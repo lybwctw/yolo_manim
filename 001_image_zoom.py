@@ -3,7 +3,7 @@ from manim import *
 class ImageFromArray(MovingCameraScene):
     def construct(self):
         # FIXME, replace with kk image instead
-        image = ImageMobject(r'assets/images/resized.jpg')
+        image = ImageMobject(r'assets/images/sample_640_360.jpg')
         image.set_resampling_algorithm(RESAMPLING_ALGORITHMS["nearest"])
 
         orig_height = image.height
