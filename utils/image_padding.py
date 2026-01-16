@@ -3,10 +3,45 @@ from manim.utils.rate_functions import there_and_back_with_pause
 
 FONT = 'JetBrains Mono'
 
+import cv2
+import numpy as np
+
+def resize_and_pad(img, target=640, pad_value=114):
+    h, w = img.shape[:2]
+
+    # 1. scale so that max(h, w) == target
+    scale = target / max(h, w)
+    new_w = int(round(w * scale))
+    new_h = int(round(h * scale))
+
+    resized = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+    # 2. compute padding
+    pad_w = target - new_w
+    pad_h = target - new_h
+
+    left   = pad_w // 2
+    right  = pad_w - left
+    top    = pad_h // 2
+    bottom = pad_h - top
+
+    padded = cv2.copyMakeBorder(
+        resized,
+        top, bottom, left, right,
+        borderType=cv2.BORDER_CONSTANT,
+        value=(pad_value, pad_value, pad_value)
+    )
+
+    return padded, scale, (left, top)
+
 class ImageRaw(Mobject):
     def __init__(self, path):
         super().__init__()
-        self.image = ImageMobject(path)
+        image = cv2.imread(path)[...,::-1]
+        self._setup(image)
+
+    def _setup(self, image):
+        self.image = ImageMobject(image)
         self.shape = self.image.get_pixel_array().shape
         self.coords = VGroup()
         self.add(self.image)
@@ -120,29 +155,42 @@ class ImageRaw(Mobject):
                 lag_ratio=0.5,
             ),
         )
+class ImagePadded(ImageRaw):
+    def __init__(self, path):
+        Mobject.__init__(self)
+        image = cv2.imread(path)[...,::-1]
+        rpad, _, _ = resize_and_pad(image)
+        self._setup(rpad)
 
 class Demo(Scene):
     def construct(self) -> None:
-        img = ImageRaw(r'assets/images/sample_1280_720.jpg').scale(0.6).shift(LEFT*2)
-        self.add(img)
-        # self.wait()
-        # self.play(img.show_shape())
-        # self.wait()
-        self.play(img.show_axes())
-        # self.wait()
-        x1, y1 = (200, 200)
-        x2, y2 = (888, 555)
-        w, h = x2-x1, y2-y1
-        cx, cy = int((x1+x2)//2), int((y1+y2)//2)
-        self.play(img.image.animate.set_opacity(0.3))
-        self.play(img.show_coords(cx, cy))
-        # self.wait()
-        self.play(TransformMatchingShapes(img._xy, img._coords))
-        self.play(img.clean_dashes())
-        self.play(img.show_frame(x1,y1,x2,y2))
-        self.wait()
+        img1 = ImageRaw(r'assets/images/sample_1280_720.jpg')
+        img2 = ImagePadded(r'assets/images/sample_1280_720.jpg')
+        Group(img1, img2).scale(.5).arrange()
+        self.add(img1, img2)
 
-        vg = VGroup(img._coords, img._wh)
-        target = Text(' '.join([str(cx), str(cy), str(w), str(h)]), font=FONT).scale(0.3).shift(RIGHT*2)
-        self.play(TransformMatchingShapes(vg, target))
-        self.wait()
+# class Demo(Scene):
+#     def construct(self) -> None:
+#         img = ImageRaw(r'assets/images/sample_1280_720.jpg').scale(0.6).shift(LEFT*2)
+#         self.add(img)
+#         # self.wait()
+#         # self.play(img.show_shape())
+#         # self.wait()
+#         self.play(img.show_axes())
+#         # self.wait()
+#         x1, y1 = (200, 200) 
+#         x2, y2 = (888, 555)
+#         w, h = x2-x1, y2-y1
+#         cx, cy = int((x1+x2)//2), int((y1+y2)//2)
+#         self.play(img.image.animate.set_opacity(0.3))
+#         self.play(img.show_coords(cx, cy))
+#         # self.wait()
+#         self.play(TransformMatchingShapes(img._xy, img._coords))
+#         self.play(img.clean_dashes())
+#         self.play(img.show_frame(x1,y1,x2,y2))
+#         self.wait()
+#
+#         vg = VGroup(img._coords, img._wh)
+#         target = Text(' '.join([str(cx), str(cy), str(w), str(h)]), font=FONT).scale(0.3).shift(RIGHT*2)
+#         self.play(TransformMatchingShapes(vg, target))
+#         self.wait()
