@@ -1,6 +1,7 @@
 # ============================
 # Manim Project .gitignore
 # ============================
+learn.py
 
 # Manim generated media (videos, images, cache)
 media/

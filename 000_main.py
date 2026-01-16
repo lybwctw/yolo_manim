@@ -7,11 +7,13 @@ class MainScene(Scene):
     def construct(self) -> None:
         image = ImageRaw(image_path)
         annotation = ImageAnnotation(image, label_path)
-        aqmark_down = ArrowQmark(DOWN)
-        aqmark_up = ArrowQmark(UP)
-        aqmark_right = ArrowQmark(RIGHT)
+        aqmark_1 = ArrowQmark(DOWN)
+        aqmark_2 = ArrowQmark(UP)
+        aqmark_main = ArrowQmark(RIGHT)
+        dtile_1 = DigitTile()
+        dtile_2 = DigitTile()
 
-        manager = LayoutManager(image, aqmark, annotation)
+        manager = LayoutManager([image, aqmark_main, annotation])
 
         self.add(image)
         self.wait()
@@ -21,3 +23,11 @@ class MainScene(Scene):
 
         self.play(manager.expand(RIGHT))
         self.wait()
+
+        self.play(manager.expand([
+            [image, None, annotation],
+            [aqmark_1, None, aqmark_2],
+            [dtile_1, aqmark_main, dtile_2],
+        ]))
+
+         
