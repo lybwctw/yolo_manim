@@ -123,7 +123,7 @@ class ImageRaw(Mobject):
 
 class Demo(Scene):
     def construct(self) -> None:
-        img = ImageRaw(r'assets/zidane.jpg').scale(0.6).shift(LEFT*2)
+        img = ImageRaw(r'assets/images/sample_1280_720.jpg').scale(0.6).shift(LEFT*2)
         self.add(img)
         # self.wait()
         # self.play(img.show_shape())
