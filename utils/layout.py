@@ -3,7 +3,8 @@ from manim import *
 class Learn(Scene):
     def focus_on(self, idx):
         def _focus_on(vg):
-            vg.arrange_in_grid(buff=10)
+            # vg.save_state()
+            vg.arrange_in_grid(buff=3)
             vg[idx].scale(3.)
             vg.shift(-vg[idx].get_center())
             return vg
@@ -12,16 +13,20 @@ class Learn(Scene):
         vg = VGroup(
             Square().scale(.3) for _ in range(6)
         )
-        vg[2] = VMobject()
-        vg.arrange_in_grid(rows=2, cols=3)
+        vg[1] = VMobject()
+        vg[3] = VMobject()
 
-        self.add(vg)
-        vg.save_state()
-        self.play(
-            ApplyFunction(self.focus_on(0), vg),
-        )
+        vg.arrange_in_grid(rows=3, cols=2)
+
+        self.play(Write(vg, lag_ratio=0.0))
         self.wait()
-        self.play(
-            vg.animate.restore(),
-        )
+
+        extra = VGroup(
+            Square().scale(.3) for _ in range(3)
+        ).arrange(DOWN).shift(RIGHT*10)
+
+        # make things simple instead of general
+        for i, e in zip([2,5,8], extra):
+            vg.insert(i, e)
+        self.play(vg.animate.arrange_in_grid(rows=3, cols=3).center())
         self.wait()
