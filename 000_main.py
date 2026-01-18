@@ -37,18 +37,28 @@ class MainScene(Scene):
         # self.play(manager.animate.restore())
         # self.wait()
 
-        manager.generate_target()
-        manager[1] = VMobject()
-        manager.add(
-            *[aq1, VMobject(), aq2],
-            *[dt1, aq3, dt2],
-        )
-        manager.generate_target()
-        manager.target.arrange_in_grid(
-            rols=3, cols=3,
-        )
-        manager.target.center()
-        self.play(MoveToTarget(manager))
+        self.play(AnimationGroup(
+            *(manager[i].animate(rate_func=there_and_back).scale(1.1) for i in range(3)),
+            lag_ratio=0.2,
+            run_time=1.8,
+        ))
+
+        # manager.generate_target()
+        # manager[1] = VMobject()
+        # manager.add(
+        #     *[aq1, VMobject(), aq2],
+        #     *[dt1, aq3, dt2],
+        # )
+        # manager.generate_target()
+        # manager.target.arrange_in_grid(
+        #     rols=3, cols=3,
+        # )
+        # manager.target.center()
+        # self.play(MoveToTarget(manager))
+        # self.wait()
+        #
+        # self.play(manager.animate.scale(0.5))
+        # self.wait()
 
         # self.play(TransformMatchingShapes(manager, manager.target))
         # self.wait()
