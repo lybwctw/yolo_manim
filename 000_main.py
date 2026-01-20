@@ -4,6 +4,7 @@ from utils.image_raw import ImageRaw
 from utils.image_annotation import ImageAnnotation
 from utils.arrow_qmark import ArrowQmark
 from utils.digit_tile import DigitTile
+from utils.digit_layer_fake import DigitLayerFake
 
 image_path = None
 label_path = None
@@ -87,7 +88,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'focus on raw image input',
-            skip_animations=False,
+            skip_animations=True,
         )
         manager.save_state()
         manager.generate_target()
@@ -112,13 +113,23 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'reverse back from focused image to the big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         self.play(manager.animate.restore())
         self.wait()
 
         # ------------------------------------------------------------
         self.next_section(
-            'tranfrom dt1 ->  (digit tile to ',
+            'tranfrom dt1 (digit tile) -> dl*3 (digit layer)',
             skip_animations=False,
         )
+        dlf_g1 = DigitLayerFake(
+            n=3,
+            width=image.width,
+            height=image.height,
+            buff=0.1,
+        ).move_to(dt1)
+        self.play(
+            Transform(dt1, dlf_g1),
+        )
+        self.wait()
