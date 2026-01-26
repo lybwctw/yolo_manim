@@ -1,5 +1,6 @@
 from manim import *
 
+# DigitLayer without real data inside
 class DigitLayerFake(VGroup):
     def __init__(
         self,
