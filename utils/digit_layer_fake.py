@@ -24,6 +24,7 @@ class DigitLayerFake(VGroup):
             ).shift((LEFT+DOWN)*buff*i) for i in range(n)
         )
         self.rects = rects
+        self.shape_texts = VGroup()
         self.add(self.rects)
 
     def show_passing_flash(self):
@@ -37,6 +38,7 @@ class DigitLayerFake(VGroup):
         text_c = Text(str(self.n),font_size=25).next_to(self.rects[1],(LEFT+UP)*.6)
         text_h = Text(str(self.h),font_size=25).next_to(self.rects[-1],LEFT)
         text_w = Text(str(self.w),font_size=25).next_to(self.rects[0],UP)
+        self.shape_texts = VGroup(text_h, text_c, text_w)
         anim = AnimationGroup(
             ShowPassingFlash(
                 path,
@@ -44,11 +46,17 @@ class DigitLayerFake(VGroup):
                 time_width=2.,
             ),
             AnimationGroup(
-                Write(text_h),
-                Write(text_c),
-                Write(text_w),
+                *(Write(text) for text in self.shape_texts),
                 lag_ratio=0.8,
             )
+        )
+
+        return anim
+
+    def unwrite_shape_texts(self):
+        anim = AnimationGroup(
+            *(Unwrite(text) for text in self.shape_texts),
+            lag_ratio=0.8,
         )
         return anim
 
@@ -58,4 +66,6 @@ class Demo(Scene):
         self.play(Write(dlf))
         self.wait()
         self.play(dlf.show_passing_flash())
+        self.wait()
+        self.play(dlf.unwrite_shape_texts())
         self.wait()

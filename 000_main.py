@@ -52,6 +52,7 @@ class MainScene(Scene):
         self.play(MoveToTarget(manager))
         self.wait()
 
+        # ------------------------------------------------------------
         # # scale-highlight one by one
         # self.play(AnimationGroup(
         #     *(manager[i].animate(
