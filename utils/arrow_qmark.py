@@ -1,9 +1,13 @@
 from manim import *
 
 class ArrowQmark(VGroup):
-    def __init__(self, adir, tdir, txt='?'):
+    def __init__(self, double=False, adir=RIGHT, tdir=UP, txt='?'):
         super().__init__()
-        arrow = Arrow(start=ORIGIN, end=adir*3)
+        if double:
+            arrow = DoubleArrow(start=ORIGIN, end=adir*3)
+        else:
+            arrow = Arrow(start=ORIGIN, end=adir*3)
+
         text = Text(txt).next_to(arrow, tdir)
         self.arrow = arrow
         self.text = text

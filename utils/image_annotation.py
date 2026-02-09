@@ -4,7 +4,11 @@ from .image_raw import ImageRaw
 class ImageAnnotation(VGroup):
     def __init__(self, image, path):
         super().__init__()
-        sq = Square(fill_color=GREEN, fill_opacity=0.3)
+        sq = Square(
+            fill_color=BLUE_E,
+            fill_opacity=0.8,
+            stroke_width=0.,
+        )
         sq.stretch_to_fit_width(image.width)
         sq.stretch_to_fit_height(image.height)
         self.sq = sq

@@ -4,7 +4,7 @@ class DigitLayerFake(VGroup):
     def __init__(
         self,
         width=2,
-        height=4,
+        height=3,
         width_nominal=None,
         height_nominal=None,
     ):
@@ -17,6 +17,7 @@ class DigitLayerFake(VGroup):
             height=height,
             fill_color=MAROON,
             fill_opacity=0.5,
+            stroke_width=0.0,
         )
         self.rect = rect
         self.shape_texts = VGroup()
@@ -29,8 +30,8 @@ class DigitLayerFake(VGroup):
             self.rect.get_corner(LEFT+UP),
             self.rect.get_corner(RIGHT+UP),
         ]).set_stroke(color=BLUE)
-        text_h = Text(str(self.h),font_size=25).next_to(self.rect,LEFT)
-        text_w = Text(str(self.w),font_size=25).next_to(self.rect,UP)
+        text_h = Text(str(self.h),font_size=20).next_to(self.rect,LEFT)
+        text_w = Text(str(self.w),font_size=20).next_to(self.rect,UP)
         self.shape_texts = VGroup(text_h, text_w)
         anim = AnimationGroup(
             ShowPassingFlash(
@@ -49,7 +50,7 @@ class DigitLayerFake(VGroup):
     def unwrite_shape_texts(self):
         anim = AnimationGroup(
             *(Unwrite(text) for text in self.shape_texts),
-            lag_ratio=0.8,
+            lag_ratio=0.3,
         )
         return anim
 
@@ -75,6 +76,7 @@ class MDigitLayerFake(VGroup):
                 height=height,
                 fill_color=MAROON,
                 fill_opacity=0.5,
+                stroke_width=0.0,
             ).shift((LEFT+DOWN)*buff*i) for i in range(n)
         )
         self.rects = rects
@@ -89,9 +91,9 @@ class MDigitLayerFake(VGroup):
             self.rects[0].get_corner(LEFT+UP),
             self.rects[0].get_corner(RIGHT+UP),
         ]).set_stroke(color=BLUE)
-        text_c = Text(str(self.n),font_size=25).next_to(self.rects[1],(LEFT+UP)*.6)
-        text_h = Text(str(self.h),font_size=25).next_to(self.rects[-1],LEFT)
-        text_w = Text(str(self.w),font_size=25).next_to(self.rects[0],UP)
+        text_c = Text(str(self.n),font_size=20).next_to(self.rects[1],(LEFT+UP)*.6)
+        text_h = Text(str(self.h),font_size=20).next_to(self.rects[-1],LEFT)
+        text_w = Text(str(self.w),font_size=20).next_to(self.rects[0],UP)
         self.shape_texts = VGroup(text_h, text_c, text_w)
         anim = AnimationGroup(
             ShowPassingFlash(
@@ -110,7 +112,7 @@ class MDigitLayerFake(VGroup):
     def unwrite_shape_texts(self):
         anim = AnimationGroup(
             *(Unwrite(text) for text in self.shape_texts),
-            lag_ratio=0.8,
+            lag_ratio=0.2,
         )
         return anim
 
