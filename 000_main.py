@@ -21,7 +21,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init assets',
-            skip_animations=False,
+            skip_animations=True,
         )
         manager = VGroup()
         image_raw = ImageRaw(
@@ -59,7 +59,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'create centered image_raw and annotation_final',
-            skip_animations=False,
+            skip_animations=True,
         )
         # self.play(Write(image_raw))
         # self.play(Write(annotation_final))
@@ -69,7 +69,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'expand into image_raw -> annotation_final',
-            skip_animations=False,
+            skip_animations=True,
         )
         # manager.save_state()
         manager.generate_target()
@@ -98,7 +98,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'introduce digital game idea, the big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         manager[1] = VMobject()
         manager.add(
@@ -116,7 +116,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'maybe, realtime detection loop until demo image_raw/annotation_final',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -128,7 +128,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on image_raw input',
-            skip_animations=False,
+            skip_animations=True,
         )
         manager.save_state()
         manager.generate_target()
@@ -141,20 +141,20 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'maybe, highlight width and height',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         # flash RGB background
         self.next_section(
             '001_rgb_input, explain the concept of RGB',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'back to the big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         self.play(manager.animate.restore())
         self.wait()
@@ -162,7 +162,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'transform dt_input to mdlf_input_raw',
-            skip_animations=False,
+            skip_animations=True,
         )
         mdlf_input_raw = MDigitLayerFake(
             n=3,
@@ -198,7 +198,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on annotation_final',
-            skip_animations=False,
+            skip_animations=True,
         )
         manager.save_state()
         manager.generate_target()
@@ -211,13 +211,13 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             '002_annotation_output, concept of label output',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'back to the big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         self.play(manager.animate.restore())
         self.wait()
@@ -225,7 +225,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'transform dlf_output_final from dt to dlf',
-            skip_animations=False,
+            skip_animations=True,
         )
         dlf_output_final = DigitLayerFake(
             width=1.,
@@ -259,17 +259,17 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'the changing shapes of current input & output',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         self.next_section(
             'the magnitude of current input & output',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         self.next_section(
             'try fixing current design of input & output',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -292,7 +292,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'focus on image_raw and mdlf_input_raw',
-            skip_animations=False,
+            skip_animations=True,
         )
         manager.save_state()
         manager.generate_target()
@@ -303,7 +303,7 @@ class MainScene(Scene):
 
         # self.next_section(
         #     'show shapes of image_raw and mdlf_input_raw',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # self.play(AnimationGroup(
         #     image_raw.show_passing_flash(),
@@ -313,7 +313,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'int-view: append image_resize',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         image_repad = image_raw.copy()
@@ -335,7 +335,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'int-view: pad image_resize into image_repad',
-            skip_animations=False,
+            skip_animations=True,
         )
         image_repad = ImagePad(image_repad, wh=640)
         # self.remove(image_repad.image_raw)
@@ -347,7 +347,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'data-view: append mdlf_input_repad',
-            skip_animations=False,
+            skip_animations=True,
         )
         mdlf_input_repad = mdlf_input_raw.copy()
         mdlf_input_repad.w = 640
@@ -371,7 +371,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'both: rearrange, new arrows, show shapes',
-            skip_animations=False,
+            skip_animations=True,
         )
         # new arrows
         _manager = VGroup(
@@ -412,13 +412,13 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'data-view: mdlf_input_repad padding value 114',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'data-view: append mdlf_input_norm',
-            skip_animations=False,
+            skip_animations=True,
         )
         mdlf_input_norm = mdlf_input_repad.copy().shift(RIGHT*10)
         aq_23.move_to(mdlf_input_norm)
@@ -438,13 +438,13 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'the concept of preprocessing',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'back to the big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         _manager = VGroup(
             *[image_raw, aq_ab, image_repad, VMobject(), VMobject(), VMobject(), annotation_final],
@@ -467,7 +467,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'both: prepend annotation_repad and dlf_output_repad',
-            skip_animations=False,
+            skip_animations=True,
         )
         annotation_repad = ImageAnnotation(image_repad, label_path_repad).shift(UP*10)
         dlf_output_repad = dlf_output_final.copy().shift(DOWN*10)
@@ -493,7 +493,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'changing raw input, good input, bad output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # show shapes once
         # show changing input and changing shapes..
@@ -520,7 +520,7 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             'focus on annotation_repad and dlf_output_repad',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         _manager.generate_target()
@@ -591,25 +591,25 @@ class MainScene(Scene):
         # ------------------------------------------------------------
         self.next_section(
             '003_DFL_output, explain the output design of YOLO',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             '004_DFL_decode, explain the decode of model output',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'both-view: prepend 32_box, 32_cls, 32_decode',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             '005_postprocess, best class -> conf -> iou -> max_det',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -638,19 +638,19 @@ class MainScene(Scene):
 
         self.next_section(
             '006_DFL_output_m, multi-layer output',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             '007_DFL_decode_m, multi-layer decode',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             '008_postprocess, multi-layer postprocess',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -667,19 +667,19 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'recap on the details of inference',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'recap on the simplified version of inference',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'focus on the most important part',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -688,25 +688,25 @@ class MainScene(Scene):
 
         self.next_section(
             'tensor, 1d/2d/3d/4d, dim/shape/value',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'module/layer/block/function',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'parameters in module',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'model/network',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -714,25 +714,25 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'add operation',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'sub, mul, div',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'split',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'concat',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -742,79 +742,79 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on conv2d',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'conv2d on 2d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'params, FLOPs, as comments by default',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option1: kernel size',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option2: stride',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option3: padding',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option4: bias',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option5: in_channels, conv2d on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option6: out_channels',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'quick reference on other options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with pytorch, init',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'extension: conv1d, 1d input -> 2d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'extension: conv3d, 3d input -> 4d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -824,49 +824,49 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on linear',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'linear on 1d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option1: in_features',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option2: out_features',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option2: bias',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'linear on 2d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'linear on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'linear vs 1x1 conv2d',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -876,67 +876,67 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on maxpool2d',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'maxpool2d on 2d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option1: kernel size',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option2: stride',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option3: padding',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'maxpool2d on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'quick reference on other options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with pytorch',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'extension: avgpool, minpool',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'extension: conv1d, 1d input -> 2d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'extension: conv3d, 3d input -> 4d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -946,37 +946,37 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on upsample',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'upsample on 2d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'option1: scale_factor',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'maxpool2d on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'quick reference on other options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with pytorch',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -986,55 +986,55 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on activation functions',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'ReLU on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'SiLU on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'tanh on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'sigmoid on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'quick reference on other options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'Softmax on 1d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'Softmax on 2d input, dim',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'Softmax on 3d input, dim',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -1044,19 +1044,19 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on BatchNorm2d',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'batchnorm2d on 3d input',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with pytorch, init',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -1070,31 +1070,31 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on Conv/CBS',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'components',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with ultralytics',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'showcase',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -1104,31 +1104,31 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on Bottleneck',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'components',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with ultralytics',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'showcase',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -1138,31 +1138,31 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on C2f',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'components',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with ultralytics',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'showcase',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -1172,31 +1172,31 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on SPPF',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'components',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with ultralytics',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'showcase',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
@@ -1208,31 +1208,31 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prologue on Detect head',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'components',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'options',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'interacting with ultralytics',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ------------------------------------------------------------
         self.next_section(
             'showcase',
-            skip_animations=False,
+            skip_animations=True,
         )
 
         # ************************************************************
