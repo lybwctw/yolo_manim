@@ -1,8 +1,8 @@
 from manim import *
 from typing_extensions import runtime
 
-from rgb_display import RGBDisplay
-from slider import *
+from .rgb_display import RGBDisplay
+from utils.slider import *
 
 # TODO: intersection -> down\up <- numbers
 # concat from both sides to build number/color connection
