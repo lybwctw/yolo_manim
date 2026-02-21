@@ -94,7 +94,7 @@ class MainScene(Scene):
         # TODO 1-2. convert one problem into three
         # ------------------------------------------------------------
         # ImageRaw        ...>      annotation_final
-        #    ->                         ->
+        #     |                           |
         # DigitTile       ...>        DigitTile
         # ************************************************************
         self.next_section(
