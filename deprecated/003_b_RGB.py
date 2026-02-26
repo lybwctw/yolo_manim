@@ -1,5 +1,5 @@
 from manim import *
-from utils.colorcube import ColorCube
+from colorcube import ColorCube
 import itertools
 
 # TODO, emphasize beams?

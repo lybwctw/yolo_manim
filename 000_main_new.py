@@ -10,6 +10,22 @@ from utils.arrow_comment import ArrowComment
 from utils.image_annotation import ImageAnnotation
 
 class MainScene(Scene):
+    def scale_align(self, manager, everything, scales):
+        if 'all' in scales:
+            for mob in manager.target:
+                mob.scale(scales['all'])
+            for mob in everything:
+                if mob not in manager:
+                    mob.scale(scales['all'])
+        else:
+            for mob in manager.target:
+                if type(mob) in scales:
+                    mob.scale(scales[type(mob)])
+            for mob in everything:
+                if mob not in manager:
+                    if type(mob) in scales:
+                        mob.scale(scales[type(mob)])
+
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
@@ -36,8 +52,8 @@ class MainScene(Scene):
         annotation_32_decode = ImageAnnotation(PATH_TXT_DECODE, image_repad)
         lf_output_32_decode = LayersFake(annotation_32_decode)
 
-        annotation_repad = ImageAnnotation(PATH_TXT_RES, image_repad)
-        lf_output_repad = LayersFake(annotation_repad)
+        annotation_repad = ImageAnnotation(PATH_TXT_RES, image_repad).shift(INIT_SHIFT_ANNOTATION_REPAD)
+        lf_output_repad = LayersFake(annotation_repad).shift(INIT_SHIFT_LF_OUTPUT_REPAD)
 
         annotation_final = ImageAnnotation(PATH_TXT_RES, image_raw).shift(INIT_SHIFT_ANNOTATION_FINAL)
         lf_output_final = LayersFake(annotation_final).shift(INIT_SHIFT_LF_OUTPUT_FINAL)
@@ -65,10 +81,23 @@ class MainScene(Scene):
         ac_78 = ArrowComment(False, RIGHT, '?').shift(INIT_SHIFT_AC_78)
         ac_89 = ArrowComment(False, RIGHT, '?').shift(INIT_SHIFT_AC_89)
 
+        everything = VGroup(
+            image_raw, lf_input_raw, tile_input,
+            image_repad, lf_input_repad,
+            image_norm, lf_input_norm,
+            annotation_32_box, lf_output_32_box,
+            annotation_32_cls, lf_output_32_cls,
+            annotation_32_decode, lf_output_32_decode,
+            annotation_repad, lf_output_repad,
+            annotation_final, lf_output_final, tile_output,
+            ac_ab, ac_bc, ac_wx, ac_xy, ac_yz,
+            ac_a1, ac_b2, ac_c3, ac_v5, ac_w6, ac_x7, ac_y8, ac_z9,
+            ac_12, ac_23, ac_game, ac_67, ac_78, ac_89,
+        )
         # ************************************************************
         self.next_section(
             'start scene',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager = VGroup(
@@ -81,7 +110,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'split image and annotation',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager = VGroup(
@@ -99,7 +128,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'introduce digit game',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager = VGroup(
@@ -119,7 +148,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on image_raw',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager = VGroup(
@@ -145,7 +174,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus back to the big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(manager.animate.restore())
@@ -154,7 +183,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'replace tile_input with lf_input_raw',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         lf_input_raw.match_x(tile_input, ORIGIN)
@@ -172,7 +201,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on annotation_final',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager = VGroup(
@@ -198,7 +227,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus back to the big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(manager.animate.restore())
@@ -207,7 +236,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'replace tile_output with lf_input_raw',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         lf_output_final.match_x(tile_output, ORIGIN)
@@ -225,7 +254,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'two preferences of modern AI',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO .. fast switching of input and output
@@ -233,14 +262,9 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on image_raw and lf_input_raw',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
-        # manager = VGroup(
-        #     *[image_raw, VMobject(), annotation_final],
-        #     *[ac_a1, VMobject(), ac_z9],
-        #     *[lf_input_raw, ac_game, lf_output_final],
-        # )
         manager = VGroup(
             VGroup(*[manager[0], manager[3], lf_input_raw]),
             VGroup(*[manager[1], manager[4], manager[7]]),
@@ -258,6 +282,214 @@ class MainScene(Scene):
         # play the source->target animation
         # focus back
         # insert the target
+
+        # ************************************************************
+        self.next_section(
+            'image_repad generated from image_raw',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # TODO, make the repad smaller, and pad
+        image_repad.move_to(image_raw)
+        manager = VGroup(
+            *[image_raw, image_repad],
+            *[ac_a1, VMobject()],
+            *[lf_input_raw, VMobject()],
+        )
+        manager.generate_target()
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=2,
+            # buff=1.0,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'lf_input_repad generated from lf_input_raw',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # TODO, make the repad smaller, and pad
+        lf_input_repad.move_to(lf_input_raw)
+        manager = VGroup(
+            *[image_raw, VMobject(), image_repad],
+            *[ac_a1, VMobject(), VMobject()],
+            *[lf_input_raw, VMobject(), lf_input_repad],
+        )
+        manager.generate_target()
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=3,
+            # buff=1.0,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'lf_input_norm generated from lf_input_repad',
+            skip_animations=True,
+        )
+        # ************************************************************
+        lf_input_norm.move_to(lf_input_repad)
+        manager = VGroup(
+            *[image_raw, image_repad, VMobject()],
+            *[ac_a1, VMobject(), VMobject()],
+            *[lf_input_raw, lf_input_repad, lf_input_norm],
+        )
+        manager.generate_target()
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=3,
+            # buff=1.0,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'image_norm generated from image_repad',
+            skip_animations=True,
+        )
+        # ************************************************************
+        image_norm.move_to(image_repad)
+        manager = VGroup(
+            *[image_raw, image_repad, image_norm],
+            *[ac_a1, VMobject(), VMobject()],
+            *[lf_input_raw, lf_input_repad, lf_input_norm],
+        )
+        manager.generate_target()
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=3,
+            # buff=1.0,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'insert arrows with comment',
+            skip_animations=True,
+        )
+        # ************************************************************
+        manager = VGroup(
+            *[image_raw, ac_ab, image_repad, ac_bc, image_norm],
+            *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3],
+            *[lf_input_raw, ac_12, lf_input_repad, ac_23, lf_input_norm],
+        )
+        manager.generate_target()
+        self.scale_align(
+            manager,
+            everything,
+            {'all': 0.7}
+        )
+        # for mob in manager.target:
+        #     mob.scale(0.7)
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=5,
+            # buff=1.0,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'focus back',
+            skip_animations=True,
+        )
+        # ************************************************************
+        manager = VGroup(
+            *[image_raw, ac_ab, image_repad, ac_bc, image_norm, VMobject(), annotation_final],
+            *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3, VMobject(), ac_z9],
+            *[lf_input_raw, ac_12, lf_input_repad, ac_23, lf_input_norm, ac_game, lf_output_final],
+        )
+        manager.generate_target()
+        self.scale_align(
+            manager,
+            everything,
+            {'all': 0.8}
+        )
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=7,
+            # buff=10.0,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'insert annotation_repad and lf_output_repad',
+            skip_animations=True,
+        )
+        # ************************************************************
+        manager = VGroup(
+            *[image_raw, ac_ab, image_repad, ac_bc, image_norm, VMobject(), annotation_repad, ac_yz, annotation_final],
+            *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3, VMobject(), ac_y8, VMobject(), ac_z9],
+            *[lf_input_raw, ac_12, lf_input_repad, ac_23, lf_input_norm, ac_game, lf_output_repad, ac_89, lf_output_final],
+        )
+        manager.generate_target()
+        self.scale_align(
+            manager,
+            everything,
+            {'all': 0.8}
+        )
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=9,
+            # buff=10.0,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'still problem with output',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # TODO .. fast switching of output
+
+        # ************************************************************
+        self.next_section(
+            'focus on annotation_repad',
+            skip_animations=False,
+        )
+        # ************************************************************
+        manager = VGroup(
+            *[image_raw, ac_ab, image_repad, ac_bc, image_norm, VMobject(), annotation_repad, ac_yz, annotation_final],
+            *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3, VMobject(), ac_y8, VMobject(), ac_z9],
+            *[lf_input_raw, ac_12, lf_input_repad, ac_23, lf_input_norm, ac_game, lf_output_repad, ac_89,
+              lf_output_final],
+        )
+        manager.save_state()
+        manager.generate_target()
+        manager.target.arrange_in_grid(
+            rows=3,
+            cols=9,
+            buff=10.0,
+        )
+        manager.target.shift(-manager.target[6].get_center())
+        # scale single for immediate focus back instead of further scale
+        manager.target[6].scale(3.0)    # FIXME, or scale_to_fit_width
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # share state for scene 003
+        self.save_state(S003_ANNOTATION_REPAD, annotation_repad.width)
+
+        # ************************************************************
+        self.next_section(
+            'focus back to the big map',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(manager.animate.restore())
+        self.wait()
 
     def save_state(self, key, value):
         with open(key, 'w') as f:
