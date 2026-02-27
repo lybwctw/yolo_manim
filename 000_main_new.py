@@ -30,7 +30,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init assets',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         image_raw = ImageRepad(PATH_IMAGE_RAW).shift(INIT_SHIFT_IMAGE_RAW)
@@ -97,7 +97,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start scene',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -110,7 +110,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'split image and annotation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -128,7 +128,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'introduce digit game',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -148,7 +148,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on image_raw',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -174,7 +174,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus back to the big map',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(manager.animate.restore())
@@ -183,7 +183,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'replace tile_input with lf_input_raw',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         lf_input_raw.match_x(tile_input, ORIGIN)
@@ -201,7 +201,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on annotation_final',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -227,7 +227,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus back to the big map',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(manager.animate.restore())
@@ -236,7 +236,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'replace tile_output with lf_input_raw',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         lf_output_final.match_x(tile_output, ORIGIN)
@@ -254,7 +254,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'two preferences of modern AI',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO .. fast switching of input and output
@@ -262,7 +262,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on image_raw and lf_input_raw',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -286,7 +286,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'image_repad generated from image_raw',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO, make the repad smaller, and pad
@@ -308,7 +308,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'lf_input_repad generated from lf_input_raw',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO, make the repad smaller, and pad
@@ -330,7 +330,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'lf_input_norm generated from lf_input_repad',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         lf_input_norm.move_to(lf_input_repad)
@@ -351,7 +351,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'image_norm generated from image_repad',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         image_norm.move_to(image_repad)
@@ -372,7 +372,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert arrows with comment',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -399,7 +399,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus back',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -424,7 +424,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert annotation_repad and lf_output_repad',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager = VGroup(
@@ -449,7 +449,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'still problem with output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO .. fast switching of output
