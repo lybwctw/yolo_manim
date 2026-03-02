@@ -92,8 +92,8 @@ class Demo(Scene):
     def construct(self):
         class_map = {0: 'kunkun', 1: 'coke', 2: 'pepsi'}
         color_map = {0: YELLOW, 1: PURE_RED, 2: PURE_BLUE}
-        image_path = r'D:\deeplearning\ultralytics-8.3.163\runs\detect\predict25\005_frames\005_1.jpg'
-        label_path = r'D:\deeplearning\ultralytics-8.3.163\runs\detect\predict25\labels\005_1.txt'
+        image_path = r'assets\images\sample_1280_720.jpg'
+        label_path = r'assets\images\labels.txt'
 
         sq = ImageMobject(image_path)
         data = np.loadtxt(label_path)
