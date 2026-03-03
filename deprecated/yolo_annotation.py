@@ -111,7 +111,7 @@ class Demo(Scene):
 
         self.add(sq, annos)
         self.play(sq.animate.shift(RIGHT*2))
-        annos.suspend_updating(recursive=True)
+        # annos.suspend_updating(recursive=True)
         self.wait()
         self.play(sq.animate.shift(LEFT*2))
         self.wait()
