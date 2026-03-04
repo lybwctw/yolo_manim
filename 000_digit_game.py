@@ -2,20 +2,21 @@ from manim import *
 from utils.constants import *
 from utils.image_repad import ImageRaw, ImageRepad
 from utils.tile_comment import TileComment
-from utils.layers_fake import LayersFake
-from utils.grid_annotation_box import GridAnnotationBox
-from utils.grid_annotation_cls import GridAnnotationCls
 from utils.arrow_comment import ArrowComment
 from utils.image_annotation import ImageAnnotation
-from utils.general import save_scene_start, scale_manager_target
+from utils.general import save_everything, load_everything, scale_manager_target
 
 class MainScene(Scene):
-
     def construct(self) -> None:
-        image_raw = ImageRaw(PATH_IMAGE_RAW)
-        tile_input = TileComment('digits')
-        annotation_final = ImageAnnotation(PATH_TXT_RES, image_raw)
-        tile_output = TileComment('digits')
+        image_raw = ImageRaw(PATH_IMAGE_640)
+        tile_input = TileComment('一堆数字')
+        annotation_final = ImageAnnotation(
+            image=PATH_IMAGE_640,
+            label=PATH_LABEL_640,
+            name_map=KK_NAME_MAP,
+            color_map=KK_COLOR_MAP,
+        ).scale_to_fit_width(image_raw.width)
+        tile_output = TileComment('一堆数字')
 
         ac_a1 = ArrowComment(True, DOWN, '?')
         ac_z9 = ArrowComment(True, DOWN, '?')
@@ -120,4 +121,4 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        save_scene_start(S001_IMAGE_RAW, image_raw.width)
+        save_everything(S001_EVERYTHING, everything)

@@ -14,7 +14,7 @@ class ImageFromArray(MovingCameraScene):
         # image.scale_to_fit_height(360/2).shift(DOWN*3)
         self.wait()
 
-        # to be used as 004_image_zoom_out.py
-        self.play(image.animate.shift(UP*3).scale_to_fit_height(orig_height))
-        # image.shift(UP*3).scale_to_fit_height(orig_height)
-        self.wait()
+        # # to be used as 004_image_zoom_out.py
+        # self.play(image.animate.shift(UP*3).scale_to_fit_height(orig_height))
+        # # image.shift(UP*3).scale_to_fit_height(orig_height)
+        # self.wait()

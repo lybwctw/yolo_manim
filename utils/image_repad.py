@@ -5,10 +5,19 @@ class ImageRaw(Mobject):
         super().__init__()
         self.scale_factor = 1.0
         image = ImageMobject(path)
+        image.set_resampling_algorithm(RESAMPLING_ALGORITHMS["nearest"])
         image.scale_to_fit_width(init_width)
         self.image = image
         self.add(self.image)
         self.center()
+
+    def scale(self, scale_factor, **kwargs):
+        self.scale_factor *= scale_factor
+        return super().scale(scale_factor, **kwargs)
+
+    def scale_back(self):
+        self.scale(1/self.scale_factor)
+        return self
 
 class ImageRepad(VMobject):
     def __init__(self, path, init_scale=1.0):
@@ -23,6 +32,13 @@ class ImageRepad(VMobject):
         )
         self.add(self.rect)
         self.center()
+
+    def scale(self, scale_factor, **kwargs):
+        self.scale_factor *= scale_factor
+        return super().scale(scale_factor, **kwargs)
+
+    def scale_back(self):
+        self.scale(1 / self.scale_factor)
 
 class Demo(Scene):
     def construct(self) -> None:

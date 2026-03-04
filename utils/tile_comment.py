@@ -1,13 +1,17 @@
 from manim import *
 
 class TileComment(VMobject):
-    def __init__(self, text='', init_scale=1.0):
+    def __init__(self, text='None'):
         super().__init__()
-        self.rect = Rectangle(
-            width=4*init_scale,
-            height=3*init_scale,
-            fill_color=GRAY,
-            fill_opacity=1.0,
-            stroke_width=0.0,
+        self.text = Text(
+            text=text,
+            font_size=73,
+            color=BLACK,
+            font='Source Han Sans SC'
+        ).add_background_rectangle(
+            color=WHITE,
+            opacity=1.0,
+            buff=0.1,
+            stroke_width=0,
         )
-        self.add(self.rect)
+        self.add(self.text)
