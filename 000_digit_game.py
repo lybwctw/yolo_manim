@@ -117,8 +117,8 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'next scene, explain RGB color space',
+            'save for next scene, explain RGB color space',
             skip_animations=False,
         )
         # ************************************************************
-        save_everything(S001_EVERYTHING, everything)
+        save_everything(S000_EVERYTHING, everything)

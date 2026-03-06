@@ -5,7 +5,7 @@ class Slider(VGroup):
         self,
         tracker: ValueTracker,
         label="",
-        width=3,
+        width=2.5,
         color=WHITE,
     ):
         super().__init__()
