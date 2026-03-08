@@ -170,7 +170,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        self.play(Write(cells))
+        self.play(FadeIn(cells))
         self.play(FadeOut(cells_r, cells_g, cells_b),)
         self.wait()
 
@@ -193,5 +193,5 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        everything = VGroup(image_raw)
+        everything = Group(image_raw)
         save_everything(S004_EVERYTHING, everything)

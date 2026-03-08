@@ -91,6 +91,8 @@ class MainScene(Scene):
             # buff=1.0,
         ).center()
         self.play(MoveToTarget(manager))
+        # make annotation background transparent
+        self.play(annotation_final.image.animate.set_opacity(0.3))
         self.wait()
 
         # ************************************************************

@@ -1,4 +1,5 @@
 from manim import *
+from utils.show_shape import ShowShape
 import numpy as np
 from .constants import (
     KK_NAME_MAP,
@@ -7,17 +8,22 @@ from .constants import (
     PATH_LABEL_640,
 )
 
-class ImageAnnotation(Mobject):
+class ImageAnnotation(Mobject, ShowShape):
     def __init__(
         self,
         image=None,    # background image object, or path?
         label=None,    # label path
         name_map=None, # class name map
         color_map=None, # class color map
+        transparent=False,
+        width_nominal=300,
+        height_nominal=200,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.scale_factor = 1.0
+        self._w = width_nominal
+        self._h = height_nominal
 
         # setup name map if not yet
         if name_map:
@@ -40,6 +46,8 @@ class ImageAnnotation(Mobject):
             self.image = image
         else:
             raise ValueError('invalid image arg for ImageAnnotation')
+        if transparent:
+            self.image.set_opacity(0.3)
         self.add(self.image)
 
         # setup raw label data if not yet
@@ -113,6 +121,37 @@ class ImageAnnotation(Mobject):
             )
             self.mobs.add(text, bbox)
         self.add(self.mobs)
+
+    def hide_text(self):
+        anims = []
+        for label in self.labels:
+            text = label['text']
+            anim = text.animate.set_opacity(0.0)
+            anims.append(anim)
+        return AnimationGroup(*anims)
+
+    def unhide_text(self):
+        anims = []
+        for label in self.labels:
+            text = label['text']
+            anim = text.animate.set_opacity(1.0)
+            anims.append(anim)
+        return AnimationGroup(*anims)
+
+    def get_shape_path(self):
+        path = VMobject()
+        path.set_points_as_corners([
+            self.image.get_corner(LEFT + DOWN),
+            self.image.get_corner(LEFT + UP),
+            self.image.get_corner(RIGHT + UP),
+        ]).set_stroke(color=BLUE)
+        return path
+
+    def get_shape_text(self):
+        text_h = Text(str(self._h), font_size=20).next_to(self.image, LEFT)
+        text_w = Text(str(self._w), font_size=20).next_to(self.image, UP)
+        text = VGroup(text_h, text_w)
+        return text
 
     def scale(self, scale_factor, **kwargs):
         self.scale_factor *= scale_factor

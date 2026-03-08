@@ -120,7 +120,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show sliders and palette',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(
@@ -144,7 +144,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'random digit-color mapping',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO, show (0,0,0) and those common ones before random
@@ -163,7 +163,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'combine digit and color',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # FIXME, problem when copy from sliders
@@ -217,7 +217,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'random color several times',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         new_text = always_redraw(
@@ -248,7 +248,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'color background with central digits',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         new_text.clear_updaters().set_z_index(1)

@@ -18,6 +18,7 @@ S000_EVERYTHING = 's000_everything.pkl'
 S001_EVERYTHING = 's001_everything.pkl'
 S002_EVERYTHING = 's002_everything.pkl'
 S004_EVERYTHING = 's004_everything.pkl'
+S005_EVERYTHING = 's005_everything.pkl'
 
 PATH_IMAGE_640 = 'assets/images/sample_640_360.jpg'
 PATH_LABEL_640 = 'assets/images/labels.txt'
