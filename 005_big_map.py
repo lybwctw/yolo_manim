@@ -21,6 +21,8 @@ class MainScene(Scene):
             name_map=KK_NAME_MAP,
             color_map=KK_COLOR_MAP,
             transparent=True,
+            width_nominal=960,
+            height_nominal=540,
         ).scale_to_fit_width(image_raw.width)
         tile_output = TileComment('一堆数字').scale(0.8)
 

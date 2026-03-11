@@ -51,6 +51,7 @@ class ImageAnnotation(Mobject, ShowShape):
         self.add(self.image)
 
         # setup raw label data if not yet
+        # FIXME, rename label naming, confused with labels
         if isinstance(label, np.ndarray):
             self.label = label
         elif isinstance(label, str):
