@@ -10,7 +10,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show annotation shape',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         (
@@ -39,25 +39,33 @@ class MainScene(Scene):
         )
         axes.shift(annotation.get_corner(UL) - axes.get_origin())
 
-        ax_labels = axes.get_axis_labels()
-
-        self.play(annotation.show_passing_flash())
+        ax_labels = axes.get_axis_labels().scale(0.8)
+        ax_labels[0].next_to(axes.x_axis, RIGHT)
+        ax_labels[1].next_to(axes.y_axis, DOWN)
 
         # ************************************************************
         self.next_section(
-            'show axes and common coords',
-            skip_animations=True,
+            'show coordinate system of cv image',
+            skip_animations=False,
         )
         # ************************************************************
+        # show shape of annotation
+        self.play(annotation.show_passing_flash())
+
+        # show axes for annotation
         self.play(Write(axes, lag_ratio=0.0))
         self.wait()
 
+        # show xy labels
         self.play(Write(ax_labels))
         self.wait()
+
+        # hide xy labels
         self.play(Unwrite(ax_labels))
         self.wait()
 
-        # show TR and DL coords
+        # show top-right and down-left coords
+        # FIXME, show dots?
         tr_label = Text(
             '(959,0)',
             font_size=20,
@@ -72,7 +80,8 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # show origin and DR coords
+        # show origin and down-right coords
+        # FIXME, show dots?
         or_label = Text(
             '(0,0)',
             font_size=20,
@@ -87,16 +96,18 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # unwrite all coords
+        # hide all coords and axes (or not?)
         self.play(AnimationGroup(
             Unwrite(or_label),
             Unwrite(tr_label),
             Unwrite(dr_label),
             Unwrite(dl_label),
+            Unwrite(axes),
         ))
         self.wait()
 
-        annotation.add(axes)        # make axes child of annotation
+        # coord system should move with annotation even not shown
+        annotation.add(axes)
 
         # ************************************************************
         self.next_section(
@@ -168,6 +179,7 @@ class MainScene(Scene):
         manager = Group(annotation, xyxy_full_tab)
         manager.generate_target()
         manager.target.arrange().center()
+        manager.target[0].align_to(manager[0], UP)     # make annotation align horizontally
         self.play(MoveToTarget(manager))
         xyxy_full_tab_copy.move_to(xyxy_full_tab)       # TODO, on other tables
         self.wait()
