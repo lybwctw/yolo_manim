@@ -4,19 +4,22 @@ from manim import *
 from utils.constants import S005_EVERYTHING
 from utils.general import load_everything
 
+# FIXME, dynamic annotation!!!
 
 class MainScene(Scene):
     def construct(self) -> None:
+        # constants
+        FONT_SIZE_COORDS = 20
+
         # ************************************************************
         self.next_section(
-            'show annotation shape',
+            'coordinate assets',
             skip_animations=False,
         )
         # ************************************************************
         (
             _, annotation, _, _, _,
         ) = load_everything(S005_EVERYTHING)
-        self.add(annotation)
 
         axes = Axes(
             x_range=[0, 10],
@@ -43,71 +46,130 @@ class MainScene(Scene):
         ax_labels[0].next_to(axes.x_axis, RIGHT)
         ax_labels[1].next_to(axes.y_axis, DOWN)
 
+        # corner dots
+        dot_ul = Dot().move_to(annotation.get_corner(UL))
+        dot_ur = Dot().move_to(annotation.get_corner(UR))
+        dot_dl = Dot().move_to(annotation.get_corner(DL))
+        dot_dr = Dot().move_to(annotation.get_corner(DR))
+        dots = VGroup(dot_ul, dot_ur, dot_dl, dot_dr)
+
+        # corner dots coords
+        _w, _h = annotation._w, annotation._h
+        coord_ul = Text(
+            '(' + '0' + ',' + '0' + ')',
+            font_size=FONT_SIZE_COORDS,
+        ).next_to(annotation.get_corner(UL), UL)
+        coord_ur = Text(
+            '(' + str(_w-1) + ',' + '0' + ')',
+            font_size=FONT_SIZE_COORDS,
+        ).next_to(annotation.get_corner(UR), UR)
+        coord_dl = Text(
+            '(' + '0' + ',' + str(_h-1) + ')',
+            font_size=FONT_SIZE_COORDS,
+        ).next_to(annotation.get_corner(DL), DL)
+        coord_dr = Text(
+            '(' + str(_w-1) + ',' + str(_h-1) + ')',
+            font_size=FONT_SIZE_COORDS,
+        ).next_to(annotation.get_corner(DR), DR)
+        coords = VGroup(coord_ul, coord_ur, coord_dl, coord_dr)
+
+        # customized shape text
+        shape_w = Text(
+            str(_w),
+            font_size=FONT_SIZE_COORDS,
+        ).next_to(annotation, UP)
+        shape_h = Text(
+            str(_h),
+            font_size=FONT_SIZE_COORDS,
+        ).next_to(annotation, LEFT)
+        shapes_annotation = VGroup(shape_w, shape_h)
+
         # ************************************************************
         self.next_section(
-            'show coordinate system of cv image',
+            'coordinate system of image annotation',
             skip_animations=False,
         )
         # ************************************************************
-        # show shape of annotation
-        self.play(annotation.show_passing_flash())
-
-        # show axes for annotation
-        self.play(Write(axes, lag_ratio=0.0))
+        # show raw annotation
+        self.add(annotation)
         self.wait()
 
-        # show xy labels
-        self.play(Write(ax_labels))
-        self.wait()
+        # show shapes, customized ShowPassingFlash
+        path_left = VMobject()
+        path_left.set_points_as_corners([
+            annotation.get_corner(UR),
+            annotation.get_corner(UL),
+        ]).set_stroke(color=ManimColor("#FFFF00"))  # pure yellow
+        path_up = VMobject()
+        path_up.set_points_as_corners([
+            annotation.get_corner(DL),
+            annotation.get_corner(UL),
+        ]).set_stroke(color=ManimColor("#FFFF00"))  # pure yellow
+        self.play(
+            AnimationGroup(
+                ShowPassingFlash(path_left, run_time=2, time_width=2),
+                Write(shape_w, run_time=1.),
+                lag_ratio=0.3,
+            ),
+            AnimationGroup(
+                ShowPassingFlash(path_up, run_time=2, time_width=2),
+                Write(shape_h, run_time=1.),
+                lag_ratio=0.3,
+            ),
+        )
+        # self.wait()
 
-        # hide xy labels
-        self.play(Unwrite(ax_labels))
-        self.wait()
-
-        # show top-right and down-left coords
-        # FIXME, show dots?
-        tr_label = Text(
-            '(959,0)',
-            font_size=20,
-        ).next_to(annotation.get_corner(UR), UP)
-        dl_label = Text(
-            '(0,539)',
-            font_size=20,
-        ).next_to(annotation.get_corner(DL), LEFT)
-        self.play(AnimationGroup(
-            ReplacementTransform(annotation.shape_texts[1], tr_label),
-            ReplacementTransform(annotation.shape_texts[0], dl_label),
+        # show axes
+        self.play(Succession(
+            Write(axes, lag_ratio=0.),
+            Write(ax_labels, lag_ratio=0.),
         ))
         self.wait()
 
-        # show origin and down-right coords
-        # FIXME, show dots?
-        or_label = Text(
-            '(0,0)',
-            font_size=20,
-        ).next_to(annotation.get_corner(UL), UL)
-        dr_label = Text(
-            '(959,539)',
-            font_size=20,
-        ).next_to(annotation.get_corner(DR), DOWN)
+        # show corner dots and coords
         self.play(AnimationGroup(
-            Write(or_label),
-            Write(dr_label),
+            Unwrite(ax_labels, lag_ratio=0.),
+            axes.animate.set_opacity(0.3),
+            TransformMatchingShapes(shape_w, coord_ur),
+            TransformMatchingShapes(shape_h, coord_dl),
+            Write(dots),
+            Write(coord_ul),
+            Write(coord_dr),
         ))
         self.wait()
 
-        # hide all coords and axes (or not?)
+        # FIXME, problem when unwrite transformed coords?
+        # hide coord system
         self.play(AnimationGroup(
-            Unwrite(or_label),
-            Unwrite(tr_label),
-            Unwrite(dr_label),
-            Unwrite(dl_label),
-            Unwrite(axes),
+            Unwrite(axes, lag_ratio=0.),
+            Unwrite(coords, lag_ratio=0.),
+            Unwrite(dots, lag_ratio=0.),
         ))
         self.wait()
 
-        # coord system should move with annotation even not shown
-        annotation.add(axes)
+        # add coord system to annotation?
+
+        # ************************************************************
+        self.next_section(
+            'digitalize label class and label position',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # emphasize class
+        # emphasize position
+
+        # introduce class mapping
+
+        # loop through text of labels
+
+        # loop through bbox of labels
+
+        # ************************************************************
+        self.next_section(
+            'digitalize position',
+            skip_animations=False,
+        )
+        # ************************************************************
 
         # ************************************************************
         self.next_section(
@@ -172,7 +234,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'explain x1y1x2y2 full, loop',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager = Group(annotation, xyxy_full_tab)
@@ -287,7 +349,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'explain cxcywh full, loop',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         _xyxy_norm = np.empty_like(_xywh_norm)
