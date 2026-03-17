@@ -175,7 +175,6 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        # first table prologue
         manager = Group(annotation, xyxy_full_tab)
         manager.generate_target()
         manager.target.arrange().center()
@@ -189,6 +188,8 @@ class MainScene(Scene):
         # fadeout labels
         self.play(annotation.hide_text())
         self.wait()
+
+        # TODO, show x1y1x2y2, loop, transform into table
 
         # explain x1y1x2y2 annotation for each box
         for i in range(len(annotation.labels)):
