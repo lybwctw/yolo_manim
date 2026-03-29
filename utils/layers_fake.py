@@ -42,42 +42,6 @@ class LayersFake(VMobject, ShowShape):
 
         self.add(self.mobs)
 
-    # def show_passing_flash(self):
-    #     # not necessary
-    #     if not self.expanded:
-    #         return None
-    #     path = VMobject()
-    #     path.set_points_as_corners([
-    #         self.rects[-1].get_corner(LEFT + DOWN),
-    #         self.rects[-1].get_corner(LEFT + UP),
-    #         self.rects[0].get_corner(LEFT + UP),
-    #         self.rects[0].get_corner(RIGHT + UP),
-    #     ]).set_stroke(color=BLUE)
-    #     text_c = Text(str(self.n), font_size=20).next_to(self.rects[1], (LEFT + UP) * .6)
-    #     text_h = Text(str(self._h), font_size=20).next_to(self.rects[-1], LEFT)
-    #     text_w = Text(str(self._w), font_size=20).next_to(self.rects[0], UP)
-    #     self.shape_texts = VGroup(text_h, text_c, text_w)
-    #     anim = AnimationGroup(
-    #         ShowPassingFlash(
-    #             path,
-    #             run_time=2.,
-    #             time_width=2.,
-    #         ),
-    #         AnimationGroup(
-    #             *(Write(text) for text in self.shape_texts),
-    #             lag_ratio=0.8,
-    #         )
-    #     )
-    #
-    #     return anim
-    #
-    # def unwrite_shape_texts(self):
-    #     anim = AnimationGroup(
-    #         *(Unwrite(text) for text in self.shape_texts),
-    #         lag_ratio=0.2,
-    #     )
-    #     return anim
-
     def expand(self):
         if self.expanded:
             return None
@@ -93,21 +57,49 @@ class LayersFake(VMobject, ShowShape):
 
         return MoveToTarget(self.mobs)
 
+    def stretch_to_square(self):
+        if self._w > self._h:
+            self._h = self._w
+            anims = AnimationGroup(
+                *(rect.animate.stretch_to_fit_height(self.rects[0].width) for rect in self.rects),
+                lag_ratio=0,
+            )
+            return anims
+        else:
+            self._w = self._h
+            anims = AnimationGroup(
+                *(rect.animate.stretch_to_fit_width(self.rects[0].height) for rect in self.rects),
+                lag_ratio=0,
+            )
+            return anims
+
     def get_shape_path(self):
         path = VMobject()
-        path.set_points_as_corners([
-            self.rects[-1].get_corner(LEFT + DOWN),
-            self.rects[-1].get_corner(LEFT + UP),
-            self.rects[0].get_corner(LEFT + UP),
-            self.rects[0].get_corner(RIGHT + UP),
-        ]).set_stroke(color=BLUE)
+        if self.n == 1:
+            path.set_points_as_corners([
+                self.rects[0].get_corner(LEFT + DOWN),
+                self.rects[0].get_corner(LEFT + UP),
+                self.rects[0].get_corner(RIGHT + UP),
+            ]).set_stroke(color=BLUE)
+        else:
+            path.set_points_as_corners([
+                self.rects[-1].get_corner(LEFT + DOWN),
+                self.rects[-1].get_corner(LEFT + UP),
+                self.rects[0].get_corner(LEFT + UP),
+                self.rects[0].get_corner(RIGHT + UP),
+            ]).set_stroke(color=BLUE)
         return path
 
     def get_shape_text(self):
-        text_c = Text(str(self.n), font_size=20).next_to(self.rects[1], (LEFT + UP) * .6)
-        text_h = Text(str(self._h), font_size=20).next_to(self.rects[-1], LEFT)
-        text_w = Text(str(self._w), font_size=20).next_to(self.rects[0], UP)
-        text = VGroup(text_h, text_c, text_w)
+        if self.n == 1:
+            text_h = Text(str(self._h), font_size=20).next_to(self.rects[0], LEFT)
+            text_w = Text(str(self._w), font_size=20).next_to(self.rects[0], UP)
+            text = VGroup(text_h, text_w)
+        else:
+            text_c = Text(str(self.n), font_size=20).next_to(self.rects[1], (LEFT + UP) * .6)
+            text_h = Text(str(self._h), font_size=20).next_to(self.rects[-1], LEFT)
+            text_w = Text(str(self._w), font_size=20).next_to(self.rects[0], UP)
+            text = VGroup(text_h, text_c, text_w)
         return text
 
 class Demo(Scene):

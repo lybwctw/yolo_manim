@@ -1,5 +1,6 @@
 from manim import *
 
+# FIXME, implement this as a Animation
 class ShowShape:
     def __init__(self):
         self.shape_texts = VGroup()

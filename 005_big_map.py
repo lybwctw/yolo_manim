@@ -38,12 +38,11 @@ class MainScene(Scene):
             height_nominal=540,
         ).scale(0.9)   # to be fully covered by image_raw
 
-
         everything = Group(
             image_raw,
             annotation_final,
             ac_a1, ac_z9,
-            ac_game,
+            lf_image_raw, ac_game, tile_output,
         )
 
         # ************************************************************
