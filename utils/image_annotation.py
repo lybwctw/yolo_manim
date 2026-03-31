@@ -184,14 +184,14 @@ class AnnotationRepad(Mobject, ShowShape):
     ):
         super().__init__()
         self.scale_factor = 1.0
-        self.image = annotation
+        self.annotation = annotation    # ImageAnnotation
         self._w = annotation._w
         self._h = annotation._h
         self.padded = padded
         self.natural_pad = False  # natural means w>h
 
         if self.padded:
-            width, height = self.image.width, self.image.height
+            width, height = self.annotation.width, self.annotation.height
             if self._w > self._h:
                 self.natural_pad = True
                 t_width, t_height = width, (width - height) / 2
@@ -201,8 +201,8 @@ class AnnotationRepad(Mobject, ShowShape):
                     stroke_width=0,
                     fill_color=GRAY,  # FIXME, using exact 114,114,114
                     fill_opacity=0.2,
-                ).next_to(self.image, DOWN, buff=0)
-                p2 = p1.copy().next_to(self.image, UP, buff=0)
+                ).next_to(self.annotation, DOWN, buff=0)
+                p2 = p1.copy().next_to(self.annotation, UP, buff=0)
             else:
                 self.natural_pad = False
                 t_width, t_height = (height - width) / 2, height
@@ -212,8 +212,8 @@ class AnnotationRepad(Mobject, ShowShape):
                     stroke_width=0,
                     fill_color=GRAY,  # FIXME, using exact 114,114,114
                     fill_opacity=0.2,
-                ).next_to(self.image, LEFT, buff=0)
-                p2 = p1.copy().next_to(self.image, RIGHT, buff=0)
+                ).next_to(self.annotation, LEFT, buff=0)
+                p2 = p1.copy().next_to(self.annotation, RIGHT, buff=0)
             self.paddings = VGroup(p1, p2)
             self.add(self.paddings)
         else:
@@ -239,11 +239,11 @@ class AnnotationRepad(Mobject, ShowShape):
 
     def get_shape_text(self):
         if self.natural_pad:
-            text_h = Text(str(self._h), font_size=20).next_to(self.image, LEFT)
+            text_h = Text(str(self._h), font_size=20).next_to(self.annotation, LEFT)
             text_w = Text(str(self._w), font_size=20).next_to(self.paddings[1], UP)
         else:
             text_h = Text(str(self._h), font_size=20).next_to(self.paddings[0], LEFT)
-            text_w = Text(str(self._w), font_size=20).next_to(self.image, UP)
+            text_w = Text(str(self._w), font_size=20).next_to(self.annotation, UP)
         text = VGroup(text_h, text_w)
         return text
 
@@ -251,7 +251,7 @@ class AnnotationRepad(Mobject, ShowShape):
         if self.padded:
             return None
 
-        width, height = self.image.width, self.image.height
+        width, height = self.annotation.width, self.annotation.height
         if self._w > self._h:
             self.natural_pad = True
             t_width, t_height = width, (width - height) / 2
@@ -260,8 +260,8 @@ class AnnotationRepad(Mobject, ShowShape):
                 height=0,
                 stroke_width=0,
                 fill_color=GRAY,  # FIXME, using exact 114,114,114
-            ).next_to(self.image, DOWN, buff=0)
-            p2 = p1.copy().next_to(self.image, UP, buff=0)
+            ).next_to(self.annotation, DOWN, buff=0)
+            p2 = p1.copy().next_to(self.annotation, UP, buff=0)
             p1_res = Rectangle(
                 width=t_width,
                 height=t_height,
@@ -287,8 +287,8 @@ class AnnotationRepad(Mobject, ShowShape):
                 height=t_height,
                 stroke_width=0,
                 fill_color=GRAY,  # FIXME, using exact 114,114,114
-            ).next_to(self.image, LEFT, buff=0)
-            p2 = p1.copy().next_to(self.image, RIGHT, buff=0)
+            ).next_to(self.annotation, LEFT, buff=0)
+            p2 = p1.copy().next_to(self.annotation, RIGHT, buff=0)
             p1_res = Rectangle(
                 width=t_width,
                 height=t_height,

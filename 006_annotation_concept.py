@@ -76,7 +76,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'coordinate assets',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         (
@@ -149,7 +149,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'coordinate system of image annotation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show raw annotation
@@ -215,7 +215,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'stress label text and label bbox respectively',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         _texts = annotation.get_texts()
@@ -242,7 +242,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prepare annotation table assets',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # introduce class mapping table
@@ -283,7 +283,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'xyxy way of annotation, pixel based',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # introduce transparent xyxy table
@@ -402,7 +402,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'transform xyxy into normed version',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show shapes of annotation
@@ -440,7 +440,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'xywh way of annotation, pixel based',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # introduce transparent xywh table

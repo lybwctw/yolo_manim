@@ -111,4 +111,16 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        
+
+        # ************************************************************
+        self.next_section(
+            'save for next scene',
+            skip_animations=False,
+        )
+        # ************************************************************
+        everything = Group(
+            *[image_raw, ac_ab, image_repad, ac_bc, image_norm, VMobject(), annotation_repad, ac_yz, annotation_final],
+            *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3, VMobject(), ac_y8, VMobject(), ac_z9],
+            *[lf_image_raw, ac_12, lf_image_repad, ac_23, lf_image_norm, ac_game, lf_output_repad, ac_89, lf_output_final],
+        )
+        save_everything(S011_EVERYTHING, everything)
