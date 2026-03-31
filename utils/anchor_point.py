@@ -1,6 +1,6 @@
 from manim import *
 
-def rect_from_point(point, offset, **kwargs):
+def rect_from_point(point, offset, **config):
     left, up, right, down = offset
 
     x, y, z = point
@@ -13,9 +13,9 @@ def rect_from_point(point, offset, **kwargs):
     rect = Rectangle(
         width=x_max - x_min,
         height=y_max - y_min,
-        stroke_width=3,
-        stroke_opacity=1.0,
-        **kwargs
+        # stroke_width=3,
+        # stroke_opacity=1.0,
+        **config,
     )
 
     rect.move_to([
@@ -47,8 +47,12 @@ class AnchorPoint(VMobject):
         )
         self.add(self.dot, self.bg)
 
-    def to_rect(self, dd):
-        rect = rect_from_point(self.dot.get_center(), (d*dd for d in self.offset))
+    def to_rect(self, dd, **config):
+        rect = rect_from_point(
+            self.dot.get_center(),
+            (float(d)*dd for d in self.offset),
+            **config,
+        )
         self.dot.save_state()
         self.bg.save_state()
         return AnimationGroup(

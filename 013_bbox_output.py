@@ -121,7 +121,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'from grid cells to anchor points',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # create grid cells
@@ -133,7 +133,7 @@ class MainScene(Scene):
         anchors = create_anchor_points(
             background,
             20,
-            dist_box[0, :, 8000:].transpose(0, 1)
+            dist_box[0, :, 8000:8400].transpose(0, 1)
         )
         self.play(Write(anchors, lag_ratio=0.02))
         self.wait()
@@ -143,75 +143,64 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # # ************************************************************
-        # self.next_section(
-        #     'anchor point capture thinking',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # dd = float(background.width) / 20       # TODO, make 20 variable
-        # offsets = dist_box[0,:,6400:8000].transpose(0,1)
-        # regs = VGroup(
-        #     *(rect_from_point(
-        #         anchor.get_center(),
-        #         float(left) * dd,
-        #         float(up) * dd,
-        #         float(right) * dd,
-        #         float(down) * dd,
-        #     ) for anchor, (left, up, right, down) in zip(anchors, offsets)),
-        # )
-        # anchors.save_state()
-        # self.play(AnimationGroup(
-        #     *(Transform(anchor,reg) for anchor, reg in zip(anchors, regs)),
-        #     lag_ratio=0.01,
-        # ))
-        # self.wait()
-        # self.play(anchors.animate.restore())
-        # self.wait()
-        #
-        # # ************************************************************
-        # self.next_section(
-        #     'identify important anchor points',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # plot reference bboxes
-        # bboxes = VGroup(
-        #     *(yolo_box_to_rect(background.background, cx, cy, w, h) for _,cx,cy,w,h in background.data),
-        # )
-        # self.play(Write(bboxes))
-        # self.wait()
-        # # stress those anchors inside rects
-        # inside_anchors = VGroup(
-        #     *(dot for dot in anchors if any(point_in_rect(dot.get_center(),rect) for rect in bboxes))
-        # )
-        #
-        # # identify those anchors inside reference bboxes
-        # self.play(AnimationGroup(
-        #     dot.animate.set_color(RED) for dot in inside_anchors
-        # ))
-        # self.wait()
-        #
-        # # setup target for each dot, different target by importance
-        # for anchor, (up, right, down, left) in zip(anchors, offsets):
-        #     anchor.generate_target()
-        #     rect = rect_from_point(
-        #         anchor.get_center(),
-        #         float(up) * dd,
-        #         float(right) * dd,
-        #         float(down) * dd,
-        #         float(left) * dd,
-        #     )
-        #     if anchor in inside_anchors:
-        #         rect.set_stroke(color=RED, opacity=1.0)
-        #     anchor.target = rect
-        #
-        # # transform into target for those important anchors
-        # self.play(AnimationGroup(
-        #     *(MoveToTarget(anchor) for anchor in inside_anchors),
-        #     lag_ratio=0.1,
-        # ))
-        # self.wait()
+        # ************************************************************
+        self.next_section(
+            'anchor point capture thinking',
+            skip_animations=False,
+        )
+        # ************************************************************
+        dd = float(background.width) / 20       # TODO, make 20 variable
+
+        self.play(AnimationGroup(
+            *(anchor.to_rect(
+                dd,
+                stroke_width=1,
+                stroke_opacity=0.3,
+                stroke_color=WHITE,
+            ) for anchor in anchors),
+            lag_ratio=0.01,
+        ))
+        self.wait()
+        self.play(AnimationGroup(
+            *(anchor.to_dot() for anchor in anchors),
+            lag_ratio=0.01,
+        ))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'identify important anchor points',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # plot reference bboxes
+        bboxes = VGroup(
+            *(yolo_box_to_rect(background.background, cx, cy, w, h) for _,cx,cy,w,h in background.data),
+        )
+        self.play(Write(bboxes))
+        self.wait()
+        # stress those anchors inside rects
+        inside_anchors = VGroup(
+            *(dot for dot in anchors if any(point_in_rect(dot.dot.get_center(),rect) for rect in bboxes))
+        )
+
+        # identify those anchors inside reference bboxes
+        self.play(AnimationGroup(
+            dot.animate.set_color(RED) for dot in inside_anchors
+        ))
+        self.wait()
+
+        # let inside anchors capture
+        self.play(AnimationGroup(
+            *(anchor.to_rect(
+                dd,
+                stroke_width=1,
+                stroke_opacity=1.0,
+                stroke_color=RED,
+            ) for anchor in inside_anchors),
+            lag_ratio=0.05,
+        ))
+        self.wait()
 
         # ************************************************************
         self.next_section(
