@@ -1,3 +1,4 @@
+import numpy as np
 from manim import *
 from utils.show_shape import ShowShape
 
@@ -11,6 +12,21 @@ class RepadBackground(Mobject, ShowShape):
 
         background = annotation_repad.annotation.image.copy()
         paddings = annotation_repad.paddings.copy()
+
+        # # store annotation for distinguishing anchor points
+        # self.labels = annotation_repad.annotation.labels.copy()
+        # self.texts = VGroup()
+        # self.bboxes = VGroup()
+        # for label in self.labels:
+        #     text, bbox = label['text'], label['bbox']
+        #     self.texts.add(text)
+        #     self.bboxes.add(bbox)
+        # self.texts.set_opacity(0.0)
+        # self.bboxes.set_opacity(0.0)
+        # self.add(self.texts, self.bboxes)
+
+        # FIXME, load annotation from raw .txt
+        self.data = np.loadtxt('assets/images/labels.txt')
 
         self.background = background
         self.paddings = paddings
