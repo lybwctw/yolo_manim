@@ -29,23 +29,17 @@ def rect_from_point(point, offset, **config):
 class AnchorPoint(VMobject):
     def __init__(self,
         point,
-        radius=0.03,
         offset=(1,1,1,1),
     ):
         super().__init__()
         self.offset = offset
-        self.dot = Dot(
-            point,  # starting position of dot
-            radius=radius,
-            stroke_width=5,
+        self.dot = Square(
+            side_length=0.01,
+            stroke_width=3,
             stroke_opacity=1.0,
             fill_opacity=0.0,
-        )
-        self.bg = Dot(
-            point,
-            radius=radius+0.01,
-        )
-        self.add(self.dot, self.bg)
+        ).move_to(point)
+        self.add(self.dot)
 
     def to_rect(self, dd, **config):
         rect = rect_from_point(
@@ -54,16 +48,7 @@ class AnchorPoint(VMobject):
             **config,
         )
         self.dot.save_state()
-        self.bg.save_state()
-        return AnimationGroup(
-            Unwrite(self.bg, run_time=0.1),
-            Transform(self.dot, rect),
-        )
+        return Transform(self.dot, rect)
 
     def to_dot(self):
-        self.bg.restore()
-        return AnimationGroup(
-            self.dot.animate.restore(),
-            Write(self.bg, run_time=0.1),
-            lag_ratio=0.9,
-        )
+        return self.dot.animate.restore()

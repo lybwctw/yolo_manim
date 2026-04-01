@@ -1,6 +1,5 @@
 from manim import *
 
-from learn import rect_from_point
 from utils.constants import *
 from utils.general import load_everything, save_everything, scale_manager_target
 from utils.arrow_comment import ArrowComment
@@ -52,9 +51,8 @@ def create_anchor_points(ref, n, offsets):
             AnchorPoint(
                 ref.get_corner(UL)
                 + DOWN * dx * (i + 0.5)
-                + RIGHT * dy * (j + 0.5),
-                0.01,
-                offsets[i*n+j],     # offset
+                + RIGHT * dy * (j + 0.5),   # position
+                offsets[i*n+j],             # offset
             )
             for i in range(n)
             for j in range(n)
@@ -133,7 +131,7 @@ class MainScene(Scene):
         anchors = create_anchor_points(
             background,
             20,
-            dist_box[0, :, 8000:8400].transpose(0, 1)
+            dist_box[0, :, 8000:].transpose(0, 1)
         )
         self.play(Write(anchors, lag_ratio=0.02))
         self.wait()
@@ -146,7 +144,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'anchor point capture thinking',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         dd = float(background.width) / 20       # TODO, make 20 variable
@@ -158,18 +156,18 @@ class MainScene(Scene):
                 stroke_opacity=0.3,
                 stroke_color=WHITE,
             ) for anchor in anchors),
-            lag_ratio=0.01,
+            lag_ratio=0.003,
         ))
         self.wait()
         self.play(AnimationGroup(
             *(anchor.to_dot() for anchor in anchors),
-            lag_ratio=0.01,
+            lag_ratio=0.003,
         ))
         self.wait()
 
         # ************************************************************
         self.next_section(
-            'identify important anchor points',
+            'identify important anchor points ',
             skip_animations=False,
         )
         # ************************************************************
@@ -198,19 +196,30 @@ class MainScene(Scene):
                 stroke_opacity=1.0,
                 stroke_color=RED,
             ) for anchor in inside_anchors),
-            lag_ratio=0.05,
+            lag_ratio=0.03,
         ))
         self.wait()
 
+        # back to background + anchor points
+        self.play(AnimationGroup(
+            *(anchor.to_dot() for anchor in inside_anchors),
+            lag_ratio=0.03,
+        ))
+        self.wait()
+        self.play(AnimationGroup(
+            *(anchor.animate.set_color(WHITE) for anchor in inside_anchors),
+            Unwrite(bboxes),
+        ))
+        self.wait()
+
+        # TODO: which target to capture? inside/inside-multiple/outside
+
         # ************************************************************
         self.next_section(
-            'not yet..',
+            'focus on one specific anchor',
             skip_animations=False,
         )
         # ************************************************************
-        # capture thinking
-
-        # which target to capture? inside/inside-multiple/outside
 
         # output design 1: 640-scale distance
 
