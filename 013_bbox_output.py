@@ -12,25 +12,6 @@ import torch
 # order:          left   up    right  down
 distance_colors = [RED, GREEN, BLUE, YELLOW]
 
-def align_to_top(rect, p):
-    return np.array([p[0], rect.get_top()[1], 0])
-
-def align_to_bottom(rect, p):
-    return np.array([p[0], rect.get_bottom()[1], 0])
-
-def align_to_left(rect, p):
-    return np.array([rect.get_left()[0], p[1], 0])
-
-def align_to_right(rect, p):
-    return np.array([rect.get_right()[0], p[1], 0])
-
-align_to_funs = [
-    align_to_left,
-    align_to_top,
-    align_to_right,
-    align_to_bottom,
-]
-
 def create_grid_cells(ref, n):
     # TODO, make rectangular ref work
     sq = Square(
@@ -80,6 +61,11 @@ def create_anchor_points(ref, n, offsets):
             for j in range(n)
         ])
     return aps
+
+def get_anchor_pos(ref, n, i, j):
+    dx, dy = ref.width / n, ref.height / n
+    pos = ref.get_corner(UL) + DOWN*dx*(i+0.5) + RIGHT*dy*(j+0.5)
+    return pos
 
 def yolo_box_to_rect(img, cx, cy, w, h, **kwargs):
     x = cx * img.width
@@ -240,7 +226,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample anchor, single dddd(640) representation',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         sample_index = 189
@@ -329,17 +315,36 @@ class MainScene(Scene):
         self.wait()
 
         # manual create sample direction texts
-        next_dirs = [UP, RIGHT, DOWN, LEFT]
         sample_diss = always_redraw(
             lambda: VGroup(
-                *(Integer(
-                    v*32,
+                Integer(
+                    o_trackers[0].get_value()*32,
                 ).scale(0.4).next_to(
-                    sample_arrows[i],
-                    next_dirs[i],
-                    buff=0.1,
-                )
-                for i,v in enumerate([t.get_value() for t in o_trackers])),
+                    sample_arrows[0],
+                    UP,
+                    buff=0.05,
+                ).set_z_index(4),
+                Integer(
+                    o_trackers[1].get_value() * 32,
+                ).scale(0.4).next_to(
+                    sample_arrows[1],
+                    RIGHT,
+                    buff=0.05,
+                ).set_z_index(3),
+                Integer(
+                    o_trackers[2].get_value() * 32,
+                ).scale(0.4).next_to(
+                    sample_arrows[2],
+                    DOWN,
+                    buff=0.05,
+                ).set_z_index(2),
+                Integer(
+                    o_trackers[3].get_value() * 32,
+                ).scale(0.4).next_to(
+                    sample_arrows[3],
+                    LEFT,
+                    buff=0.05,
+                ).set_z_index(1),
             )
         )
         self.play(Write(sample_diss, lag_ratio=0.3))
@@ -348,65 +353,7 @@ class MainScene(Scene):
         # TODO, change offsets multiple times
         for _ in range(1):
             self.play(AnimationGroup(
-                *(tracker.animate.set_value(np.random.randint(2,6))
-                  for tracker in o_trackers),
-            ))
-            self.wait(0.3)
-        self.wait()
-
-        # change color of each direction text and rearrange
-        self.play(AnimationGroup(
-            *(dis.animate.set_color(distance_colors[i]) for i,dis in enumerate(sample_diss)),
-            lag_ratio=0.3,
-        ))
-        self.wait()
-
-        # reset updaters of sample_diss
-        copy_base = RIGHT * 5       # TODO, constant
-        sample_diss.clear_updaters()
-        sample_diss[0].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[0].get_value() * 32,
-            ).next_to(sample_arrows[0], UP, buff=0.1,),
-        )
-        sample_diss[1].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[1].get_value() * 32,
-            ).next_to(sample_arrows[1], RIGHT, buff=0.1, ),
-        )
-        sample_diss[2].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[2].get_value() * 32,
-            ).next_to(sample_arrows[2], DOWN, buff=0.1, ),
-        )
-        sample_diss[3].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[3].get_value() * 32,
-            ).next_to(sample_arrows[3], LEFT, buff=0.1, ),
-        )
-
-        # create copy of sample diss with its own updaters
-        diss_copy = sample_diss.copy().clear_updaters()
-        self.add(diss_copy)
-        self.play(diss_copy.animate.shift(RIGHT*4))
-        diss_copy[0].add_updater(
-            lambda mob: mob.set_value(o_trackers[0].get_value() * 32),
-        )
-        diss_copy[1].add_updater(
-            lambda mob: mob.set_value(o_trackers[1].get_value() * 32),
-        )
-        diss_copy[2].add_updater(
-            lambda mob: mob.set_value(o_trackers[2].get_value() * 32),
-        )
-        diss_copy[3].add_updater(
-            lambda mob: mob.set_value(o_trackers[3].get_value() * 32),
-        )
-        self.wait()
-
-        # changing offsets after arranging distances
-        for _ in range(1):
-            self.play(AnimationGroup(
-                *(tracker.animate.set_value(np.random.randint(2,6))
+                *(tracker.animate.set_value(np.random.uniform(2,8))
                   for tracker in o_trackers),
             ))
             self.wait(0.3)
@@ -414,11 +361,99 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'dddd(640) output representation',
-            skip_animations=False,
+            'with colored arrangement, single dddd(640) representation',
+            skip_animations=True,
         )
         # ************************************************************
+        # change color of each distance and arrow
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                dis.animate.set_color(distance_colors[i]),
+                sample_arrows[i].animate.set_color(distance_colors[i]).set_opacity(0.5),
+            ) for i,dis in enumerate(sample_diss)),
+            lag_ratio=0.3,
+        ))
+        self.wait()
 
+        # arrange distance in IN order, most properties of distance kept here during animation
+        _offset_scale = 0.15
+        self.play(AnimationGroup(
+            sample_diss[0].animate.move_to(sample_center+DL*_offset_scale*1.5).set_opacity(1.0).scale(2.0),
+            sample_diss[1].animate.move_to(sample_center + DL * _offset_scale * 0.5).set_opacity(0.8).scale(1.8),
+            sample_diss[2].animate.move_to(sample_center + DL * _offset_scale * -0.5).set_opacity(0.6).scale(1.6),
+            sample_diss[3].animate.move_to(sample_center + DL * _offset_scale * -1.5).set_opacity(0.4).scale(1.4),
+        ))
+        self.wait()
+
+        # reset updaters of sample_diss and sample_arrows
+        sample_diss.clear_updaters()
+        sample_diss[0].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[0].get_value() * 32,
+            ),)
+        sample_diss[1].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[1].get_value() * 32,
+            ),)
+        sample_diss[2].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[2].get_value() * 32,
+            ),)
+        sample_diss[3].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[3].get_value() * 32,
+            ),)
+
+        sample_arrows[0].add_updater(
+            lambda mob: mob.put_start_and_end_on(
+                start=sample_center,
+                end=(
+                    sample_center[0] - o_trackers[0].get_value() * dd,
+                    sample_center[1],
+                    0,
+                ),
+            )
+        )
+        sample_arrows[1].add_updater(
+            lambda mob: mob.put_start_and_end_on(
+                start=sample_center,
+                end=(
+                    sample_center[0],
+                    sample_center[1] + o_trackers[1].get_value() * dd,
+                    0,
+                ),
+            )
+        )
+        sample_arrows[2].add_updater(
+            lambda mob: mob.put_start_and_end_on(
+                start=sample_center,
+                end=(
+                    sample_center[0] + o_trackers[2].get_value() * dd,
+                    sample_center[1],
+                    0,
+                ),
+            )
+        )
+        sample_arrows[3].add_updater(
+            lambda mob: mob.put_start_and_end_on(
+                start=sample_center,
+                end=(
+                    sample_center[0],
+                    sample_center[1] - o_trackers[3].get_value() * dd,
+                    0,
+                ),
+            )
+        )
+
+        # TODO, change offsets multiple times
+        # TODO, maybe a final regular series?
+        for _ in range(3):
+            self.play(AnimationGroup(
+                *(tracker.animate.set_value(np.random.uniform(2,8))
+                  for tracker in o_trackers),
+            ))
+            self.wait(0.3)
+        self.wait()
 
         # ************************************************************
         self.next_section(
@@ -426,34 +461,162 @@ class MainScene(Scene):
             skip_animations=True,
         )
         # ************************************************************
+        # remove updaters of distance for preparation
+        for dis in sample_diss:
+            dis.clear_updaters()
+
+        # TODO, maybe crawling lines to signify UNIT concept?
+        # append /32 for each distance
+        divs_32 = VGroup(
+            MathTex(
+                '/32',
+                font_size=int(32*(1-i*0.1)),
+                color=GRAY,
+            ).next_to(sample_diss[i],RIGHT,buff=0).shift(DOWN*0.03).set_opacity(1-i*0.2).set_z_index(1)
+            for i in range(4)
+        )
+        self.play(Write(divs_32))
+        self.wait()
+
+        # transform x/32 into result
+        _inputs = VGroup(
+            VGroup(
+                left,
+                right,
+            ) for left, right in zip(sample_diss,divs_32)
+        )
+        _outputs = VGroup(
+            DecimalNumber(
+                o_trackers[0].get_value(),
+                num_decimal_places=2,
+            ).move_to(sample_center+DL*_offset_scale*1.5).set_opacity(1.0).scale(0.9).set_color(distance_colors[0]).set_z_index(4),
+            DecimalNumber(
+                o_trackers[1].get_value(),
+                num_decimal_places=2,
+            ).move_to(sample_center + DL * _offset_scale * 0.5).set_opacity(0.8).scale(0.8).set_color(distance_colors[1]).set_z_index(3),
+            DecimalNumber(
+                o_trackers[2].get_value(),
+                num_decimal_places=2,
+            ).move_to(sample_center + DL * _offset_scale * -0.5).set_opacity(0.6).scale(0.7).set_color(distance_colors[2]).set_z_index(2),
+            DecimalNumber(
+                o_trackers[3].get_value(),
+                num_decimal_places=2,
+            ).move_to(sample_center + DL * _offset_scale * -1.5).set_opacity(0.4).scale(0.6).set_color(distance_colors[3]).set_z_index(1),
+        )
+        self.play(AnimationGroup(
+            ReplacementTransform(_input, _output) for _input,_output in zip(_inputs,_outputs)
+        ))
+        self.wait()
+
+        # add updaters to decimals
+        _outputs[0].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[0].get_value(),
+            ),
+        )
+        _outputs[1].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[1].get_value(),
+            ),
+        )
+        _outputs[2].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[2].get_value(),
+            ),
+        )
+        _outputs[3].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[3].get_value(),
+            ),
+        )
+
+        # TODO, change offsets multiple times
+        for _ in range(3):
+            self.play(AnimationGroup(
+                *(tracker.animate.set_value(np.random.uniform(2, 8))
+                  for tracker in o_trackers),
+            ))
+            self.wait(0.3)
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'clean job',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # FIXME, necessary to clear updater before unwrite?
+        for output in _outputs:
+            output.clear_updaters()
+        for arrow in sample_arrows:
+            arrow.clear_updaters()
+        sample_rect.clear_updaters()
+        
+        self.play(AnimationGroup(
+            Unwrite(_outputs, run_time=0.5),
+            Unwrite(sample_arrows, run_time=0.5),     # unwriting always_redraw object
+            anchors.animate.restore(),
+        ))
+
+        # TODO, problem with the transformed anchors? thus recreate
+        self.remove(anchors)
+        anchors = create_anchor_points(
+            background,
+            20,
+            offsets,
+        )
+        self.add(anchors)
+        self.wait()
 
         # ************************************************************
         self.next_section(
             'dddd(640/32) output representation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
+        dd = float(background.width) / 20   # update step from now on
 
+        # make anchors and background a whole
+        whole = Group(background, anchors)
 
+        # make room in the right
+        self.play(whole.animate.shift(LEFT*3).scale(0.8))
+        self.wait()
 
+        # # capture and back, for reference
+        # self.play(AnimationGroup(
+        #     *(anchor.to_rect(
+        #         dd,
+        #         stroke_width=1,
+        #         stroke_opacity=0.3,
+        #         stroke_color=WHITE,
+        #     ) for anchor in anchors),
+        #     lag_ratio=0.003,
+        # ))
+        # self.wait()
+        # self.play(AnimationGroup(
+        #     *(anchor.to_dot() for anchor in anchors),
+        #     lag_ratio=0.003,
+        # ))
+        # self.wait()
+
+        # sync capture and digits generation
+
+        # replace digits with numberplane
 
         # ************************************************************
         self.next_section(
             'sample anchor, single dfl-32 representation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
 
         # ************************************************************
         self.next_section(
             'dfl-32 output representation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-
-
-
-
 
 
         # decode step roughly, before tensor introduction
