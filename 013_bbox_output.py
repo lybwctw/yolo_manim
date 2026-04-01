@@ -9,6 +9,28 @@ from utils.anchor_point import AnchorPoint
 
 import torch
 
+# order:          left   up    right  down
+distance_colors = [RED, GREEN, BLUE, YELLOW]
+
+def align_to_top(rect, p):
+    return np.array([p[0], rect.get_top()[1], 0])
+
+def align_to_bottom(rect, p):
+    return np.array([p[0], rect.get_bottom()[1], 0])
+
+def align_to_left(rect, p):
+    return np.array([rect.get_left()[0], p[1], 0])
+
+def align_to_right(rect, p):
+    return np.array([rect.get_right()[0], p[1], 0])
+
+align_to_funs = [
+    align_to_left,
+    align_to_top,
+    align_to_right,
+    align_to_bottom,
+]
+
 def create_grid_cells(ref, n):
     # TODO, make rectangular ref work
     sq = Square(
@@ -128,10 +150,11 @@ class MainScene(Scene):
         self.wait()
 
         # create anchors points, based on tensor content
+        offsets = dist_box[0, :, 8000:].transpose(0,1)
         anchors = create_anchor_points(
             background,
             20,
-            dist_box[0, :, 8000:].transpose(0, 1)
+            offsets,
         )
         self.play(Write(anchors, lag_ratio=0.02))
         self.wait()
@@ -168,7 +191,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'identify important anchor points ',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # plot reference bboxes
@@ -216,16 +239,222 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'focus on one specific anchor',
+            'sample anchor, single dddd(640) representation',
+            skip_animations=False,
+        )
+        # ************************************************************
+        sample_index = 189
+        sample_anchor = anchors[sample_index]    # FIXME, change this
+        anchors.save_state()                    # for restore later
+        anchors.generate_target()
+        anchors.target.set_stroke(opacity=0.2)
+        anchors.target[sample_index].set_stroke(opacity=1.0)
+
+        # focus on sample anchor
+        self.play(MoveToTarget(anchors))
+        self.wait()
+
+        # offset trackers
+        o_trackers = [ValueTracker(v) for v in sample_anchor.offset]
+
+        # manual create sample rect
+        sample_center = sample_anchor.orig_center   # FIXME, orig_center exist only after calling to_rect
+        from utils.anchor_point import rect_from_point
+        sample_rect = always_redraw(
+            lambda: rect_from_point(
+                sample_center,
+                (d*dd for d in [t.get_value() for t in o_trackers]),
+                stroke_width=2,
+                stroke_opacity=1.0,
+                stroke_color=WHITE,
+            )
+        )
+        self.play(ReplacementTransform(
+            sample_anchor,
+            sample_rect,
+        ))
+        self.wait()
+
+        # manual create sample arrows
+        sample_arrows = always_redraw(
+            lambda: VGroup(
+                Arrow(
+                    start=sample_center,
+                    end=(
+                        sample_center[0]-o_trackers[0].get_value()*dd,
+                        sample_center[1],
+                        0,
+                    ),
+                    stroke_width=3,
+                    tip_length=0.15,
+                    buff=0.0,
+                ),
+                Arrow(
+                    start=sample_center,
+                    end=(
+                        sample_center[0],
+                        sample_center[1]+o_trackers[1].get_value()*dd,
+                        0,
+                    ),
+                    stroke_width=3,
+                    tip_length=0.15,
+                    buff=0.0,
+                ),
+                Arrow(
+                    start=sample_center,
+                    end=(
+                        sample_center[0]+o_trackers[2].get_value()*dd,
+                        sample_center[1],
+                        0,
+                    ),
+                    stroke_width=3,
+                    tip_length=0.15,
+                    buff=0.0,
+                ),
+                Arrow(
+                    start=sample_center,
+                    end=(
+                        sample_center[0],
+                        sample_center[1]-o_trackers[3].get_value()*dd,
+                        0,
+                    ),
+                    stroke_width=3,
+                    tip_length=0.15,
+                    buff=0.0,
+                ),
+            )
+        )
+        # problem if write one by one
+        self.play(Write(sample_arrows, lag_ratio=0.3))
+        self.wait()
+
+        # manual create sample direction texts
+        next_dirs = [UP, RIGHT, DOWN, LEFT]
+        sample_diss = always_redraw(
+            lambda: VGroup(
+                *(Integer(
+                    v*32,
+                ).scale(0.4).next_to(
+                    sample_arrows[i],
+                    next_dirs[i],
+                    buff=0.1,
+                )
+                for i,v in enumerate([t.get_value() for t in o_trackers])),
+            )
+        )
+        self.play(Write(sample_diss, lag_ratio=0.3))
+        self.wait()
+
+        # TODO, change offsets multiple times
+        for _ in range(1):
+            self.play(AnimationGroup(
+                *(tracker.animate.set_value(np.random.randint(2,6))
+                  for tracker in o_trackers),
+            ))
+            self.wait(0.3)
+        self.wait()
+
+        # change color of each direction text and rearrange
+        self.play(AnimationGroup(
+            *(dis.animate.set_color(distance_colors[i]) for i,dis in enumerate(sample_diss)),
+            lag_ratio=0.3,
+        ))
+        self.wait()
+
+        # reset updaters of sample_diss
+        copy_base = RIGHT * 5       # TODO, constant
+        sample_diss.clear_updaters()
+        sample_diss[0].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[0].get_value() * 32,
+            ).next_to(sample_arrows[0], UP, buff=0.1,),
+        )
+        sample_diss[1].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[1].get_value() * 32,
+            ).next_to(sample_arrows[1], RIGHT, buff=0.1, ),
+        )
+        sample_diss[2].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[2].get_value() * 32,
+            ).next_to(sample_arrows[2], DOWN, buff=0.1, ),
+        )
+        sample_diss[3].add_updater(
+            lambda mob: mob.set_value(
+                o_trackers[3].get_value() * 32,
+            ).next_to(sample_arrows[3], LEFT, buff=0.1, ),
+        )
+
+        # create copy of sample diss with its own updaters
+        diss_copy = sample_diss.copy().clear_updaters()
+        self.add(diss_copy)
+        self.play(diss_copy.animate.shift(RIGHT*4))
+        diss_copy[0].add_updater(
+            lambda mob: mob.set_value(o_trackers[0].get_value() * 32),
+        )
+        diss_copy[1].add_updater(
+            lambda mob: mob.set_value(o_trackers[1].get_value() * 32),
+        )
+        diss_copy[2].add_updater(
+            lambda mob: mob.set_value(o_trackers[2].get_value() * 32),
+        )
+        diss_copy[3].add_updater(
+            lambda mob: mob.set_value(o_trackers[3].get_value() * 32),
+        )
+        self.wait()
+
+        # changing offsets after arranging distances
+        for _ in range(1):
+            self.play(AnimationGroup(
+                *(tracker.animate.set_value(np.random.randint(2,6))
+                  for tracker in o_trackers),
+            ))
+            self.wait(0.3)
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'dddd(640) output representation',
             skip_animations=False,
         )
         # ************************************************************
 
-        # output design 1: 640-scale distance
 
-        # output design 2: fm-32 distance, yolo26
+        # ************************************************************
+        self.next_section(
+            'sample anchor, single dddd(640/32) representation',
+            skip_animations=True,
+        )
+        # ************************************************************
 
-        # output design 3: prob distribution, yolov8/yolo11/..
+        # ************************************************************
+        self.next_section(
+            'dddd(640/32) output representation',
+            skip_animations=True,
+        )
+        # ************************************************************
+
+
+
+
+        # ************************************************************
+        self.next_section(
+            'sample anchor, single dfl-32 representation',
+            skip_animations=True,
+        )
+        # ************************************************************
+
+        # ************************************************************
+        self.next_section(
+            'dfl-32 output representation',
+            skip_animations=True,
+        )
+        # ************************************************************
+
+
+
+
+
 
         # decode step roughly, before tensor introduction
 
