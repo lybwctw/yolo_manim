@@ -6,11 +6,16 @@ from utils.arrow_comment import ArrowComment
 from utils.image_annotation import ImageAnnotation, AnnotationRepad
 from utils.repad_background import RepadBackground
 from utils.anchor_point import AnchorPoint
+from utils.layers_fake import LayersFake
 
 import torch
 
-# order:          left   up    right  down
-distance_colors = [RED, GREEN, BLUE, YELLOW]
+distance_colors = [
+    PURE_RED,           # left
+    PURE_GREEN,         # up
+    PURE_BLUE,          # right
+    PURE_YELLOW,        # down
+]
 
 def create_grid_cells(ref, n):
     # TODO, make rectangular ref work
@@ -136,7 +141,7 @@ class MainScene(Scene):
         self.wait()
 
         # create anchors points, based on tensor content
-        offsets = dist_box[0, :, 8000:].transpose(0,1)
+        offsets = dist_box[0, :, 8000:].transpose(0,1)      # (400,4)
         anchors = create_anchor_points(
             background,
             20,
@@ -542,7 +547,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'clean job',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # FIXME, necessary to clear updater before unwrite?
@@ -574,26 +579,80 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        dd = float(background.width) / 20   # update step from now on
-
         # make anchors and background a whole
         whole = Group(background, anchors)
 
         # make room in the right
         self.play(whole.animate.shift(LEFT*3).scale(0.8))
         self.wait()
+        dd = float(background.width) / 20   # update step from now on
 
-        # # capture and back, for reference
-        # self.play(AnimationGroup(
-        #     *(anchor.to_rect(
-        #         dd,
-        #         stroke_width=1,
-        #         stroke_opacity=0.3,
-        #         stroke_color=WHITE,
-        #     ) for anchor in anchors),
-        #     lag_ratio=0.003,
-        # ))
+        # prepare lf
+        lf_output_32_box = LayersFake(
+            4,
+            width=background.width,
+            height=background.height,
+            width_nominal=20,
+            height_nominal=20,
+            expanded=True,
+            buff=0.12,
+        ).shift(RIGHT*3)
+        # self.add(lf_output_32_box)
+        self.wait()
+
+        # prepare digit representation, dmobs
+        dmobs = []
+        data = offsets.transpose(0,1).reshape(4,20,20)
+        x_step = dd * RIGHT
+        y_step = dd * DOWN
+        for i, layer in enumerate(data):
+            bg = lf_output_32_box.rects[3-i]    # reversed for layersfake type
+            base = bg.get_corner(UL) + x_step * 0.5 + y_step * 0.5
+            zidx = 4 - i
+            opac = 1.0 - i * 0.25
+            color = distance_colors[i]  # color for current layer
+
+            layer_mobs = []
+            for j, row in enumerate(layer):
+                for k, value in enumerate(row):
+                    mob = DecimalNumber(
+                        value,
+                        color=color,
+                        stroke_width=0.5,   # make digits more visible
+                        stroke_opacity=opac,
+                    ).move_to(base).shift(k * x_step + j * y_step)
+                    mob.scale(0.25)
+
+                    mob.set_z_index(zidx)
+                    mob.set_fill(opacity=opac)
+                    # mobs.append(mob)
+                    layer_mobs.append(mob)
+            layer_mobs = VGroup(*layer_mobs)
+            dmobs.append(layer_mobs)
+        dmobs = VGroup(*dmobs)
+        dmobs = VGroup(VGroup(*g) for g in list(zip(*dmobs)))   # rearrange
+
+        # self.add(dmobs)
         # self.wait()
+
+        # # sync capture and digit generation
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                anchor.to_rect(
+                    dd,
+                    stroke_width=1,
+                    stroke_opacity=0.3,
+                    stroke_color=WHITE
+                ),
+                Write(
+                    beam,
+                    lag_ratio=0.001,
+                    run_time=1.0,          # FIXME, sync
+                ),
+            ) for anchor, beam in zip(anchors, dmobs)),
+            lag_ratio=0.003,
+        ))
+        self.wait()
         # self.play(AnimationGroup(
         #     *(anchor.to_dot() for anchor in anchors),
         #     lag_ratio=0.003,
