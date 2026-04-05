@@ -2,16 +2,10 @@ from manim import *
 import os
 
 # kk dataset config
-KK_NAME_MAP = {
-    0: 'kunkun',
-    1: 'coke',
-    2: 'pepsi',
-}
-KK_COLOR_MAP = {
-    0: GREEN,
-    1: RED,
-    2: BLUE,
-}
+KK_NAMES = ['kunkun', 'coke', 'pepsi']
+KK_COLORS = [GREEN, RED, BLUE]
+KK_NAME_MAP = dict(enumerate(KK_NAMES))
+KK_COLOR_MAP = dict(enumerate(KK_COLORS))
 
 # everything filename
 S000_EVERYTHING = 's000_everything.pkl'

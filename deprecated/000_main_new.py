@@ -1,13 +1,13 @@
 from manim import *
 
 from utils.constants import *
-from utils.image_repad import ImageRepad
+from utils.image_pad import ImageRepad
 from utils.tile_comment import TileComment
 from utils.layers_fake import LayersFake
 from utils.grid_annotation_box import GridAnnotationBox
 from utils.grid_annotation_cls import GridAnnotationCls
 from utils.arrow_comment import ArrowComment
-from utils.image_annotation import ImageAnnotation
+from utils.yolo_annotation import ImageAnnotation
 
 class MainScene(Scene):
     def scale_align(self, manager, everything, scales):

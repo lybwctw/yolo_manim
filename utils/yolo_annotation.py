@@ -1,26 +1,53 @@
 from manim import *
-from utils.show_shape import ShowShape
-import numpy as np
-from .constants import (
+from show_shape import ShowShape
+from image_raw import ImageRaw
+from image_pad import ImagePad
+from constants import (
     KK_NAME_MAP,
     KK_COLOR_MAP,
     PATH_IMAGE_640,
     PATH_LABEL_640,
 )
 
-class ImageAnnotation(Mobject, ShowShape):
+import numpy as np
+
+class SingleAnnotation(VMobject):
     def __init__(
         self,
-        image=None,    # background image object, or path?
-        label=None,    # label path
-        name_map=None, # class name map
-        color_map=None, # class color map
-        transparent=False,
-        width_nominal=300,
-        height_nominal=200,
-        **kwargs,
+        text: str = 'test',
+        text_config: dict = {},
+        text_bg_config: dict = {},
+        bbox_config: dict = {},
     ):
-        super().__init__(**kwargs)
+        super().__init__()
+        bbox = Rectangle(
+            **bbox_config,
+        )
+
+        label = Text(
+            text=text,
+            **text_config,
+        ).add_background_rectangle(
+            **text_bg_config,
+        ).move_to(
+            bbox.get_corner(UL),
+            aligned_edge=DL,
+        )
+
+        self.bbox = bbox
+        self.label = label
+        self.add(self.bbox, self.label)
+        
+
+class YoloAnnotation(Mobject, ShowShape):
+    def __init__(
+        self,
+        background: str | ImageRaw | ImagePad | None = None,
+        annotation: str | np.ndarray | None = None,
+        name_map: dict = KK_NAME_MAP,
+        color_map: dict = KK_COLOR_MAP,
+    ):
+        super().__init__()
         self.scale_factor = 1.0
         self._w = width_nominal
         self._h = height_nominal
@@ -313,3 +340,11 @@ class AnnotationRepad(Mobject, ShowShape):
 
     def scale_back(self):
         self.scale(1 / self.scale_factor)
+
+class Demo(Scene):
+    def construct(self):
+        ann = SingleAnnotation(
+
+        )
+        self.add(ann)
+        self.wait()

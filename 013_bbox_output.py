@@ -3,7 +3,7 @@ from manim import *
 from utils.constants import *
 from utils.general import load_everything, save_everything, scale_manager_target
 from utils.arrow_comment import ArrowComment
-from utils.image_annotation import ImageAnnotation, AnnotationRepad
+from utils.yolo_annotation import ImageAnnotation, AnnotationRepad
 from utils.repad_background import RepadBackground
 from utils.anchor_point import AnchorPoint
 from utils.layers_fake import LayersFake

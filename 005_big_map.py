@@ -1,11 +1,11 @@
 from manim import *
 from utils.constants import *
 from utils.general import load_everything, scale_manager_target, save_everything
-from utils.image_annotation import ImageAnnotation
+from utils.yolo_annotation import ImageAnnotation
 from utils.arrow_comment import ArrowComment
 from utils.layers_fake import LayersFake
 from utils.tile_comment import TileComment
-from utils.image_repad import ImageRaw
+from utils.image_pad import ImageRaw
 
 class MainScene(Scene):
     def construct(self) -> None:

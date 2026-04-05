@@ -1,9 +1,9 @@
 from manim import *
 from utils.constants import *
-from utils.image_repad import ImageRaw, ImageRepad
+from utils.image_pad import ImageRaw, ImageRepad
 from utils.tile_comment import TileComment
 from utils.arrow_comment import ArrowComment
-from utils.image_annotation import ImageAnnotation
+from utils.yolo_annotation import ImageAnnotation
 from utils.general import save_everything, load_everything, load_central_cells
 from utils.color_cell import ColorCell
 

@@ -1,7 +1,7 @@
 from manim import *
 from utils.yolo_annotation import YoloAnnotation
 from utils.image_raw import ImageRaw, ImagePad
-from utils.image_annotation import ImageAnnotation
+from utils.yolo_annotation import ImageAnnotation
 from utils.arrow_qmark import ArrowQmark
 from utils.digit_tile import DigitTile
 from utils.digit_layer_fake import MDigitLayerFake, DigitLayerFake

@@ -2,7 +2,7 @@ from manim import *
 
 from utils.constants import *
 from utils.general import load_everything, save_everything
-from utils.image_repad import ImageRepad, ImageRaw
+from utils.image_pad import ImageRepad, ImageRaw
 
 # def get_ints(n):
 #     ds = VGroup(
