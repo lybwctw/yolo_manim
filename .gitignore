@@ -2,7 +2,7 @@
 # Manim Project .gitignore
 # ============================
 learn.py
-tmp.py
+learn2.py
 
 # Manim generated media (videos, images, cache)
 media/
@@ -24,6 +24,7 @@ env/
 
 # PyCharm project settings
 .idea/
+.vscode/
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/

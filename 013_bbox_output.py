@@ -642,7 +642,7 @@ class MainScene(Scene):
                     dd,
                     stroke_width=1,
                     stroke_opacity=0.3,
-                    stroke_color=WHITE
+                    stroke_color=WHITE,
                 ),
                 Write(
                     beam,
@@ -666,14 +666,14 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample anchor, single dfl-32 representation',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
 
         # ************************************************************
         self.next_section(
             'dfl-32 output representation',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
 
