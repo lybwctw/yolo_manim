@@ -1,34 +1,71 @@
+import sys
+sys.path.append('..')
+
 from manim import *
-from show_shape import ShowShape
-from image_raw import ImageRaw
-from image_pad import ImagePad
-from constants import (
+import numpy as np
+
+from utils.show_shape import ShowShape
+from utils.image_raw import ImageRaw
+from utils.image_pad import ImagePad
+from utils.constants import (
     KK_NAME_MAP,
     KK_COLOR_MAP,
     PATH_IMAGE_640,
     PATH_LABEL_640,
 )
 
-import numpy as np
+
+ANNO_BBOX_CONFIG = {
+    'stroke_width': 3,
+    'stroke_color': GRAY,
+    'fill_color': GRAY,
+    'fill_opacity': 0.1,
+}
+
+ANNO_LABEL_CONFIG = {
+    'font_size': 20,
+    'color': WHITE,
+    'font': 'JetBrains Mono',
+}
+
+ANNO_LABEL_BG_CONFIG = {
+    'color': GRAY,
+    'opacity': 1.0,
+    'buff': 0.03,
+    'stroke_width': 3,
+    # 'stroke_color': GRAY,
+    'stroke_opacity': 1.0,
+}
+
+def bg_get_point(bg, cx, cy):
+    # cx, cy in normalized [0,1]
+    base = bg.get_corner(UL)
+    point = base + bg.width*cx*RIGHT + bg.height*cy*DOWN
+    return point
 
 class SingleAnnotation(VMobject):
     def __init__(
         self,
         text: str = 'test',
-        text_config: dict = {},
-        text_bg_config: dict = {},
-        bbox_config: dict = {},
+        label_config: dict = {},
+        label_bg_config: dict = {},
+        bbox_config: dict = {},     # width, height
     ):
         super().__init__()
+        self.text = text
+        self.label_config = {**ANNO_LABEL_CONFIG, **label_config}
+        self.label_bg_config = {**ANNO_LABEL_BG_CONFIG, **label_bg_config}
+        self.bbox_config = {**ANNO_BBOX_CONFIG, **bbox_config}
+
         bbox = Rectangle(
-            **bbox_config,
+            **self.bbox_config,
         )
 
         label = Text(
-            text=text,
-            **text_config,
+            text=self.text,
+            **self.label_config,
         ).add_background_rectangle(
-            **text_bg_config,
+            **self.label_bg_config,
         ).move_to(
             bbox.get_corner(UL),
             aligned_edge=DL,
@@ -39,168 +76,130 @@ class SingleAnnotation(VMobject):
         self.add(self.bbox, self.label)
         
 
-class YoloAnnotation(Mobject, ShowShape):
+class YoloAnnotation(Mobject):
     def __init__(
         self,
         background: str | ImageRaw | ImagePad | None = None,
-        annotation: str | np.ndarray | None = None,
+        annotation: str | np.ndarray = PATH_LABEL_640,
         name_map: dict = KK_NAME_MAP,
         color_map: dict = KK_COLOR_MAP,
     ):
         super().__init__()
-        self.scale_factor = 1.0
-        self._w = width_nominal
-        self._h = height_nominal
+        
+        if isinstance(background, (str, type(None))):
+            background = ImageRaw(background or PATH_IMAGE_640)
+        
+        self.background = background
+        self.name_map = name_map
+        self.color_map = color_map
 
-        # setup name map if not yet
-        if name_map:
-            self.name_map = name_map
+        if isinstance(annotation, str):
+            self.data = np.loadtxt(annotation).astype(np.float32)
         else:
-            self.name_map = {0: '0', 1: '1', 2: '2'}   # FIXME, if not 3 classes
+            self.data = annotation
 
-        # setup color map if not yet
-        if color_map:
-            self.color_map = color_map
-        else:
-            self.color_map = {0: RED, 1: GREEN, 2: BLUE}    # FIXME, if not 3 classes
+        # setup annotation as a vgroup of mobs
+        annotation = VGroup()
+        for cls, xywh in zip(self.cls.tolist(), self.xywh.tolist()):
+            cx, cy, w, h = xywh
+            name = self.name_map[cls]
+            color = self.color_map[cls]
 
-        # setup image object if not yet
-        if isinstance(image, ImageMobject):
-            self.image = image
-        elif isinstance(image, str):
-            image = ImageMobject(image)
-            image.set_opacity(1.0)
-            self.image = image
-        else:
-            raise ValueError('invalid image arg for ImageAnnotation')
-        if transparent:
-            self.image.set_opacity(0.3)
-        self.add(self.image)
+            label_config = {
+                'font_size': 10,
+            }
+            label_bg_config = {
+                'color': color,
+            }
+            bbox_config = {
+                'width': self.background.width * w,
+                'height': self.background.height * h,
+                'fill_color': color,
+                'stroke_color': color,
+            }
 
-        # setup raw label data if not yet
-        # FIXME, rename label naming, confused with labels
-        if isinstance(label, np.ndarray):
-            self.label = label
-        elif isinstance(label, str):
-            self.label = np.loadtxt(label)
-        else:
-            raise ValueError('invalid label arg for ImageAnnotation')
-
-        # setup cls and xywh according to label
-        self.cls = self.label[:,0].astype(int).tolist()
-        self.xywh = self.label[:, 1:5]
-
-        # setup vmobject for labels
-        self.labels = []
-        self.mobs = VGroup()
-        for _cls, _xywh in zip(self.cls, self.xywh):
-            _cls = int(_cls)
-            _name = self.name_map[_cls]
-            _color = self.color_map[_cls]
-            _x, _y, _w, _h = _xywh
-
-            # create text and bbox
-            text = Text(
-                _name,
-                font_size=8,
-                color=WHITE,
-                font='JetBrains Mono',
-            ).add_background_rectangle(
-                color=_color,
-                opacity=1.0,
-                buff=0.03,
-                stroke_width=3,
-                stroke_color=_color,
-                stroke_opacity=1.0,
+            anno = SingleAnnotation(
+                text=name,
+                label_config=label_config,
+                label_bg_config=label_bg_config,
+                bbox_config=bbox_config,
             )
-            bbox = Rectangle(
-                stroke_width=3,
-                stroke_color=_color,
-                fill_color=_color,
-                fill_opacity=0.1,
+            anno.shift(
+                bg_get_point(self.background,cx,cy) - anno.bbox.get_center()
             )
+            annotation.add(anno)
+        self.annotation = annotation
 
-            # move bbox to target position
-            ref_tl = self.image.get_corner(UL)
-            width = _w * self.image.width
-            height = _h * self.image.height
-            shift_cx = _x * self.image.width * RIGHT
-            shift_cy = _y * self.image.height * DOWN
-            (
-                bbox
-                .stretch_to_fit_width(width)
-                .stretch_to_fit_height(height)
-                .move_to(ref_tl)
-                .shift(shift_cx + shift_cy)
-            )
+        self.add(self.background)
+        self.add(self.annotation)
 
-            # align text to bbox
-            text.align_to(bbox, LEFT+DOWN).shift(UP * bbox.height)
-            # text.add_updater(
-            #     lambda m: m.align_to(bbox, LEFT+DOWN).shift(UP * bbox.height)
-            # )
-            
-            # add to labels and mobs
-            self.labels.append(
-                {
-                    'text': text,
-                    'bbox': bbox,
-                }
-            )
-            self.mobs.add(text, bbox)
-        self.add(self.mobs)
+    def show_passing_flash(
+        self,
+    ):
+        return self.background.show_passing_flash()
+
+    def unwrite_shape_texts(
+        self,
+    ):
+        return self.background.unwrite_shape_texts()
 
     def hide_text(self):
-        anims = []
-        for label in self.labels:
-            text = label['text']
-            anim = text.animate.set_opacity(0.0)
-            anims.append(anim)
-        return AnimationGroup(*anims)
+        pass
 
     def unhide_text(self):
-        anims = []
-        for label in self.labels:
-            text = label['text']
-            anim = text.animate.set_opacity(1.0)
-            anims.append(anim)
-        return AnimationGroup(*anims)
+        pass
 
-    def get_shape_path(self):
-        path = VMobject()
-        path.set_points_as_corners([
-            self.image.get_corner(LEFT + DOWN),
-            self.image.get_corner(LEFT + UP),
-            self.image.get_corner(RIGHT + UP),
-        ]).set_stroke(color=BLUE)
-        return path
+    @property
+    def labels(self):
+        res = VGroup()
+        for anno in self.annotation:
+            res.add(anno.label)
+        return res
 
-    def get_shape_text(self):
-        text_h = Text(str(self._h), font_size=20).next_to(self.image, LEFT)
-        text_w = Text(str(self._w), font_size=20).next_to(self.image, UP)
-        text = VGroup(text_h, text_w)
-        return text
+    @property
+    def bboxes(self):
+        res = VGroup()
+        for anno in self.annotation:
+            res.add(anno.bbox)
+        return res
 
-    def get_texts(self):
-        res = []
-        for label in self.labels:
-            res.append(label['text'])
-        return VGroup(*res)
+    @property
+    def cls(self):
+        return self.data[:, 0].astype(np.int32)
 
-    def get_bboxes(self):
-        res = []
-        for label in self.labels:
-            res.append(label['bbox'])
-        return VGroup(*res)
+    @property
+    def xywh(self):
+        return self.data[:, 1:5]
 
-    def scale(self, scale_factor, **kwargs):
-        self.scale_factor *= scale_factor
-        return super().scale(scale_factor, **kwargs)
+    @property
+    def xywh_abs(self):
+        scale = np.array([
+            self.background.width_nominal,
+            self.background.height_nominal,
+            self.background.width_nominal,
+            self.background.height_nominal,
+        ])
+        return self.xywh * scale
+    
+    @property
+    def xyxy(self):
+        cx, cy, w, h = self.xywh.T
+        x1 = cx - w / 2
+        y1 = cy - h / 2
+        x2 = cx + w / 2
+        y2 = cy + h / 2
+        return np.stack([x1, y1, x2, y2], axis=1)
 
-    def scale_back(self):
-        self.scale(1 / self.scale_factor)
-        return self
+    @property
+    def xyxy_abs(self):
+        cx, cy, w, h = self.xywh.T
+        x1 = (cx - w / 2) * self.background.width_nominal
+        y1 = (cy - h / 2) * self.background.height_nominal
+        x2 = (cx + w / 2) * self.background.width_nominal
+        y2 = (cy + h / 2) * self.background.height_nominal
 
+        return np.stack([x1, y1, x2, y2], axis=1)
+        
 
 # FIXME: copy of ImageRepad, expediency
 class AnnotationRepad(Mobject, ShowShape):
@@ -334,17 +333,30 @@ class AnnotationRepad(Mobject, ShowShape):
                 Transform(p2, p2_res),
             )
 
-    def scale(self, scale_factor, **kwargs):
-        self.scale_factor *= scale_factor
-        return super().scale(scale_factor, **kwargs)
-
-    def scale_back(self):
-        self.scale(1 / self.scale_factor)
-
 class Demo(Scene):
     def construct(self):
-        ann = SingleAnnotation(
-
+        path = '../assets/images/sample_640_360.jpg'
+        background = ImagePad(
+            path=path,
+            padded=False,
         )
-        self.add(ann)
+        anno = YoloAnnotation(
+            background=background,
+            annotation='../assets/images/labels.txt',
+        )
+        self.add(anno)
+        self.wait()
+
+        self.play(anno.animate.scale(1.5).shift(LEFT*2))
+        self.play(anno.show_passing_flash())
+        self.play(anno.unwrite_shape_texts())
+        self.wait()
+
+        self.play(background.show_natural_paddings())
+        self.wait()
+
+        self.play(anno.animate.shift(RIGHT).scale(0.8))
+        self.wait()
+
+        self.play(anno.show_passing_flash())
         self.wait()

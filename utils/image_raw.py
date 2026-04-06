@@ -1,23 +1,28 @@
+import sys
+sys.path.append('..')
+
 from manim import *
-from constants import *
-from show_shape import ShowShape
+
+from utils.constants import *
+from utils.show_shape import ShowShape
 
 class ImageRaw(Mobject, ShowShape):
     def __init__(
         self,
         path: str = PATH_IMAGE_640,
-        width_nominal: int = 960,
-        height_nominal: int = 540,
+        width_nominal: int | None = None,
+        height_nominal: int | None = None,
     ):
         super().__init__()
         self.path = path
-        self.width_nominal = width_nominal
-        self.height_nominal = height_nominal
 
         image = ImageMobject(path)
         image.set_resampling_algorithm(RESAMPLING_ALGORITHMS["nearest"])
-
         self.image = image
+
+        self.width_nominal = width_nominal or image.get_pixel_array().shape[1]
+        self.height_nominal = height_nominal or image.get_pixel_array().shape[0]
+
         self.add(self.image)
 
     def get_shape_path(self):
@@ -26,7 +31,7 @@ class ImageRaw(Mobject, ShowShape):
             self.image.get_corner(LEFT + DOWN),
             self.image.get_corner(LEFT + UP),
             self.image.get_corner(RIGHT + UP),
-        ]).set_stroke(color=BLUE)
+        ]).set_stroke(color=YELLOW)
         return path
 
     def get_shape_text(self):

@@ -73,7 +73,7 @@ class AnchorPoint(VMobject):
         self,
         point=ORIGIN,                   # starting position
         offset=(0.8,0.9,1.1,1.2),       # left, up, right, down
-        s_xy=(0.5,0.5),              # dx, dy
+        s_xy=(0.5,0.5),                 # dx, dy
     ):
         super().__init__()
         if isinstance(offset, np.ndarray):
@@ -85,7 +85,7 @@ class AnchorPoint(VMobject):
         dot = Square(
             side_length=0.01,
             stroke_width=3,
-            stroke_opacity=0.0,
+            stroke_opacity=0.0,         # as a reference
         ).move_to(point)
 
         left, up, right, down = offset
@@ -97,26 +97,41 @@ class AnchorPoint(VMobject):
             width=width,
             height=height,
             stroke_width=2,
-            stroke_opacity=0.0,
+            stroke_opacity=0.0,         # as a reference
             stroke_color=WHITE,
         ).move_to(point + center_offset)
 
         self.dot = dot
         self.rect = rect
-        self.mob = dot.copy().set_stroke(opacity=1.0)
+        self.current_opacity=1.0        # global opacity
+        self.mob = dot.copy().set_stroke(opacity=self.current_opacity)
         self.add(self.dot, self.rect, self.mob)
 
     def to_rect(
         self,
     ):
-        target = self.rect.copy().set_stroke(opacity=1.0)
+        target = self.rect.copy().set_stroke(opacity=self.current_opacity)
         return Transform(self.mob, target)
 
     def to_dot(
         self,
     ):
-        target = self.dot.copy().set_stroke(opacity=1.0)
+        target = self.dot.copy().set_stroke(opacity=self.current_opacity)
         return Transform(self.mob, target)
+
+    def get_center(self):
+        """Override the default center with dot center.
+        """
+        return self.dot.get_center()
+    
+    def set_pattern(self, opacity, color):
+        """FIXME, Set pattern, only care about opacity and color.
+        """
+        self.current_opacity = opacity
+        self.mob.set_stroke(opacity=opacity, color=color)
+        self.dot.set_stroke(color=color)
+        self.rect.set_stroke(color=color)
+        return self
 
     @property
     def sx(self):
@@ -138,8 +153,11 @@ class Demo(Scene):
         self.play(ap.to_rect())
         self.wait()
 
-        # self.play(ap.to_dot())
+        # self.play(Write(Dot(ap.get_center())))
         # self.wait()
 
-        self.play(Write(Square(side_length=3)))
+        self.play(ap.animate.set_pattern(0.3, RED))
+        self.wait()
+
+        self.play(ap.to_dot())
         self.wait()

@@ -1,7 +1,11 @@
+import sys
+sys.path.append('..')
+
 from manim import *
-from image_raw import ImageRaw
-from show_shape import ShowShape
-from constants import *
+
+from utils.image_raw import ImageRaw
+from utils.show_shape import ShowShape
+from utils.constants import *
 
 class ImagePad(Mobject, ShowShape):
     def __init__(
@@ -27,7 +31,6 @@ class ImagePad(Mobject, ShowShape):
             self.image = image
             self.width_nominal = width_nominal or self.image.get_pixel_array().shape[1]
             self.height_nominal = height_nominal or self.image.get_pixel_array().shape[0]
-        self.add(self.image)
 
         self.paddings_config = {
             'stroke_width': 0,
@@ -35,17 +38,30 @@ class ImagePad(Mobject, ShowShape):
             'fill_color': GRAY,
         }
         self.paddings = None
+
+        self.add(self.image)
         # use natural paddings if init with paddings
         if padded:
             paddings = self.create_natural_paddings(
                 paddings=None,          # auto compute
-                **self.paddings_config,
             )
             if paddings:
                 self.width_nominal = max(self.width_nominal, self.height_nominal)
                 self.height_nominal = max(self.width_nominal, self.height_nominal)
                 self.paddings = paddings
                 self.add(self.paddings)
+    
+    def set_opacity(self, alpha):
+        """ Override set_opacity because there are 
+            different interfaces when setting opacity
+            for ImageMobject and VMobject.
+        """
+        self.image.set_opacity(alpha)
+
+        if self.paddings:
+            self.paddings.set_opacity(alpha)
+
+        return self
 
     def get_shape_path(self):
         path = VMobject()
@@ -53,7 +69,7 @@ class ImagePad(Mobject, ShowShape):
             self.get_corner(LEFT + DOWN),
             self.get_corner(LEFT + UP),
             self.get_corner(RIGHT + UP),
-        ]).set_stroke(color=BLUE)
+        ]).set_stroke(color=YELLOW)
         return path
     
     def get_shape_text(self):

@@ -1,11 +1,19 @@
+import sys
+sys.path.append('..')
+
 from manim import *
-from anchor_point import AnchorPoint
+import numpy as np
+
+from utils.anchor_point import AnchorPoint
+from utils.image_raw import ImageRaw
+from utils.image_pad import ImagePad
+from utils.yolo_annotation import SingleAnnotation
 
 class ExplainerBbox(VGroup):
     def __init__(
         self,
-        background,                         # reference background
-        data=np.ones((4,4,4)),              # (h, w, 4)
+        background: ImageRaw | ImagePad | None = None,
+        data: np.array = np.ones((4,4,4)),      # (h, w, 4)
     ):
         super().__init__()
         self.background = background
@@ -16,6 +24,7 @@ class ExplainerBbox(VGroup):
 
     def create_grid(
         self,
+        **kwargs,
     ):
         grid = Rectangle(
             width=self.background.width,
@@ -32,16 +41,18 @@ class ExplainerBbox(VGroup):
 
         self.grid = grid
         self.add(self.grid)
-        return Write(self.grid)
+        return Write(self.grid, **kwargs)
 
     def remove_grid(
         self,
+        **kwargs,
     ):
         self.remove(self.grid)
-        return Unwrite(self.grid)
+        return Unwrite(self.grid, **kwargs)
 
     def create_anchor_points(
         self,
+        **kwargs,
     ):
         base = self.background.get_corner(UL)
         anchor_points = VGroup(*[
@@ -56,31 +67,56 @@ class ExplainerBbox(VGroup):
 
         self.anchor_points = anchor_points
         self.add(self.anchor_points)
-        return Write(self.anchor_points)
+        return Write(self.anchor_points,**kwargs)
 
     def to_rects(
         self,
+        **kwargs,
     ):
         anims = AnimationGroup(
             *(ap.to_rect() for ap in self.anchor_points),
-            lag_ratio=0,
+            **kwargs,
         )
         return anims
 
     def to_dots(
         self,
+        **kwargs,
     ):
         anims = AnimationGroup(
             *(ap.to_dot() for ap in self.anchor_points),
-            lag_ratio=0,
+            **kwargs,
         )
         return anims
 
     def remove_anchor_points(
         self,
+        **kwargs,
     ):
         self.remove(self.anchor_points)
-        return Unwrite(self.anchor_points)
+        return Unwrite(self.anchor_points,**kwargs)
+
+    def collect_in_out_aps(
+        self,
+        annotation: VGroup | None,      # VGroup of SingleAnnotation
+    ):
+        """FIXME, collect aps inside/outside a group of SingleAnnotation.
+        """
+        def _inside(point, anno):
+            x, y, _ = point
+            return (
+                anno.bbox.get_left()[0] <= x <= anno.bbox.get_right()[0]
+                and anno.bbox.get_bottom()[1] <= y <= anno.bbox.get_top()[1]
+            )
+        in_aps = VGroup()
+        out_aps = VGroup()
+        for ap in self.anchor_points:
+            if any(_inside(ap.get_center(), anno) for anno in annotation):
+                in_aps.add(ap)
+            else:
+                out_aps.add(ap)
+        return in_aps, out_aps
+        
 
     @property
     def sx(self):
