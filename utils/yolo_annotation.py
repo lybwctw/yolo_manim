@@ -71,12 +71,24 @@ class SingleAnnotation(VMobject):
             aligned_edge=DL,
         )
 
+        # BackgroundRectangle Fix
+        new_bg = Rectangle(
+            stroke_width=0,
+            width=label.background_rectangle.width,
+            height=label.background_rectangle.height,
+        ).set_style(
+            **label.background_rectangle.get_style(simple=True),
+        ).move_to(label.background_rectangle)
+        label.remove(label.background_rectangle)
+        label.background_rectangle = new_bg
+        label.add_to_back(label.background_rectangle)
+
         self.bbox = bbox
         self.label = label
         self.add(self.bbox, self.label)
         
 
-class YoloAnnotation(Mobject):
+class YoloAnnotation(VMobject):
     def __init__(
         self,
         background: str | ImageRaw | ImagePad | None = None,
@@ -130,7 +142,8 @@ class YoloAnnotation(Mobject):
             annotation.add(anno)
         self.annotation = annotation
 
-        self.add(self.background)
+        # store reference to background without add
+        # self.add(self.background)
         self.add(self.annotation)
 
     def show_passing_flash(
@@ -340,23 +353,28 @@ class Demo(Scene):
             path=path,
             padded=False,
         )
-        anno = YoloAnnotation(
+        annotation = YoloAnnotation(
             background=background,
             annotation='../assets/images/labels.txt',
         )
-        self.add(anno)
+
+        anno_with_bg = Group(background, annotation)
+
+        self.add(background)
+        self.wait()
+        self.play(Write(annotation))
         self.wait()
 
-        self.play(anno.animate.scale(1.5).shift(LEFT*2))
-        self.play(anno.show_passing_flash())
-        self.play(anno.unwrite_shape_texts())
+        self.play(anno_with_bg.animate.scale(1.5).shift(LEFT*2))
+        self.play(annotation.show_passing_flash())
+        self.play(annotation.unwrite_shape_texts())
         self.wait()
 
         self.play(background.show_natural_paddings())
         self.wait()
 
-        self.play(anno.animate.shift(RIGHT).scale(0.8))
+        self.play(anno_with_bg.animate.shift(RIGHT).scale(0.8))
         self.wait()
 
-        self.play(anno.show_passing_flash())
+        self.play(annotation.show_passing_flash())
         self.wait()
