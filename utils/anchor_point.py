@@ -1,162 +1,329 @@
 from manim import *
+from typing import Self
 
-def rect_from_point(point, offset, **config):
-    left, up, right, down = offset
+DIRECTION_SERIES = [
+    'left',
+    'up',
+    'right',
+    'down',
+]
 
-    x, y, z = point
+DOT_CONFIG = {
+    'side_length': 0.01,
+    'stroke_width': 3,
+    'stroke_color': WHITE,
+}
 
-    x_min = x - left
-    x_max = x + right
-    y_min = y - down
-    y_max = y + up
+RECT_CONFIG = {
+    'stroke_width': 2,
+    'stroke_color': WHITE,
+}
 
-    rect = Rectangle(
-        width=x_max - x_min,
-        height=y_max - y_min,
-        # stroke_width=3,
-        # stroke_opacity=1.0,
-        **config,
-    )
+ARROW_COLOR_MAP = {
+    'left':  PURE_RED,
+    'up':    PURE_GREEN,
+    'right': PURE_BLUE,
+    'down':  PURE_MAGENTA,
+}
 
-    rect.move_to([
-        (x_min + x_max) / 2,
-        (y_min + y_max) / 2,
-        z
-    ])
+TEXT_COLOR_MAP = ARROW_COLOR_MAP
 
-    return rect
+# next to arrow direction
+TEXT_DIRECTION_MAP = {
+    'left':  UP,
+    'up':    RIGHT,
+    'right': DOWN,
+    'down':  LEFT,
+}
+TEXT_DIRECTION_BUFF = 0.1
 
+ARROW_CONFIG = {
+    'stroke_width': 3,
+    'tip_length': 0.15,
+    'buff': 0.0,
+}
 
-class AnchorPointDep(VMobject):
-    def __init__(self,
-        point,
-        offset=(1,1,1,1),
-    ):
-        super().__init__()
-        self.offset = offset
-        self.dot = Square(
-            side_length=0.01,
-            stroke_width=3,
-            stroke_opacity=1.0,
-            fill_opacity=0.0,
-        ).move_to(point)
-        self.add(self.dot)
-
-    def to_rect(self, dd, **config):
-        self.orig_center = self.dot.get_center()
-        rect = rect_from_point(
-            self.orig_center,
-            (float(d)*dd for d in self.offset),
-            **config,
-        )
-        self.dot.save_state()
-        return Transform(self.dot, rect)
-
-    # def get_arrows(self):
-    #     # user's responsible for writing and unwriting of arrows
-    #     arrows = VGroup(
-    #         *(Arrow(
-    #             start=self.orig_center,
-    #             end=af(self.dot, self.orig_center),
-    #             stroke_width=3,
-    #             tip_length=0.15,
-    #             buff=0,
-    #         ) for af in align_to_funs),
-    #     )
-    #     return arrows
-
-    def to_dot(self):
-        return self.dot.animate.restore()
+TEXT_CONFIG = {
+    'font': 'JetBrains Mono',
+    'font_size': 15,
+}
 
 class AnchorPoint(VMobject):
     def __init__(
         self,
-        point=ORIGIN,                   # starting position
-        offset=(0.8,0.9,1.1,1.2),       # left, up, right, down
-        s_xy=(0.5,0.5),                 # dx, dy
+        point: np.ndarray = ORIGIN,                         # starting position
+        offset: np.ndarray | list | tuple = (1.,2.,3.,4.),  # left, up, right, down
+        sf_screen: float = 0.5,                             # scale factor for screen
+        sf_nominal: int = 32,                               # scale factor for nominal, 8/16/32
     ):
         super().__init__()
+        # make sure offset is list or tuple
         if isinstance(offset, np.ndarray):
             self.offset = offset.tolist()
         elif isinstance(offset, (list, tuple)):
             self.offset = offset
-        self.s_xy = s_xy
+        self.sf_screen = sf_screen
+        self.sf_nominal = sf_nominal
 
         dot = Square(
-            side_length=0.01,
-            stroke_width=3,
-            stroke_opacity=0.0,         # as a reference
+            stroke_opacity=0.0,
+            **DOT_CONFIG,
         ).move_to(point)
+        self.dot = dot
 
-        left, up, right, down = offset
-        left, right = left*self.sx, right*self.sx   # update with sx
-        up, down = up*self.sy, down*self.sy         # update with sy
+        left, up, right, down = [x*self.sf_screen for x in self.offset]
         width, height = left+right, up+down
         center_offset = RIGHT*(right-left)/2 + UP*(up-down)/2
         rect = Rectangle(
             width=width,
             height=height,
-            stroke_width=2,
-            stroke_opacity=0.0,         # as a reference
-            stroke_color=WHITE,
+            stroke_opacity=0.0,
+            **RECT_CONFIG,
         ).move_to(point + center_offset)
-
-        self.dot = dot
         self.rect = rect
-        self.current_opacity=1.0        # global opacity
-        self.mob = dot.copy().set_stroke(opacity=self.current_opacity)
+
+        self.mob_opacity=1.0
+        self.mob = dot.copy().set_stroke(
+            opacity=self.mob_opacity,
+        )
         self.add(self.dot, self.rect, self.mob)
 
     def to_rect(
         self,
-    ):
-        target = self.rect.copy().set_stroke(opacity=self.current_opacity)
-        return Transform(self.mob, target)
+        **aargs,
+    ) -> Animation:
+        target = self.rect.copy().set_stroke(
+            opacity=self.mob_opacity,
+        )
+        return Transform(self.mob, target, **aargs)
 
     def to_dot(
         self,
-    ):
-        target = self.dot.copy().set_stroke(opacity=self.current_opacity)
-        return Transform(self.mob, target)
+        **aargs,
+    ) -> Animation:
+        target = self.dot.copy().set_stroke(
+            opacity=self.mob_opacity,
+        )
+        return Transform(self.mob, target, **aargs)
 
-    def get_center(self):
+    def create_arrows(
+        self,
+    ) -> VGroup:
+        arrows = VGroup(
+            *(Arrow(
+                start=self.dot.get_center(),
+                end=self.node_map[direction],
+                color=ARROW_COLOR_MAP[direction],
+                **ARROW_CONFIG,
+            ) for direction in DIRECTION_SERIES),
+        )
+        return arrows
+    
+    def show_arrows(
+        self,
+        **aargs,
+    ) -> Animation:
+        """ TODO, arrow growing effect.
+        """
+        self.arrows = self.create_arrows()
+        self.add(self.arrows)
+        return Write(self.arrows, **aargs)
+    
+    def hide_arrows(
+        self,
+        **aargs,
+    ) -> Animation:
+        self.remove(self.arrows)
+        return Unwrite(self.arrows, **aargs)
+
+    def create_distance_abs(
+        self,
+    ) -> VGroup :
+        dists = VGroup(
+            *(Text(
+                # str(int(self.offset[i]*self.sf_nominal)), # TODO, why the fuck this failed?
+                '{:.0f}'.format(self.offset[i]*self.sf_nominal),
+                color=TEXT_COLOR_MAP[direction],
+                **TEXT_CONFIG,
+            ).next_to(
+                self.arrows[i],
+                TEXT_DIRECTION_MAP[direction],
+                buff=TEXT_DIRECTION_BUFF,
+            ) for i, direction in enumerate(DIRECTION_SERIES))
+        )
+        return dists
+
+    def create_distance(
+        self,
+    ) -> VGroup :
+        dists = VGroup(
+            *(Text(
+                '{:.2f}'.format(self.offset[i]),
+                color=TEXT_COLOR_MAP[direction],
+                **TEXT_CONFIG,
+            ).next_to(
+                self.arrows[i],
+                TEXT_DIRECTION_MAP[direction],
+                buff=TEXT_DIRECTION_BUFF,
+            ) for i, direction in enumerate(DIRECTION_SERIES))
+        )
+        return dists
+    
+    def show_distance_abs(
+        self,
+        **aargs,
+    ) -> Animation:
+        self.distance_abs = self.create_distance_abs()
+        self.add(self.distance_abs)
+        return Write(self.distance_abs, **aargs)
+    
+    def hide_distance_abs(
+        self,
+        **aargs,
+    ) -> Animation:
+        self.remove(self.distance_abs)
+        return Unwrite(self.distance_abs, **aargs)
+    
+    def show_distance(
+        self,
+        **aargs,
+    ) -> Animation:
+        self.distance = self.create_distance()
+        self.add(self.distance)
+        return Write(self.distance, **aargs)
+
+    def hide_distance(
+        self,
+        **aargs,
+    ) -> Animation:
+        self.remove(self.distance)
+        return Unwrite(self.distance, **aargs)
+    
+    def create_divide(
+        self,
+    ) -> VGroup:
+        divide = VGroup(
+            Text(
+                '/' + str(self.sf_nominal),
+                color=TEXT_COLOR_MAP[direction],
+                **TEXT_CONFIG,
+            ).next_to(
+                self.distance_abs[i],
+                RIGHT,
+                buff=0.05,
+            ) for i, direction in enumerate(DIRECTION_SERIES)
+        )
+        return divide
+    
+    def show_divide(
+        self,
+        **aargs,
+    ) -> Animation:
+        """ Create divide and add into distance.
+        """
+        divide = self.create_divide()
+        for dis, div in zip(self.distance_abs, divide):
+            dis.add(div)
+        return Write(divide, **aargs)
+    
+    def abs_to_rela(
+        self,
+        aargs: dict = {},       # ReplacementTransform args
+        gargs: dict = {},       # AnimationGroup args
+    ) -> Animation:
+        """ Convert distance_abs with divide into distance.
+        """
+        self.remove(self.distance_abs)
+        self.distance = self.create_distance()
+        self.add(self.distance)
+        return AnimationGroup(
+            *(ReplacementTransform(dis_abs, dis_rela, **aargs)
+            for dis_abs, dis_rela in zip(self.distance_abs, self.distance)),
+            **gargs,
+        )
+
+    def get_center(
+        self,
+    ) -> np.ndarray:
         """Override the default center with dot center.
         """
         return self.dot.get_center()
     
-    def set_pattern(self, opacity, color):
+    def set_pattern(
+        self,
+        opacity: float = 1.0,           # FIXME, the default opacity?
+        color: ManimColor = WHITE,      # FIXME, the default color?
+    ) -> Self:
         """FIXME, Set pattern, only care about opacity and color.
         """
-        self.current_opacity = opacity
+        self.mob_opacity = opacity
         self.mob.set_stroke(opacity=opacity, color=color)
         self.dot.set_stroke(color=color)
         self.rect.set_stroke(color=color)
         return self
 
     @property
-    def sx(self):
-        return self.s_xy[0]
+    def node_left(self) -> np.ndarray:
+        return np.array([self.rect.get_left()[0], self.dot.get_center()[1], 0])
+    
+    @property
+    def node_up(self) -> np.ndarray:
+        return np.array([self.dot.get_center()[0], self.rect.get_top()[1], 0])
 
     @property
-    def sy(self):
-        return self.s_xy[1]
+    def node_right(self) -> np.ndarray:
+        return np.array([self.rect.get_right()[0], self.dot.get_center()[1], 0])
+
+    @property
+    def node_down(self) -> np.ndarray:
+        return np.array([self.dot.get_center()[0], self.rect.get_bottom()[1], 0])
+
+    @property
+    def node_map(self) -> dict:
+        return {
+            'left':  self.node_left,
+            'up':    self.node_up,
+            'right': self.node_right,
+            'down':  self.node_down,
+        }
 
 class Demo(Scene):
     def construct(self):
         ap = AnchorPoint(
             offset=(1,2,3,4),
-            s_xy=(0.5,0.5),
-        )
+            sf_screen=0.5,
+        ).scale(1.5)
         self.play(Create(ap))
+        self.wait()
+
+        self.play(ap.show_arrows(
+            lag_ratio=0.3,
+            run_time=1.3,
+        ))
+        self.wait()
+
+        self.play(ap.show_distance_abs())
         self.wait()
 
         self.play(ap.to_rect())
         self.wait()
 
-        # self.play(Write(Dot(ap.get_center())))
-        # self.wait()
+        self.play(AnimationGroup(
+            ap.arrows.animate.set_opacity(0.3),
+            ap.show_divide(),
+        ))
+        self.wait()
 
-        self.play(ap.animate.set_pattern(0.3, RED))
+        self.play(AnimationGroup(
+            ap.arrows.animate.set_opacity(1.0),
+            ap.abs_to_rela(),
+        ))
+        self.wait()
+
+        self.play(ap.hide_distance())
+        self.wait()
+
+        self.play(ap.hide_arrows())
         self.wait()
 
         self.play(ap.to_dot())

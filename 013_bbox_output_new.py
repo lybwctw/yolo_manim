@@ -5,6 +5,8 @@ from utils.yolo_annotation import YoloAnnotation
 from utils.image_pad import ImagePad
 from utils.constants import *
 
+from utils.anchor_point import AnchorPoint
+
 import torch
 
 class MainScene(Scene):
@@ -12,16 +14,13 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True)
         background.scale(1.3).set_opacity(0.2)
-        self.add(background)
-        # self.play(background.animate.set_opacity(0.2))
-        self.wait()
 
-        # TODO, make distance loading a function
+        # TODO, make distance tensor loading a function
         data_dist = torch.load(
             'assets/tensors/_dist_box.pt',
             weights_only=True,
@@ -29,30 +28,49 @@ class MainScene(Scene):
             )  # (1, 4, 8400)
         data_dist = data_dist[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
 
-        explainer_bbox = ExplainerBbox(background, data_dist)
-        self.add(explainer_bbox)
+        explainer_bbox = ExplainerBbox(
+            background=background,
+            data=data_dist,
+            sf_nominal=32,
+        )
+
+        # if add background to ExplainerBbox
+        # then it can not be restored as a whole
+        explainer_system = Group(explainer_bbox, background)
+        self.add(explainer_system)
+        self.wait()
 
         # ************************************************************
         self.next_section(
             'anchor points capture thinking',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show grid and anchor points
-        self.play(explainer_bbox.create_grid(lag_ratio=0, run_time=0.5))
+        self.play(explainer_bbox.show_grid(lag_ratio=0, run_time=0.5))
         self.wait()
-        self.play(explainer_bbox.create_anchor_points(lag_ratio=0, run_time=0.5))
+        self.play(explainer_bbox.show_anchor_points(lag_ratio=0, run_time=0.5))
         self.wait()
-        self.play(explainer_bbox.remove_grid(lag_ratio=0, run_time=0.5))
+        self.play(explainer_bbox.hide_grid(lag_ratio=0, run_time=0.5))
         self.wait()
 
         # anchor points capture
-        self.play(explainer_bbox.to_rects(lag_ratio=0, run_time=0.5))
+        self.play(explainer_bbox.to_rects(
+            gargs={'lag_ratio':0, 'run_time':0.5,}
+        ))
         self.wait()
-        self.play(explainer_bbox.to_dots(lag_ratio=0, run_time=0.5))
+        self.play(explainer_bbox.to_dots(
+            gargs={'lag_ratio':0, 'run_time':0.5,}
+        ))
         self.wait()
 
-        # show and fade annotation, VGroup of SingleAnnotation
+        # # ************************************************************
+        # self.next_section(
+        #     'inside anchor points capture',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # FIXME, show and fade annotation, VGroup of SingleAnnotation
         annotation = YoloAnnotation(
             background=background.image,
             annotation=PATH_LABEL_640,
@@ -71,16 +89,9 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # ************************************************************
-        self.next_section(
-            'inside anchor points capture',
-            skip_animations=False,
-        )
-        # ************************************************************
+        # highlight inside anchor points
         explainer_bbox.save_state()
         in_aps, out_aps = explainer_bbox.collect_in_out_aps(annotation)
-        
-        # highlight inside anchor points
         self.play(AnimationGroup(
             AnimationGroup(
                 *(ap.animate.set_pattern(opacity=0.4,color=PURE_YELLOW) for ap in in_aps),
@@ -107,28 +118,64 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # # ************************************************************
-        # self.next_section(
-        #     'sample, from distance to position',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # focus on sample anchor point
+        # ************************************************************
+        self.next_section(
+            'sample, from distance to position',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # focus on sample anchor point
+        sample_ap, other_aps = explainer_bbox.collect_focus_ap(189)
+        self.play(AnimationGroup(
+            sample_ap.animate(run_time=0.5).set_pattern(opacity=1.0),
+            AnimationGroup(
+                *(ap.animate.set_pattern(opacity=0.3) for ap in other_aps),
+                lag_ratio=0, run_time=0.5,
+            )
+        ))
+        self.wait()
         
-        # # distance to position
+        # distance representation
+        self.play(sample_ap.to_rect(run_time=0.5))
+        self.wait()
+        self.play(sample_ap.show_arrows(lag_ratio=0.1, run_time=0.5))
+        self.wait()
+        self.play(sample_ap.show_distance_abs(lag_ratio=0.1, run_time=0.5))
+        self.wait()
+        self.play(AnimationGroup(
+            sample_ap.arrows.animate(run_time=0.5).set_opacity(0.3),
+            sample_ap.show_divide(run_time=0.5),
+        ))
+        self.wait()
 
-        # # digit counterpart
+        self.play(AnimationGroup(
+            sample_ap.arrows.animate(run_time=0.5).set_opacity(1.0),
+            sample_ap.abs_to_rela(
+                aargs={'run_time':0.3,},
+                gargs={'lag_ratio':0.1, 'run_time':0.5,},
+            ),
+        ))
+        self.wait()
 
-        # # loop through several samples
+        # distance to position computation
+        self.play(explainer_system.animate(run_time=0.5).shift(LEFT*3).scale(0.8))
+        self.wait()
 
-        # # ************************************************************
-        # self.next_section(
-        #     'global, from distance to position',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # sync, distance generation
+        # loop through several samples
 
-        # # sync, position generation
+        # # restore
+        # self.play(explainer_bbox.animate(run_time=0.5).restore())
+        # self.wait()
 
-        # # to thunbnail
+        # # # ************************************************************
+        # # self.next_section(
+        # #     'global, from distance to position',
+        # #     skip_animations=False,
+        # # )
+        # # # ************************************************************
+        # # # sync, distance generation
+
+        # # # sync, position generation
+
+        # # # to thunbnail
+    
