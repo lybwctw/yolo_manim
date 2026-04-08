@@ -14,7 +14,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -43,7 +43,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'anchor points capture thinking',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show grid and anchor points
@@ -64,12 +64,12 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # # ************************************************************
-        # self.next_section(
-        #     'inside anchor points capture',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
+        # ************************************************************
+        self.next_section(
+            'inside anchor points capture',
+            skip_animations=False,
+        )
+        # ************************************************************
         # FIXME, show and fade annotation, VGroup of SingleAnnotation
         annotation = YoloAnnotation(
             background=background.image,
@@ -104,6 +104,14 @@ class MainScene(Scene):
         ))
         self.wait()
 
+        # fade out and remove annotation
+        self.play(AnimationGroup(
+            *(anno.bbox.animate.set_opacity(opacity=0) for anno in annotation),
+            lag_ratio=0, run_time=0.5,
+        ))
+        self.remove(annotation)
+        self.wait()
+
         # inside anchor points capture
         self.play(AnimationGroup(
             *(ap.to_rect() for ap in in_aps),
@@ -111,11 +119,8 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # restore
-        self.play(AnimationGroup(
-            explainer_bbox.animate(run_time=0.5).restore(),
-            Unwrite(annotation, lag_ratio=0, run_time=0.5),
-        ))
+        # restore to anchor point array
+        self.play(explainer_bbox.animate(run_time=0.5).restore())
         self.wait()
 
         # ************************************************************

@@ -90,28 +90,6 @@ class YoloAnnotation(VGroup):
 
 class Demo(Scene):
     def construct(self):
-        class_map = {0: 'kunkun', 1: 'coke', 2: 'pepsi'}
-        color_map = {0: YELLOW, 1: PURE_RED, 2: PURE_BLUE}
-        image_path = r'assets\images\sample_1280_720.jpg'
-        label_path = r'assets\images\labels.txt'
-
-        sq = ImageMobject(image_path)
-        data = np.loadtxt(label_path)
-        cls = data[:,0].astype(int).tolist()
-        xywh = data[:, 1:5]
-        annos = VGroup(
-            YoloAnnotation(
-                source=sq,
-                xywh=t,
-                text=class_map[c],
-                label_bg=color_map[c],
-                label_color=BLACK,
-            ) for c, t in zip(cls, xywh)
-        )
-
-        self.add(sq, annos)
-        self.play(sq.animate.shift(RIGHT*2))
-        # annos.suspend_updating(recursive=True)
-        self.wait()
-        self.play(sq.animate.shift(LEFT*2))
+        sq = Square()
+        self.add(sq)
         self.wait()
