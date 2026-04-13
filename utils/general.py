@@ -1,7 +1,11 @@
+import sys
+sys.path.append('..')
+
 from manim import *
 import pickle
 import cv2
-from .color_cell import ColorCell
+from utils.color_cell import ColorCell
+from utils.line_matrix import LineMatrix
 
 def save_everything(file, everything):
     with open(file, 'wb') as f:
@@ -51,3 +55,21 @@ def load_central_cells(
     ).scale_to_fit_height(target_height)
 
     return cells
+
+def tensor_to_line_matrix(
+    tensor: VGroup | None = None,       # vgroup of ints
+    lmatrix: LineMatrix | None = None,  # line matrix object
+    targs: dict = {},                   # Transform args
+    gargs: dict = {},                   # inner AnimationGroup args
+    ggargs: dict = {},                  # outter AnimationGroup args
+):
+    """From a tensor matrix into line matrix (mini version).
+    """
+    anim = AnimationGroup(
+        *(AnimationGroup(
+            *(Transform(t, l, **targs) for t,l in zip(tensor[i], lmatrix.mobs[i])),
+            **gargs,
+        ) for i in range(len(tensor))),
+        **ggargs,
+    )
+    return anim

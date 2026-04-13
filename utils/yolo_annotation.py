@@ -71,7 +71,7 @@ class SingleAnnotation(VMobject):
             aligned_edge=DL,
         )
 
-        # BackgroundRectangle Fix
+        # BackgroundRectangle Fix, Write/Create animtion issue
         new_bg = Rectangle(
             stroke_width=0,
             width=label.background_rectangle.width,

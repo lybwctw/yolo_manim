@@ -1,683 +1,512 @@
 from manim import *
 
+from utils.explainer_bbox import ExplainerBbox
+from utils.yolo_annotation import YoloAnnotation
+from utils.image_pad import ImagePad
 from utils.constants import *
-from utils.general import load_everything, save_everything, scale_manager_target
-from utils.arrow_comment import ArrowComment
-from utils.yolo_annotation import ImageAnnotation, AnnotationRepad
-from utils.repad_background import RepadBackground
+from utils.line_matrix import LineMatrix
 from utils.anchor_point import AnchorPoint
+from utils.general import tensor_to_line_matrix, save_everything
 from utils.layers_fake import LayersFake
 
 import torch
 
-distance_colors = [
-    PURE_RED,           # left
-    PURE_GREEN,         # up
-    PURE_BLUE,          # right
-    PURE_YELLOW,        # down
-]
+import random
 
-def create_grid_cells(ref, n):
-    # TODO, make rectangular ref work
-    sq = Square(
-        stroke_width=1,
-        side_length=ref.width,
-        grid_xstep=ref.width/n,
-        grid_ystep=ref.width/n,
-    )
-    sq.move_to(ref)
-    sq.grid_lines.set_stroke(width=1)
-    return sq
-
-def rect_from_point(point, left, up, right, down, **kwargs):
-    x, y, z = point
-
-    x_min = x - left
-    x_max = x + right
-    y_min = y - down
-    y_max = y + up
-
-    rect = Rectangle(
-        width=x_max - x_min,
-        height=y_max - y_min,
-        stroke_width=1,
-        stroke_opacity=0.3,
-        **kwargs
-    )
-
-    rect.move_to([
-        (x_min + x_max) / 2,
-        (y_min + y_max) / 2,
-        z
-    ])
-
-    return rect
-
-def create_anchor_points(ref, n, offsets):
-    dx, dy = ref.width / n, ref.height / n
-    aps = VGroup(*[
-            AnchorPoint(
-                ref.get_corner(UL)
-                + DOWN * dx * (i + 0.5)
-                + RIGHT * dy * (j + 0.5),   # position
-                offsets[i*n+j],             # offset
-            )
-            for i in range(n)
-            for j in range(n)
-        ])
-    return aps
-
-def get_anchor_pos(ref, n, i, j):
-    dx, dy = ref.width / n, ref.height / n
-    pos = ref.get_corner(UL) + DOWN*dx*(i+0.5) + RIGHT*dy*(j+0.5)
-    return pos
-
-def yolo_box_to_rect(img, cx, cy, w, h, **kwargs):
-    x = cx * img.width
-    y = cy * img.height
-
-    rect = Rectangle(
-        width=w * img.width,
-        height=h * img.height,
-        stroke_color=PURE_YELLOW,
-        stroke_width=2,
-        **kwargs
-    )
-
-    rect.move_to(img.get_corner(UL) + RIGHT * x + DOWN * y)
-    return rect
-
-def point_in_rect(point, rect):
-    x, y, _ = point
-
-    return (
-        rect.get_left()[0] <= x <= rect.get_right()[0]
-        and rect.get_bottom()[1] <= y <= rect.get_top()[1]
-    )
-
-def load_tensors():
-    # sequence of directions: left, up, right, down
-    pre_box = torch.load('assets/tensors/_pre_box.pt', weights_only=True, map_location='cpu')  # 1, 64, 8400
-    norm_box = torch.load('assets/tensors/_norm_box.pt', weights_only=True, map_location='cpu')  # 1, 64, 8400
-    dist_box = torch.load('assets/tensors/_dist_box.pt', weights_only=True, map_location='cpu')  # 1, 4, 8400
-    decoded_box = torch.load('assets/tensors/_decoded_box.pt', weights_only=True, map_location='cpu')  # 1, 4, 8400
-
-    pre_cls = torch.load('assets/tensors/_pre_cls.pt', weights_only=True, map_location='cpu')  # 1, 3, 8400
-    norm_cls = torch.load('assets/tensors/_norm_cls.pt', weights_only=True, map_location='cpu')  # 1, 3, 8400
-
-    return pre_box, norm_box, dist_box, decoded_box, pre_cls, norm_cls
+SHORT_DURATION=0.1
 
 class MainScene(Scene):
-    def construct(self) -> None:
-        (
-            background,
-        ) = load_everything(S012_EVERYTHING)
-        # FIXME, manually setup background shape
-        background._w = 640
-        background._h = 640
-
-        pre_box, norm_box, dist_box, decoded_box, pre_cls, norm_cls = load_tensors()
-
+    def construct(self):
         # ************************************************************
         self.next_section(
-            'init, show background shape before output design',
-            skip_animations=True,
-        )
-        # ************************************************************
-        self.add(background)
-        self.wait()
-        self.play(background.show_passing_flash())
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'from grid cells to anchor points',
-            skip_animations=True,
-        )
-        # ************************************************************
-        # create grid cells
-        grid = create_grid_cells(background.background, 20)
-        self.play(Write(grid))
-        self.wait()
-
-        # create anchors points, based on tensor content
-        offsets = dist_box[0, :, 8000:].transpose(0,1)      # (400,4)
-        anchors = create_anchor_points(
-            background,
-            20,
-            offsets,
-        )
-        self.play(Write(anchors, lag_ratio=0.02))
-        self.wait()
-        self.play(AnimationGroup(
-            background.unwrite_shape_texts(),
-            Unwrite(grid),
-        ))
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'anchor point capture thinking',
-            skip_animations=True,
-        )
-        # ************************************************************
-        dd = float(background.width) / 20       # TODO, make 20 variable
-
-        self.play(AnimationGroup(
-            *(anchor.to_rect(
-                dd,
-                stroke_width=1,
-                stroke_opacity=0.3,
-                stroke_color=WHITE,
-            ) for anchor in anchors),
-            lag_ratio=0.003,
-        ))
-        self.wait()
-        self.play(AnimationGroup(
-            *(anchor.to_dot() for anchor in anchors),
-            lag_ratio=0.003,
-        ))
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'identify important anchor points ',
-            skip_animations=True,
-        )
-        # ************************************************************
-        # plot reference bboxes
-        bboxes = VGroup(
-            *(yolo_box_to_rect(background.background, cx, cy, w, h) for _,cx,cy,w,h in background.data),
-        )
-        self.play(Write(bboxes))
-        self.wait()
-        # stress those anchors inside rects
-        inside_anchors = VGroup(
-            *(dot for dot in anchors if any(point_in_rect(dot.dot.get_center(),rect) for rect in bboxes))
-        )
-
-        # identify those anchors inside reference bboxes
-        self.play(AnimationGroup(
-            dot.animate.set_color(RED) for dot in inside_anchors
-        ))
-        self.wait()
-
-        # let inside anchors capture
-        self.play(AnimationGroup(
-            *(anchor.to_rect(
-                dd,
-                stroke_width=1,
-                stroke_opacity=1.0,
-                stroke_color=RED,
-            ) for anchor in inside_anchors),
-            lag_ratio=0.03,
-        ))
-        self.wait()
-
-        # back to background + anchor points
-        self.play(AnimationGroup(
-            *(anchor.to_dot() for anchor in inside_anchors),
-            lag_ratio=0.03,
-        ))
-        self.wait()
-        self.play(AnimationGroup(
-            *(anchor.animate.set_color(WHITE) for anchor in inside_anchors),
-            Unwrite(bboxes),
-        ))
-        self.wait()
-
-        # TODO: which target to capture? inside/inside-multiple/outside
-
-        # ************************************************************
-        self.next_section(
-            'sample anchor, single dddd(640) representation',
-            skip_animations=True,
-        )
-        # ************************************************************
-        sample_index = 189
-        sample_anchor = anchors[sample_index]    # FIXME, change this
-        anchors.save_state()                    # for restore later
-        anchors.generate_target()
-        anchors.target.set_stroke(opacity=0.2)
-        anchors.target[sample_index].set_stroke(opacity=1.0)
-
-        # focus on sample anchor
-        self.play(MoveToTarget(anchors))
-        self.wait()
-
-        # offset trackers
-        o_trackers = [ValueTracker(v) for v in sample_anchor.offset]
-
-        # manual create sample rect
-        sample_center = sample_anchor.orig_center   # FIXME, orig_center exist only after calling to_rect
-        from utils.anchor_point import rect_from_point
-        sample_rect = always_redraw(
-            lambda: rect_from_point(
-                sample_center,
-                (d*dd for d in [t.get_value() for t in o_trackers]),
-                stroke_width=2,
-                stroke_opacity=1.0,
-                stroke_color=WHITE,
-            )
-        )
-        self.play(ReplacementTransform(
-            sample_anchor,
-            sample_rect,
-        ))
-        self.wait()
-
-        # manual create sample arrows
-        sample_arrows = always_redraw(
-            lambda: VGroup(
-                Arrow(
-                    start=sample_center,
-                    end=(
-                        sample_center[0]-o_trackers[0].get_value()*dd,
-                        sample_center[1],
-                        0,
-                    ),
-                    stroke_width=3,
-                    tip_length=0.15,
-                    buff=0.0,
-                ),
-                Arrow(
-                    start=sample_center,
-                    end=(
-                        sample_center[0],
-                        sample_center[1]+o_trackers[1].get_value()*dd,
-                        0,
-                    ),
-                    stroke_width=3,
-                    tip_length=0.15,
-                    buff=0.0,
-                ),
-                Arrow(
-                    start=sample_center,
-                    end=(
-                        sample_center[0]+o_trackers[2].get_value()*dd,
-                        sample_center[1],
-                        0,
-                    ),
-                    stroke_width=3,
-                    tip_length=0.15,
-                    buff=0.0,
-                ),
-                Arrow(
-                    start=sample_center,
-                    end=(
-                        sample_center[0],
-                        sample_center[1]-o_trackers[3].get_value()*dd,
-                        0,
-                    ),
-                    stroke_width=3,
-                    tip_length=0.15,
-                    buff=0.0,
-                ),
-            )
-        )
-        # problem if write one by one
-        self.play(Write(sample_arrows, lag_ratio=0.3))
-        self.wait()
-
-        # manual create sample direction texts
-        sample_diss = always_redraw(
-            lambda: VGroup(
-                Integer(
-                    o_trackers[0].get_value()*32,
-                ).scale(0.4).next_to(
-                    sample_arrows[0],
-                    UP,
-                    buff=0.05,
-                ).set_z_index(4),
-                Integer(
-                    o_trackers[1].get_value() * 32,
-                ).scale(0.4).next_to(
-                    sample_arrows[1],
-                    RIGHT,
-                    buff=0.05,
-                ).set_z_index(3),
-                Integer(
-                    o_trackers[2].get_value() * 32,
-                ).scale(0.4).next_to(
-                    sample_arrows[2],
-                    DOWN,
-                    buff=0.05,
-                ).set_z_index(2),
-                Integer(
-                    o_trackers[3].get_value() * 32,
-                ).scale(0.4).next_to(
-                    sample_arrows[3],
-                    LEFT,
-                    buff=0.05,
-                ).set_z_index(1),
-            )
-        )
-        self.play(Write(sample_diss, lag_ratio=0.3))
-        self.wait()
-
-        # TODO, change offsets multiple times
-        for _ in range(1):
-            self.play(AnimationGroup(
-                *(tracker.animate.set_value(np.random.uniform(2,8))
-                  for tracker in o_trackers),
-            ))
-            self.wait(0.3)
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'with colored arrangement, single dddd(640) representation',
-            skip_animations=True,
-        )
-        # ************************************************************
-        # change color of each distance and arrow
-        self.play(AnimationGroup(
-            *(AnimationGroup(
-                dis.animate.set_color(distance_colors[i]),
-                sample_arrows[i].animate.set_color(distance_colors[i]).set_opacity(0.5),
-            ) for i,dis in enumerate(sample_diss)),
-            lag_ratio=0.3,
-        ))
-        self.wait()
-
-        # arrange distance in IN order, most properties of distance kept here during animation
-        _offset_scale = 0.15
-        self.play(AnimationGroup(
-            sample_diss[0].animate.move_to(sample_center+DL*_offset_scale*1.5).set_opacity(1.0).scale(2.0),
-            sample_diss[1].animate.move_to(sample_center + DL * _offset_scale * 0.5).set_opacity(0.8).scale(1.8),
-            sample_diss[2].animate.move_to(sample_center + DL * _offset_scale * -0.5).set_opacity(0.6).scale(1.6),
-            sample_diss[3].animate.move_to(sample_center + DL * _offset_scale * -1.5).set_opacity(0.4).scale(1.4),
-        ))
-        self.wait()
-
-        # reset updaters of sample_diss and sample_arrows
-        sample_diss.clear_updaters()
-        sample_diss[0].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[0].get_value() * 32,
-            ),)
-        sample_diss[1].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[1].get_value() * 32,
-            ),)
-        sample_diss[2].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[2].get_value() * 32,
-            ),)
-        sample_diss[3].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[3].get_value() * 32,
-            ),)
-
-        sample_arrows[0].add_updater(
-            lambda mob: mob.put_start_and_end_on(
-                start=sample_center,
-                end=(
-                    sample_center[0] - o_trackers[0].get_value() * dd,
-                    sample_center[1],
-                    0,
-                ),
-            )
-        )
-        sample_arrows[1].add_updater(
-            lambda mob: mob.put_start_and_end_on(
-                start=sample_center,
-                end=(
-                    sample_center[0],
-                    sample_center[1] + o_trackers[1].get_value() * dd,
-                    0,
-                ),
-            )
-        )
-        sample_arrows[2].add_updater(
-            lambda mob: mob.put_start_and_end_on(
-                start=sample_center,
-                end=(
-                    sample_center[0] + o_trackers[2].get_value() * dd,
-                    sample_center[1],
-                    0,
-                ),
-            )
-        )
-        sample_arrows[3].add_updater(
-            lambda mob: mob.put_start_and_end_on(
-                start=sample_center,
-                end=(
-                    sample_center[0],
-                    sample_center[1] - o_trackers[3].get_value() * dd,
-                    0,
-                ),
-            )
-        )
-
-        # TODO, change offsets multiple times
-        # TODO, maybe a final regular series?
-        for _ in range(3):
-            self.play(AnimationGroup(
-                *(tracker.animate.set_value(np.random.uniform(2,8))
-                  for tracker in o_trackers),
-            ))
-            self.wait(0.3)
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'sample anchor, single dddd(640/32) representation',
-            skip_animations=True,
-        )
-        # ************************************************************
-        # remove updaters of distance for preparation
-        for dis in sample_diss:
-            dis.clear_updaters()
-
-        # TODO, maybe crawling lines to signify UNIT concept?
-        # append /32 for each distance
-        divs_32 = VGroup(
-            MathTex(
-                '/32',
-                font_size=int(32*(1-i*0.1)),
-                color=GRAY,
-            ).next_to(sample_diss[i],RIGHT,buff=0).shift(DOWN*0.03).set_opacity(1-i*0.2).set_z_index(1)
-            for i in range(4)
-        )
-        self.play(Write(divs_32))
-        self.wait()
-
-        # transform x/32 into result
-        _inputs = VGroup(
-            VGroup(
-                left,
-                right,
-            ) for left, right in zip(sample_diss,divs_32)
-        )
-        _outputs = VGroup(
-            DecimalNumber(
-                o_trackers[0].get_value(),
-                num_decimal_places=2,
-            ).move_to(sample_center+DL*_offset_scale*1.5).set_opacity(1.0).scale(0.9).set_color(distance_colors[0]).set_z_index(4),
-            DecimalNumber(
-                o_trackers[1].get_value(),
-                num_decimal_places=2,
-            ).move_to(sample_center + DL * _offset_scale * 0.5).set_opacity(0.8).scale(0.8).set_color(distance_colors[1]).set_z_index(3),
-            DecimalNumber(
-                o_trackers[2].get_value(),
-                num_decimal_places=2,
-            ).move_to(sample_center + DL * _offset_scale * -0.5).set_opacity(0.6).scale(0.7).set_color(distance_colors[2]).set_z_index(2),
-            DecimalNumber(
-                o_trackers[3].get_value(),
-                num_decimal_places=2,
-            ).move_to(sample_center + DL * _offset_scale * -1.5).set_opacity(0.4).scale(0.6).set_color(distance_colors[3]).set_z_index(1),
-        )
-        self.play(AnimationGroup(
-            ReplacementTransform(_input, _output) for _input,_output in zip(_inputs,_outputs)
-        ))
-        self.wait()
-
-        # add updaters to decimals
-        _outputs[0].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[0].get_value(),
-            ),
-        )
-        _outputs[1].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[1].get_value(),
-            ),
-        )
-        _outputs[2].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[2].get_value(),
-            ),
-        )
-        _outputs[3].add_updater(
-            lambda mob: mob.set_value(
-                o_trackers[3].get_value(),
-            ),
-        )
-
-        # TODO, change offsets multiple times
-        for _ in range(3):
-            self.play(AnimationGroup(
-                *(tracker.animate.set_value(np.random.uniform(2, 8))
-                  for tracker in o_trackers),
-            ))
-            self.wait(0.3)
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'clean job',
-            skip_animations=True,
-        )
-        # ************************************************************
-        # FIXME, necessary to clear updater before unwrite?
-        for output in _outputs:
-            output.clear_updaters()
-        for arrow in sample_arrows:
-            arrow.clear_updaters()
-        sample_rect.clear_updaters()
-        
-        self.play(AnimationGroup(
-            Unwrite(_outputs, run_time=0.5),
-            Unwrite(sample_arrows, run_time=0.5),     # unwriting always_redraw object
-            anchors.animate.restore(),
-        ))
-
-        # TODO, problem with the transformed anchors? thus recreate
-        self.remove(anchors)
-        anchors = create_anchor_points(
-            background,
-            20,
-            offsets,
-        )
-        self.add(anchors)
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'dddd(640/32) output representation',
+            'init',
             skip_animations=False,
         )
         # ************************************************************
-        # make anchors and background a whole
-        whole = Group(background, anchors)
+        background = ImagePad(padded=True)
+        background.scale(1.3).set_opacity(0.2)
 
-        # make room in the right
-        self.play(whole.animate.shift(LEFT*3).scale(0.8))
-        self.wait()
-        dd = float(background.width) / 20   # update step from now on
+        # TODO, make distance tensor loading a function
+        data_dist = torch.load(
+            'assets/tensors/_dist_box.pt',
+            weights_only=True,
+            map_location='cpu',
+            )  # (1, 4, 8400)
+        data_dist = data_dist[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
 
-        # prepare lf
-        lf_output_32_box = LayersFake(
-            4,
-            width=background.width,
-            height=background.height,
+        # explainer for distance tensor
+        explainer_dist = ExplainerBbox(
+            background=background,
+            data=data_dist,
+            sf_nominal=32,
+        )
+
+        explainer_dist_bg = Group(explainer_dist, background)
+        self.add(explainer_dist_bg)
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'anchor points capture thinking',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # show grid and anchor points
+        self.play(explainer_dist.show_grid(lag_ratio=0, run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+        self.play(explainer_dist.show_anchor_points(lag_ratio=0, run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+        self.play(explainer_dist.hide_grid(lag_ratio=0, run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+
+        # anchor points capture
+        self.play(explainer_dist.to_rects(
+            gargs={'lag_ratio':0, 'run_time':SHORT_DURATION,}
+        ))
+        self.wait(SHORT_DURATION)
+        self.play(explainer_dist.to_dots(
+            gargs={'lag_ratio':0, 'run_time':SHORT_DURATION,}
+        ))
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'inside anchor points capture',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # FIXME, show and fade annotation, VGroup of SingleAnnotation
+        annotation = YoloAnnotation(
+            background=background.image,
+            annotation=PATH_LABEL_640,
+        ).annotation.set_z_index(1) # annotation should on top
+        self.play(Write(annotation, lag_ratio=0, run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+        self.play(AnimationGroup(
+            AnimationGroup(
+                *(anno.label.animate.set_opacity(opacity=0) for anno in annotation),
+                lag_ratio=0, run_time=SHORT_DURATION,
+            ),
+            AnimationGroup(
+                *(anno.bbox.animate.set_fill(opacity=0) for anno in annotation),
+                lag_ratio=0, run_time=SHORT_DURATION,
+            ),
+        ))
+        self.wait(SHORT_DURATION)
+
+        # highlight inside anchor points
+        explainer_dist.save_state()
+        in_aps, out_aps = explainer_dist.collect_in_out_aps(annotation)
+        self.play(AnimationGroup(
+            AnimationGroup(
+                *(ap.animate.set_pattern(opacity=1.0,color=PURE_YELLOW) for ap in in_aps),
+                lag_ratio=0, run_time=SHORT_DURATION,
+            ),
+            AnimationGroup(
+                *(ap.animate.set_pattern(opacity=0.3,color=WHITE) for ap in out_aps),
+                lag_ratio=0, run_time=SHORT_DURATION,
+            ),
+        ))
+        self.wait(SHORT_DURATION)
+
+        # fade out and remove annotation
+        self.play(AnimationGroup(
+            *(anno.bbox.animate.set_opacity(opacity=0) for anno in annotation),
+            lag_ratio=0, run_time=SHORT_DURATION,
+        ))
+        self.remove(annotation)
+        self.wait(SHORT_DURATION)
+
+        # inside anchor points capture
+        # TODO, make target rect transparent?
+        self.play(AnimationGroup(
+            *(ap.to_rect() for ap in in_aps),
+            lag_ratio=0, run_time=SHORT_DURATION,
+        ))
+        self.wait(SHORT_DURATION)
+
+        # restore to anchor point array
+        self.play(explainer_dist.animate(run_time=SHORT_DURATION).restore())
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'sample, from distance to position thinking',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # focus on sample anchor point
+        sample_idx = 189
+        sample_ap, other_aps = explainer_dist.collect_focus_ap(sample_idx)
+        self.play(AnimationGroup(
+            sample_ap.animate(run_time=SHORT_DURATION).set_pattern(opacity=1.0),
+            AnimationGroup(
+                *(ap.animate.set_pattern(opacity=0.3) for ap in other_aps),
+                lag_ratio=0, run_time=SHORT_DURATION,
+            )
+        ))
+        self.wait(SHORT_DURATION)
+        
+        # from distance to position, thinking
+        self.play(sample_ap.show_arrows(lag_ratio=0.1, run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+        self.play(sample_ap.to_rect(run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+        self.play(sample_ap.to_dot(run_time=SHORT_DURATION),)
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'sample, from absolute distance to relative distance',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # from distance to position, details
+        self.play(sample_ap.show_distance_abs(lag_ratio=0.1, run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+        self.play(AnimationGroup(
+            sample_ap.arrows.animate(run_time=SHORT_DURATION).set_opacity(0.3),
+            sample_ap.show_divide(run_time=SHORT_DURATION),
+        ))
+        self.wait(SHORT_DURATION)
+        self.play(AnimationGroup(
+            sample_ap.arrows.animate(run_time=SHORT_DURATION).set_opacity(1.0),
+            sample_ap.abs_to_rela(
+                aargs={'run_time':0.3,},
+                gargs={'lag_ratio':0.1, 'run_time':SHORT_DURATION,},
+            ),
+        ))
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'sample, detailed computation from distance to position',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # make room for equations
+        self.play(explainer_dist_bg.animate(run_time=SHORT_DURATION).shift(LEFT*2).scale(0.9))
+        self.wait(SHORT_DURATION)
+
+        # create equations for sample
+        sample_eq = sample_ap.create_decode_equations(
+            buff=0.3,
+        ).shift(RIGHT*3)
+        self.play(Create(sample_eq))
+        self.wait(SHORT_DURATION)
+
+        # show point from x1y1
+        self.play(explainer_dist.show_point_from_xy(
+            sample_idx,
+            direction=UL,
+            pargs={'run_time':SHORT_DURATION, 'time_width':2},
+            targs={},
+            gargs={'lag_ratio':SHORT_DURATION,},
+        ))
+        self.wait(SHORT_DURATION)
+        self.play(explainer_dist.hide_xy_txts(run_time=SHORT_DURATION))
+
+        # show point from x2y2
+        self.play(explainer_dist.show_point_from_xy(
+            sample_idx,
+            direction=DR,
+            pargs={'run_time':1, 'time_width':2},
+            targs={},
+            gargs={'lag_ratio':SHORT_DURATION,},
+        ))
+        self.wait(SHORT_DURATION)
+        self.play(explainer_dist.hide_xy_txts(run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+
+        # to rect
+        self.play(AnimationGroup(
+            sample_ap.hide_distance(run_time=SHORT_DURATION, lag_ratio=0),
+            sample_ap.to_rect(run_time=SHORT_DURATION),
+        ))
+        self.wait(SHORT_DURATION)
+
+        # clean
+        self.play(AnimationGroup(
+            sample_ap.hide_arrows(run_time=SHORT_DURATION),
+            sample_ap.to_dot(run_time=SHORT_DURATION),
+            Uncreate(sample_eq, run_time=SHORT_DURATION),
+        ))
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'loop, from distance to position',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO, more natural way of looping
+        k=1         # TODO, proper loop number
+        idxs = random.sample(
+            range(data_dist.shape[0]*data_dist.shape[1]),
+            k=k,
+        )
+        for idx in idxs:
+            # highlight one target point
+            sample_ap, other_aps = explainer_dist.collect_focus_ap(idx)
+            self.play(AnimationGroup(
+                sample_ap.animate(run_time=SHORT_DURATION).set_pattern(opacity=1.0),
+                AnimationGroup(
+                    *(ap.animate.set_pattern(opacity=0.3) for ap in other_aps),
+                    lag_ratio=0, run_time=SHORT_DURATION,
+                )
+            ))
+            self.wait(SHORT_DURATION)
+
+            # show arrows
+            self.play(sample_ap.show_arrows(lag_ratio=0.0, run_time=SHORT_DURATION))
+            self.wait(SHORT_DURATION)
+
+            # show equations
+            sample_eq = sample_ap.create_decode_equations(
+                buff=0.3,
+            ).shift(RIGHT*3)
+            self.play(Create(sample_eq, run_time=SHORT_DURATION))
+            self.wait(SHORT_DURATION)
+
+            # to rect
+            self.play(sample_ap.to_rect(run_time=SHORT_DURATION))
+            self.wait(SHORT_DURATION)
+
+            # restore
+            self.play(AnimationGroup(
+                sample_ap.hide_arrows(run_time=SHORT_DURATION),
+                sample_ap.to_dot(run_time=SHORT_DURATION),
+                Uncreate(sample_eq, run_time=SHORT_DURATION),
+            ))
+            self.wait(SHORT_DURATION)
+        
+        # make all aps opacity 1.0
+        self.play(AnimationGroup(
+            *(ap.animate.set_pattern(opacity=1.0)
+            for ap in explainer_dist.anchor_points),
+            lag_ratio=0.0,
+            run_time=SHORT_DURATION,
+        ))
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'global, generate distance tensor',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # sync distance generation
+        self.play(explainer_dist_bg.animate(run_time=SHORT_DURATION).scale(0.8).shift(LEFT*.5))
+        self.wait(SHORT_DURATION)
+
+        tensor_dist = explainer_dist.create_distance_tensor(font_size=8)
+        tensor_dist.center().shift(RIGHT*3)
+        self.play(AnimationGroup(
+            explainer_dist.show_arrows(
+                arrow_config={'stroke_width':1, 'tip_length':0.03,},
+                gargs={'run_time':SHORT_DURATION, 'lag_ratio':0.02},
+            ),
+            Write(tensor_dist, run_time=SHORT_DURATION, lag_ratio=0.02),
+        ))  # TODO, 3 seconds looks good
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'global, generate xyxy tensor',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # scale and make room in the bottom
+        sync_bbox = Group(explainer_dist_bg, tensor_dist)
+        sync_bbox.generate_target()
+        sync_bbox.target.scale(0.7).arrange(DOWN,buff=0.5).shift(LEFT*3)
+        sync_bbox.target[1].align_to(sync_bbox.target[0][0].background, LEFT)
+        self.play(MoveToTarget(sync_bbox, run_time=SHORT_DURATION))
+        self.wait(SHORT_DURATION)
+
+        # make copy of distance
+        explainer_xyxy_bg = explainer_dist_bg.copy()
+        self.add(explainer_xyxy_bg)
+        self.play(explainer_xyxy_bg.animate(run_time=1.0).shift(RIGHT*5.5))
+        self.wait(SHORT_DURATION)
+
+        explainer_xyxy = explainer_xyxy_bg[0]
+
+        # sync position generation
+        tensor_xyxy = explainer_xyxy.create_xyxy_tensor(font_size=6)
+        tensor_xyxy.align_to(tensor_dist, UP)
+        self.play(AnimationGroup(
+            explainer_xyxy.to_rects(
+                rect_config={'width':0.5,},
+                aargs={},
+                gargs={'lag_ratio':0.01, 'run_time': SHORT_DURATION},
+            ),
+            explainer_xyxy.hide_arrows(
+                aargs={},
+                gargs={'lag_ratio':0.01, 'run_time': SHORT_DURATION},
+            ),
+            Write(tensor_xyxy, run_time=SHORT_DURATION, lag_ratio=0.01),
+        ))  # TODO, 3 seconds looks good
+        self.wait(SHORT_DURATION)
+
+        # # TODO, generate comment labels for layers of tensors
+
+        # ************************************************************
+        self.next_section(
+            'reshape xyxy tensor to 2d',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # make room for reshaped xyxy tensor
+        self.play(AnimationGroup(
+            explainer_dist_bg.animate(run_time=SHORT_DURATION).shift(LEFT*1),
+            tensor_dist.animate(run_time=SHORT_DURATION).shift(LEFT*1),
+            explainer_xyxy_bg.animate(run_time=SHORT_DURATION).shift(LEFT*2),
+            tensor_xyxy.animate(run_time=SHORT_DURATION).shift(LEFT*2),
+        ))
+        self.wait(SHORT_DURATION)
+
+        # transform xyxy into reshaped 2d version
+        tensor_xyxy_2d = tensor_xyxy.copy()     # make a copy as target 2d tensor
+        self.add(tensor_xyxy_2d)
+        line_matrix = explainer_xyxy.create_line_matrix().scale(0.07).shift(RIGHT*4.3)
+        self.play(tensor_to_line_matrix(
+            tensor=tensor_xyxy_2d,
+            lmatrix=line_matrix,
+            targs={},
+            gargs={'lag_ratio':0.02, 'run_time':0.1,},
+            ggargs={'lag_ratio':0.05, 'run_time':SHORT_DURATION,},
+        ))
+        self.wait(SHORT_DURATION)
+
+        # ************************************************************
+        self.next_section(
+            'simplify tensor_dist/tensor_xyxy/tensor_xyxy_2d' \
+            'into lf_output_32_dist/lf_output_32_xyxy/lf_output_32_xyxy_2d',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # create lf_output_32_dist
+        lf_output_32_dist = LayersFake(
+            n=4,
+            ref=tensor_dist,
             width_nominal=20,
             height_nominal=20,
+            buff=0.05,
             expanded=True,
-            buff=0.12,
-        ).shift(RIGHT*3)
-        # self.add(lf_output_32_box)
-        self.wait()
+        ).move_to(tensor_dist).scale(0.95)
 
-        # prepare digit representation, dmobs
-        dmobs = []
-        data = offsets.transpose(0,1).reshape(4,20,20)
-        x_step = dd * RIGHT
-        y_step = dd * DOWN
-        for i, layer in enumerate(data):
-            bg = lf_output_32_box.rects[3-i]    # reversed for layersfake type
-            base = bg.get_corner(UL) + x_step * 0.5 + y_step * 0.5
-            zidx = 4 - i
-            opac = 1.0 - i * 0.25
-            color = distance_colors[i]  # color for current layer
+        # create lf_output_32_xyxy
+        lf_output_32_xyxy = lf_output_32_dist.copy()
+        lf_output_32_xyxy.move_to(tensor_xyxy)
 
-            layer_mobs = []
-            for j, row in enumerate(layer):
-                for k, value in enumerate(row):
-                    mob = DecimalNumber(
-                        value,
-                        color=color,
-                        stroke_width=0.5,   # make digits more visible
-                        stroke_opacity=opac,
-                    ).move_to(base).shift(k * x_step + j * y_step)
-                    mob.scale(0.25)
+        # create lf_output_32_xyxy_2d
+        lf_output_32_xyxy_2d = LayersFake(
+            n=1,
+            ref=tensor_xyxy_2d,
+            width_nominal=4,
+            height_nominal=400,
+            expanded=True,
+        ).move_to(tensor_xyxy_2d)
 
-                    mob.set_z_index(zidx)
-                    mob.set_fill(opacity=opac)
-                    # mobs.append(mob)
-                    layer_mobs.append(mob)
-            layer_mobs = VGroup(*layer_mobs)
-            dmobs.append(layer_mobs)
-        dmobs = VGroup(*dmobs)
-        dmobs = VGroup(VGroup(*g) for g in list(zip(*dmobs)))   # rearrange
-
-        # self.add(dmobs)
-        # self.wait()
-
-        # # sync capture and digit generation
+        # simplify tensor_dist/tensor_xyxy/tensor_xyxy_2d
         self.play(AnimationGroup(
-            *(AnimationGroup(
-                anchor.to_rect(
-                    dd,
-                    stroke_width=1,
-                    stroke_opacity=0.3,
-                    stroke_color=WHITE,
-                ),
-                Write(
-                    beam,
-                    lag_ratio=0.001,
-                    run_time=1.0,          # FIXME, sync
-                ),
-            ) for anchor, beam in zip(anchors, dmobs)),
-            lag_ratio=0.003,
+            Unwrite(tensor_dist, lag_ratio=0, run_time=1.0),
+            Write(lf_output_32_dist, run_time=1.0),
+            Unwrite(tensor_xyxy, lag_ratio=0, run_time=1.0),
+            Write(lf_output_32_xyxy, run_time=1.0),
+            Unwrite(tensor_xyxy_2d, lag_ratio=0, run_time=1.0),
+            Write(lf_output_32_xyxy_2d, run_time=1.0),
         ))
-        self.wait()
-        # self.play(AnimationGroup(
-        #     *(anchor.to_dot() for anchor in anchors),
-        #     lag_ratio=0.003,
-        # ))
-        # self.wait()
+        self.wait(0.3)
 
-        # sync capture and digits generation
-
-        # replace digits with numberplane
 
         # ************************************************************
         self.next_section(
-            'sample anchor, single dfl-32 representation',
-            skip_animations=True,
+            'simplify explainer_dist and explainer_xyxy ' \
+            'into 4x4 mini version',
+            skip_animations=False,
         )
         # ************************************************************
+        # clean explainer_dist and explainer_xyxy
+        self.play(AnimationGroup(
+            explainer_dist.hide_arrows(
+                aargs={},
+                gargs={'lag_ratio':0, 'run_time':0.5},
+            ),
+            explainer_xyxy.to_dots(
+                aargs={},
+                gargs={'lag_ratio':0, 'run_time':0.5},
+            ),
+        ))
+        self.wait(0.3)
+        self.play(AnimationGroup(
+            explainer_dist.hide_anchor_points(
+                lag_ratio=0, run_time=0.5,
+            ),
+            explainer_xyxy.hide_anchor_points(
+                lag_ratio=0, run_time=0.5,
+            ),
+        ))
+        self.wait(0.3)
+        self.remove(explainer_dist, explainer_xyxy)
+        
+        # create mini version explainer_dist and explainer_xyxy
+        explainer_dist = ExplainerBbox(
+            background=background,
+            data=np.load(MINI_32_PATH),
+            sf_nominal=32,
+        )
+        explainer_xyxy = ExplainerBbox(
+            background=explainer_xyxy_bg[1],
+            data=np.load(MINI_32_PATH),
+            sf_nominal=32,
+        )
+        explainer_dist_bg = Group(explainer_dist, background)
+        explainer_xyxy_bg = Group(explainer_xyxy, explainer_xyxy_bg[1])
+
+        # show content for explainer_dist and explainer_xyxy
+        self.play(AnimationGroup(
+            explainer_dist.show_anchor_points(
+                lag_ratio=0, run_time=0.5,
+            ),
+            explainer_xyxy.show_anchor_points(
+                lag_ratio=0, run_time=0.5,
+            ),
+        ))
+        self.wait(0.5)
+        self.play(AnimationGroup(
+            explainer_dist.show_arrows(
+                arrow_config={'stroke_width':2, 'tip_length':0.06,},
+                aargs={},
+                gargs={'lag_ratio':0, 'run_time':0.5},
+            ),
+            explainer_xyxy.to_rects(
+                rect_config={'width':1,},
+                aargs={},
+                gargs={'lag_ratio':0, 'run_time':0.5},
+            ),
+        ))
+        self.wait(0.5)
+
+        # # ************************************************************
+        # self.next_section(
+        #     'generate explainer_xyxy_2d from explainer_xyxy',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
 
         # ************************************************************
         self.next_section(
-            'dfl-32 output representation',
-            skip_animations=True,
+            'save for next scene which go back to big map',
+            skip_animations=False,
         )
         # ************************************************************
-
-
-        # decode step roughly, before tensor introduction
-
-        # save for next scene
+        everything = Group(
+            explainer_dist_bg,
+            explainer_xyxy_bg,
+            lf_output_32_dist,
+            lf_output_32_xyxy,
+            lf_output_32_xyxy_2d,
+        )
+        save_everything(S013_EVERYTHING, everything)

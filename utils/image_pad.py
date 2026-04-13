@@ -66,9 +66,9 @@ class ImagePad(Mobject, ShowShape):
     def get_shape_path(self):
         path = VMobject()
         path.set_points_as_corners([
-            self.get_corner(LEFT + DOWN),
-            self.get_corner(LEFT + UP),
-            self.get_corner(RIGHT + UP),
+            self.get_corner(DL),
+            self.get_corner(UL),
+            self.get_corner(UR),
         ]).set_stroke(color=YELLOW)
         return path
     

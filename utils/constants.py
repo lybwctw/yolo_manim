@@ -20,7 +20,7 @@ S009_EVERYTHING = 's009_everything.pkl'
 S010_EVERYTHING = 's010_everything.pkl'
 S011_EVERYTHING = 's011_everything.pkl'
 S012_EVERYTHING = 's012_everything.pkl'
-
+S013_EVERYTHING = 's013_everything.pkl'
 
 PATH_IMAGE_640 = 'assets/images/sample_640_360.jpg'
 PATH_LABEL_640 = 'assets/images/labels.txt'
@@ -39,3 +39,6 @@ CONFIG_DIR = 'config'
 S001_IMAGE_RAW = os.path.join(CONFIG_DIR, 's001_image_raw.txt',)
 S002_ANNOTATION_FINAL = os.path.join(CONFIG_DIR, 's002_annotation_final.txt',)
 S003_ANNOTATION_REPAD = os.path.join(CONFIG_DIR, 's003_annotation_repad.txt')
+
+# mini
+MINI_32_PATH = 'assets/numpy/mini_32.npy'

@@ -45,7 +45,7 @@ ARROW_CONFIG = {
 
 TEXT_CONFIG = {
     'font': 'JetBrains Mono',
-    'font_size': 15,
+    # 'font_size': 15,
 }
 
 class AnchorPoint(VMobject):
@@ -55,6 +55,8 @@ class AnchorPoint(VMobject):
         offset: np.ndarray | list | tuple = (1.,2.,3.,4.),  # left, up, right, down
         sf_screen: float = 0.5,                             # scale factor for screen
         sf_nominal: int = 32,                               # scale factor for nominal, 8/16/32
+        idx: tuple = (0,0),                                 # indices of current anchor point
+        xyxy: np.ndarray | list | tuple = (1.,2.,3.,4.),    # precomputed x1y1x2y2
     ):
         super().__init__()
         # make sure offset is list or tuple
@@ -64,12 +66,34 @@ class AnchorPoint(VMobject):
             self.offset = offset
         self.sf_screen = sf_screen
         self.sf_nominal = sf_nominal
+        self.idx = idx
+        # make sure xyxy is a list
+        if isinstance(xyxy, np.ndarray):
+            self.xyxy = xyxy.tolist()
+        elif isinstance(xyxy, tuple):
+            self.xyxy = [t for t in xyxy]
+        else:
+            self.xyxy = xyxy
 
         dot = Square(
             stroke_opacity=0.0,
             **DOT_CONFIG,
         ).move_to(point)
         self.dot = dot
+
+        self.dir_to_idx = {
+            'left':  self.idx[1],
+            'up':    self.idx[0],
+            'right': self.idx[1],
+            'down':  self.idx[0],
+        }
+
+        self.dir_to_sign = {
+            'left':  '-',
+            'up':    '-',
+            'right': '+',
+            'down':  '+',
+        }
 
         left, up, right, down = [x*self.sf_screen for x in self.offset]
         width, height = left+right, up+down
@@ -90,10 +114,12 @@ class AnchorPoint(VMobject):
 
     def to_rect(
         self,
+        rect_config: dict = {}, # rect config
         **aargs,
     ) -> Animation:
         target = self.rect.copy().set_stroke(
             opacity=self.mob_opacity,
+            **rect_config,
         )
         return Transform(self.mob, target, **aargs)
 
@@ -108,24 +134,29 @@ class AnchorPoint(VMobject):
 
     def create_arrows(
         self,
+        arrow_config: dict={},
     ) -> VGroup:
+        cfg = {**ARROW_CONFIG, **arrow_config}
         arrows = VGroup(
             *(Arrow(
                 start=self.dot.get_center(),
                 end=self.node_map[direction],
                 color=ARROW_COLOR_MAP[direction],
-                **ARROW_CONFIG,
+                **cfg,
             ) for direction in DIRECTION_SERIES),
         )
         return arrows
     
     def show_arrows(
         self,
+        arrow_config: dict={},
         **aargs,
     ) -> Animation:
         """ TODO, arrow growing effect.
         """
-        self.arrows = self.create_arrows()
+        self.arrows = self.create_arrows(
+            arrow_config=arrow_config,
+        )
         self.add(self.arrows)
         return Write(self.arrows, **aargs)
     
@@ -138,12 +169,14 @@ class AnchorPoint(VMobject):
 
     def create_distance_abs(
         self,
+        font_size: int = 15,
     ) -> VGroup :
         dists = VGroup(
             *(Text(
                 # str(int(self.offset[i]*self.sf_nominal)), # TODO, why the fuck this failed?
                 '{:.0f}'.format(self.offset[i]*self.sf_nominal),
                 color=TEXT_COLOR_MAP[direction],
+                font_size=font_size,
                 **TEXT_CONFIG,
             ).next_to(
                 self.arrows[i],
@@ -155,19 +188,71 @@ class AnchorPoint(VMobject):
 
     def create_distance(
         self,
+        font_size: int = 15,            # specify font size manually
     ) -> VGroup :
+        """Create distance not positioned.
+        """
         dists = VGroup(
             *(Text(
                 '{:.2f}'.format(self.offset[i]),
                 color=TEXT_COLOR_MAP[direction],
+                font_size=font_size,
                 **TEXT_CONFIG,
-            ).next_to(
-                self.arrows[i],
-                TEXT_DIRECTION_MAP[direction],
-                buff=TEXT_DIRECTION_BUFF,
             ) for i, direction in enumerate(DIRECTION_SERIES))
         )
         return dists
+    
+    def create_xyxy(
+        self,
+        font_size: int = 15,            # specify font size manually
+    ) -> VGroup:
+        """Create xyxy not positioned.
+        """
+        xyxy = VGroup(
+            *(Text(
+                '{:>3d}'.format(self.xyxy[i]),
+                color=WHITE,            # xyxy is all white
+                font_size=font_size,
+                **TEXT_CONFIG,
+            ) for i in range(4))
+        )
+        return xyxy
+    
+    def create_ordered_distance(
+        self,
+        font_size: int = 8,             # smaller for tensor
+    ) -> VGroup:
+        """"Create distance ordered from DL to UR.
+        """
+        dists = self.create_distance(font_size=font_size)
+
+        # manual arrange
+        for i, dist in enumerate(dists):
+            dist.move_to(self.dot)
+            dist.set_z_index(4-i)
+            dist.set_opacity(opacity=1-i*0.2)
+            dist.shift((RIGHT*0.05 + UP*0.06)*i)
+
+        dists.move_to(self.dot)
+        return dists
+    
+    def create_ordered_xyxy(
+            self,
+            font_size: int = 8,         # smaller for tensor
+    ) -> VGroup:
+        """Create xyxy ordered from DL to UR.
+        """
+        xyxy = self.create_xyxy(font_size=font_size)
+
+        # manual arrange
+        for i, t in enumerate(xyxy):
+            t.move_to(self.dot)
+            t.set_z_index(4-i)
+            t.set_opacity(opacity=1-i*0.2)
+            t.shift((RIGHT*0.05 + UP*0.06)*i)
+        
+        xyxy.move_to(self.dot)
+        return xyxy
     
     def show_distance_abs(
         self,
@@ -184,11 +269,24 @@ class AnchorPoint(VMobject):
         self.remove(self.distance_abs)
         return Unwrite(self.distance_abs, **aargs)
     
+    def align_distance_to_arrows(
+        self,
+    ) -> Self:
+        for i, direction in enumerate(DIRECTION_SERIES):
+            self.distance[i].next_to(
+                self.arrows[i],
+                TEXT_DIRECTION_MAP[direction],
+                buff=TEXT_DIRECTION_BUFF,
+            )
+        return self
+    
     def show_distance(
         self,
+        font_size: int = 15,            # specifiy font manually
         **aargs,
     ) -> Animation:
         self.distance = self.create_distance()
+        self.align_distance_to_arrows()
         self.add(self.distance)
         return Write(self.distance, **aargs)
 
@@ -201,11 +299,13 @@ class AnchorPoint(VMobject):
     
     def create_divide(
         self,
+        font_size: int = 15,
     ) -> VGroup:
         divide = VGroup(
             Text(
                 '/' + str(self.sf_nominal),
                 color=TEXT_COLOR_MAP[direction],
+                font_size=font_size,
                 **TEXT_CONFIG,
             ).next_to(
                 self.distance_abs[i],
@@ -235,6 +335,7 @@ class AnchorPoint(VMobject):
         """
         self.remove(self.distance_abs)
         self.distance = self.create_distance()
+        self.align_distance_to_arrows()
         self.add(self.distance)
         return AnimationGroup(
             *(ReplacementTransform(dis_abs, dis_rela, **aargs)
@@ -262,6 +363,38 @@ class AnchorPoint(VMobject):
         self.rect.set_stroke(color=color)
         return self
 
+    def create_decode_equations(
+        self,
+        font_size: int = 15,
+        buff: float = 0.3,              # up-down buff between equatinos
+    ) -> VGroup:
+        """Create 4 Equations show computing from distance to position,
+           not positioned, not arranged.
+        """
+        equations = VGroup()
+        for i, direction in enumerate(DIRECTION_SERIES):
+            text = (
+                f'({self.dir_to_idx[direction]:>2d}+0.5{self.dir_to_sign[direction]}'
+                f'<span foreground="{TEXT_COLOR_MAP[direction]}">{self.offset[i]:.2f}</span>'
+                f')*{self.sf_nominal} = '
+                f'<span foreground="white">{self.xyxy[i]:<3d}</span>'
+            )
+            equation = MarkupText(
+                text,
+                color=GRAY,
+                font_size=font_size,
+                **TEXT_CONFIG,
+            )
+            equations.add(equation)
+
+        equations.arrange(
+            DOWN,
+            buff=buff,
+            aligned_edge=LEFT,
+        ).center()
+
+        return equations
+
     @property
     def node_left(self) -> np.ndarray:
         return np.array([self.rect.get_left()[0], self.dot.get_center()[1], 0])
@@ -287,44 +420,51 @@ class AnchorPoint(VMobject):
             'down':  self.node_down,
         }
 
+
 class Demo(Scene):
     def construct(self):
         ap = AnchorPoint(
             offset=(1,2,3,4),
             sf_screen=0.5,
+            idx=(5,6),
+            xyxy=(120,230,312,23),
         ).scale(1.5)
-        self.play(Create(ap))
+        self.play(Create(ap, run_time=0.3))
         self.wait()
 
         self.play(ap.show_arrows(
             lag_ratio=0.3,
-            run_time=1.3,
+            run_time=0.3,
+        ))
+        self.wait(0.3)
+
+        self.play(ap.to_rect(
+            rect_config={'width': 1},
         ))
         self.wait()
 
-        self.play(ap.show_distance_abs())
+        # self.play(ap.show_distance())
+        # self.wait()
+
+        # eq = ap.create_decode_equations(
+        #     buff=0.3,
+        # ).shift(RIGHT*2)
+
+        # self.play(ap.animate.shift(LEFT*2))
+        # self.wait()
+
+        xyxy = ap.create_ordered_xyxy()
+        dist = ap.create_ordered_distance()
+        vg = VGroup(xyxy, dist).arrange()
+
+        self.play(
+            Write(xyxy),
+            Write(dist),
+        )
         self.wait()
 
-        self.play(ap.to_rect())
+        self.play(vg.animate.scale(3.))
         self.wait()
 
-        self.play(AnimationGroup(
-            ap.arrows.animate.set_opacity(0.3),
-            ap.show_divide(),
-        ))
-        self.wait()
-
-        self.play(AnimationGroup(
-            ap.arrows.animate.set_opacity(1.0),
-            ap.abs_to_rela(),
-        ))
-        self.wait()
-
-        self.play(ap.hide_distance())
-        self.wait()
-
-        self.play(ap.hide_arrows())
-        self.wait()
-
-        self.play(ap.to_dot())
-        self.wait()
+        # self.play(Create(eq))
+        # self.wait()
