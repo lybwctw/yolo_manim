@@ -48,6 +48,20 @@ TEXT_CONFIG = {
     # 'font_size': 15,
 }
 
+# pbars related
+PBAR_SPACE_RATIO = 0.7          # pbar space : unit space
+PBAR_GAP_RATIO = 0.1            # pbar gap : pbar space
+PBAR_COLORS = [
+    GREEN,
+    RED,
+    BLUE,
+]
+PBAR_CONFIG = {
+    'stroke_width': 0,
+    'fill_opacity': 1.0,
+}
+CLASS_COLORS = PBAR_COLORS
+
 class AnchorPoint(VMobject):
     def __init__(
         self,
@@ -57,6 +71,7 @@ class AnchorPoint(VMobject):
         sf_nominal: int = 32,                               # scale factor for nominal, 8/16/32
         idx: tuple = (0,0),                                 # indices of current anchor point
         xyxy: np.ndarray | list | tuple = (1.,2.,3.,4.),    # precomputed x1y1x2y2
+        probs: np.ndarray | list | tuple = (0.3,0.8,0.5),   # probability for each class
     ):
         super().__init__()
         # make sure offset is list or tuple
@@ -74,12 +89,29 @@ class AnchorPoint(VMobject):
             self.xyxy = [t for t in xyxy]
         else:
             self.xyxy = xyxy
+        # make sure probs is a list
+        if isinstance(probs, np.ndarray):
+            self.probs = probs.tolist()
+        elif isinstance(probs, tuple):
+            self.probs = [t for t in probs]
+        else:
+            self.probs = probs
+        self.n_probs = len(self.probs)
 
         dot = Square(
             stroke_opacity=0.0,
             **DOT_CONFIG,
         ).move_to(point)
         self.dot = dot
+
+        # setup baseline for pbars
+        baseline = Line(
+            start=ORIGIN,
+            end=self.sf_screen*RIGHT*PBAR_SPACE_RATIO,
+        ).move_to(self.dot)
+        baseline.set_opacity(0)
+        self.baseline = baseline
+        self.add(baseline)      # used for reference
 
         self.dir_to_idx = {
             'left':  self.idx[1],
@@ -218,6 +250,22 @@ class AnchorPoint(VMobject):
         )
         return xyxy
     
+    def create_probs(
+        self,
+        font_size: int = 15,
+    ) -> VGroup:
+        """Create cls not positioned.
+        """
+        probs = VGroup(
+            *(Text(
+                '{:.2f}'.format(self.probs[i]),
+                color=CLASS_COLORS[i],
+                font_size=font_size,
+                **TEXT_CONFIG,
+            ) for i in range(3))
+        )
+        return probs
+    
     def create_ordered_distance(
         self,
         font_size: int = 8,             # smaller for tensor
@@ -253,6 +301,24 @@ class AnchorPoint(VMobject):
         
         xyxy.move_to(self.dot)
         return xyxy
+    
+    def create_ordered_probs(
+        self,
+        font_size: int = 8,
+    ) -> VGroup:
+        """Create xyxy ordered from DL to UR.
+        """
+        probs = self.create_probs(font_size=font_size)
+
+        # manual arrange
+        for i, t in enumerate(probs):
+            t.move_to(self.dot)
+            t.set_z_index(4-i)
+            t.set_opacity(opacity=1-i*0.2)
+            t.shift((RIGHT*0.05 + UP*0.06)*i)
+        
+        probs.move_to(self.dot)
+        return probs
     
     def show_distance_abs(
         self,
@@ -394,6 +460,83 @@ class AnchorPoint(VMobject):
         ).center()
 
         return equations
+    
+    def create_pbars(
+        self,
+        probs: list | None = None,        # (n_probs,)
+    ) -> VGroup:
+        """Realtime pbars based on baseline.
+        """
+        if probs is None:
+            probs = self.probs
+
+        space_size = self.baseline.width
+        pbar_gap = space_size * PBAR_GAP_RATIO
+        pbar_width = space_size * (1-(self.n_probs-1)*PBAR_GAP_RATIO) / self.n_probs
+        pbars = VGroup(
+            Rectangle(
+                width=pbar_width,
+                height=space_size*p,
+                fill_color=PBAR_COLORS[i],
+                **PBAR_CONFIG,
+            ).align_to(self.baseline, LEFT)\
+             .shift((pbar_width+pbar_gap)*i*RIGHT)\
+             .set_y(self.baseline.get_y())
+            for i, p in enumerate(probs)
+        )
+        return pbars
+    
+    def show_pbars(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Grow pbars from baseline.
+        """
+        pbars_end = self.create_pbars()
+        pbars_start = pbars_end.copy()
+        for bar in pbars_start:
+            bar.stretch_to_fit_height(0)
+        self.pbars = pbars_start
+        self.add(self.pbars)
+        return AnimationGroup(
+            *(Transform(p0, p1, **aargs)
+            for p0, p1 in zip(self.pbars, pbars_end)),
+            **gargs,
+        )
+    
+    def to_probs(
+        self,
+        probs: np.ndarray | list | None,         # (n_probs, )
+        **aargs,
+    ) -> Animation:
+        """Update pbars with new one.
+        """
+        if probs is None:
+            return Wait(1.0)
+        if isinstance(probs, np.ndarray):
+            probs = probs.tolist()
+
+        self.probs = probs
+        new_pbars = self.create_pbars(probs)
+        return Transform(self.pbars, new_pbars, **aargs)
+    
+    def hide_pbars(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Shrink pbars into baseline.
+        """
+        pbars_end = self.pbars.copy()
+        for bar in pbars_end:
+            bar.stretch_to_fit_height(0)
+        self.remove(self.pbars)
+        return AnimationGroup(
+            *(Transform(p0, p1, **aargs)
+            for p0, p1 in zip(self.pbars, pbars_end)),
+            **gargs,
+        )
 
     @property
     def node_left(self) -> np.ndarray:
@@ -432,39 +575,19 @@ class Demo(Scene):
         self.play(Create(ap, run_time=0.3))
         self.wait()
 
-        self.play(ap.show_arrows(
-            lag_ratio=0.3,
-            run_time=0.3,
-        ))
-        self.wait(0.3)
+        # self.play(ap.show_arrows(
+        #     lag_ratio=0.3,
+        #     run_time=0.3,
+        # ))
+        # self.wait(0.3)
 
-        self.play(ap.to_rect(
-            rect_config={'width': 1},
-        ))
-        self.wait()
-
-        # self.play(ap.show_distance())
+        # self.play(ap.to_rect(
+        #     rect_config={'width': 1},
+        # ))
         # self.wait()
 
-        # eq = ap.create_decode_equations(
-        #     buff=0.3,
-        # ).shift(RIGHT*2)
-
-        # self.play(ap.animate.shift(LEFT*2))
-        # self.wait()
-
-        xyxy = ap.create_ordered_xyxy()
-        dist = ap.create_ordered_distance()
-        vg = VGroup(xyxy, dist).arrange()
-
-        self.play(
-            Write(xyxy),
-            Write(dist),
-        )
+        self.play(ap.show_pbars())
         self.wait()
 
-        self.play(vg.animate.scale(3.))
+        self.play(ap.to_probs([0.5,0.5,0.5]))
         self.wait()
-
-        # self.play(Create(eq))
-        # self.wait()

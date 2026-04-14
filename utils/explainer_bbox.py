@@ -17,16 +17,21 @@ TEXT_XY_CONFIG = {
     'font_size': 15,
 }
 
+# TODO, renaming of ExplainerBbox -> Explainer
+# TODO, renaming of self.data -> self.data_dist
+# because class info is also stored
 class ExplainerBbox(VGroup):
     def __init__(
         self,
         background: ImageRaw | ImagePad | None = None,
-        data: np.ndarray = np.ones((4,4,4)),      # (h, w, 4)
-        sf_nominal: int = 32,                   # 8/16/32
+        data: np.ndarray = np.ones((4,4,4)),        # (h, w, 4)
+        data_cls: np.ndarray = np.ones((4,4,3)),    # (h, w, 3)
+        sf_nominal: int = 32,                       # 8/16/32
     ):
         super().__init__()
         self.background = background
         self.data = data
+        self.data_cls = data_cls
         self.sf_nominal = sf_nominal
 
         self.shape = data.shape[:2]             # (h, w)
@@ -95,6 +100,7 @@ class ExplainerBbox(VGroup):
                 sf_nominal=self.sf_nominal,
                 idx=(i, j),
                 xyxy=self.xyxy[i, j],
+                probs=self.data_cls[i, j],
             )
             for i in range(self.shape[0])
             for j in range(self.shape[1])
@@ -132,6 +138,52 @@ class ExplainerBbox(VGroup):
             *(ap.hide_arrows(**aargs)
               for ap in self.anchor_points),
             **gargs,
+        )
+        return anim
+    
+    def show_pbars(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+        ggargs: dict = {},
+    ) -> Animation:
+        anim = AnimationGroup(
+            *(ap.show_pbars(aargs=aargs, gargs=gargs)
+              for ap in self.anchor_points),
+            **ggargs,
+        )
+        return anim
+    
+    def to_probs(
+        self,
+        probs: np.ndarray | None = None,        # (h, w, 3)
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Update probs and pbars in aps accordingly.
+        """
+        if probs is None:
+            return Wait(1.0)
+
+        self.probs = probs
+        # FIXME, other than 3 classes
+        anim = AnimationGroup(
+            *(ap.to_probs(ps, **aargs)
+              for ap,ps in zip(self.anchor_points, probs.reshape(-1,3))),
+            **gargs,
+        )
+        return anim
+    
+    def hide_pbars(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+        ggargs: dict = {},
+    ) -> Animation:
+        anim = AnimationGroup(
+            *(ap.hide_pbars(aargs=aargs, gargs=gargs)
+              for ap in self.anchor_points),
+            **ggargs,
         )
         return anim
 
@@ -298,6 +350,16 @@ class ExplainerBbox(VGroup):
             xyxys.add(xyxy)
         return xyxys
     
+    def create_probs_tensor(
+        self,
+        font_size: int=8,
+    ) -> VGroup:
+        probs = VGroup()
+        for ap in self.anchor_points:
+            ps = ap.create_ordered_probs(font_size=font_size)
+            probs.add(ps)
+        return probs
+    
     def create_line_matrix(
         self,
     ):
@@ -323,6 +385,7 @@ class Demo(Scene):
         explainer = ExplainerBbox(
             sq,
             data=np.random.uniform(1,2,(6,6,4)),
+            data_cls=np.random.uniform(0.1,0.9,(6,6,3)),
             sf_nominal=32,
         )
         explainer_system = Group(sq, explainer)
@@ -341,13 +404,38 @@ class Demo(Scene):
         # self.play(explainer.hide_grid())
         # self.wait()
         
-        self.play(explainer.to_rects())
+        # self.play(explainer.to_rects())
+        # self.wait()
+
+        # self.play(explainer.to_dots())
+        # self.wait()
+
+        # self.play(explainer.hide_anchor_points())
+        # self.wait()
+
+        # self.play(explainer.hide_anchor_points(
+        #     lag_ratio=0,
+        #     run_time=0.5,
+        # ))
+
+        # self.play(AnimationGroup(
+        #     *(ap.animate.set_pattern(color=GRAY,opacity=0.1)
+        #       for ap in explainer.anchor_points),
+        #       lag_ratio=0,
+        #       run_time=1.0,
+        # ))
+        # self.wait()
+
+        self.play(explainer.show_pbars())
         self.wait()
 
-        self.play(explainer.to_dots())
+        new_probs = np.random.uniform(0.1,0.3,(6,6,3))
+        self.play(explainer.to_probs(new_probs))
         self.wait()
 
-        self.play(explainer.hide_anchor_points())
+        probs_tensor = explainer.create_probs_tensor().shift(RIGHT*2)
+        self.play(explainer_system.animate.shift(LEFT*2))
+        self.play(Write(probs_tensor, lag_ratio=0.1))
         self.wait()
 
         # self.play(explainer.show_arrows())
@@ -358,21 +446,24 @@ class Demo(Scene):
 
         # self.play(explainer.hide_anchor_points())
         # self.wait()
-        self.remove(explainer)
+        # self.remove(explainer)
 
-        explainer = ExplainerBbox(
-            sq,
-            data=np.load('../assets/numpy/mini_32.npy'),
-            sf_nominal=32,
-        )
-        explainer_system = Group(sq, explainer)
-        self.add(explainer_system)
-        self.wait(0.3)
+        # explainer = ExplainerBbox(
+        #     sq,
+        #     data=np.load('../assets/numpy/mini_32.npy'),
+        #     sf_nominal=32,
+        # )
+        # explainer_system = Group(sq, explainer)
+        # self.add(explainer_system)
+        # self.wait(0.3)
 
         # self.play(explainer.show_anchor_points())
         # self.wait()
 
         # self.play(explainer.to_rects())
+        # self.wait()
+
+        # self.play(explainer.show_pbars())
         # self.wait()
 
         # self.play(explainer.show_arrows())

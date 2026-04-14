@@ -1,31 +1,45 @@
-from typing import Self
+import sys
+sys.path.append('..')
 
 from manim import *
 from manim.typing import MultiMappingFunction, Point3DLike, Vector3DLike
 
-from .constants import INIT_WIDTH_ARROW_COMMENT
+DOUBLE_AC_CONFIG = {
+    'color': GRAY,
+}
+
+SINGLE_AC_CONFIG = {
+    'color': WHITE,
+}
 
 class ArrowComment(VMobject):
-    def __init__(self, double, direction, comment):
+    def __init__(
+        self,
+        double: bool = False,                   # double arrow or not
+        direction: np.ndarray = RIGHT,          # direction of arrow
+        comment: str = '?',                     # pop out comment
+    ):
         super().__init__()
-        self.scale_factor = 1.0
+        self.comment = comment      # not implemented yet
 
         if double:
-            # double means not equal, make it less stand out
-            self.arrow = DoubleArrow(start=-direction, end=direction).set_opacity(0.5)
+            self.arrow = DoubleArrow(
+                start=-direction,
+                end=direction,
+                **DOUBLE_AC_CONFIG,
+            )
         else:
-            self.arrow = Arrow(start=-direction, end=direction)
+            self.arrow = Arrow(
+                start=-direction,
+                end=direction,
+                **SINGLE_AC_CONFIG,
+            )
 
         self.add(self.arrow)
 
-    def scale(self, scale_factor, **kwargs):
-        self.scale_factor *= scale_factor
-        return super().scale(scale_factor, **kwargs)
 
-    def scale_as(self, target):
-        self.scale(target.scale_factor)
-        return self
-
-    def scale_back(self):
-        self.scale(1 / self.scale_factor)
-        return self
+class Demo(Scene):
+    def construct(self):
+        a1 = ArrowComment(double=True, direction=DOWN)
+        self.play(Write(a1))
+        self.wait()
