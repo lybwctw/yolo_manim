@@ -37,10 +37,13 @@ TEXT_DIRECTION_MAP = {
 }
 TEXT_DIRECTION_BUFF = 0.1
 
+# FIXME, test the last two options
 ARROW_CONFIG = {
     'stroke_width': 3,
     'tip_length': 0.15,
     'buff': 0.0,
+    # 'max_stroke_width_to_length_ratio': 25,         # 5 by default
+    # 'max_tip_length_to_length_ratio': 1.0,          # 0.25 by default
 }
 
 TEXT_CONFIG = {
@@ -61,6 +64,14 @@ PBAR_CONFIG = {
     'fill_opacity': 1.0,
 }
 CLASS_COLORS = PBAR_COLORS
+
+# fake labels related
+FAKE_LABEL_COLORS = PBAR_COLORS
+FAKE_LABEL_CONFIG = {
+    'stroke_width': 2,
+    'stroke_opacity': 1.0,
+    'fill_opacity': 1.0,
+}
 
 class AnchorPoint(VMobject):
     def __init__(
@@ -537,6 +548,47 @@ class AnchorPoint(VMobject):
             for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
+    
+    def create_multi_labels(
+        self,
+        width_ratio: float = 0.6,            # width : baseline
+        height_ratio: float = 0.4,           # height : baseline
+        **label_config,                      # rectangle config
+    ) -> VGroup:
+        """Create multi labels, not positioned.
+        """
+        cfg = {**FAKE_LABEL_CONFIG, **label_config}
+        label_width = self.baseline.width * width_ratio
+        label_height = self.baseline.width * height_ratio
+        labels = VGroup(
+            Rectangle(
+                width=label_width,
+                height=label_height,
+                stroke_color=color,
+                fill_color=color,
+                **cfg,
+            ) for color in FAKE_LABEL_COLORS
+        ).arrange(buff=0)
+        return labels
+    
+    def show_multi_labels(
+        self,
+        width_ratio: float = 0.6,            # width : baseline
+        height_ratio: float = 0.4,           # height : baseline
+        label_config: dict = {},             # rectangle config
+        **aargs,
+    ) -> Animation:
+        self.labels = self.create_multi_labels(
+            width_ratio=width_ratio,
+            height_ratio=height_ratio,
+            **label_config,
+        ).move_to(
+            self.rect.get_corner(UL),
+            aligned_edge=DL,
+        )
+
+        self.add(self.labels)
+        return Write(self.labels, **aargs)
 
     @property
     def node_left(self) -> np.ndarray:
@@ -581,13 +633,18 @@ class Demo(Scene):
         # ))
         # self.wait(0.3)
 
-        # self.play(ap.to_rect(
-        #     rect_config={'width': 1},
-        # ))
-        # self.wait()
+        self.play(ap.to_rect(
+            rect_config={'width': 1},
+        ))
+        self.wait()
 
         self.play(ap.show_pbars())
         self.wait()
 
-        self.play(ap.to_probs([0.5,0.5,0.5]))
+        self.play(ap.show_multi_labels(
+            label_config={'fill_opacity': 0.3},
+        ))
         self.wait()
+
+        # self.play(ap.to_probs([0.5,0.5,0.5]))
+        # self.wait()

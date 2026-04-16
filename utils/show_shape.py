@@ -1,6 +1,7 @@
 from manim import *
 
-# FIXME, implement this as a Animation
+# TODO, implement this as a Animation
+# TODO, font size and buff as configuration arg
 class ShowShape:
     def __init__(self):
         self.shape_texts = VGroup()

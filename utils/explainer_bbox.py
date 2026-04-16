@@ -10,7 +10,7 @@ from utils.image_pad import ImagePad
 from utils.yolo_annotation import SingleAnnotation
 from utils.line_matrix import LineMatrix
 from utils.general import tensor_to_line_matrix
-from utils.constants import MINI_32_PATH
+from utils.constants import MINI_32_DIST_PATH, MINI_32_PROB_PATH
 
 TEXT_XY_CONFIG = {
     'font': 'JetBrains Mono',
@@ -32,8 +32,7 @@ class ExplainerBbox(VGroup):
         self.background = background
         self.data = data
         self.data_cls = data_cls
-        self.sf_nominal = sf_nominal
-
+        self.sf_nominal = sf_nominal,
         self.shape = data.shape[:2]             # (h, w)
         self.xyxy = self._compute_xyxy()
 
@@ -186,6 +185,30 @@ class ExplainerBbox(VGroup):
             **ggargs,
         )
         return anim
+    
+    def show_multi_labels(
+        self,
+        width_ratio: float = 0.6,            # width : baseline
+        height_ratio: float = 0.4,           # height : baseline
+        label_config: dict = {},             # rectangle config
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        anim = AnimationGroup(
+            *(ap.show_multi_labels(
+                width_ratio=width_ratio,
+                height_ratio=height_ratio,
+                label_config=label_config,
+                **aargs,
+            ) for ap in self.anchor_points),
+            **gargs,
+        )
+        return anim
+    
+    def hide_multi_labels(
+        self,
+    ) -> Animation:
+        pass
 
     def to_rects(
         self,
@@ -362,11 +385,12 @@ class ExplainerBbox(VGroup):
     
     def create_line_matrix(
         self,
+        n: int=4,              # n lines in a rows
     ):
         """Create 2d LineMatrix according to xyxy shape.
         """
         matrix = LineMatrix(
-            (self.shape[0]*self.shape[1], 4),
+            (self.shape[0]*self.shape[1], n),
         )
         return matrix
 
@@ -384,7 +408,7 @@ class Demo(Scene):
         ).scale(2.)
         explainer = ExplainerBbox(
             sq,
-            data=np.random.uniform(1,2,(6,6,4)),
+            data=np.random.uniform(0.6,1.2,(6,6,4)),
             data_cls=np.random.uniform(0.1,0.9,(6,6,3)),
             sf_nominal=32,
         )
@@ -404,8 +428,19 @@ class Demo(Scene):
         # self.play(explainer.hide_grid())
         # self.wait()
         
-        # self.play(explainer.to_rects())
-        # self.wait()
+        self.play(explainer.to_rects())
+        self.wait()
+
+        self.play(explainer.show_multi_labels(
+            label_config={
+                'fill_opacity': 0.5,
+                'stroke_opacity': 0.6,
+            },
+            aargs={
+                'lag_ratio': 0.1,
+            }
+        ))
+        self.wait()
 
         # self.play(explainer.to_dots())
         # self.wait()
@@ -426,17 +461,17 @@ class Demo(Scene):
         # ))
         # self.wait()
 
-        self.play(explainer.show_pbars())
-        self.wait()
+        # self.play(explainer.show_pbars())
+        # self.wait()
 
-        new_probs = np.random.uniform(0.1,0.3,(6,6,3))
-        self.play(explainer.to_probs(new_probs))
-        self.wait()
+        # new_probs = np.random.uniform(0.1,0.3,(6,6,3))
+        # self.play(explainer.to_probs(new_probs))
+        # self.wait()
 
-        probs_tensor = explainer.create_probs_tensor().shift(RIGHT*2)
-        self.play(explainer_system.animate.shift(LEFT*2))
-        self.play(Write(probs_tensor, lag_ratio=0.1))
-        self.wait()
+        # probs_tensor = explainer.create_probs_tensor().shift(RIGHT*2)
+        # self.play(explainer_system.animate.shift(LEFT*2))
+        # self.play(Write(probs_tensor, lag_ratio=0.1))
+        # self.wait()
 
         # self.play(explainer.show_arrows())
         # self.wait()

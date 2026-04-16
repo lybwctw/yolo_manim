@@ -22,6 +22,8 @@ S011_EVERYTHING = 's011_everything.pkl'
 S012_EVERYTHING = 's012_everything.pkl'
 S013_EVERYTHING = 's013_everything.pkl'
 
+S015_EVERYTHING = 's015_everything.pkl'
+
 PATH_IMAGE_640 = 'assets/images/sample_640_360.jpg'
 PATH_LABEL_640 = 'assets/images/labels.txt'
 
@@ -41,4 +43,5 @@ S002_ANNOTATION_FINAL = os.path.join(CONFIG_DIR, 's002_annotation_final.txt',)
 S003_ANNOTATION_REPAD = os.path.join(CONFIG_DIR, 's003_annotation_repad.txt')
 
 # mini
-MINI_32_PATH = 'assets/numpy/mini_32.npy'
+MINI_32_DIST_PATH = 'assets/numpy/mini_32_dist.npy'
+MINI_32_PROB_PATH = 'assets/numpy/mini_32_prob.npy'

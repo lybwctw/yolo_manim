@@ -316,12 +316,12 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        # scale and make room in the bottom
-        sync_bbox = Group(explainer_dist_bg, tensor_dist)
-        sync_bbox.generate_target()
-        sync_bbox.target.scale(0.7).arrange(DOWN,buff=0.5).shift(LEFT*3)
-        sync_bbox.target[1].align_to(sync_bbox.target[0][0].background, LEFT)
-        self.play(MoveToTarget(sync_bbox, run_time=SHORT_DURATION))
+        # scale and make room in the right
+        manager = Group(explainer_dist_bg, tensor_dist)
+        manager.generate_target()
+        manager.target.scale(0.7).arrange(DOWN,buff=0.5).shift(LEFT*3)
+        manager.target[1].align_to(manager.target[0][0].background, LEFT)
+        self.play(MoveToTarget(manager, run_time=SHORT_DURATION))
         self.wait(SHORT_DURATION)
 
         # make copy of distance
@@ -369,7 +369,7 @@ class MainScene(Scene):
         # transform xyxy into reshaped 2d version
         tensor_xyxy_2d = tensor_xyxy.copy()     # make a copy as target 2d tensor
         self.add(tensor_xyxy_2d)
-        line_matrix = explainer_xyxy.create_line_matrix().scale(0.07).shift(RIGHT*4.3)
+        line_matrix = explainer_xyxy.create_line_matrix(n=4).scale(0.07).shift(RIGHT*4.3)
         self.play(tensor_to_line_matrix(
             tensor=tensor_xyxy_2d,
             lmatrix=line_matrix,
@@ -452,14 +452,17 @@ class MainScene(Scene):
         self.remove(explainer_dist, explainer_xyxy)
         
         # create mini version explainer_dist and explainer_xyxy
+        # data_cls is not used here
         explainer_dist = ExplainerBbox(
             background=background,
-            data=np.load(MINI_32_PATH),
+            data=np.load(MINI_32_DIST_PATH),
+            data_cls=np.load(MINI_32_PROB_PATH),
             sf_nominal=32,
         )
         explainer_xyxy = ExplainerBbox(
             background=explainer_xyxy_bg[1],
-            data=np.load(MINI_32_PATH),
+            data=np.load(MINI_32_DIST_PATH),
+            data_cls=np.load(MINI_32_PROB_PATH),
             sf_nominal=32,
         )
         explainer_dist_bg = Group(explainer_dist, background)

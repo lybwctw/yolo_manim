@@ -6,6 +6,8 @@ from utils.image_raw import ImageRaw
 from utils.image_pad import ImagePad
 from utils.yolo_annotation import YoloAnnotation
 from utils.explainer_bbox import ExplainerBbox
+from utils.general import tensor_to_line_matrix, save_everything
+from utils.layers_fake import LayersFake
 
 import torch
 
@@ -14,7 +16,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -52,7 +54,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'class prob thinking for each ANCHOR POINT TARGET',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # start with anchor points
@@ -82,8 +84,129 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        tensor_probs = explainer.create_probs_tensor().shift(RIGHT*2)
-        self.play(explainer_bg.animate.shift(LEFT*3))
+        # show tensor probs in the right
+        # TODO, loop through each pbars, rate_functions.there_and_back
+        self.play(explainer_bg.animate.scale(0.8).shift(LEFT*3))
+        tensor_probs = explainer.create_probs_tensor().shift(RIGHT*6)
         self.wait()
         self.play(Write(tensor_probs, lag_ratio=0.02, run_time=2.0))
         self.wait()
+
+        # scale and rearrange into up-down
+        manager = Group(explainer_bg, tensor_probs)
+        manager.generate_target()
+        manager.target.scale(0.6).arrange(DOWN,buff=0.45).shift(LEFT*2)
+        manager.target[1].align_to(manager.target[0][0].background, LEFT)   # adjustment
+        self.play(MoveToTarget(manager, run_time=1.0))
+        self.wait(0.5)
+
+        #  transform probs into reshaped 2d version
+        tensor_probs_2d = tensor_probs.copy()
+        self.add(tensor_probs)  # TODO, fadein animation?
+        line_matrix = explainer.create_line_matrix(n=3).scale(0.07).shift(RIGHT*3.5)
+        self.play(tensor_to_line_matrix(
+            tensor=tensor_probs_2d,
+            lmatrix=line_matrix,
+            targs={},
+            gargs={'lag_ratio':0.02, 'run_time':0.1,},
+            ggargs={'lag_ratio':0.05, 'run_time':2.1,},
+        ))
+        self.wait(0.3)
+
+        # ************************************************************
+        self.next_section(
+            'simplify tensor_probs/tensor_probs_2d' \
+            'into lf_output_32_cls/lf_output_32_cls_2d',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # create lf_output_32_cls
+        lf_output_32_cls = LayersFake(
+            n=3,
+            ref=tensor_probs,
+            width_nominal=20,
+            height_nominal=20,
+            buff=0.05,
+            expanded=True,
+        ).move_to(tensor_probs).scale(0.95)
+
+        # create lf_output_32_cls_2d
+        lf_output_32_cls_2d = LayersFake(
+            n=1,
+            ref=tensor_probs_2d,
+            width_nominal=3,
+            height_nominal=400,
+            expanded=True,
+        ).move_to(tensor_probs_2d)
+
+        # simplify tensor_probs/tensor_probs_2d
+        self.play(AnimationGroup(
+            Unwrite(tensor_probs, lag_ratio=0, run_time=1.0),
+            Write(lf_output_32_cls, run_time=1.0),
+            Unwrite(tensor_probs_2d, lag_ratio=0, run_time=1.0),
+            Write(lf_output_32_cls_2d, run_time=1.0)
+        ))
+        self.wait(0.5)
+
+        # ************************************************************
+        self.next_section(
+            'simplify explainer_dist and explainer_xyxy ' \
+            'into 4x4 mini version',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # clean explainer
+        self.play(explainer.hide_pbars(
+            aargs={},
+            gargs={},
+            ggargs={'lag_ratio':0, 'run_time':1.0},
+        ))
+        self.wait(0.5)
+        self.play(explainer.hide_anchor_points(
+            lag_ratio=0, run_time=0.5,
+        ))
+        self.wait(0.5)
+        self.remove(explainer)
+
+        # create mini version of explainer
+        explainer = ExplainerBbox(
+            background=background,
+            data=np.load(MINI_32_DIST_PATH),
+            data_cls=np.load(MINI_32_PROB_PATH),
+            sf_nominal=32,
+        )
+        explainer_bg = Group(explainer, background)
+
+        # dim anchor points, show pbars
+        self.play(AnimationGroup(
+            explainer.show_anchor_points(
+                lag_ratio=0, run_time=0.5,
+            )
+        ))
+        self.wait(0.5)
+        self.play(AnimationGroup(
+            *(ap.animate.set_pattern(opacity=0.1)
+              for ap in explainer.anchor_points),
+              lag_ratio=0,
+              run_time=1.0,
+        ))
+        
+        self.play(explainer.show_pbars(
+            aargs={},
+            gargs={},
+            ggargs={},
+        ))
+        self.wait(0.5)
+
+        # ************************************************************
+        self.next_section(
+            'save for next scene which go back to big map',
+            skip_animations=False,
+        )
+        # ************************************************************
+        everything = Group(
+            explainer_bg,
+            lf_output_32_cls,
+            lf_output_32_cls_2d,
+        )
+        save_everything(S015_EVERYTHING, everything)
