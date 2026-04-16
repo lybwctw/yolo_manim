@@ -363,7 +363,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'intuition view, merge outputs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make a copy of marrow_out in intuition view
@@ -429,19 +429,26 @@ class MainScene(Scene):
         )
         # ************************************************************
         # shift left the big map 
+        mobs = Group(*self.get_top_level_mobjects())
+        self.play(mobs.animate.shift(LEFT*10.))
+        self.wait()
 
-        # append class selection
+        # max class selection: (6400,7) -> (6400,6) [xyxy, conf, cls]
+        # ... split if [multi_label] option is on: (6400,7) -> (6400*3,6)
 
-        # append conf selection
+        # filter use [conf] option: (6400,6) -> (n,6) [xyxy, conf, cls]
 
-        # append NMS selection
+        # ... classes filter if [classes] option is specified: (6400,6) -> (n,6)
 
-        # maybe more?
+        # NMS filter using [iou] option: (n,6) -> (k,6) [xyxy, conf, cls]
+        # ... class agnostic NMS if [agnostic_nms] option is on: (n,6) -> (k,6)
+
+        # filter using [max_det] option: (k,6) -> (m,6)
 
         # ************************************************************
         self.next_section(
             'big map: decode + postprocess',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # scale down the big map
@@ -449,13 +456,13 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'bigger map: from input to output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
 
         # ************************************************************
         self.next_section(
             'more on output design',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************

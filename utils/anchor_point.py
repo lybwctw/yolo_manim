@@ -378,7 +378,7 @@ class AnchorPoint(VMobject):
         self,
         font_size: int = 15,
     ) -> VGroup:
-        divide = VGroup(
+        divide = VGroup(*(
             Text(
                 '/' + str(self.sf_nominal),
                 color=TEXT_COLOR_MAP[direction],
@@ -389,7 +389,7 @@ class AnchorPoint(VMobject):
                 RIGHT,
                 buff=0.05,
             ) for i, direction in enumerate(DIRECTION_SERIES)
-        )
+        ))
         return divide
     
     def show_divide(

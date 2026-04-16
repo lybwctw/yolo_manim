@@ -108,7 +108,7 @@ class MainScene(Scene):
         )
         manager.generate_target()
         manager.target.arrange_in_grid(
-            rols=3, cols=3,
+            rows=3, cols=3,
         )
         manager.target.center()
         self.play(MoveToTarget(manager))
