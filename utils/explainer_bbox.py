@@ -451,15 +451,21 @@ class ExplainerBbox(VGroup):
     ) -> Animation:
         """Clip aps cross border, remove is fully outside.
         """
-        # TODO, remove those unwriten from anchor_points?
-        anims = AnimationGroup(
-            *(ap.clip_to_background(
-                self.background,
-                **aargs,
-            ) for ap in self.anchor_points),
-            **gargs,
-        )
-        return anims
+        anims = []
+        for ap in self.anchor_points:
+            anim = ap.clip_to_background(self.background, **aargs)
+            if isinstance(anim, Unwrite):   # TODO, better solution?
+                self.anchor_points.remove(ap)
+            anims.append(anim)
+        return AnimationGroup(*anims, **gargs)
+        # anims = AnimationGroup(
+        #     *(ap.clip_to_background(
+        #         self.background,
+        #         **aargs,
+        #     ) for ap in self.anchor_points),
+        #     **gargs,
+        # )
+        # return anims
 
     @property
     def step(self) -> float:

@@ -647,7 +647,7 @@ class MainScene(Scene):
             [5] scale back to original image size: (m,6) -> (n,6)
                 maybe convert to desired output format (e.g. xywh)
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO, adjust naming
@@ -664,28 +664,27 @@ class MainScene(Scene):
             aargs={},
             gargs={},
         ))
+        
         # TODO, scale up system as a whole, ugly alignment
         system_scale_back.generate_target()
-        system_scale_back.target.next_to(
-            ac_d,
-            RIGHT,
-            buff=gap_postprocess,
-        )
         system_scale_back.target.scale(
             1.5,
             about_point=system_scale_back.target[1].get_center(),
         )
+        y_to_align = system_scale_back.target[1].get_y()
         system_scale_back.target.next_to(
             ac_d,
             RIGHT,
             buff=gap_postprocess,
         )
+        system_scale_back.target.set_y(y_to_align)
         self.play(MoveToTarget(
             system_scale_back,
             run_time=1.0,
         ))
         self.wait(0.3)
 
+        # clip into the shrinked background image
         self.play(system_scale_back[0].clip_to_background(
             aargs={},
             gargs={},
@@ -811,7 +810,7 @@ class MainScene(Scene):
             split output procedure into 2 stages:
             post-process and post-post-process
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO, make state saving clear
@@ -839,17 +838,20 @@ class MainScene(Scene):
         ))
         self.wait(.3)
 
-        # self.play(
-        #     Write(Dot(system_merged.get_center(), color=RED)),
-        #     Write(Dot(system_after_max.get_center(), color=GREEN)),
-        # )
-        # self.wait()
+        # show init system/tensors
+        self.play(AnimationGroup(
+            Transform(system_dist, system_dist.saved_state.scale(1.2)),
+            Transform(system_probs, system_probs.saved_state.scale(1.2)),
+            Transform(tensor_32_dist, tensor_32_dist.saved_state.scale(1.2)),
+            Transform(tensor_32_probs, tensor_32_probs.saved_state.scale(1.2)),
+            lag_ratio=0,
+        ))
+        self.wait(1)
 
         # from init systems/tensors to decoded system/tensor
         self.play(AnimationGroup(
             AnimationGroup(
                 AnimationGroup(
-                    Transform(system_dist, system_dist.saved_state.scale(1.2)),
                     Transform(system_xyxy, system_xyxy.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
                     Transform(system_xyxy_2d, system_xyxy_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
                     Transform(system_merged, system_merged.saved_state.scale(1.2)),
@@ -857,7 +859,6 @@ class MainScene(Scene):
                     run_time=1.0,
                 ),
                 AnimationGroup(
-                    Transform(system_probs, system_probs.saved_state.scale(1.2)),
                     Transform(system_probs_2d, system_probs_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),   
                     lag_ratio=0.5,
                     run_time=0.8,
@@ -866,7 +867,6 @@ class MainScene(Scene):
             ),
             AnimationGroup(
                 AnimationGroup(
-                    Transform(tensor_32_dist, tensor_32_dist.saved_state.scale(1.2)),
                     Transform(tensor_32_xyxy, tensor_32_xyxy.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
                     Transform(tensor_32_xyxy_2d, tensor_32_xyxy_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
                     Transform(tensor_merged_2d, tensor_merged_2d.saved_state.scale(1.2)),
@@ -874,7 +874,6 @@ class MainScene(Scene):
                     run_time=1.0,
                 ),
                 AnimationGroup(
-                    Transform(tensor_32_probs, tensor_32_probs.saved_state.scale(1.2)),
                     Transform(tensor_32_probs_2d, tensor_32_probs_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),   
                     lag_ratio=0.5,
                     run_time=0.8,
@@ -886,7 +885,6 @@ class MainScene(Scene):
         self.wait()
 
         # from decoded system/tensor to postprocessed system/tensor
-        # FIXME, bad scale animation
         self.play(AnimationGroup(
             AnimationGroup(
                 Transform(system_after_max, system_after_max.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
@@ -906,15 +904,6 @@ class MainScene(Scene):
             ),
         ))
         self.wait()
-
-        # # # loop into decoded system and tensor
-        # # self.play(AnimationGroup(
-        # #     Transform(system_dist, system_dist.saved_state),
-        # #     Transform(system_probs, system_probs.saved_state),
-        # #     Transform(tensor_32_dist, tensor_32_dist.saved_state),
-        # #     Transform(tensor_32_probs, tensor_32_probs.saved_state),
-        # # ))
-        
 
         # ************************************************************
         self.next_section(
