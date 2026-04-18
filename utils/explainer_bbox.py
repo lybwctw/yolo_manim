@@ -433,6 +433,23 @@ class ExplainerBbox(VGroup):
             (self.shape[0]*self.shape[1], n),
         )
         return matrix
+    
+    def clip_to_background(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Clip aps cross border, remove is fully outside.
+        """
+        # TODO, remove those unwriten from anchor_points?
+        anims = AnimationGroup(
+            *(ap.clip_to_background(
+                self.background,
+                **aargs,
+            ) for ap in self.anchor_points),
+            **gargs,
+        )
+        return anims
 
     @property
     def step(self) -> float:
@@ -448,7 +465,7 @@ class Demo(Scene):
         ).scale(2.)
         explainer = ExplainerBbox(
             sq,
-            data=np.random.uniform(0.3,0.8,(6,6,4)),
+            data=np.random.uniform(0.3,1.3,(6,6,4)),
             data_cls=np.random.uniform(0.1,0.9,(6,6,3)),
             sf_nominal=32,
         )
@@ -489,10 +506,10 @@ class Demo(Scene):
         ))
         self.wait()
 
-        self.play(explainer.keep_ratio(ratio=0.8))
+        self.play(explainer.keep_ratio(ratio=0.5))
         self.wait()
 
-        self.play(explainer.keep_ratio(ratio=0.8))
+        self.play(explainer.clip_to_background())
         self.wait()
 
         # self.play(explainer.to_dots())

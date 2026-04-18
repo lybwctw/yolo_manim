@@ -210,6 +210,8 @@ class ImagePad(Mobject, ShowShape):
         updown: bool = True,    # user is responsible for providing correct updown
         width_nominal: int | None = None,       # manual nominal update
         height_nominal: int | None = None,      # manual nominal update
+        aargs: dict = {},       # transform args
+        gargs: dict = {},       # group args
     ) -> Animation:
         if not self.paddings:
             return Wait()
@@ -229,9 +231,8 @@ class ImagePad(Mobject, ShowShape):
             self.height_nominal = height_nominal
 
         return AnimationGroup(
-            *(Transform(p1, p2) for p1, p2 in zip(paddings_start, paddings_end)),
-            lag_ratio=0,
-            run_time=0.5,
+            *(Transform(p1, p2, **aargs) for p1, p2 in zip(paddings_start, paddings_end)),
+            **gargs,
         )
 
 class Demo(Scene):

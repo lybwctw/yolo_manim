@@ -611,6 +611,54 @@ class AnchorPoint(VMobject):
         
         self.labels = VGroup(max_label)
         return AnimationGroup(*anims, **gargs) if anims else Wait(0.1)
+    
+    def clip_to_background(
+        self,
+        background,
+        **aargs,        # for both labels and rect
+    ) -> Animation:
+        anims = []
+        inter_rect = self._compute_intersection(
+            background,
+        )
+        if inter_rect is None:
+            anims.append(Unwrite(self)) # TODO, or fade out???
+        else:
+            inter_rect.match_style(self.mob)
+            self.rect = inter_rect
+            anims.append(AnimationGroup(
+                self.to_rect(
+                    rect_config={},
+                    **aargs,
+                ),
+                self.labels.animate(**aargs).move_to(
+                    self.rect.get_corner(UL),
+                    aligned_edge=DL,
+                ),
+            ))
+        return AnimationGroup(*anims)
+    
+    def _compute_intersection(
+        self,
+        background,
+    ) -> Rectangle | None:
+        r1, r2 = self.rect, background
+        # compute edges of intersection
+        x_min = max(r1.get_left()[0], r2.get_left()[0])
+        x_max = min(r1.get_right()[0], r2.get_right()[0])
+        y_min = max(r1.get_bottom()[1], r2.get_bottom()[1])
+        y_max = min(r1.get_top()[1], r2.get_top()[1])
+
+        # check if overlap exist or not
+        if x_min < x_max and y_min < y_max:
+            width = x_max - x_min
+            height = y_max - y_min
+            # The center is the average of the min and max coordinates
+            center = [(x_min + x_max) / 2, (y_min + y_max) / 2, 0]
+            
+            return Rectangle(width=width, height=height).move_to(center)
+        
+        return None # no intersection
 
     @property
     def node_left(self) -> np.ndarray:
@@ -660,8 +708,8 @@ class Demo(Scene):
         ))
         self.wait()
 
-        self.play(ap.show_pbars())
-        self.wait()
+        # self.play(ap.show_pbars())
+        # self.wait()
 
         self.play(ap.show_multi_labels(
             label_config={'fill_opacity': 0.3},
@@ -669,4 +717,13 @@ class Demo(Scene):
         self.wait()
 
         self.play(ap.keep_max_label())
+        self.wait()
+
+        bg = Rectangle().scale(2)
+        self.play(Write(bg))
+        self.wait()
+
+        self.play(ap.clip_to_background(
+            bg,
+        ))
         self.wait()

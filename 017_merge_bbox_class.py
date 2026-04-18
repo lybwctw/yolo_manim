@@ -16,7 +16,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all from start',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
@@ -96,7 +96,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start with bbox output flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager_bbox = Group(
@@ -147,7 +147,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'shift in class output flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.add(manager_cls)
@@ -181,7 +181,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO, font size issue on shape texts
@@ -240,7 +240,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge bbox line and class flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         iview_bbox = Group(
@@ -266,7 +266,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'the merged output in both views',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         marrow_in = MultiArrow(
@@ -305,7 +305,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor view, merge 2d tensors',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor_32_xyxy_2d_copy = tensor_32_xyxy_2d.copy()
@@ -363,7 +363,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'intuition view, merge outputs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # used in post-process part, scale back later
@@ -429,7 +429,7 @@ class MainScene(Scene):
         self.next_section("""
             Prepare before get into details of post-process.
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # shift left the big map 
@@ -445,7 +445,7 @@ class MainScene(Scene):
             (6400,7) -> (6400,6) [xyxy, conf, cls]
             split if [multi_label] option is on: (6400,7) -> (6400*3,6)
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # generate a copy of system_merged for post-process flowchart
@@ -505,10 +505,10 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section("""
-            [2] filter use [conf] option: (6400,6) -> (m,6) [xyxy, conf, cls]
+            [2] filter use [conf] option: (6400,6) -> (k,6) [xyxy, conf, cls]
             classes filter if [classes] option is specified
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # generate a copy of system_after_max for post-process flowchart
@@ -536,7 +536,7 @@ class MainScene(Scene):
         self.play(tensor_after_conf.animate.stretch_to_fit_height(
             tensor_after_max.height * 0.6
         ))
-        tensor_after_conf.height_nominal = 'm'      # xyxy, conf, cls
+        tensor_after_conf.height_nominal = 'k'      # xyxy, conf, cls
         self.wait()
 
         # show shapes of the new tensors after confidence filtering
@@ -572,11 +572,11 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section("""
-            [3] NMS filter using [iou] option: (m,6) -> (n,6) [xyxy, conf, cls]
-            class agnostic NMS if [agnostic_nms] option is on: (m,6) -> (n,6)
+            [3] NMS filter using [iou] option: (k,6) -> (m,6) [xyxy, conf, cls]
+            class agnostic NMS if [agnostic_nms] option is on
             [4-skipped] filter using [max_det] option
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # generate a copy of system_after_conf for post-process flowchart
@@ -604,7 +604,7 @@ class MainScene(Scene):
         self.play(tensor_after_nms.animate.stretch_to_fit_height(
             tensor_after_conf.height * 0.6
         ))
-        tensor_after_nms.height_nominal = 'n'      # xyxy, conf, cls
+        tensor_after_nms.height_nominal = 'm'      # xyxy, conf, cls
         self.wait()
 
         # show shapes of the new tensors after NMS filtering
@@ -644,10 +644,10 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section("""
-            [5] scale back to original image size: (n,6) -> (n,6)
+            [5] scale back to original image size: (m,6) -> (n,6)
                 maybe convert to desired output format (e.g. xywh)
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO, adjust naming
@@ -655,8 +655,24 @@ class MainScene(Scene):
         ac_d = ac_c.copy().next_to(system_after_nms, RIGHT, buff=gap_postprocess)
         self.play(Write(ac_d))
         # system_after_maxdet = system_after_nms.copy()
-        system_scale_back = None        # TODO
+        system_scale_back = system_after_nms.copy()        # TODO
         self.play(system_scale_back.animate.next_to(ac_d, RIGHT, buff=gap_postprocess))
+        self.play(system_scale_back[1].hide_paddings(
+            updown=True,        # manual
+            width_nominal=640,
+            height_nominal=360,
+            aargs={},
+            gargs={},
+        ))
+        # scale up system as a whole
+        self.play(system_scale_back.animate(
+            run_time=1.0,
+        ).scale(1.5,).next_to(ac_d, RIGHT, buff=gap_postprocess))
+        self.play(system_scale_back[0].clip_to_background(
+            aargs={},
+            gargs={},
+        ))
+        self.wait()
         # TODO: show comment on ac_d
 
         # generate a copy of tensor_after_nms for post-process flowchart
@@ -668,9 +684,9 @@ class MainScene(Scene):
             .set_x(system_scale_back.get_x()))
         # TODO: show comment on ac_4
         self.play(tensor_scale_back.animate.stretch_to_fit_height(
-            tensor_after_nms.height * 0.6
+            tensor_after_nms.height * 0.8
         ))
-        # tensor_scale_back.height_nominal = 'n'      # xywh, conf, cls
+        tensor_scale_back.height_nominal = 'n'      # xywh, conf, cls
         self.wait()
 
         # show shapes of the new tensors after max_det filtering
@@ -755,13 +771,13 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'bigger map: from input to output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
 
         # ************************************************************
         self.next_section(
             'more on output design',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
