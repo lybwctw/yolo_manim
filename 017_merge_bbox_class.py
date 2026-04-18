@@ -16,7 +16,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all from start',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
@@ -96,7 +96,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start with bbox output flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager_bbox = Group(
@@ -147,7 +147,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'shift in class output flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.add(manager_cls)
@@ -181,7 +181,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO, font size issue on shape texts
@@ -240,7 +240,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge bbox line and class flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         iview_bbox = Group(
@@ -266,7 +266,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'the merged output in both views',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         marrow_in = MultiArrow(
@@ -305,7 +305,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor view, merge 2d tensors',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         tensor_32_xyxy_2d_copy = tensor_32_xyxy_2d.copy()
@@ -363,11 +363,11 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'intuition view, merge outputs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # used in post-process part, scale back later
-        scale_factor = 1.2
+        scale_factor = 1.1
 
         # make a copy of marrow_out in intuition view
         # marrow_out_iview = marrow_out.copy()
@@ -429,7 +429,7 @@ class MainScene(Scene):
         self.next_section("""
             Prepare before get into details of post-process.
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # shift left the big map 
@@ -445,7 +445,7 @@ class MainScene(Scene):
             (6400,7) -> (6400,6) [xyxy, conf, cls]
             split if [multi_label] option is on: (6400,7) -> (6400*3,6)
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # generate a copy of system_merged for post-process flowchart
@@ -508,7 +508,7 @@ class MainScene(Scene):
             [2] filter use [conf] option: (6400,6) -> (k,6) [xyxy, conf, cls]
             classes filter if [classes] option is specified
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # generate a copy of system_after_max for post-process flowchart
@@ -576,7 +576,7 @@ class MainScene(Scene):
             class agnostic NMS if [agnostic_nms] option is on
             [4-skipped] filter using [max_det] option
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # generate a copy of system_after_conf for post-process flowchart
@@ -647,7 +647,7 @@ class MainScene(Scene):
             [5] scale back to original image size: (m,6) -> (n,6)
                 maybe convert to desired output format (e.g. xywh)
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO, adjust naming
@@ -664,10 +664,28 @@ class MainScene(Scene):
             aargs={},
             gargs={},
         ))
-        # scale up system as a whole
-        self.play(system_scale_back.animate(
+        # TODO, scale up system as a whole, ugly alignment
+        system_scale_back.generate_target()
+        system_scale_back.target.next_to(
+            ac_d,
+            RIGHT,
+            buff=gap_postprocess,
+        )
+        system_scale_back.target.scale(
+            1.5,
+            about_point=system_scale_back.target[1].get_center(),
+        )
+        system_scale_back.target.next_to(
+            ac_d,
+            RIGHT,
+            buff=gap_postprocess,
+        )
+        self.play(MoveToTarget(
+            system_scale_back,
             run_time=1.0,
-        ).scale(1.5,).next_to(ac_d, RIGHT, buff=gap_postprocess))
+        ))
+        self.wait(0.3)
+
         self.play(system_scale_back[0].clip_to_background(
             aargs={},
             gargs={},
@@ -730,8 +748,8 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'big map: decode + postprocess',
-            skip_animations=False,
+            'back to output big map',
+            skip_animations=True,
         )
         # ************************************************************
         # scale down the big map
@@ -746,6 +764,7 @@ class MainScene(Scene):
             ac_1, ac_2, ac_3, ac_4,
             marrow_in, marrow_out, marrow_out_iview,
         )
+        ac_all.save_state()
 
         # TODO, setup font size and gap for shape texts
         # TODO, also shape text z_index
@@ -768,16 +787,145 @@ class MainScene(Scene):
         ))
         self.wait()
 
+        self.play(AnimationGroup(
+            tensor_32_dist.unwrite_shape_texts(),
+            tensor_32_xyxy.unwrite_shape_texts(),
+            tensor_32_xyxy_2d.unwrite_shape_texts(),
+            tensor_32_probs.unwrite_shape_texts(),
+            tensor_32_probs_2d.unwrite_shape_texts(),
+            tensor_merged_2d.unwrite_shape_texts(),
+            tensor_after_max.unwrite_shape_texts(),
+            tensor_after_conf.unwrite_shape_texts(),
+            tensor_after_nms.unwrite_shape_texts(),
+            tensor_scale_back.unwrite_shape_texts(),
+            lag_ratio=0.1,
+        ))
+        self.play(
+            ac_all.animate.restore(),
+            run_time=1.0,
+        )
+        self.wait()
+
+        # ************************************************************
+        self.next_section("""
+            split output procedure into 2 stages:
+            post-process and post-post-process
+            """,
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO, make state saving clear
+        system_all = Group(
+            system_dist, system_xyxy, system_xyxy_2d,
+            system_probs, system_probs_2d,
+            system_merged, system_after_max, system_after_conf, system_after_nms, system_scale_back,
+        ).save_state()
+        tensor_all = VGroup(
+            tensor_32_dist, tensor_32_xyxy, tensor_32_xyxy_2d,
+            tensor_32_probs, tensor_32_probs_2d,
+            tensor_merged_2d, tensor_after_max, tensor_after_conf, tensor_after_nms, tensor_scale_back,
+        ).save_state()
+        ac_all.save_state()
+        for system, tensor in zip(system_all, tensor_all):
+            system.save_state()
+            tensor.save_state()
+
+        # fade all
+        self.play(AnimationGroup(
+            ac_all.animate.fade(0.8),
+            system_all.animate.fade(0.8),
+            tensor_all.animate.fade(0.8),
+            lag_ratio=0.1,
+        ))
+        self.wait(.3)
+
+        # self.play(
+        #     Write(Dot(system_merged.get_center(), color=RED)),
+        #     Write(Dot(system_after_max.get_center(), color=GREEN)),
+        # )
+        # self.wait()
+
+        # from init systems/tensors to decoded system/tensor
+        self.play(AnimationGroup(
+            AnimationGroup(
+                AnimationGroup(
+                    Transform(system_dist, system_dist.saved_state.scale(1.2)),
+                    Transform(system_xyxy, system_xyxy.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                    Transform(system_xyxy_2d, system_xyxy_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                    Transform(system_merged, system_merged.saved_state.scale(1.2)),
+                    lag_ratio=0.3,
+                    run_time=1.0,
+                ),
+                AnimationGroup(
+                    Transform(system_probs, system_probs.saved_state.scale(1.2)),
+                    Transform(system_probs_2d, system_probs_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),   
+                    lag_ratio=0.5,
+                    run_time=0.8,
+                ),
+                lag_ratio=0,
+            ),
+            AnimationGroup(
+                AnimationGroup(
+                    Transform(tensor_32_dist, tensor_32_dist.saved_state.scale(1.2)),
+                    Transform(tensor_32_xyxy, tensor_32_xyxy.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                    Transform(tensor_32_xyxy_2d, tensor_32_xyxy_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                    Transform(tensor_merged_2d, tensor_merged_2d.saved_state.scale(1.2)),
+                    lag_ratio=0.3,
+                    run_time=1.0,
+                ),
+                AnimationGroup(
+                    Transform(tensor_32_probs, tensor_32_probs.saved_state.scale(1.2)),
+                    Transform(tensor_32_probs_2d, tensor_32_probs_2d.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),   
+                    lag_ratio=0.5,
+                    run_time=0.8,
+                ),
+                lag_ratio=0,
+            ),
+            lag_ratio=0,
+        ))
+        self.wait()
+
+        # from decoded system/tensor to postprocessed system/tensor
+        # FIXME, bad scale animation
+        self.play(AnimationGroup(
+            AnimationGroup(
+                Transform(system_after_max, system_after_max.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                Transform(system_after_conf, system_after_conf.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                Transform(system_after_nms, system_after_nms.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                Transform(system_scale_back, system_scale_back.saved_state.scale(1.2)),
+                lag_ratio=0.2,
+                run_time=0.8,
+            ),
+            AnimationGroup(
+                Transform(tensor_after_max, tensor_after_max.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                Transform(tensor_after_conf, tensor_after_conf.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                Transform(tensor_after_nms, tensor_after_nms.saved_state.scale(1.2), rate_func=rate_functions.there_and_back_with_pause),
+                Transform(tensor_scale_back, tensor_scale_back.saved_state.scale(1.2)),
+                lag_ratio=0.2,
+                run_time=0.8,
+            ),
+        ))
+        self.wait()
+
+        # # # loop into decoded system and tensor
+        # # self.play(AnimationGroup(
+        # #     Transform(system_dist, system_dist.saved_state),
+        # #     Transform(system_probs, system_probs.saved_state),
+        # #     Transform(tensor_32_dist, tensor_32_dist.saved_state),
+        # #     Transform(tensor_32_probs, tensor_32_probs.saved_state),
+        # # ))
+        
+
         # ************************************************************
         self.next_section(
             'bigger map: from input to output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
 
         # ************************************************************
         self.next_section(
             'more on output design',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************

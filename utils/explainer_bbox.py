@@ -238,17 +238,27 @@ class ExplainerBbox(VGroup):
         n_keep = max(1, int(len(self.anchor_points) * ratio))
         keep_indices = random.sample(range(len(self.anchor_points)), n_keep)
         
-        keep_aps = VGroup()
-        remove_anims = []
-        
-        for i, ap in enumerate(self.anchor_points):
-            if i in keep_indices:
-                keep_aps.add(ap)
-            else:
-                remove_anims.append(Unwrite(ap, **aargs))
-        
-        self.anchor_points = keep_aps
-        return AnimationGroup(*remove_anims, **gargs) if remove_anims else Wait(0.1)
+        aps_to_remove = [
+            ap for i, ap in enumerate(self.anchor_points)
+              if i not in keep_indices
+        ]
+        self.anchor_points.remove(*aps_to_remove)
+        if aps_to_remove:
+            anims = AnimationGroup(
+                *(Unwrite(ap, **aargs) for ap in aps_to_remove),
+            )
+        else:
+            anims = Wait(0.1)
+        return anims
+        # keep_aps = VGroup()
+        # remove_anims = []
+        # for i, ap in enumerate(self.anchor_points):
+        #     if i in keep_indices:
+        #         keep_aps.add(ap)
+        #     else:
+        #         remove_anims.append(Unwrite(ap, **aargs))
+        # self.anchor_points = keep_aps
+        # return AnimationGroup(*remove_anims, **gargs) if remove_anims else Wait(0.1)
 
     def to_rects(
         self,

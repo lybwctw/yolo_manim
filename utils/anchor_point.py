@@ -604,12 +604,23 @@ class AnchorPoint(VMobject):
         
         anims = [
             Transform(max_label, max_label.copy().move_to(first_pos, aligned_edge=DL), **aargs),
-            *(Unwrite(self.labels[i], **aargs)
-              for i in range(len(self.labels))
-              if i != max_idx)
         ]
+        labels_to_remove = []
+        for i in range(len(self.labels)):
+            if i != max_idx:
+                anims.append(Unwrite(self.labels[i], **aargs))
+                labels_to_remove.append(self.labels[i])
+
+        self.labels.remove(*labels_to_remove)
+
+        # anims = [
+        #     Transform(max_label, max_label.copy().move_to(first_pos, aligned_edge=DL), **aargs),
+        #     *(Unwrite(self.labels[i], **aargs)
+        #       for i in range(len(self.labels))
+        #       if i != max_idx)
+        # ]
         
-        self.labels = VGroup(max_label)
+        # self.labels = VGroup(max_label)
         return AnimationGroup(*anims, **gargs) if anims else Wait(0.1)
     
     def clip_to_background(
