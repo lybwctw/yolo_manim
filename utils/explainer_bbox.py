@@ -210,6 +210,46 @@ class ExplainerBbox(VGroup):
     ) -> Animation:
         pass
 
+    def keep_max_label(
+        self,
+        aargs: dict = {},       # animation args
+        gargs: dict = {},       # group args
+        ggargs: dict = {},      # group of group args
+    ) -> Animation:
+        """Keep only the label with maximum probability for each anchor point.
+        Used to represent the take-max class step in YOLO postprocessing.
+        """
+        anim = AnimationGroup(
+            *(ap.keep_max_label(aargs=aargs, gargs=gargs) for ap in self.anchor_points),
+            **ggargs,
+        )
+        return anim
+
+    def keep_ratio(
+        self,
+        ratio: float = 0.5,    # ratio of anchor points to keep (0-1)
+        aargs: dict = {},       # animation args
+        gargs: dict = {},       # group args
+    ) -> Animation:
+        """Keep only a random subset of anchor points based on ratio.
+        Can be called multiple times successively to further filter.
+        """
+        import random
+        n_keep = max(1, int(len(self.anchor_points) * ratio))
+        keep_indices = random.sample(range(len(self.anchor_points)), n_keep)
+        
+        keep_aps = VGroup()
+        remove_anims = []
+        
+        for i, ap in enumerate(self.anchor_points):
+            if i in keep_indices:
+                keep_aps.add(ap)
+            else:
+                remove_anims.append(Unwrite(ap, **aargs))
+        
+        self.anchor_points = keep_aps
+        return AnimationGroup(*remove_anims, **gargs) if remove_anims else Wait(0.1)
+
     def to_rects(
         self,
         rect_config: dict = {}, # rect config
@@ -408,7 +448,7 @@ class Demo(Scene):
         ).scale(2.)
         explainer = ExplainerBbox(
             sq,
-            data=np.random.uniform(0.6,1.2,(6,6,4)),
+            data=np.random.uniform(0.3,0.8,(6,6,4)),
             data_cls=np.random.uniform(0.1,0.9,(6,6,3)),
             sf_nominal=32,
         )
@@ -440,6 +480,19 @@ class Demo(Scene):
                 'lag_ratio': 0.1,
             }
         ))
+        self.wait()
+
+        self.play(explainer.keep_max_label(
+            aargs={
+                'lag_ratio': 0.1,
+            }
+        ))
+        self.wait()
+
+        self.play(explainer.keep_ratio(ratio=0.8))
+        self.wait()
+
+        self.play(explainer.keep_ratio(ratio=0.8))
         self.wait()
 
         # self.play(explainer.to_dots())

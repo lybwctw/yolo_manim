@@ -204,6 +204,35 @@ class ImagePad(Mobject, ShowShape):
                 ),
                 width_nominal=self.height_nominal,
             )
+        
+    def hide_paddings(
+        self,
+        updown: bool = True,    # user is responsible for providing correct updown
+        width_nominal: int | None = None,       # manual nominal update
+        height_nominal: int | None = None,      # manual nominal update
+    ) -> Animation:
+        if not self.paddings:
+            return Wait()
+
+        paddings_start = self.paddings
+        paddings_end = self.create_paddings(
+            updown=updown,
+            paddings=(0,0),
+            **self.paddings_config,
+        )
+
+        self.paddings = None
+
+        if width_nominal:
+            self.width_nominal = width_nominal
+        if height_nominal:
+            self.height_nominal = height_nominal
+
+        return AnimationGroup(
+            *(Transform(p1, p2) for p1, p2 in zip(paddings_start, paddings_end)),
+            lag_ratio=0,
+            run_time=0.5,
+        )
 
 class Demo(Scene):
     def construct(self) -> None:
@@ -217,6 +246,12 @@ class Demo(Scene):
         self.wait()
 
         self.play(ipad.show_natural_paddings())
+        self.wait()
+
+        self.play(ipad.hide_paddings(
+            width_nominal=640,
+            height_nominal=360,
+        ))
         self.wait()
 
         self.play(ipad.show_passing_flash())

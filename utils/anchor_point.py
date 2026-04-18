@@ -590,6 +590,28 @@ class AnchorPoint(VMobject):
         self.add(self.labels)
         return Write(self.labels, **aargs)
 
+    def keep_max_label(
+        self,
+        aargs: dict = {},       # animation args
+        gargs: dict = {},       # group args
+    ) -> Animation:
+        """Keep only the label with maximum probability and move it to left.
+        Used after show_multi_labels to represent the take-max class step.
+        """
+        max_idx = np.argmax(self.probs)
+        max_label = self.labels[max_idx]
+        first_pos = self.labels[0].get_corner(DL)
+        
+        anims = [
+            Transform(max_label, max_label.copy().move_to(first_pos, aligned_edge=DL), **aargs),
+            *(Unwrite(self.labels[i], **aargs)
+              for i in range(len(self.labels))
+              if i != max_idx)
+        ]
+        
+        self.labels = VGroup(max_label)
+        return AnimationGroup(*anims, **gargs) if anims else Wait(0.1)
+
     @property
     def node_left(self) -> np.ndarray:
         return np.array([self.rect.get_left()[0], self.dot.get_center()[1], 0])
@@ -646,5 +668,5 @@ class Demo(Scene):
         ))
         self.wait()
 
-        # self.play(ap.to_probs([0.5,0.5,0.5]))
-        # self.wait()
+        self.play(ap.keep_max_label())
+        self.wait()

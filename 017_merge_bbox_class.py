@@ -366,6 +366,9 @@ class MainScene(Scene):
             skip_animations=True,
         )
         # ************************************************************
+        # used in post-process part, scale back later
+        scale_factor = 1.2
+
         # make a copy of marrow_out in intuition view
         # marrow_out_iview = marrow_out.copy()
         # self.add(marrow_out_iview)
@@ -395,7 +398,7 @@ class MainScene(Scene):
         self.play(
             system_merged\
             .animate(run_time=1.0)\
-            .scale(1.5)\
+            .scale(scale_factor)\
             .next_to(marrow_out_iview, RIGHT, buff=0.26)
         )
         self.wait()
@@ -423,9 +426,10 @@ class MainScene(Scene):
         # NOTE, played after 018_post_process!!!!!!!!!!!!!!!!!!
 
         # ************************************************************
-        self.next_section(
-            'appending postprocess steps',
-            skip_animations=False,
+        self.next_section("""
+            Prepare before get into details of post-process.
+            """,
+            skip_animations=True,
         )
         # ************************************************************
         # shift left the big map 
@@ -433,25 +437,320 @@ class MainScene(Scene):
         self.play(mobs.animate.shift(LEFT*10.))
         self.wait()
 
-        # max class selection: (6400,7) -> (6400,6) [xyxy, conf, cls]
-        # ... split if [multi_label] option is on: (6400,7) -> (6400*3,6)
+        gap_postprocess = 0.2
 
-        # filter use [conf] option: (6400,6) -> (n,6) [xyxy, conf, cls]
+        # ************************************************************
+        self.next_section("""
+            [1] max class selection
+            (6400,7) -> (6400,6) [xyxy, conf, cls]
+            split if [multi_label] option is on: (6400,7) -> (6400*3,6)
+            """,
+            skip_animations=True,
+        )
+        # ************************************************************
+        # generate a copy of system_merged for post-process flowchart
+        ac_a = acb_ab.copy().next_to(system_merged, RIGHT, buff=gap_postprocess)
+        self.play(Write(ac_a))
+        system_after_max = system_merged.copy()
+        self.play(system_after_max.animate.next_to(ac_a, RIGHT, buff=gap_postprocess))
+        # TODO: show comment on ac_a
+        self.play(system_after_max[0].keep_max_label(
+            aargs={},
+            gargs={},
+            ggargs={},
+        ))
+        self.wait()
 
-        # ... classes filter if [classes] option is specified: (6400,6) -> (n,6)
+        # generate a copy of tensor_merged_2d for post-process flowchart
+        ac_1 = ac_a.copy().next_to(tensor_merged_2d, RIGHT, buff=gap_postprocess)\
+            .align_to(ac_a, LEFT)
+        self.play(Write(ac_1))
+        tensor_after_max = tensor_merged_2d.copy()
+        self.play(tensor_after_max.animate.next_to(ac_1, RIGHT, buff=gap_postprocess)\
+            .set_x(system_after_max.get_x()))
+        # TODO: show comment on ac_1
+        self.play(tensor_after_max.animate.stretch_to_fit_width(
+            tensor_merged_2d.width * 0.8
+        ))
+        tensor_after_max.width_nominal = 6      # xyxy, conf, cls
+        self.wait()
 
-        # NMS filter using [iou] option: (n,6) -> (k,6) [xyxy, conf, cls]
-        # ... class agnostic NMS if [agnostic_nms] option is on: (n,6) -> (k,6)
+        # show shapes of the new tensors after max class selection
+        ac_1.save_state()
+        marrow_out.save_state()     # marrow_out already changed, save again for later restore
+        self.play(AnimationGroup(
+            AnimationGroup(
+                marrow_out.animate.fade(0.8),
+                ac_1.animate.fade(0.8),
+            ),
+            AnimationGroup(
+                tensor_merged_2d.show_passing_flash(),
+                tensor_after_max.show_passing_flash(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
+        self.play(AnimationGroup(
+            AnimationGroup(
+                tensor_merged_2d.unwrite_shape_texts(),
+                tensor_after_max.unwrite_shape_texts(),
+            ),
+            AnimationGroup(
+                marrow_out.animate.restore(),
+                ac_1.animate.restore(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
 
-        # filter using [max_det] option: (k,6) -> (m,6)
+        # ************************************************************
+        self.next_section("""
+            [2] filter use [conf] option: (6400,6) -> (m,6) [xyxy, conf, cls]
+            classes filter if [classes] option is specified
+            """,
+            skip_animations=True,
+        )
+        # ************************************************************
+        # generate a copy of system_after_max for post-process flowchart
+        ac_b = ac_a.copy().next_to(system_after_max, RIGHT, buff=gap_postprocess)
+        self.play(Write(ac_b))
+        system_after_conf = system_after_max.copy()
+        self.play(system_after_conf.animate.next_to(ac_b, RIGHT, buff=gap_postprocess))
+        # TODO: show comment on ac_b
+        # TODO: use hardcoded removal
+        self.play(system_after_conf[0].keep_ratio(
+            ratio=0.8,
+            aargs={},
+            gargs={},
+        ))
+        self.wait()
+
+        # generate a copy of tensor_after_max for post-process flowchart
+        ac_2 = ac_b.copy().next_to(tensor_after_max, RIGHT, buff=gap_postprocess)\
+            .align_to(ac_b, LEFT)
+        self.play(Write(ac_2))
+        tensor_after_conf = tensor_after_max.copy()
+        self.play(tensor_after_conf.animate.next_to(ac_2, RIGHT, buff=gap_postprocess)\
+            .set_x(system_after_conf.get_x()))
+        # TODO: show comment on ac_2
+        self.play(tensor_after_conf.animate.stretch_to_fit_height(
+            tensor_after_max.height * 0.6
+        ))
+        tensor_after_conf.height_nominal = 'm'      # xyxy, conf, cls
+        self.wait()
+
+        # show shapes of the new tensors after confidence filtering
+        ac_2.save_state()
+        self.play(AnimationGroup(
+            AnimationGroup(
+                marrow_out.animate.fade(0.8),
+                ac_1.animate.fade(0.8),
+                ac_2.animate.fade(0.8),
+            ),
+            AnimationGroup(
+                tensor_merged_2d.show_passing_flash(),
+                tensor_after_max.show_passing_flash(),
+                tensor_after_conf.show_passing_flash(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
+        self.play(AnimationGroup(
+            AnimationGroup(
+                tensor_merged_2d.unwrite_shape_texts(),
+                tensor_after_max.unwrite_shape_texts(),
+                tensor_after_conf.unwrite_shape_texts(),
+            ),
+            AnimationGroup(
+                marrow_out.animate.restore(),
+                ac_1.animate.restore(),
+                ac_2.animate.restore(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
+
+        # ************************************************************
+        self.next_section("""
+            [3] NMS filter using [iou] option: (m,6) -> (n,6) [xyxy, conf, cls]
+            class agnostic NMS if [agnostic_nms] option is on: (m,6) -> (n,6)
+            [4-skipped] filter using [max_det] option
+            """,
+            skip_animations=True,
+        )
+        # ************************************************************
+        # generate a copy of system_after_conf for post-process flowchart
+        ac_c = ac_b.copy().next_to(system_after_conf, RIGHT, buff=gap_postprocess)
+        self.play(Write(ac_c))
+        system_after_nms = system_after_conf.copy()
+        self.play(system_after_nms.animate.next_to(ac_c, RIGHT, buff=gap_postprocess))
+        # TODO: show comment on ac_c
+        # TODO: use hardcoded removal
+        self.play(system_after_nms[0].keep_ratio(
+            ratio=0.6,
+            aargs={},
+            gargs={},
+        ))
+        self.wait()
+
+        # generate a copy of tensor_after_conf for post-process flowchart
+        ac_3 = ac_c.copy().next_to(tensor_after_conf, RIGHT, buff=gap_postprocess)\
+            .align_to(ac_c, LEFT)
+        self.play(Write(ac_3))
+        tensor_after_nms = tensor_after_conf.copy()
+        self.play(tensor_after_nms.animate.next_to(ac_3, RIGHT, buff=gap_postprocess)\
+            .set_x(system_after_nms.get_x()))
+        # TODO: show comment on ac_3
+        self.play(tensor_after_nms.animate.stretch_to_fit_height(
+            tensor_after_conf.height * 0.6
+        ))
+        tensor_after_nms.height_nominal = 'n'      # xyxy, conf, cls
+        self.wait()
+
+        # show shapes of the new tensors after NMS filtering
+        ac_3.save_state()
+        self.play(AnimationGroup(
+            AnimationGroup(
+                marrow_out.animate.fade(0.8),
+                ac_1.animate.fade(0.8),
+                ac_2.animate.fade(0.8),
+                ac_3.animate.fade(0.8),
+            ),
+            AnimationGroup(
+                tensor_merged_2d.show_passing_flash(),
+                tensor_after_max.show_passing_flash(),
+                tensor_after_conf.show_passing_flash(),
+                tensor_after_nms.show_passing_flash(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
+        self.play(AnimationGroup(
+            AnimationGroup(
+                tensor_merged_2d.unwrite_shape_texts(),
+                tensor_after_max.unwrite_shape_texts(),
+                tensor_after_conf.unwrite_shape_texts(),
+                tensor_after_nms.unwrite_shape_texts(),
+            ),
+            AnimationGroup(
+                marrow_out.animate.restore(),
+                ac_1.animate.restore(),
+                ac_2.animate.restore(),
+                ac_3.animate.restore(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
+
+        # ************************************************************
+        self.next_section("""
+            [5] scale back to original image size: (n,6) -> (n,6)
+                maybe convert to desired output format (e.g. xywh)
+            """,
+            skip_animations=True,
+        )
+        # ************************************************************
+        # TODO, adjust naming
+        # generate a copy of system_after_nms for post-process flowchart
+        ac_d = ac_c.copy().next_to(system_after_nms, RIGHT, buff=gap_postprocess)
+        self.play(Write(ac_d))
+        # system_after_maxdet = system_after_nms.copy()
+        system_scale_back = None        # TODO
+        self.play(system_scale_back.animate.next_to(ac_d, RIGHT, buff=gap_postprocess))
+        # TODO: show comment on ac_d
+
+        # generate a copy of tensor_after_nms for post-process flowchart
+        ac_4 = ac_d.copy().next_to(tensor_after_nms, RIGHT, buff=gap_postprocess)\
+            .align_to(ac_d, LEFT)
+        self.play(Write(ac_4))
+        tensor_scale_back = tensor_after_nms.copy()
+        self.play(tensor_scale_back.animate.next_to(ac_4, RIGHT, buff=gap_postprocess)\
+            .set_x(system_scale_back.get_x()))
+        # TODO: show comment on ac_4
+        self.play(tensor_scale_back.animate.stretch_to_fit_height(
+            tensor_after_nms.height * 0.6
+        ))
+        # tensor_scale_back.height_nominal = 'n'      # xywh, conf, cls
+        self.wait()
+
+        # show shapes of the new tensors after max_det filtering
+        ac_4.save_state()
+        self.play(AnimationGroup(
+            AnimationGroup(
+                marrow_out.animate.fade(0.8),
+                ac_1.animate.fade(0.8),
+                ac_2.animate.fade(0.8),
+                ac_3.animate.fade(0.8),
+                ac_4.animate.fade(0.8),
+            ),
+            AnimationGroup(
+                tensor_merged_2d.show_passing_flash(),
+                tensor_after_max.show_passing_flash(),
+                tensor_after_conf.show_passing_flash(),
+                tensor_after_nms.show_passing_flash(),
+                tensor_scale_back.show_passing_flash(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
+        self.play(AnimationGroup(
+            AnimationGroup(
+                tensor_merged_2d.unwrite_shape_texts(),
+                tensor_after_max.unwrite_shape_texts(),
+                tensor_after_conf.unwrite_shape_texts(),
+                tensor_after_nms.unwrite_shape_texts(),
+                tensor_scale_back.unwrite_shape_texts(),
+            ),
+            AnimationGroup(
+                marrow_out.animate.restore(),
+                ac_1.animate.restore(),
+                ac_2.animate.restore(),
+                ac_3.animate.restore(),
+                ac_4.animate.restore(),
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait()
 
         # ************************************************************
         self.next_section(
             'big map: decode + postprocess',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # scale down the big map
+        mobs = Group(*self.get_top_level_mobjects())
+        self.play(mobs.animate.scale(0.7).center())
+        self.wait()
+
+        # show shapes for all tensors in the big map
+        ac_all = VGroup(
+            acc_all, acb_all,
+            ac_a, ac_b, ac_c, ac_d,
+            ac_1, ac_2, ac_3, ac_4,
+            marrow_in, marrow_out, marrow_out_iview,
+        )
+
+        # TODO, setup font size and gap for shape texts
+        # TODO, also shape text z_index
+        self.play(
+            ac_all.animate.fade(0.8),
+            run_time=1.0,
+        )
+        self.play(AnimationGroup(
+            tensor_32_dist.show_passing_flash(),
+            tensor_32_xyxy.show_passing_flash(),
+            tensor_32_xyxy_2d.show_passing_flash(),
+            tensor_32_probs.show_passing_flash(),
+            tensor_32_probs_2d.show_passing_flash(),
+            tensor_merged_2d.show_passing_flash(),
+            tensor_after_max.show_passing_flash(),
+            tensor_after_conf.show_passing_flash(),
+            tensor_after_nms.show_passing_flash(),
+            tensor_scale_back.show_passing_flash(),
+            lag_ratio=0.1,
+        ))
+        self.wait()
 
         # ************************************************************
         self.next_section(
