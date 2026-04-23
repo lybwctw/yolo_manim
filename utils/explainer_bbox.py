@@ -449,23 +449,17 @@ class ExplainerBbox(VGroup):
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """Clip aps cross border, remove is fully outside.
+        """Clip aps cross border, remove if fully outside.
         """
         anims = []
+        aps_to_remove = []
         for ap in self.anchor_points:
             anim = ap.clip_to_background(self.background, **aargs)
-            if isinstance(anim, Unwrite):   # TODO, better solution?
-                self.anchor_points.remove(ap)
+            if isinstance(anim.animations[0], Unwrite):   # TODO, better solution?
+                aps_to_remove.append(ap)
             anims.append(anim)
+        self.anchor_points.remove(*aps_to_remove)
         return AnimationGroup(*anims, **gargs)
-        # anims = AnimationGroup(
-        #     *(ap.clip_to_background(
-        #         self.background,
-        #         **aargs,
-        #     ) for ap in self.anchor_points),
-        #     **gargs,
-        # )
-        # return anims
 
     @property
     def step(self) -> float:

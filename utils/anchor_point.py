@@ -635,7 +635,8 @@ class AnchorPoint(VMobject):
         if inter_rect is None:
             anims.append(Unwrite(self)) # TODO, or fade out???
         else:
-            inter_rect.match_style(self.mob)
+            # inter_rect.match_style(self.mob)
+            self.remove(self.rect)
             self.rect = inter_rect
             anims.append(AnimationGroup(
                 self.to_rect(
@@ -653,6 +654,9 @@ class AnchorPoint(VMobject):
         self,
         background,
     ) -> Rectangle | None:
+        """Compute the intersection between self.rect and background
+        return a new Rectangle if intersected, otherwise return None.
+        """
         r1, r2 = self.rect, background
         # compute edges of intersection
         x_min = max(r1.get_left()[0], r2.get_left()[0])
@@ -667,7 +671,8 @@ class AnchorPoint(VMobject):
             # The center is the average of the min and max coordinates
             center = [(x_min + x_max) / 2, (y_min + y_max) / 2, 0]
             
-            return Rectangle(width=width, height=height).move_to(center)
+            rect = Rectangle(width=width, height=height).move_to(center)
+            return rect.match_style(self.mob)
         
         return None # no intersection
 

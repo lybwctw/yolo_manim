@@ -224,6 +224,7 @@ class ImagePad(Mobject, ShowShape):
         )
 
         self.paddings = None
+        # self.remove(self.paddings)
 
         if width_nominal:
             self.width_nominal = width_nominal

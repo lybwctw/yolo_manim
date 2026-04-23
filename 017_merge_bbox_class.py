@@ -647,11 +647,12 @@ class MainScene(Scene):
             [5] scale back to original image size: (m,6) -> (n,6)
                 maybe convert to desired output format (e.g. xywh)
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO, adjust naming
         # generate a copy of system_after_nms for post-process flowchart
+
         ac_d = ac_c.copy().next_to(system_after_nms, RIGHT, buff=gap_postprocess)
         self.play(Write(ac_d))
         # system_after_maxdet = system_after_nms.copy()
@@ -849,6 +850,7 @@ class MainScene(Scene):
         self.wait(1)
 
         # from init systems/tensors to decoded system/tensor
+        # TODO, make it faster
         self.play(AnimationGroup(
             AnimationGroup(
                 AnimationGroup(
@@ -905,12 +907,91 @@ class MainScene(Scene):
         ))
         self.wait()
 
+        # NOTE: video editing point!!!!!!!!!!!!!!!!!!
+
+        # ************************************************************
+        self.next_section(
+            'simplify the details in post-process stage',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO, more natural transform from current acs to new acs?
+        ac_cd = ArrowComment(False, RIGHT, 'decode').scale(0.3).shift(UP*10)
+        ac_de = ArrowComment(False, RIGHT, 'post-process').scale(0.3).shift(UP*10)
+        ac_game = ArrowComment(False, RIGHT, 'model').scale(0.3).shift(LEFT*10) # TODO, stand out
+        ac_34 = ArrowComment(False, RIGHT, 'decode').scale(0.3).shift(DOWN*10)
+        ac_45 = ArrowComment(False, RIGHT, 'post-process').scale(0.3).shift(DOWN*10)
+        manager = Group(
+            *[VMobject(), system_dist, system_probs, ac_cd, system_merged, ac_de, system_scale_back],
+            *[ac_game, tensor_32_dist, tensor_32_probs, ac_34, tensor_merged_2d, ac_45, tensor_scale_back],
+        )
+        other_systems = Group(
+            *(system for system in system_all if system not in 
+            [system_dist, system_probs, system_merged, system_scale_back])
+        )
+        other_tensors = Group(
+            *(tensor for tensor in tensor_all if tensor not in 
+            [tensor_32_dist, tensor_32_probs, tensor_merged_2d, tensor_scale_back])
+        )
+        manager.generate_target()
+        manager.target.arrange_in_grid(
+            rows=2,
+            cols=7,
+            buff=0.5,
+        ).center()
+        # stretch up the final tensor for better visual after rearrangement
+        manager.target[13].stretch_to_fit_height(
+            tensor_merged_2d.height * 0.6,
+        )   
+        self.play(AnimationGroup(
+            FadeOut(other_systems),
+            FadeOut(other_tensors),
+            Unwrite(ac_all),
+            MoveToTarget(manager),
+        ))
+        self.wait(0.5)
+
         # ************************************************************
         self.next_section(
             'bigger map: from input to output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
+        ac_ab = ArrowComment(False, RIGHT, 'preprocess').scale(0.3).shift(LEFT*10)
+        ac_12 = ArrowComment(False, RIGHT, 'preprocess').scale(0.3).shift(LEFT*10)
+        image_raw = system_scale_back[1].copy().set_x(0).shift(LEFT*10)
+        image_pad = system_merged[1].copy().set_x(0).shift(LEFT*10)
+        tensor_raw = LayersFake(
+            n=3,
+            ref=image_raw,
+            expanded=True,
+            width_nominal=image_raw.width_nominal,
+            height_nominal=image_raw.height_nominal,
+            buff=0.05,              # TODO, natural buff?
+        ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
+        tensor_pad = LayersFake(
+            n=3,
+            ref=image_pad,
+            expanded=True,
+            width_nominal=image_pad.width_nominal,
+            height_nominal=image_pad.height_nominal,
+            buff=0.05,              # TODO, natural buff?
+        ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
+
+        manager = Group(
+            *[image_raw, ac_ab, image_pad, VMobject(), system_dist, system_probs, ac_cd, system_merged, ac_de, system_scale_back],
+            *[tensor_raw, ac_12, tensor_pad, ac_game, tensor_32_dist, tensor_32_probs, ac_34, tensor_merged_2d, ac_45, tensor_scale_back],
+        )
+        manager.generate_target()
+        manager.target.arrange_in_grid(
+            rows=2,
+            cols=10,
+            # buff=0.5,
+        ).center()
+        self.play(MoveToTarget(manager))
+        self.wait()
+
+        # TODO, pop out comments from acs
 
         # ************************************************************
         self.next_section(
