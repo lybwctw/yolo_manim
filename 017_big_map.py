@@ -17,7 +17,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs from start',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
@@ -97,7 +97,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start with bbox output flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         manager_bbox = Group(
@@ -148,7 +148,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'shift in class output flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.add(manager_cls)
@@ -182,7 +182,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO, font size issue on shape texts
@@ -241,19 +241,19 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge bbox line and class flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         iview_bbox = Group(
             *[system_dist, acb_ab, system_xyxy, acb_bc, system_xyxy_2d],
         )
-        tview_bbox = Group(
+        tview_bbox = VGroup(
             *[acb_game, tensor_32_dist, acb_12, tensor_32_xyxy, acb_23, tensor_32_xyxy_2d, acb_post],
         )
         iview_cls = Group(
             *[system_probs, acc_ab, system_probs_2d],
         )
-        tviwe_cls = Group(
+        tview_cls = VGroup(
             *[acc_game, tensor_32_probs, acc_12, tensor_32_probs_2d, acc_post],
         )
 
@@ -267,7 +267,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'the merged output in both views',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         marrow_in = MultiArrow(
@@ -277,8 +277,11 @@ class MainScene(Scene):
         )
         marrow_out = MultiArrow(
             one_to_many=False,
-            p1=acb_post.get_left()+LEFT*0,     # manual adjust
-            p2=acc_post.get_left()+LEFT*0,     # manual adjust
+            p1=acb_post.get_left()+LEFT*0,
+            p2=acc_post.get_left()+LEFT*0,
+            ratio_input=0.2,
+            ratio_brace=0.4,
+            ratio_output=0.2,
         )
 
         # merge input arrows
@@ -306,7 +309,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor view, merge 2d tensors',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         tensor_32_xyxy_2d_copy = tensor_32_xyxy_2d.copy()
@@ -319,7 +322,7 @@ class MainScene(Scene):
         self.wait(0.3)
 
         tensor_32_xyxy_2d_copy.generate_target()
-        tensor_32_xyxy_2d_copy.target.next_to(marrow_out, RIGHT, buff=0.3)
+        tensor_32_xyxy_2d_copy.target.next_to(marrow_out, RIGHT, buff=0.5)      # manual adjusted
         tensor_32_probs_2d_copy.generate_target()
         tensor_32_probs_2d_copy.target.next_to(tensor_32_xyxy_2d_copy.target, RIGHT, buff=0)
         tensor_copy = VGroup(
@@ -364,7 +367,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'intuition view, merge outputs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # used in post-process part, scale back later
@@ -424,13 +427,40 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            "save everything",
-            skip_animations=False,
+            "save everything, used by 019",
+            skip_animations=True,
         )
         # ************************************************************
         everything = Group(
-            *iview_bbox, *iview_cls, *tview_bbox, *tviwe_cls,
+            *iview_bbox, *iview_cls, *tview_bbox, *tview_cls,
             marrow_in, marrow_out, marrow_out_iview,
             system_merged, tensor_merged_2d,
         )
-        save_everything(S017_EVERYTHING, everything)
+        save_everything(S017_EVERYTHING_BM, everything)
+
+        # ************************************************************
+        self.next_section("""
+            focus on system_merged and tensor_merged_2d,
+            used by 018.
+            """,
+            skip_animations=False,
+        )
+        # ************************************************************
+        # manual init position for scene 018
+        self.play(AnimationGroup(
+            system_merged[1].animate(run_time=1.0).center().scale(4.0).to_edge(LEFT,buff=1.0),  # manual adjust background scale factor
+            Unwrite(system_merged[0], lag_ratio=0, run_time=0.3),
+            Unwrite(tensor_merged_2d, lag_ratio=0, run_time=0.3),
+            FadeOut(iview_bbox, lag_ratio=0, run_time=0.3),
+            FadeOut(iview_cls, lag_ratio=0, run_time=0.3),
+            Unwrite(tview_bbox, lag_ratio=0, run_time=0.3),
+            Unwrite(tview_cls, lag_ratio=0, run_time=0.3),
+            Unwrite(marrow_in, lag_ratio=0, run_time=0.3),
+            Unwrite(marrow_out, lag_ratio=0, run_time=0.3),
+            Unwrite(marrow_out_iview, lag_ratio=0, run_time=0.3),
+        ))
+        self.wait()
+        everything = Group(
+            system_merged[1],
+        )
+        save_everything(S017_EVERYTHING_PP, everything)

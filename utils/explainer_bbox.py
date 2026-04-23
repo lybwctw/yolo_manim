@@ -2,8 +2,6 @@ import sys
 sys.path.append('..')
 
 from manim import *
-import numpy as np
-
 from utils.anchor_point import AnchorPoint
 from utils.image_raw import ImageRaw
 from utils.image_pad import ImagePad
@@ -12,12 +10,21 @@ from utils.line_matrix import LineMatrix
 from utils.general import tensor_to_line_matrix
 from utils.constants import MINI_32_DIST_PATH, MINI_32_PROB_PATH
 
+import numpy as np
+import torch
+
+PATH_DIST_BBOX = 'assets/tensors/_dist_box.pt'
+PATH_NORM_CLS = 'assets/tensors/_norm_cls.pt'
+PATH_DIST_BBOX_MINI = 'assets/numpy/mini_32_dist.npy'
+PATH_NORM_CLS_MINI = 'assets/numpy/mini_32_prob.npy'
+
 TEXT_XY_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 15,
 }
 
-# TODO, renaming of ExplainerBbox -> Explainer
+
+# FIXME, renaming of ExplainerBbox -> Explainer
 # TODO, renaming of self.data -> self.data_dist
 # because class info is also stored
 class ExplainerBbox(VGroup):
@@ -466,6 +473,50 @@ class ExplainerBbox(VGroup):
         # FIXME, assume that width and height hold same scale
         return self.background.width / self.shape[1]
         
+def load_explainer(
+    background,
+    version: str = 'mini',  # mini/general
+    scale: int = 32,        # 32/16/8 for general
+    random_probs: bool = False,   # random init probs
+) -> ExplainerBbox:
+    """User interface for explainer.
+       TODO, make all data np/torch
+       and make mini version customizable
+    """
+    if version == 'mini':
+        data_dist = np.load(PATH_DIST_BBOX_MINI)
+        data_cls = np.load(PATH_NORM_CLS_MINI)
+    elif version == 'general':
+        data_dist = torch.load(
+            PATH_DIST_BBOX,
+            weights_only=True,
+            map_location='cpu',
+        )  # (1, 4, 8400)
+        data_cls = torch.load(
+            PATH_NORM_CLS,
+            weights_only=True,
+            map_location='cpu',
+        )  # (1, 3, 8400)
+        if scale == 32:
+            data_dist = data_dist[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
+            data_cls = data_cls[0,:,8000:].transpose(0,1).reshape(20,20,3).numpy()
+        elif scale == 16:
+            data_dist = data_dist[0,:,6400:8000].transpose(0,1).reshape(40,40,4).numpy()
+            data_cls = data_cls[0,:,6400:8000].transpose(0,1).reshape(20,20,3).numpy()
+        elif scale == 8:
+            data_dist = data_dist[0,:,:6400].transpose(0,1).reshape(80,80,4).numpy()
+            data_cls = data_cls[0,:,:6400].transpose(0,1).reshape(20,20,3).numpy()
+        
+        if random_probs:
+            data_cls = np.random.uniform(0.1,0.9,(scale,scale,3))
+
+    explainer = ExplainerBbox(
+        background=background,
+        data=data_dist,
+        data_cls=data_cls,
+        sf_nominal=scale,
+    )
+    return explainer
 
 class Demo(Scene):
     def construct(self):

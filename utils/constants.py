@@ -11,6 +11,7 @@ KK_COLOR_MAP = dict(enumerate(KK_COLORS))
 S000_EVERYTHING = 's000_everything.pkl'
 S001_EVERYTHING = 's001_everything.pkl'
 S002_EVERYTHING = 's002_everything.pkl'
+
 S004_EVERYTHING = 's004_everything.pkl'
 S005_EVERYTHING = 's005_everything.pkl'
 S006_EVERYTHING = 's006_everything.pkl'
@@ -24,7 +25,8 @@ S013_EVERYTHING = 's013_everything.pkl'
 
 S015_EVERYTHING = 's015_everything.pkl'
 
-S017_EVERYTHING = 's017_everything.pkl'
+S017_EVERYTHING_PP = 's017_everything_pp.pkl'       # for 018 postprocess
+S017_EVERYTHING_BM = 's017_everything_bm.pkl'       # for 019 big map
 
 S019_EVERYTHING = 's019_everything.pkl'
 

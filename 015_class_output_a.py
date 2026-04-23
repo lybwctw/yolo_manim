@@ -25,6 +25,7 @@ class MainScene(Scene):
         self.wait()
 
         # TODO, make distance tensor loading a function
+        # FIXME, update with general explainer loading function
         data_dist = torch.load(
             'assets/tensors/_dist_box.pt',
             weights_only=True,

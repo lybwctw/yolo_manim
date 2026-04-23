@@ -6,7 +6,7 @@ from utils.layers_fake import LayersFake
 from utils.multi_arrow import MultiArrow
 from utils.arrow_comment import ArrowComment
 
-class PostProcessScene(Scene):
+class MainScene(Scene):
     def construct(self):
         # ************************************************************
         self.next_section(
@@ -14,7 +14,7 @@ class PostProcessScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        everything = load_everything(S017_EVERYTHING)
+        everything = load_everything(S017_EVERYTHING_BM)
         (
             system_dist, acb_ab, system_xyxy, acb_bc, system_xyxy_2d,
             system_probs, acc_ab, system_probs_2d,
@@ -627,5 +627,9 @@ class PostProcessScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        everything = manager    # FIXME, redundancy between manager and everything
+        # FIXME, redundancy between manager and everything
+        everything = Group(
+            *[image_raw, ac_ab, image_pad, VMobject(), system_dist, system_probs, ac_cd, system_merged, ac_de, system_scale_back],
+            *[tensor_raw, ac_12, tensor_pad, ac_game, tensor_32_dist, tensor_32_probs, ac_34, tensor_merged_2d, ac_45, tensor_scale_back],
+        )
         save_everything(S019_EVERYTHING, everything)

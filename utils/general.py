@@ -4,6 +4,9 @@ sys.path.append('..')
 from manim import *
 import pickle
 import cv2
+import torch
+import numpy as np
+
 from utils.color_cell import ColorCell
 from utils.line_matrix import LineMatrix
 
