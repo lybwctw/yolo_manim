@@ -16,6 +16,9 @@ __pycache__/
 *.pyo
 *.pyd
 
+# pickle files
+s*.pkl
+
 # Virtual environments
 venv/
 env/

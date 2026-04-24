@@ -589,6 +589,32 @@ class AnchorPoint(VMobject):
 
         self.add(self.labels)
         return Write(self.labels, **aargs)
+    
+    def show_rect_mlabels(
+        self,
+        width_ratio: float = 0.6,            # width : baseline
+        height_ratio: float = 0.4,           # height : baseline
+        rect_config: dict = {},
+        label_config: dict = {},
+        rargs: dict = {},       # to_rect animation args
+        largs: dict = {},       # show_multi_labels animation args
+        gargs: dict = {},       # group args
+    ) -> Animation:
+        """Show rect and multi labels together.
+        """
+        anims = [
+            self.to_rect(
+                rect_config=rect_config,
+                **rargs,
+            ),
+            self.show_multi_labels(
+                width_ratio=width_ratio,
+                height_ratio=height_ratio,
+                label_config=label_config,
+                **largs
+            ),
+        ]
+        return AnimationGroup(*anims, **gargs)
 
     def keep_max_label(
         self,
@@ -719,27 +745,34 @@ class Demo(Scene):
         # ))
         # self.wait(0.3)
 
-        self.play(ap.to_rect(
-            rect_config={'width': 1},
-        ))
+        self.play(
+            ap.show_rect_mlabels(
+                label_config={'fill_opacity': 0.5,},
+            )
+        )
         self.wait()
 
-        # self.play(ap.show_pbars())
+        # self.play(ap.to_rect(
+        #     rect_config={'width': 1},
+        # ))
         # self.wait()
 
-        self.play(ap.show_multi_labels(
-            label_config={'fill_opacity': 0.3},
-        ))
-        self.wait()
+        # # self.play(ap.show_pbars())
+        # # self.wait()
+
+        # self.play(ap.show_multi_labels(
+        #     label_config={'fill_opacity': 0.3},
+        # ))
+        # self.wait()
 
         self.play(ap.keep_max_label())
         self.wait()
 
-        bg = Rectangle().scale(2)
-        self.play(Write(bg))
-        self.wait()
+        # bg = Rectangle().scale(2)
+        # self.play(Write(bg))
+        # self.wait()
 
-        self.play(ap.clip_to_background(
-            bg,
-        ))
-        self.wait()
+        # self.play(ap.clip_to_background(
+        #     bg,
+        # ))
+        # self.wait()

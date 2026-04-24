@@ -17,7 +17,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs from start',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
@@ -97,7 +97,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start with bbox output flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         manager_bbox = Group(
@@ -148,7 +148,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'shift in class output flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.add(manager_cls)
@@ -182,7 +182,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO, font size issue on shape texts
@@ -241,7 +241,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge bbox line and class flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         iview_bbox = Group(
@@ -267,7 +267,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'the merged output in both views',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         marrow_in = MultiArrow(
@@ -309,7 +309,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor view, merge 2d tensors',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor_32_xyxy_2d_copy = tensor_32_xyxy_2d.copy()
@@ -367,7 +367,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'intuition view, merge outputs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # used in post-process part, scale back later
@@ -428,7 +428,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             "save everything, used by 019",
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         everything = Group(

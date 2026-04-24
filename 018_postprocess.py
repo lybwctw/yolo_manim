@@ -22,34 +22,31 @@ class MainScene(Scene):
         self.add(everything)
         self.wait()
 
-        # ************************************************************
-        self.next_section(
-            'generate 20x20 bbox+cls, intuition + tensor',
-            skip_animations=False,
-        )
         explainer = load_explainer(
             background=background,
             version='general',
         )
         self.add(explainer)
-        self.play(explainer.show_anchor_points(lag_ratio=0))
-        self.wait()
-        self.play(explainer.to_rects())
-        self.wait()
-        
-        # ************************************************************
-        # generate 20x20 anchor
-
-        # generate 20x20 bbox
-
-        # generate 20x20 pbars
 
         # ************************************************************
         self.next_section(
             'generate 20x20 bbox+cls',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
+        # show anchor points
+        self.play(explainer.show_anchor_points(lag_ratio=0))
+        self.wait()
+
+        # show both rect and multi labels together
+        self.play(explainer.show_rect_mlabels(
+            rect_config={'width': 0.3,},
+            label_config={'fill_opacity': 0.3, 'stroke_opacity': 0.0,},
+            rargs={'run_time': 0.3,},
+            largs={'run_time': 0.3,},
+            gargs={'lag_ratio': 0.8, 'run_time': 0.5,},
+            ggargs={'lag_ratio': 0.1, 'run_time': 10, 'rate_func': rate_functions.ease_in_out_expo,},
+        ))
 
         # ************************************************************
         self.next_section(
@@ -57,6 +54,12 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+        self.play(explainer.keep_ratio(
+            ratio=0.1,
+            aargs={},
+            gargs={'lag_ratio': 0.1, 'run_time': 1.5,},
+        ))
+        self.wait()
 
         # ************************************************************
         self.next_section(

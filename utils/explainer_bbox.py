@@ -217,6 +217,31 @@ class ExplainerBbox(VGroup):
     ) -> Animation:
         pass
 
+    def show_rect_mlabels(
+        self,
+        width_ratio: float = 0.6,            # width : baseline
+        height_ratio: float = 0.4,           # height : baseline
+        rect_config: dict = {},
+        label_config: dict = {},
+        rargs: dict = {},       # to_rect animation args
+        largs: dict = {},       # show_multi_labels animation args
+        gargs: dict = {},       # ap.show_rect_mlabels group args
+        ggargs: dict = {},      # group of ap.show_rect_mlabels group args
+    ) -> Animation:
+        anim = AnimationGroup(
+            *(ap.show_rect_mlabels(
+                width_ratio=width_ratio,
+                height_ratio=height_ratio,
+                rect_config=rect_config,
+                label_config=label_config,
+                rargs=rargs,
+                largs=largs,
+                gargs=gargs,
+            ) for ap in self.anchor_points),
+            **ggargs,
+        )
+        return anim
+
     def keep_max_label(
         self,
         aargs: dict = {},       # animation args
@@ -253,28 +278,23 @@ class ExplainerBbox(VGroup):
         if aps_to_remove:
             anims = AnimationGroup(
                 *(Unwrite(ap, **aargs) for ap in aps_to_remove),
+                **gargs,
             )
         else:
             anims = Wait(0.1)
         return anims
-        # keep_aps = VGroup()
-        # remove_anims = []
-        # for i, ap in enumerate(self.anchor_points):
-        #     if i in keep_indices:
-        #         keep_aps.add(ap)
-        #     else:
-        #         remove_anims.append(Unwrite(ap, **aargs))
-        # self.anchor_points = keep_aps
-        # return AnimationGroup(*remove_anims, **gargs) if remove_anims else Wait(0.1)
 
     def to_rects(
         self,
         rect_config: dict = {}, # rect config
-        aargs: dict = {},       # animation args
+        aargs: dict = {},       # to_rect args
         gargs: dict = {},       # group args
     ) -> Animation:
         anims = AnimationGroup(
-            *(ap.to_rect(rect_config, **aargs) for ap in self.anchor_points),
+            *(ap.to_rect(
+                rect_config,
+                **aargs,
+            ) for ap in self.anchor_points),
             **gargs,
         )
         return anims
@@ -546,17 +566,28 @@ class Demo(Scene):
         # self.play(explainer.hide_grid())
         # self.wait()
         
-        self.play(explainer.to_rects())
-        self.wait()
+        # self.play(explainer.to_rects())
+        # self.wait()
 
-        self.play(explainer.show_multi_labels(
+        # self.play(explainer.show_multi_labels(
+        #     label_config={
+        #         'fill_opacity': 0.5,
+        #         'stroke_opacity': 0.6,
+        #     },
+        #     aargs={
+        #         'lag_ratio': 0.1,
+        #     }
+        # ))
+        # self.wait()
+
+        self.play(explainer.show_rect_mlabels(
+            rect_config={},
             label_config={
                 'fill_opacity': 0.5,
                 'stroke_opacity': 0.6,
             },
-            aargs={
-                'lag_ratio': 0.1,
-            }
+            gargs={'lag_ratio': 0.8},
+            ggargs={'lag_ratio': 0.1, 'run_time': 3,},
         ))
         self.wait()
 
