@@ -12,7 +12,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background according to 017',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         everything = load_everything(S017_EVERYTHING_PP)
@@ -55,10 +55,24 @@ class MainScene(Scene):
         )
         # ************************************************************
         self.play(explainer.keep_ratio(
-            ratio=0.1,
+            ratio=0.2,
             aargs={},
             gargs={'lag_ratio': 0.1, 'run_time': 1.5,},
         ))
+        self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'generate 2d tensor as the fake raw output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO, maybe, show conf in each label?
+        tensor_raw = explainer.create_2d_tensor(
+            font_size=6,
+        )
+        tensor_raw.center().shift(RIGHT*2)
+        self.play(Write(tensor_raw, lag_ratio=0.1))
         self.wait()
 
         # ************************************************************

@@ -38,10 +38,10 @@ class ExplainerBbox(VGroup):
         super().__init__()
         self.background = background
         self.data = data
-        self.data_cls = data_cls
+        self.data_cls = data_cls            # ccc, (h, w, 3)
         self.sf_nominal = sf_nominal,
         self.shape = data.shape[:2]             # (h, w)
-        self.xyxy = self._compute_xyxy()
+        self.xyxy = self._compute_xyxy()    # xyxy, (h, w, 4)
 
         # TODO, more elegant way?
         self.tmp_txts = None
@@ -50,6 +50,7 @@ class ExplainerBbox(VGroup):
         self,
     ) -> np.ndarray:
         """Compute decoded x1y1x2y2, (h, w, 4)
+        TODO, make this a property?
         """
         rows = np.arange(self.shape[0])[:, None]
         cols = np.arange(self.shape[1])[None, :]
@@ -492,6 +493,9 @@ class ExplainerBbox(VGroup):
     def step(self) -> float:
         # FIXME, assume that width and height hold same scale
         return self.background.width / self.shape[1]
+    
+    @property
+    def xyxy
         
 def load_explainer(
     background,

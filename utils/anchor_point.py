@@ -277,6 +277,11 @@ class AnchorPoint(VMobject):
         )
         return probs
     
+    def create_xyxy_probs(
+        self,
+    ):
+        pass
+    
     def create_ordered_distance(
         self,
         font_size: int = 8,             # smaller for tensor
