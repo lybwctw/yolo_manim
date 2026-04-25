@@ -18,6 +18,10 @@ ARRANGE_CONFIG = {
     'cell_height': 0.4,
 }
 
+# empirically determined, for monospaced font
+FONT_SIZE_WIDTH_RATIO = 0.063
+FONT_SIZE_HEIGHT_RATIO = 0.020
+
 # also used by mcubes
 # TODO, make these functions general
 def _indices_from_part(part, size):
@@ -62,8 +66,8 @@ class Tensor2D(VMobject):
         self.ndim = self.data.ndim
         self.decimal_config = {**DECIMAL_CONFIG, **decimal_config}
         auto_arrange_config = {
-            'cell_width': self.decimal_config['font_size']*0.052,
-            'cell_height': self.decimal_config['font_size']*0.026,
+            'cell_width': self.decimal_config['font_size']*FONT_SIZE_WIDTH_RATIO,
+            'cell_height': self.decimal_config['font_size']*FONT_SIZE_HEIGHT_RATIO,
         }
         self.arrange_config = {**auto_arrange_config, **arrange_config}
 
@@ -166,11 +170,11 @@ class Demo(Scene):
     def construct(self):
         t1 = Tensor2D(
             data=[
-                np.random.randint(0,999,(60,4)),
-                np.random.uniform(0,1,(60,3))
+                np.random.randint(0,999,(80,4)),
+                np.random.uniform(0,1,(80,3))
             ],
             decimal_config={
-                'font_size': 5.5,
+                'font_size': 4.3,
                 'color': WHITE,
             },
             # arrange_config={
@@ -194,12 +198,13 @@ class Demo(Scene):
         # )
 
         self.add(t1)
+        self.wait()
         # self.play(Write(
         #     t1,
         #     lag_ratio=0.1,
-        #     run_time=0.5,
+        #     run_time=1.5,
         # ))
-        self.wait()
+        # self.wait()
 
         partial = t1[:,-3:]
         self.play(partial.animate.set_color(RED))

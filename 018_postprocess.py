@@ -25,6 +25,8 @@ class MainScene(Scene):
         explainer = load_explainer(
             background=background,
             version='general',
+            scale=32,
+            random_probs=True,     # FIXME: random init for demo purpose
         )
         self.add(explainer)
 
@@ -68,12 +70,34 @@ class MainScene(Scene):
         )
         # ************************************************************
         # TODO, maybe, show conf in each label?
-        tensor_raw = explainer.create_2d_tensor(
-            font_size=6,
-        )
+        tensor_raw = explainer.xyxyccc() # random cls for demo
         tensor_raw.center().shift(RIGHT*2)
+
         self.play(Write(tensor_raw, lag_ratio=0.1))
         self.wait()
+
+        self.play(AnimationGroup(
+            tensor_raw[:,4].animate.set_color(KK_COLOR_MAP[0]),
+            tensor_raw[:,5].animate.set_color(KK_COLOR_MAP[1]),
+            tensor_raw[:,6].animate.set_color(KK_COLOR_MAP[2]),
+            lag_ratio=0.1,
+            run_time=1.5,
+        ))
+        self.wait()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         # ************************************************************
         self.next_section(

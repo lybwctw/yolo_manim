@@ -9,6 +9,7 @@ from utils.yolo_annotation import SingleAnnotation
 from utils.line_matrix import LineMatrix
 from utils.general import tensor_to_line_matrix
 from utils.constants import MINI_32_DIST_PATH, MINI_32_PROB_PATH
+from utils.tensor_2d import Tensor2D
 
 import numpy as np
 import torch
@@ -51,6 +52,7 @@ class ExplainerBbox(VGroup):
     ) -> np.ndarray:
         """Compute decoded x1y1x2y2, (h, w, 4)
         TODO, make this a property?
+        FIXME, only for 3d data, need to be more general
         """
         rows = np.arange(self.shape[0])[:, None]
         cols = np.arange(self.shape[1])[None, :]
@@ -60,6 +62,34 @@ class ExplainerBbox(VGroup):
             (cols + 0.5 + self.data[...,2]) * self.sf_nominal,  # x2
             (rows + 0.5 + self.data[...,3]) * self.sf_nominal,  # y2
         ], axis=-1).astype(np.int32)
+
+
+    def _compute_xyxy_2d(self):
+        h, w = self.shape
+
+        rows = self.keep_indices // w
+        cols = self.keep_indices % w
+
+        data = self.data.reshape(-1, 4)
+        d = data[self.keep_indices]
+
+        return np.stack([
+            (cols + 0.5 - d[:, 0]) * self.sf_nominal,
+            (rows + 0.5 - d[:, 1]) * self.sf_nominal,
+            (cols + 0.5 + d[:, 2]) * self.sf_nominal,
+            (rows + 0.5 + d[:, 3]) * self.sf_nominal,
+        ], axis=-1).astype(np.int32)
+    
+    def _compute_cls_2d(self) -> np.ndarray:
+        """
+        Return class data for currently active anchor points.
+        Output shape: (n_active, 3)
+        """
+        # flatten class map once
+        cls_flat = self.data_cls.reshape(-1, 3) # TODO, 3 is hardcoded
+
+        # gather active rows
+        return cls_flat[self.keep_indices]
 
     def create_grid(
         self,
@@ -270,7 +300,15 @@ class ExplainerBbox(VGroup):
         import random
         n_keep = max(1, int(len(self.anchor_points) * ratio))
         keep_indices = random.sample(range(len(self.anchor_points)), n_keep)
+
+        # data_flat = self.data.reshape(-1, 4)       # (h*w, 4)
+        # data_cls_flat = self.data_cls.reshape(-1, 3)  # (h*w, 3)
+        # self.data = data_flat[keep_indices] # FIXME, 3d -> 2d
+        # self.data_cls = data_cls_flat[keep_indices]
         
+        # remember kept indices to be used later
+        self.keep_indices = np.array(keep_indices, dtype=np.int64)
+
         aps_to_remove = [
             ap for i, ap in enumerate(self.anchor_points)
               if i not in keep_indices
@@ -488,20 +526,34 @@ class ExplainerBbox(VGroup):
             anims.append(anim)
         self.anchor_points.remove(*aps_to_remove)
         return AnimationGroup(*anims, **gargs)
+    
+    def xyxyccc(
+        self,
+    ) -> Tensor2D:
+        """Combined xyxy and cls info, (h*w, 7)
+        """
+        data = [
+            self._compute_xyxy_2d(),
+            self._compute_cls_2d(),
+        ]
+        return Tensor2D(
+            data=data,
+            decimal_config={
+                'font_size': 4.3,
+                'color': WHITE,
+            },
+        )
 
     @property
     def step(self) -> float:
         # FIXME, assume that width and height hold same scale
         return self.background.width / self.shape[1]
-    
-    @property
-    def xyxy
         
 def load_explainer(
     background,
     version: str = 'mini',  # mini/general
     scale: int = 32,        # 32/16/8 for general
-    random_probs: bool = False,   # random init probs
+    random_probs: bool = False,   # random overriden probs for demo purpose
 ) -> ExplainerBbox:
     """User interface for explainer.
        TODO, make all data np/torch
@@ -532,7 +584,7 @@ def load_explainer(
             data_cls = data_cls[0,:,:6400].transpose(0,1).reshape(20,20,3).numpy()
         
         if random_probs:
-            data_cls = np.random.uniform(0.1,0.9,(scale,scale,3))
+            data_cls = np.random.uniform(0.0,0.98,(640//random_probs,640//random_probs,3))
 
     explainer = ExplainerBbox(
         background=background,
