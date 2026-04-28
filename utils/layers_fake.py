@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 from manim import *
-from utils.show_shape import ShowShape
+from utils.show_shape import *
 
 from typing import Self
 
@@ -13,18 +13,7 @@ RECT_CONFIG = {
     'stroke_color': WHITE,
 }
 
-SHAPE_PATH_CONFIG = {
-    'color': PURE_YELLOW,
-    'width': 3,
-    'opacity': 1.0,
-}
-
-SHAPE_TEXT_CONFIG = {
-    'font_size': 20,
-    'font': 'JetBrains Mono',
-}
-
-class LayersFake(VMobject, ShowShape):
+class LayersFake(VMobject, ShowShapeMixin):
     def __init__(
         self,
         n: int = 3,                     # layers
@@ -135,6 +124,7 @@ class LayersFake(VMobject, ShowShape):
 
     def get_shape_path(
         self,
+        **path_config,
     ) -> VMobject:
         # same z_index as the first rect
         path = VMobject().set_z_index(self.n)
@@ -143,60 +133,76 @@ class LayersFake(VMobject, ShowShape):
                 self.rects[0].get_corner(DL),
                 self.rects[0].get_corner(UL),
                 self.rects[0].get_corner(UR),
-            ]).set_stroke(**SHAPE_PATH_CONFIG)
+            ]).set_stroke(**path_config)
         else:
             path.set_points_as_corners([
                 self.rects[0].get_corner(DL),
                 self.rects[0].get_corner(UL),
                 self.rects[-1].get_corner(UL),
                 self.rects[-1].get_corner(UR),
-            ]).set_stroke(**SHAPE_PATH_CONFIG)
+            ]).set_stroke(**path_config)
         return path
 
     def get_shape_text(
         self,
+        **text_config,
     ) -> VGroup:
+
+        buff = text_config.pop('buff', 0.25)
         if self.n == 1:
             text_h = Text(
                 str(self.height_nominal),
-                **SHAPE_TEXT_CONFIG,
-            ).next_to(self.rects[0], LEFT)
+                **text_config,
+            ).next_to(self.rects[0], LEFT, buff=buff)
             text_w = Text(
                 str(self.width_nominal),
-                **SHAPE_TEXT_CONFIG,
-            ).next_to(self.rects[0], UP)
+                **text_config,
+            ).next_to(self.rects[0], UP, buff=buff)
             text = VGroup(text_h, text_w)
         else:
             text_c = Text(
                 str(self.n),
-                **SHAPE_TEXT_CONFIG,
-            ).next_to(self.rects[self.n//2], (LEFT + UP) * .6)
+                **text_config,
+            ).next_to(self.rects[self.n//2], (LEFT + UP), buff=buff*.6)
             text_h = Text(
                 str(self.height_nominal),
-                **SHAPE_TEXT_CONFIG,
-            ).next_to(self.rects[0], LEFT)
+                **text_config,
+            ).next_to(self.rects[0], LEFT, buff=buff)
             text_w = Text(
                 str(self.width_nominal),
-                **SHAPE_TEXT_CONFIG,
-            ).next_to(self.rects[-1], UP)
+                **text_config,
+            ).next_to(self.rects[-1], UP, buff=buff)
             text = VGroup(text_h, text_c, text_w)
         return text
 
 class Demo(Scene):
     def construct(self) -> None:
         lf = LayersFake(
-            n=1,
-            width=0.5,
-            height=7,
-            width_nominal=4,
+            n=3,
+            width=3,
+            height=4,
+            width_nominal=300,
             height_nominal=400,
             expanded=True,
         )
         self.play(Write(lf))
         self.wait()
         
-        self.play(lf.stretch_to_fit(
-            width=1,
-            height=3,
+        self.play(ShowShape(
+            lf,
+            text_config={'buff': 0.2, 'font_size': 25,},
+            path_config={'color': BLUE,},
         ))
+        self.wait()
+        self.play(lf.animate(
+            rate_func=rate_functions.ease_in_out_back,
+        ).scale(0.6).shift(LEFT*2))
+        self.wait()
+        self.play(HideShape(lf))
+        self.wait()
+        self.play(lf.animate.shift(RIGHT).scale(2.0))
+        self.wait()
+        self.play(ShowShape(lf))
+        self.wait()
+        self.play(HideShape(lf))
         self.wait()

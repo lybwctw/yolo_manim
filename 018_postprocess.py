@@ -6,6 +6,7 @@ from utils.layers_fake import LayersFake
 from utils.multi_arrow import MultiArrow
 from utils.arrow_comment import ArrowComment
 from utils.explainer_bbox import ExplainerBbox, load_explainer
+from utils.show_shape import ShowShape, HideShape
 
 class MainScene(Scene):
     def construct(self):
@@ -84,10 +85,6 @@ class MainScene(Scene):
             run_time=1.5,
         ))
         self.wait()
-
-
-
-
 
 
 

@@ -24,45 +24,31 @@ TEXT_XY_CONFIG = {
     'font_size': 15,
 }
 
-
-# FIXME, renaming of ExplainerBbox -> Explainer
-# TODO, renaming of self.data -> self.data_dist
-# because class info is also stored
-class ExplainerBbox(VGroup):
+class Explainer(VGroup):
+    """Class for explaining YOLO output design.
+    """
     def __init__(
         self,
         background: ImageRaw | ImagePad | None = None,
-        data: np.ndarray = np.ones((4,4,4)),        # (h, w, 4)
-        data_cls: np.ndarray = np.ones((4,4,3)),    # (h, w, 3)
+        data_dist: np.ndarray = np.ones((4,4,4)),   # (h, w, 4)
+        data_prob: np.ndarray = np.ones((4,4,3)),   # (h, w, 3)
         sf_nominal: int = 32,                       # 8/16/32
     ):
         super().__init__()
         self.background = background
-        self.data = data
-        self.data_cls = data_cls            # ccc, (h, w, 3)
         self.sf_nominal = sf_nominal,
-        self.shape = data.shape[:2]             # (h, w)
-        self.xyxy = self._compute_xyxy()    # xyxy, (h, w, 4)
+        self.raw_dist = None                        # (h*w, 4)
+        self.raw_xyxy = None                        # (h*w, 4)
+        self.raw_prob = None                        # (h*w, 3)
+        self.raw_idx = None                         # (h*w, 2)
+
+        self.data_box = data_box
+        self.data_cls = data_cls
+        assert data_box.shape[:2] == data_cls[:2]
+        self.shape = data_box.shape[:2]             # (h, w)
 
         # TODO, more elegant way?
         self.tmp_txts = None
-    
-    def _compute_xyxy(
-        self,
-    ) -> np.ndarray:
-        """Compute decoded x1y1x2y2, (h, w, 4)
-        TODO, make this a property?
-        FIXME, only for 3d data, need to be more general
-        """
-        rows = np.arange(self.shape[0])[:, None]
-        cols = np.arange(self.shape[1])[None, :]
-        return np.stack([
-            (cols + 0.5 - self.data[...,0]) * self.sf_nominal,  # x1
-            (rows + 0.5 - self.data[...,1]) * self.sf_nominal,  # y1
-            (cols + 0.5 + self.data[...,2]) * self.sf_nominal,  # x2
-            (rows + 0.5 + self.data[...,3]) * self.sf_nominal,  # y2
-        ], axis=-1).astype(np.int32)
-
 
     def _compute_xyxy_2d(self):
         h, w = self.shape
@@ -548,6 +534,23 @@ class ExplainerBbox(VGroup):
     def step(self) -> float:
         # FIXME, assume that width and height hold same scale
         return self.background.width / self.shape[1]
+
+    @property
+    def xyxy(
+        self,
+    ) -> np.ndarray:
+        """Compute decoded x1y1x2y2, (h, w, 4)
+        TODO, make this a property?
+        FIXME, only for 3d data, need to be more general
+        """
+        rows = np.arange(self.shape[0])[:, None]
+        cols = np.arange(self.shape[1])[None, :]
+        return np.stack([
+            (cols + 0.5 - self.data[...,0]) * self.sf_nominal,  # x1
+            (rows + 0.5 - self.data[...,1]) * self.sf_nominal,  # y1
+            (cols + 0.5 + self.data[...,2]) * self.sf_nominal,  # x2
+            (rows + 0.5 + self.data[...,3]) * self.sf_nominal,  # y2
+        ], axis=-1).astype(np.int32)
         
 def load_explainer(
     background,
