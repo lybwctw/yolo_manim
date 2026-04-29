@@ -175,18 +175,22 @@ class AnchorPoint(VMobject):
     def show_arrows(
         self,
         arrow_config: dict={},
-        **aargs,
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
-        """ TODO, arrow growing effect.
+        """ NOTE: rate_func for arrow is inside aargs.
         """
-        rfunc = aargs.pop('rate_func', rate_functions.smooth)
+        # rfunc = aargs.pop('rate_func', rate_functions.smooth)
         self.arrows = self.create_arrows(
             arrow_config=arrow_config,
         )
         self.add(self.arrows)
         return AnimationGroup(
-            *(GrowArrow(arrow, rate_func=rfunc) for arrow in self.arrows),
-            **aargs,
+            *(GrowArrow(
+                arrow,
+                **aargs,
+            ) for arrow in self.arrows),
+            **gargs,
         )
         # return Write(self.arrows, **aargs)
     
@@ -277,6 +281,54 @@ class AnchorPoint(VMobject):
     ) -> Animation:
         self.remove(self.ts_dist_nominal)
         return Unwrite(self.ts_dist_nominal, **aargs)
+
+    def create_divide(
+        self,
+        font_size: int = 15,
+    ) -> VGroup:
+        """Create '/sf_nominal' for each dist_nominal.
+        """
+        divide = VGroup(*(
+            Text(
+                '/' + str(self.sf_nominal),
+                color=TEXT_COLOR_MAP[direction],
+                font_size=font_size,
+                **TEXT_CONFIG,
+            ).next_to(
+                self.ts_dist_nominal[i],
+                RIGHT,
+                buff=0.05,
+            ) for i, direction in enumerate(DIRECTION_SERIES)
+        ))
+        return divide
+    
+    def show_divide(
+        self,
+        **aargs,
+    ) -> Animation:
+        """Append '/sf_nominal' into each dist_nominal.
+        """
+        divide = self.create_divide()
+        for dist, div in zip(self.ts_dist_nominal, divide):
+            dist.add(div)
+        return Write(divide, **aargs)
+    
+    def nominal_to_rela(
+        self,
+        aargs: dict = {},       # ReplacementTransform args
+        gargs: dict = {},       # AnimationGroup args
+    ) -> Animation:
+        """ Convert ts_dist_nominal with divide into ts_dist.
+        """
+        self.remove(self.ts_dist_nominal)
+        self.ts_dist = self.create_dist()
+        self._align_ts_to_arrows(self.ts_dist)
+        self.add(self.ts_dist)
+        return AnimationGroup(
+            *(ReplacementTransform(dist_nominal, dist_rela, **aargs)
+            for dist_nominal, dist_rela in zip(self.ts_dist_nominal, self.ts_dist)),
+            **gargs,
+        )
     
     # def create_xyxy(
     #     self,
@@ -364,53 +416,6 @@ class AnchorPoint(VMobject):
     #     probs.move_to(self.dot)
     #     return probs
     
-    def create_divide(
-        self,
-        font_size: int = 15,
-    ) -> VGroup:
-        """Create '/sf_nominal' for each dist_nominal.
-        """
-        divide = VGroup(*(
-            Text(
-                '/' + str(self.sf_nominal),
-                color=TEXT_COLOR_MAP[direction],
-                font_size=font_size,
-                **TEXT_CONFIG,
-            ).next_to(
-                self.ts_dist_nominal[i],
-                RIGHT,
-                buff=0.05,
-            ) for i, direction in enumerate(DIRECTION_SERIES)
-        ))
-        return divide
-    
-    def show_divide(
-        self,
-        **aargs,
-    ) -> Animation:
-        """Append '/sf_nominal' into each dist_nominal.
-        """
-        divide = self.create_divide()
-        for dist, div in zip(self.ts_dist_nominal, divide):
-            dist.add(div)
-        return Write(divide, **aargs)
-    
-    def nominal_to_rela(
-        self,
-        aargs: dict = {},       # ReplacementTransform args
-        gargs: dict = {},       # AnimationGroup args
-    ) -> Animation:
-        """ Convert ts_dist_nominal with divide into ts_dist.
-        """
-        self.remove(self.ts_dist_nominal)
-        self.ts_dist = self.create_dist()
-        self._align_ts_to_arrows(self.ts_dist)
-        self.add(self.ts_dist)
-        return AnimationGroup(
-            *(ReplacementTransform(dist_nominal, dist_rela, **aargs)
-            for dist_nominal, dist_rela in zip(self.ts_dist_nominal, self.ts_dist)),
-            **gargs,
-        )
 
     # def get_center(
     #     self,
@@ -462,6 +467,7 @@ class AnchorPoint(VMobject):
     
     def create_pbars(
         self,
+        pbar_config: dict={},
     ) -> VGroup:
         """Realtime pbars based on given prob.
         """
@@ -470,12 +476,13 @@ class AnchorPoint(VMobject):
         pbar_offset = self.sf_screen*(1-PBAR_SPACE_RATIO)/2
         pbar_gap = pbar_space * PBAR_GAP_RATIO
         pbar_width = pbar_space * (1-(n_probs-1)*PBAR_GAP_RATIO) / n_probs
+        cfg = {**PBAR_CONFIG, **pbar_config}
         pbars = VGroup(
             Rectangle(
                 width=pbar_width,
                 height=pbar_space*p,
                 fill_color=PBAR_COLORS[i],
-                **PBAR_CONFIG,
+                **cfg,
             ).align_to(self.ref, LEFT)\
              .shift((pbar_offset+pbar_width*i+pbar_gap*i)*RIGHT)\
              .set_y(self.ref.get_y())
@@ -485,12 +492,15 @@ class AnchorPoint(VMobject):
     
     def show_pbars(
         self,
+        pbar_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
         """Grow pbars from baseline.
         """
-        pbars_end = self.create_pbars()
+        pbars_end = self.create_pbars(
+            pbar_config=pbar_config,
+        )
         pbars_start = pbars_end.copy()
         for bar in pbars_start:
             bar.stretch_to_fit_height(0)
@@ -504,12 +514,15 @@ class AnchorPoint(VMobject):
     
     def sync_pbars(
         self,
+        pbar_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """Sync pbars with current prob.
+        """Sync pbars into current prob.
         """
-        pbars_end = self.create_pbars()     # current prob
+        pbars_end = self.create_pbars(
+            pbar_config=pbar_config,
+        )     # current prob
         return AnimationGroup(
             *(Transform(p0, p1, **aargs)
             for p0, p1 in zip(self.pbars, pbars_end)),
@@ -539,9 +552,11 @@ class AnchorPoint(VMobject):
     ) -> VGroup:
         """Create multi labels, not positioned.
         """
+        label_width_ratio = label_config.pop('width_ratio', LABEL_WIDTH_RATIO)
+        label_height_ratio = label_config.pop('height_ratio', LABEL_HEIGHT_RATIO)
+        label_width = self.sf_screen * label_width_ratio
+        label_height = self.sf_screen * label_height_ratio
         cfg = {**LABEL_CONFIG, **label_config}
-        label_width = self.sf_screen * LABEL_WIDTH_RATIO
-        label_height = self.sf_screen * LABEL_HEIGHT_RATIO
         labels = VGroup(
             Rectangle(
                 width=label_width,
@@ -556,19 +571,25 @@ class AnchorPoint(VMobject):
     def show_multi_labels(
         self,
         label_config: dict = {},             # rectangle config
-        **aargs,
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
         """Add labels as new member.
         """
-        self.labels = self.create_multi_labels(
+        labels = self.create_multi_labels(
             **label_config,
         ).move_to(
             self.rect.get_corner(UL),
             aligned_edge=DL,
-        )
-
+        ).set_z_index(1)            # FIXME: why the fuck added to back?
+        self.labels = labels
         self.add(self.labels)
-        return Write(self.labels, **aargs)
+
+        return AnimationGroup(
+            *(Write(label, **aargs) for label in labels),
+            **gargs,
+        )
+        # return Write(self.labels, **aargs)
     
     def show_rect_mlabels(
         self,
@@ -580,7 +601,18 @@ class AnchorPoint(VMobject):
     ) -> Animation:
         """Show rect and multi labels at a time.
         """
-        anims = [
+        # anims = [
+        #     self.to_rect(
+        #         rect_config=rect_config,
+        #         **rargs,
+        #     ),
+        #     self.show_multi_labels(
+        #         label_config=label_config,
+        #         **largs
+        #     ),
+        # ]
+        # return AnimationGroup(*anims, **gargs)
+        anims = AnimationGroup(
             self.to_rect(
                 rect_config=rect_config,
                 **rargs,
@@ -589,17 +621,16 @@ class AnchorPoint(VMobject):
                 label_config=label_config,
                 **largs
             ),
-        ]
-        return AnimationGroup(*anims, **gargs)
+            **gargs,
+        )
+        return anims
 
     def keep_max_label(
         self,
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Keep only the label with maximum probability and move it to left.
-           Also update rect's color as the max class.
-           Used after show_multi_labels to represent the take-max class step.
+        """Keep max label.
         """
         max_idx = np.argmax(self.prob)
         max_label = self.labels[max_idx]
@@ -769,17 +800,29 @@ class Demo(Scene):
         # self.wait()
 
         self.play(ap.show_rect_mlabels(
-            gargs={'lag_ratio': 0.5,}
+            rect_config={},
+            label_config={
+                'width_ratio': 0.3,
+                'height_ratio': 0.2,
+                # 'fill_opacity': 0.8,
+                # 'stroke_opacity': 0.8,
+            },
+            rargs={'rate_func': rate_functions.ease_out_back},
+            largs={'lag_ratio': 0.1},
+            gargs={'lag_ratio': 0.0},
         ))
-        self.wait()
-
-
-        rect = Rectangle()
-        self.play(Write(rect))
-        self.wait()
-
-        self.play(ap.clip_to_background(rect))
         self.wait()
 
         self.play(ap.keep_max_label())
         self.wait()
+
+
+        # rect = Rectangle()
+        # self.play(Write(rect))
+        # self.wait()
+
+        # self.play(ap.clip_to_background(rect))
+        # self.wait()
+
+        # self.play(ap.keep_max_label())
+        # self.wait()

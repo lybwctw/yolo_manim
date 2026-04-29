@@ -158,17 +158,57 @@ class Explainer(VGroup):
         self.anchor_points = self.create_anchor_points()
         self.add(self.anchor_points)
         return Write(self.anchor_points,**aargs)
+
+    def to_rects(
+        self,
+        rect_config: dict = {}, # rect config
+        aargs: dict = {},       # to_rect args
+        gargs: dict = {},       # group args
+    ) -> Animation:
+        """Capture target for all anchor points.
+        """
+        anims = AnimationGroup(
+            *(ap.to_rect(
+                rect_config,
+                **aargs,
+            ) for ap in self.anchor_points),
+            **gargs,
+        )
+        return anims
+
+    def to_dots(
+        self,
+        dot_config: dict = {},  # dot config
+        aargs: dict = {},       # animation args
+        gargs: dict = {},       # group args
+    ) -> Animation:
+        """Back to dot for all anchor points.
+        """
+        anims = AnimationGroup(
+            *(ap.to_dot(
+                dot_config,
+                **aargs,
+            ) for ap in self.anchor_points),
+            **gargs,
+        )
+        return anims
     
     def show_arrows(
         self,
         arrow_config: dict={},
         aargs: dict = {},
         gargs: dict = {},
+        ggargs: dict = {},
     ) -> Animation:
+        """Show arrows for all anchor points.
+        """
         anim = AnimationGroup(
-            *(ap.show_arrows(arrow_config=arrow_config, **aargs)
-              for ap in self.anchor_points),
-            **gargs,
+            *(ap.show_arrows(
+                arrow_config=arrow_config,
+                aargs=aargs,
+                gargs=gargs,
+            ) for ap in self.anchor_points),
+            **ggargs,
         )
         return anim
     
@@ -177,44 +217,52 @@ class Explainer(VGroup):
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
+        """Hide Arrows for all anchor points.
+        """
         anim = AnimationGroup(
-            *(ap.hide_arrows(**aargs)
-              for ap in self.anchor_points),
+            *(ap.hide_arrows(
+                **aargs,
+            ) for ap in self.anchor_points),
             **gargs,
         )
         return anim
     
     def show_pbars(
         self,
+        pbar_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
         ggargs: dict = {},
     ) -> Animation:
+        """Show pbars for each anchor points.
+        """
         anim = AnimationGroup(
-            *(ap.show_pbars(aargs=aargs, gargs=gargs)
-              for ap in self.anchor_points),
+            *(ap.show_pbars(
+                pbar_config=pbar_config,
+                aargs=aargs,
+                gargs=gargs,
+            ) for ap in self.anchor_points),
             **ggargs,
         )
         return anim
     
-    # FIXME, sync_pbars
-    def to_probs(
+    def sync_pbars(
         self,
-        probs: np.ndarray | None = None,        # (h, w, 3)
+        pbar_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
+        ggargs: dict = {},
     ) -> Animation:
-        """Update probs and pbars in aps accordingly.
+        """Sync pbars into current prob for all anchor points.
+           Used after explainer.prob = ....
         """
-        if probs is None:
-            return Wait(1.0)
-
-        self.probs = probs
-        # FIXME, other than 3 classes
         anim = AnimationGroup(
-            *(ap.to_probs(ps, **aargs)
-              for ap,ps in zip(self.anchor_points, probs.reshape(-1,3))),
-            **gargs,
+            *(ap.sync_pbars(
+                pbar_config=pbar_config,
+                aargs=aargs,
+                gargs=gargs,
+            ) for ap in self.anchor_points),
+            **ggargs,
         )
         return anim
     
@@ -224,41 +272,40 @@ class Explainer(VGroup):
         gargs: dict = {},
         ggargs: dict = {},
     ) -> Animation:
+        """Hide pbars for all anchor points.
+        """
         anim = AnimationGroup(
-            *(ap.hide_pbars(aargs=aargs, gargs=gargs)
-              for ap in self.anchor_points),
+            *(ap.hide_pbars(
+                aargs=aargs,
+                gargs=gargs,
+            ) for ap in self.anchor_points),
             **ggargs,
         )
         return anim
     
     def show_multi_labels(
         self,
-        width_ratio: float = 0.6,            # width : baseline
-        height_ratio: float = 0.4,           # height : baseline
         label_config: dict = {},             # rectangle config
         aargs: dict = {},
         gargs: dict = {},
+        ggargs: dict = {},
     ) -> Animation:
+        """Show multi-labels for all anchor points.
+           Assume that rects is ready.
+        """
         anim = AnimationGroup(
             *(ap.show_multi_labels(
-                width_ratio=width_ratio,
-                height_ratio=height_ratio,
                 label_config=label_config,
-                **aargs,
+                aargs=aargs,
+                gargs=gargs,
+                # **aargs,
             ) for ap in self.anchor_points),
-            **gargs,
+            **ggargs,
         )
         return anim
-    
-    def hide_multi_labels(
-        self,
-    ) -> Animation:
-        pass
 
     def show_rect_mlabels(
         self,
-        width_ratio: float = 0.6,            # width : baseline
-        height_ratio: float = 0.4,           # height : baseline
         rect_config: dict = {},
         label_config: dict = {},
         rargs: dict = {},       # to_rect animation args
@@ -266,10 +313,10 @@ class Explainer(VGroup):
         gargs: dict = {},       # ap.show_rect_mlabels group args
         ggargs: dict = {},      # group of ap.show_rect_mlabels group args
     ) -> Animation:
+        """FIXME: display issue.
+        """
         anim = AnimationGroup(
             *(ap.show_rect_mlabels(
-                width_ratio=width_ratio,
-                height_ratio=height_ratio,
                 rect_config=rect_config,
                 label_config=label_config,
                 rargs=rargs,
@@ -286,11 +333,13 @@ class Explainer(VGroup):
         gargs: dict = {},       # group args
         ggargs: dict = {},      # group of group args
     ) -> Animation:
-        """Keep only the label with maximum probability for each anchor point.
-        Used to represent the take-max class step in YOLO postprocessing.
+        """Keep max label for all anchor points.
         """
         anim = AnimationGroup(
-            *(ap.keep_max_label(aargs=aargs, gargs=gargs) for ap in self.anchor_points),
+            *(ap.keep_max_label(
+                aargs=aargs,
+                gargs=gargs,
+            ) for ap in self.anchor_points),
             **ggargs,
         )
         return anim
@@ -328,32 +377,6 @@ class Explainer(VGroup):
             )
         else:
             anims = Wait(0.1)
-        return anims
-
-    def to_rects(
-        self,
-        rect_config: dict = {}, # rect config
-        aargs: dict = {},       # to_rect args
-        gargs: dict = {},       # group args
-    ) -> Animation:
-        anims = AnimationGroup(
-            *(ap.to_rect(
-                rect_config,
-                **aargs,
-            ) for ap in self.anchor_points),
-            **gargs,
-        )
-        return anims
-
-    def to_dots(
-        self,
-        aargs: dict = {},       # animation args
-        gargs: dict = {},       # group args
-    ) -> Animation:
-        anims = AnimationGroup(
-            *(ap.to_dot(**aargs) for ap in self.anchor_points),
-            **gargs,
-        )
         return anims
 
     def hide_anchor_points(
@@ -564,7 +587,26 @@ class Explainer(VGroup):
         """
         vg = VGroup(*(ap.mob for ap in self.anchor_points))
         return vg
+    
+    @property
+    def prob(self):
+        """Only expose 2d version to user.
+        """
+        return self.prob_2d
+    
+    @prob.setter
+    def prob(self, prob: np.ndarray):
+        """Update global prob_2d and anchor points.
+           Expect immediate sync_pbars.
+        """
+        assert prob.ndim == 2
+        self.prob_2d = prob
+        # self.prob_3d = prob.reshape(*self.shape, -1)
+        for prob, ap in zip(self.prob_2d, self.anchor_points):
+            ap.prob = prob
 
+    # TODO, setters and sync animations for other members
+    
     @staticmethod
     def from_random(
         background,
@@ -622,50 +664,50 @@ class Explainer(VGroup):
         )
         return explainer
         
-def load_explainer(
-    background,
-    version: str = 'mini',  # mini/general
-    scale: int = 32,        # 32/16/8 for general
-    random_probs: bool = False,   # random overriden probs for demo purpose
-) -> Explainer:
-    """User interface for explainer.
-       TODO, make all data np/torch
-       and make mini version customizable
-    """
-    if version == 'mini':
-        data_dist = np.load(PATH_DIST_BBOX_MINI)
-        data_cls = np.load(PATH_NORM_CLS_MINI)
-    elif version == 'general':
-        data_dist = torch.load(
-            PATH_DIST_BBOX,
-            weights_only=True,
-            map_location='cpu',
-        )  # (1, 4, 8400)
-        data_cls = torch.load(
-            PATH_NORM_CLS,
-            weights_only=True,
-            map_location='cpu',
-        )  # (1, 3, 8400)
-        if scale == 32:
-            data_dist = data_dist[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
-            data_cls = data_cls[0,:,8000:].transpose(0,1).reshape(20,20,3).numpy()
-        elif scale == 16:
-            data_dist = data_dist[0,:,6400:8000].transpose(0,1).reshape(40,40,4).numpy()
-            data_cls = data_cls[0,:,6400:8000].transpose(0,1).reshape(20,20,3).numpy()
-        elif scale == 8:
-            data_dist = data_dist[0,:,:6400].transpose(0,1).reshape(80,80,4).numpy()
-            data_cls = data_cls[0,:,:6400].transpose(0,1).reshape(20,20,3).numpy()
+# def load_explainer(
+#     background,
+#     version: str = 'mini',  # mini/general
+#     scale: int = 32,        # 32/16/8 for general
+#     random_probs: bool = False,   # random overriden probs for demo purpose
+# ) -> Explainer:
+#     """User interface for explainer.
+#        TODO, make all data np/torch
+#        and make mini version customizable
+#     """
+#     if version == 'mini':
+#         data_dist = np.load(PATH_DIST_BBOX_MINI)
+#         data_cls = np.load(PATH_NORM_CLS_MINI)
+#     elif version == 'general':
+#         data_dist = torch.load(
+#             PATH_DIST_BBOX,
+#             weights_only=True,
+#             map_location='cpu',
+#         )  # (1, 4, 8400)
+#         data_cls = torch.load(
+#             PATH_NORM_CLS,
+#             weights_only=True,
+#             map_location='cpu',
+#         )  # (1, 3, 8400)
+#         if scale == 32:
+#             data_dist = data_dist[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
+#             data_cls = data_cls[0,:,8000:].transpose(0,1).reshape(20,20,3).numpy()
+#         elif scale == 16:
+#             data_dist = data_dist[0,:,6400:8000].transpose(0,1).reshape(40,40,4).numpy()
+#             data_cls = data_cls[0,:,6400:8000].transpose(0,1).reshape(20,20,3).numpy()
+#         elif scale == 8:
+#             data_dist = data_dist[0,:,:6400].transpose(0,1).reshape(80,80,4).numpy()
+#             data_cls = data_cls[0,:,:6400].transpose(0,1).reshape(20,20,3).numpy()
         
-        if random_probs:
-            data_cls = np.random.uniform(0.0,0.98,(640//random_probs,640//random_probs,3))
+#         if random_probs:
+#             data_cls = np.random.uniform(0.0,0.98,(640//random_probs,640//random_probs,3))
 
-    explainer = Explainer(
-        background=background,
-        data=data_dist,
-        data_cls=data_cls,
-        sf_nominal=scale,
-    )
-    return explainer
+#     explainer = Explainer(
+#         background=background,
+#         data=data_dist,
+#         data_cls=data_cls,
+#         sf_nominal=scale,
+#     )
+#     return explainer
 
 class Demo(Scene):
     def construct(self):
@@ -675,7 +717,7 @@ class Demo(Scene):
         ).scale(2.)
         explainer = Explainer.from_random(
             background=sq,
-            dist_range=(1,2.5),
+            dist_range=(0.3,1.0),
             prob_range=(0,1),
             shape=(5,5),
             sf_nominal=32,
@@ -692,6 +734,68 @@ class Demo(Scene):
         ))
         self.wait()
 
+        # self.play(explainer.show_arrows(
+        #     arrow_config={},
+        #     aargs={'rate_func': rate_functions.ease_out_back},
+        #     gargs={'lag_ratio': 0.2},
+        #     ggargs={'lag_ratio': 0.2, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        # self.play(explainer.to_rects(
+        #     rect_config={},
+        #     aargs={'rate_func': rate_functions.ease_out_back},
+        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        self.play(explainer.show_multi_labels(
+            label_config={
+                'width_ratio': 0.3,
+                'height_ratio': 0.2,
+                'fill_opacity': 1.0,
+                'stroke_opacity': 1.0,
+            },
+            aargs={'lag_ratio': 0.1},
+            gargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        ))
+        self.wait()
+
+        # self.play(explainer.show_rect_mlabels(
+        #     rect_config={},
+        #     label_config={
+        #         'width_ratio': 0.3,
+        #         'height_ratio': 0.2,
+        #         # 'fill_opacity': 0.8,
+        #         # 'stroke_opacity': 0.8,
+        #     },
+        #     # rargs={'rate_func': rate_functions.ease_out_back},
+        #     largs={'lag_ratio': 0.0},
+        #     gargs={'lag_ratio': 0.3},
+        #     ggargs={'lag_ratio': 0.1, 'run_time': 2.0},
+        # ))
+        # self.wait()
+
+        # self.play(explainer.keep_max_label(
+        #     aargs={},
+        #     gargs={},
+        #     ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        # self.play(explainer.hide_arrows(
+        #     aargs={},
+        #     gargs={'lag_ratio': 0.2, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        # self.play(explainer.to_dots(
+        #     dot_config={},
+        #     aargs={},
+        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
         # self.play(explainer.hide_grid())
         # self.wait()
 
@@ -707,9 +811,30 @@ class Demo(Scene):
         # ))
         # self.wait()
 
-        dots = explainer.dots.save_state()
-        self.play(dots.animate.set_stroke(opacity=0))
-        self.wait()
+        # dots = explainer.dots.save_state()
+        # self.play(dots.animate.set_stroke(opacity=0))
+        # self.wait()
 
-        self.play(explainer.show_pbars())
-        self.wait()
+        # self.play(explainer.show_pbars(
+        #     pbar_config={},
+        #     aargs={'rate_func': rate_functions.ease_out_back},
+        #     gargs={'lag_ratio': 0.1},
+        #     ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        # explainer.prob = np.random.uniform(0.4, 1.0, (25, 3))
+
+        # self.play(explainer.sync_pbars(
+        #     pbar_config={},
+        #     aargs={'rate_func': rate_functions.ease_out_back},
+        #     gargs={'lag_ratio': 0.1},
+        #     ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        # self.play(explainer.hide_pbars(
+        #     aargs={'lag_ratio': 0.1},
+        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        # ))
+        # self.wait()
