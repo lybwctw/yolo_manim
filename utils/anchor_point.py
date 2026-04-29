@@ -1,5 +1,11 @@
+from __future__ import annotations
+import sys
+sys.path.append('..')
+
 from manim import *
 from typing import Self
+from utils.computation import Computation
+from utils.constants import KK_COLORS
 
 DIRECTION_SERIES = [
     'left',
@@ -9,12 +15,14 @@ DIRECTION_SERIES = [
 ]
 
 DOT_CONFIG = {
+    'fill_opacity': 0.0,
     'side_length': 0.01,
     'stroke_width': 3,
     'stroke_color': WHITE,
 }
 
 RECT_CONFIG = {
+    'fill_opacity': 0.0,
     'stroke_width': 2,
     'stroke_color': WHITE,
 }
@@ -37,13 +45,13 @@ TEXT_DIRECTION_MAP = {
 }
 TEXT_DIRECTION_BUFF = 0.1
 
-# FIXME, test the last two options
+# TODO, adjust the last two options
 ARROW_CONFIG = {
     'stroke_width': 3,
     'tip_length': 0.15,
     'buff': 0.0,
-    # 'max_stroke_width_to_length_ratio': 25,         # 5 by default
-    # 'max_tip_length_to_length_ratio': 1.0,          # 0.25 by default
+    'max_stroke_width_to_length_ratio': 15,         # 5 by default
+    'max_tip_length_to_length_ratio': 0.25,          # 0.25 by default
 }
 
 TEXT_CONFIG = {
@@ -52,22 +60,20 @@ TEXT_CONFIG = {
 }
 
 # pbars related
-PBAR_SPACE_RATIO = 0.7          # pbar space : unit space
+PBAR_SPACE_RATIO = 0.5          # pbar space : unit space
 PBAR_GAP_RATIO = 0.1            # pbar gap : pbar space
-PBAR_COLORS = [
-    GREEN,
-    RED,
-    BLUE,
-]
+PBAR_COLORS = KK_COLORS
 PBAR_CONFIG = {
     'stroke_width': 0,
     'fill_opacity': 1.0,
 }
 CLASS_COLORS = PBAR_COLORS
 
-# fake labels related
-FAKE_LABEL_COLORS = PBAR_COLORS
-FAKE_LABEL_CONFIG = {
+# label related
+LABEL_WIDTH_RATIO = 0.6             # label width / unit
+LABEL_HEIGHT_RATIO = 0.4            # label height / width
+LABEL_COLORS = PBAR_COLORS
+LABEL_CONFIG = {
     'stroke_width': 2,
     'stroke_opacity': 1.0,
     'fill_opacity': 1.0,
@@ -77,37 +83,20 @@ class AnchorPoint(VMobject):
     def __init__(
         self,
         point: np.ndarray = ORIGIN,                         # starting position
-        offset: np.ndarray | list | tuple = (1.,2.,3.,4.),  # left, up, right, down
-        sf_screen: float = 0.5,                             # scale factor for screen
-        sf_nominal: int = 32,                               # scale factor for nominal, 8/16/32
-        idx: tuple = (0,0),                                 # indices of current anchor point
-        xyxy: np.ndarray | list | tuple = (1.,2.,3.,4.),    # precomputed x1y1x2y2
-        probs: np.ndarray | list | tuple = (0.3,0.8,0.5),   # probability for each class
+        dist: np.ndarray | list | tuple = (1.,1.,1.,1.),    # left, up, right, down
+        xyxy: np.ndarray | list | tuple = (10,20,30,40),    # x1, y1, x2, y2
+        prob: np.ndarray | list | tuple = (.5,.5,.5),       # c1, c2, c3
+        index: np.ndarray | list | tuple = (0, 0),          # index in explainer
+        sf_nominal: int = 32,                               # nominal distance / unit distance
+        sf_screen: int = 0.5,                               # screen distance / unit distance
     ):
         super().__init__()
-        # make sure offset is list or tuple
-        if isinstance(offset, np.ndarray):
-            self.offset = offset.tolist()
-        elif isinstance(offset, (list, tuple)):
-            self.offset = offset
-        self.sf_screen = sf_screen
+        # user is responsible for providing matching tensors
+        self.dist = np.array(dist)
+        self.xyxy = np.array(xyxy)
+        self.prob = np.array(prob)
+        self.index = np.array(index)
         self.sf_nominal = sf_nominal
-        self.idx = idx
-        # make sure xyxy is a list
-        if isinstance(xyxy, np.ndarray):
-            self.xyxy = xyxy.tolist()
-        elif isinstance(xyxy, tuple):
-            self.xyxy = [t for t in xyxy]
-        else:
-            self.xyxy = xyxy
-        # make sure probs is a list
-        if isinstance(probs, np.ndarray):
-            self.probs = probs.tolist()
-        elif isinstance(probs, tuple):
-            self.probs = [t for t in probs]
-        else:
-            self.probs = probs
-        self.n_probs = len(self.probs)
 
         dot = Square(
             stroke_opacity=0.0,
@@ -115,30 +104,13 @@ class AnchorPoint(VMobject):
         ).move_to(point)
         self.dot = dot
 
-        # setup baseline for pbars
-        baseline = Line(
-            start=ORIGIN,
-            end=self.sf_screen*RIGHT*PBAR_SPACE_RATIO,
-        ).move_to(self.dot)
-        baseline.set_opacity(0)
-        self.baseline = baseline
-        self.add(baseline)      # used for reference
+        ref = Line(
+            LEFT/2,
+            RIGHT/2,
+        ).set_opacity(0.0).scale(sf_screen).move_to(self.dot)
+        self.ref = ref              # reference line
 
-        self.dir_to_idx = {
-            'left':  self.idx[1],
-            'up':    self.idx[0],
-            'right': self.idx[1],
-            'down':  self.idx[0],
-        }
-
-        self.dir_to_sign = {
-            'left':  '-',
-            'up':    '-',
-            'right': '+',
-            'down':  '+',
-        }
-
-        left, up, right, down = [x*self.sf_screen for x in self.offset]
+        left, up, right, down = [x*sf_screen for x in self.dist]
         width, height = left+right, up+down
         center_offset = RIGHT*(right-left)/2 + UP*(up-down)/2
         rect = Rectangle(
@@ -149,36 +121,46 @@ class AnchorPoint(VMobject):
         ).move_to(point + center_offset)
         self.rect = rect
 
-        self.mob_opacity=1.0
-        self.mob = dot.copy().set_stroke(
-            opacity=self.mob_opacity,
-        )
-        self.add(self.dot, self.rect, self.mob)
+        self.mob = dot.copy().set_stroke(opacity=1.0)
+
+        self.add(self.ref, self.dot, self.rect, self.mob)
 
     def to_rect(
         self,
-        rect_config: dict = {}, # rect config
+        rect_config: dict = {}, # target rect config
         **aargs,
     ) -> Animation:
-        target = self.rect.copy().set_stroke(
-            opacity=self.mob_opacity,
-            **rect_config,
+        """Apply config only once.
+        """
+        rect_config = {'stroke_opacity': 1.0, **rect_config}
+        target = self.rect.copy().set_style(**rect_config)
+        return Transform(
+            self.mob,
+            target,
+            **aargs,
         )
-        return Transform(self.mob, target, **aargs)
 
     def to_dot(
         self,
+        dot_config: dict = {}, # target dot config
         **aargs,
     ) -> Animation:
-        target = self.dot.copy().set_stroke(
-            opacity=self.mob_opacity,
+        """Apply config only once.
+        """
+        dot_config = {'stroke_opacity': 1.0, **dot_config}
+        target = self.dot.copy().set_style(**dot_config)
+        return Transform(
+            self.mob,
+            target,
+            **aargs,
         )
-        return Transform(self.mob, target, **aargs)
 
     def create_arrows(
         self,
         arrow_config: dict={},
     ) -> VGroup:
+        """Create arrows based on dot and rect.
+        """
         cfg = {**ARROW_CONFIG, **arrow_config}
         arrows = VGroup(
             *(Arrow(
@@ -197,192 +179,197 @@ class AnchorPoint(VMobject):
     ) -> Animation:
         """ TODO, arrow growing effect.
         """
+        rfunc = aargs.pop('rate_func', rate_functions.smooth)
         self.arrows = self.create_arrows(
             arrow_config=arrow_config,
         )
         self.add(self.arrows)
-        return Write(self.arrows, **aargs)
+        return AnimationGroup(
+            *(GrowArrow(arrow, rate_func=rfunc) for arrow in self.arrows),
+            **aargs,
+        )
+        # return Write(self.arrows, **aargs)
     
     def hide_arrows(
         self,
         **aargs,
     ) -> Animation:
+        """TODO, shrink version?
+        """
         self.remove(self.arrows)
         return Unwrite(self.arrows, **aargs)
 
-    def create_distance_abs(
-        self,
-        font_size: int = 15,
-    ) -> VGroup :
-        dists = VGroup(
-            *(Text(
-                # str(int(self.offset[i]*self.sf_nominal)), # TODO, why the fuck this failed?
-                '{:.0f}'.format(self.offset[i]*self.sf_nominal),
-                color=TEXT_COLOR_MAP[direction],
-                font_size=font_size,
-                **TEXT_CONFIG,
-            ).next_to(
-                self.arrows[i],
-                TEXT_DIRECTION_MAP[direction],
-                buff=TEXT_DIRECTION_BUFF,
-            ) for i, direction in enumerate(DIRECTION_SERIES))
-        )
-        return dists
-
-    def create_distance(
+    def create_dist(
         self,
         font_size: int = 15,            # specify font size manually
     ) -> VGroup :
-        """Create distance not positioned.
+        """Create distance Texts, not aligned.
         """
-        dists = VGroup(
+        ts = VGroup(
             *(Text(
-                '{:.2f}'.format(self.offset[i]),
+                '{:.2f}'.format(self.dist[i]),
                 color=TEXT_COLOR_MAP[direction],
                 font_size=font_size,
                 **TEXT_CONFIG,
             ) for i, direction in enumerate(DIRECTION_SERIES))
         )
-        return dists
-    
-    def create_xyxy(
-        self,
-        font_size: int = 15,            # specify font size manually
-    ) -> VGroup:
-        """Create xyxy not positioned.
-        """
-        xyxy = VGroup(
-            *(Text(
-                '{:>3d}'.format(self.xyxy[i]),
-                color=WHITE,            # xyxy is all white
-                font_size=font_size,
-                **TEXT_CONFIG,
-            ) for i in range(4))
-        )
-        return xyxy
-    
-    def create_probs(
-        self,
-        font_size: int = 15,
-    ) -> VGroup:
-        """Create cls not positioned.
-        """
-        probs = VGroup(
-            *(Text(
-                '{:.2f}'.format(self.probs[i]),
-                color=CLASS_COLORS[i],
-                font_size=font_size,
-                **TEXT_CONFIG,
-            ) for i in range(3))
-        )
-        return probs
-    
-    def create_xyxy_probs(
-        self,
-    ):
-        pass
-    
-    def create_ordered_distance(
-        self,
-        font_size: int = 8,             # smaller for tensor
-    ) -> VGroup:
-        """"Create distance ordered from DL to UR.
-        """
-        dists = self.create_distance(font_size=font_size)
+        return ts
 
-        # manual arrange
-        for i, dist in enumerate(dists):
-            dist.move_to(self.dot)
-            dist.set_z_index(4-i)
-            dist.set_opacity(opacity=1-i*0.2)
-            dist.shift((RIGHT*0.05 + UP*0.06)*i)
-
-        dists.move_to(self.dot)
-        return dists
-    
-    def create_ordered_xyxy(
-            self,
-            font_size: int = 8,         # smaller for tensor
-    ) -> VGroup:
-        """Create xyxy ordered from DL to UR.
-        """
-        xyxy = self.create_xyxy(font_size=font_size)
-
-        # manual arrange
-        for i, t in enumerate(xyxy):
-            t.move_to(self.dot)
-            t.set_z_index(4-i)
-            t.set_opacity(opacity=1-i*0.2)
-            t.shift((RIGHT*0.05 + UP*0.06)*i)
-        
-        xyxy.move_to(self.dot)
-        return xyxy
-    
-    def create_ordered_probs(
-        self,
-        font_size: int = 8,
-    ) -> VGroup:
-        """Create xyxy ordered from DL to UR.
-        """
-        probs = self.create_probs(font_size=font_size)
-
-        # manual arrange
-        for i, t in enumerate(probs):
-            t.move_to(self.dot)
-            t.set_z_index(4-i)
-            t.set_opacity(opacity=1-i*0.2)
-            t.shift((RIGHT*0.05 + UP*0.06)*i)
-        
-        probs.move_to(self.dot)
-        return probs
-    
-    def show_distance_abs(
-        self,
-        **aargs,
-    ) -> Animation:
-        self.distance_abs = self.create_distance_abs()
-        self.add(self.distance_abs)
-        return Write(self.distance_abs, **aargs)
-    
-    def hide_distance_abs(
-        self,
-        **aargs,
-    ) -> Animation:
-        self.remove(self.distance_abs)
-        return Unwrite(self.distance_abs, **aargs)
-    
-    def align_distance_to_arrows(
-        self,
-    ) -> Self:
-        for i, direction in enumerate(DIRECTION_SERIES):
-            self.distance[i].next_to(
-                self.arrows[i],
-                TEXT_DIRECTION_MAP[direction],
-                buff=TEXT_DIRECTION_BUFF,
-            )
-        return self
-    
-    def show_distance(
+    def show_dist(
         self,
         font_size: int = 15,            # specifiy font manually
         **aargs,
     ) -> Animation:
-        self.distance = self.create_distance()
-        self.align_distance_to_arrows()
-        self.add(self.distance)
-        return Write(self.distance, **aargs)
+        """Show distance Texts, aligned to arrows.
+        """
+        self.ts_dist = self.create_dist(
+            font_size=font_size,
+        )
+        self._align_ts_to_arrows(self.ts_dist)
+        self.add(self.ts_dist)
+        return Write(self.ts_dist, **aargs)
 
-    def hide_distance(
+    def hide_dist(
         self,
         **aargs,
     ) -> Animation:
-        self.remove(self.distance)
-        return Unwrite(self.distance, **aargs)
+        self.remove(self.ts_dist)
+        return Unwrite(self.ts_dist, **aargs)
+
+    def create_dist_nominal(
+        self,
+        font_size: int = 15,
+    ) -> VGroup :
+        """Create nominal distance Texts, not aligned.
+        """
+        ts = VGroup(
+            *(Text(
+                # str(int(self.dist[i]*self.sf_nominal)), # TODO, why the fuck this failed?
+                '{:.0f}'.format(self.dist[i]*self.sf_nominal),
+                color=TEXT_COLOR_MAP[direction],
+                font_size=font_size,
+                **TEXT_CONFIG,
+            # ).next_to(
+            #     self.arrows[i],
+            #     TEXT_DIRECTION_MAP[direction],
+            #     buff=TEXT_DIRECTION_BUFF,
+            ) for i, direction in enumerate(DIRECTION_SERIES))
+        )
+        return ts
+
+    def show_dist_nominal(
+        self,
+        font_size: int = 15,
+        **aargs,
+    ) -> Animation:
+        """Show nominal distance Texts, aligned to arrows.
+        """
+        self.ts_dist_nominal = self.create_dist_nominal(
+            font_size=font_size,
+        )
+        self._align_ts_to_arrows(self.ts_dist_nominal)
+        self.add(self.ts_dist_nominal)
+        return Write(self.ts_dist_nominal, **aargs)
+
+    def hide_dist_nominal(
+        self,
+        **aargs,
+    ) -> Animation:
+        self.remove(self.ts_dist_nominal)
+        return Unwrite(self.ts_dist_nominal, **aargs)
+    
+    # def create_xyxy(
+    #     self,
+    #     font_size: int = 15,            # specify font size manually
+    # ) -> VGroup:
+    #     """Create xyxy not positioned.
+    #     """
+    #     xyxy = VGroup(
+    #         *(Text(
+    #             '{:>3d}'.format(self.xyxy[i]),
+    #             color=WHITE,            # xyxy is all white
+    #             font_size=font_size,
+    #             **TEXT_CONFIG,
+    #         ) for i in range(4))
+    #     )
+    #     return xyxy
+    
+    # def create_probs(
+    #     self,
+    #     font_size: int = 15,
+    # ) -> VGroup:
+    #     """Create cls not positioned.
+    #     """
+    #     probs = VGroup(
+    #         *(Text(
+    #             '{:.2f}'.format(self.probs[i]),
+    #             color=CLASS_COLORS[i],
+    #             font_size=font_size,
+    #             **TEXT_CONFIG,
+    #         ) for i in range(3))
+    #     )
+    #     return probs
+    
+    # def create_ordered_distance(
+    #     self,
+    #     font_size: int = 8,             # smaller for tensor
+    # ) -> VGroup:
+    #     """"Create distance ordered from DL to UR.
+    #     """
+    #     dists = self.create_distance(font_size=font_size)
+
+    #     # manual arrange
+    #     for i, dist in enumerate(dists):
+    #         dist.move_to(self.dot)
+    #         dist.set_z_index(4-i)
+    #         dist.set_opacity(opacity=1-i*0.2)
+    #         dist.shift((RIGHT*0.05 + UP*0.06)*i)
+
+    #     dists.move_to(self.dot)
+    #     return dists
+    
+    # def create_ordered_xyxy(
+    #         self,
+    #         font_size: int = 8,         # smaller for tensor
+    # ) -> VGroup:
+    #     """Create xyxy ordered from DL to UR.
+    #     """
+    #     xyxy = self.create_xyxy(font_size=font_size)
+
+    #     # manual arrange
+    #     for i, t in enumerate(xyxy):
+    #         t.move_to(self.dot)
+    #         t.set_z_index(4-i)
+    #         t.set_opacity(opacity=1-i*0.2)
+    #         t.shift((RIGHT*0.05 + UP*0.06)*i)
+        
+    #     xyxy.move_to(self.dot)
+    #     return xyxy
+    
+    # def create_ordered_probs(
+    #     self,
+    #     font_size: int = 8,
+    # ) -> VGroup:
+    #     """Create xyxy ordered from DL to UR.
+    #     """
+    #     probs = self.create_probs(font_size=font_size)
+
+    #     # manual arrange
+    #     for i, t in enumerate(probs):
+    #         t.move_to(self.dot)
+    #         t.set_z_index(4-i)
+    #         t.set_opacity(opacity=1-i*0.2)
+    #         t.shift((RIGHT*0.05 + UP*0.06)*i)
+        
+    #     probs.move_to(self.dot)
+    #     return probs
     
     def create_divide(
         self,
         font_size: int = 15,
     ) -> VGroup:
+        """Create '/sf_nominal' for each dist_nominal.
+        """
         divide = VGroup(*(
             Text(
                 '/' + str(self.sf_nominal),
@@ -390,7 +377,7 @@ class AnchorPoint(VMobject):
                 font_size=font_size,
                 **TEXT_CONFIG,
             ).next_to(
-                self.distance_abs[i],
+                self.ts_dist_nominal[i],
                 RIGHT,
                 buff=0.05,
             ) for i, direction in enumerate(DIRECTION_SERIES)
@@ -401,104 +388,98 @@ class AnchorPoint(VMobject):
         self,
         **aargs,
     ) -> Animation:
-        """ Create divide and add into distance.
+        """Append '/sf_nominal' into each dist_nominal.
         """
         divide = self.create_divide()
-        for dis, div in zip(self.distance_abs, divide):
-            dis.add(div)
+        for dist, div in zip(self.ts_dist_nominal, divide):
+            dist.add(div)
         return Write(divide, **aargs)
     
-    def abs_to_rela(
+    def nominal_to_rela(
         self,
         aargs: dict = {},       # ReplacementTransform args
         gargs: dict = {},       # AnimationGroup args
     ) -> Animation:
-        """ Convert distance_abs with divide into distance.
+        """ Convert ts_dist_nominal with divide into ts_dist.
         """
-        self.remove(self.distance_abs)
-        self.distance = self.create_distance()
-        self.align_distance_to_arrows()
-        self.add(self.distance)
+        self.remove(self.ts_dist_nominal)
+        self.ts_dist = self.create_dist()
+        self._align_ts_to_arrows(self.ts_dist)
+        self.add(self.ts_dist)
         return AnimationGroup(
-            *(ReplacementTransform(dis_abs, dis_rela, **aargs)
-            for dis_abs, dis_rela in zip(self.distance_abs, self.distance)),
+            *(ReplacementTransform(dist_nominal, dist_rela, **aargs)
+            for dist_nominal, dist_rela in zip(self.ts_dist_nominal, self.ts_dist)),
             **gargs,
         )
 
-    def get_center(
-        self,
-    ) -> np.ndarray:
-        """Override the default center with dot center.
-        """
-        return self.dot.get_center()
-    
-    def set_pattern(
-        self,
-        opacity: float = 1.0,           # FIXME, the default opacity?
-        color: ManimColor = WHITE,      # FIXME, the default color?
-    ) -> Self:
-        """FIXME, Set pattern, only care about opacity and color.
-        """
-        self.mob_opacity = opacity
-        self.mob.set_stroke(opacity=opacity, color=color)
-        self.dot.set_stroke(color=color)
-        self.rect.set_stroke(color=color)
-        return self
+    # def get_center(
+    #     self,
+    # ) -> np.ndarray:
+    #     """Override the default center with dot center.
+    #     """
+    #     return self.dot.get_center()
 
-    def create_decode_equations(
+    def create_decode_computations(
         self,
-        font_size: int = 15,
-        buff: float = 0.3,              # up-down buff between equatinos
+        buff: float = 0.3,              # up-down buff between computations
+        text_config: dict = {},         # for computation
     ) -> VGroup:
         """Create 4 Equations show computing from distance to position,
            not positioned, not arranged.
         """
-        equations = VGroup()
-        for i, direction in enumerate(DIRECTION_SERIES):
-            text = (
-                f'({self.dir_to_idx[direction]:>2d}+0.5{self.dir_to_sign[direction]}'
-                f'<span foreground="{TEXT_COLOR_MAP[direction]}">{self.offset[i]:.2f}</span>'
-                f')*{self.sf_nominal} = '
-                f'<span foreground="white">{self.xyxy[i]:<3d}</span>'
-            )
-            equation = MarkupText(
-                text,
-                color=GRAY,
-                font_size=font_size,
-                **TEXT_CONFIG,
-            )
-            equations.add(equation)
+        # f'({self.dir_to_idx[direction]:>2d}+0.5{self.dir_to_sign[direction]}'
+        # f'<span foreground="{TEXT_COLOR_MAP[direction]}">{self.offset[i]:.2f}</span>'
+        # f')*{self.sf_nominal} = '
+        # f'<span foreground="white">{self.xyxy[i]:<3d}</span>'
+        formatters = [
+            (
+                f'({{:>2d}}+0.5{self.dir_to_sign[direction]}'
+                f'<span foreground="{TEXT_COLOR_MAP[direction]}">{{:.2f}}</span>)'
+                f'*{self.sf_nominal} = <span foreground="white">{{:<3d}}</span>'
+            ) for direction in DIRECTION_SERIES
+        ]
+        values = [
+            [
+                self.dir_to_idx[direction],
+                self.dist[i],
+                self.xyxy[i]
+            ] for i, direction in enumerate(DIRECTION_SERIES)
+        ]
 
-        equations.arrange(
+        computations = VGroup(
+            Computation(
+                formatter=formatter,
+                values=vs,
+                **text_config,
+            ) for formatter, vs in zip(formatters, values)
+        ).arrange(
             DOWN,
             buff=buff,
             aligned_edge=LEFT,
-        ).center()
+        ).center()   # TODO, arrange args
 
-        return equations
+        return computations
     
     def create_pbars(
         self,
-        probs: list | None = None,        # (n_probs,)
     ) -> VGroup:
-        """Realtime pbars based on baseline.
+        """Realtime pbars based on given prob.
         """
-        if probs is None:
-            probs = self.probs
-
-        space_size = self.baseline.width
-        pbar_gap = space_size * PBAR_GAP_RATIO
-        pbar_width = space_size * (1-(self.n_probs-1)*PBAR_GAP_RATIO) / self.n_probs
+        n_probs = len(self.prob)
+        pbar_space = self.sf_screen * PBAR_SPACE_RATIO
+        pbar_offset = self.sf_screen*(1-PBAR_SPACE_RATIO)/2
+        pbar_gap = pbar_space * PBAR_GAP_RATIO
+        pbar_width = pbar_space * (1-(n_probs-1)*PBAR_GAP_RATIO) / n_probs
         pbars = VGroup(
             Rectangle(
                 width=pbar_width,
-                height=space_size*p,
+                height=pbar_space*p,
                 fill_color=PBAR_COLORS[i],
                 **PBAR_CONFIG,
-            ).align_to(self.baseline, LEFT)\
-             .shift((pbar_width+pbar_gap)*i*RIGHT)\
-             .set_y(self.baseline.get_y())
-            for i, p in enumerate(probs)
+            ).align_to(self.ref, LEFT)\
+             .shift((pbar_offset+pbar_width*i+pbar_gap*i)*RIGHT)\
+             .set_y(self.ref.get_y())
+            for i, p in enumerate(self.prob)
         )
         return pbars
     
@@ -521,21 +502,19 @@ class AnchorPoint(VMobject):
             **gargs,
         )
     
-    def to_probs(
+    def sync_pbars(
         self,
-        probs: np.ndarray | list | None,         # (n_probs, )
-        **aargs,
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
-        """Update pbars with new one.
+        """Sync pbars with current prob.
         """
-        if probs is None:
-            return Wait(1.0)
-        if isinstance(probs, np.ndarray):
-            probs = probs.tolist()
-
-        self.probs = probs
-        new_pbars = self.create_pbars(probs)
-        return Transform(self.pbars, new_pbars, **aargs)
+        pbars_end = self.create_pbars()     # current prob
+        return AnimationGroup(
+            *(Transform(p0, p1, **aargs)
+            for p0, p1 in zip(self.pbars, pbars_end)),
+            **gargs,
+        )
     
     def hide_pbars(
         self,
@@ -556,15 +535,13 @@ class AnchorPoint(VMobject):
     
     def create_multi_labels(
         self,
-        width_ratio: float = 0.6,            # width : baseline
-        height_ratio: float = 0.4,           # height : baseline
         **label_config,                      # rectangle config
     ) -> VGroup:
         """Create multi labels, not positioned.
         """
-        cfg = {**FAKE_LABEL_CONFIG, **label_config}
-        label_width = self.baseline.width * width_ratio
-        label_height = self.baseline.width * height_ratio
+        cfg = {**LABEL_CONFIG, **label_config}
+        label_width = self.sf_screen * LABEL_WIDTH_RATIO
+        label_height = self.sf_screen * LABEL_HEIGHT_RATIO
         labels = VGroup(
             Rectangle(
                 width=label_width,
@@ -572,20 +549,18 @@ class AnchorPoint(VMobject):
                 stroke_color=color,
                 fill_color=color,
                 **cfg,
-            ) for color in FAKE_LABEL_COLORS
+            ) for color in LABEL_COLORS
         ).arrange(buff=0)
         return labels
     
     def show_multi_labels(
         self,
-        width_ratio: float = 0.6,            # width : baseline
-        height_ratio: float = 0.4,           # height : baseline
         label_config: dict = {},             # rectangle config
         **aargs,
     ) -> Animation:
+        """Add labels as new member.
+        """
         self.labels = self.create_multi_labels(
-            width_ratio=width_ratio,
-            height_ratio=height_ratio,
             **label_config,
         ).move_to(
             self.rect.get_corner(UL),
@@ -597,15 +572,13 @@ class AnchorPoint(VMobject):
     
     def show_rect_mlabels(
         self,
-        width_ratio: float = 0.6,            # width : baseline
-        height_ratio: float = 0.4,           # height : baseline
         rect_config: dict = {},
         label_config: dict = {},
         rargs: dict = {},       # to_rect animation args
         largs: dict = {},       # show_multi_labels animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Show rect and multi labels together.
+        """Show rect and multi labels at a time.
         """
         anims = [
             self.to_rect(
@@ -613,8 +586,6 @@ class AnchorPoint(VMobject):
                 **rargs,
             ),
             self.show_multi_labels(
-                width_ratio=width_ratio,
-                height_ratio=height_ratio,
                 label_config=label_config,
                 **largs
             ),
@@ -627,32 +598,27 @@ class AnchorPoint(VMobject):
         gargs: dict = {},       # group args
     ) -> Animation:
         """Keep only the label with maximum probability and move it to left.
-        Used after show_multi_labels to represent the take-max class step.
+           Also update rect's color as the max class.
+           Used after show_multi_labels to represent the take-max class step.
         """
-        max_idx = np.argmax(self.probs)
+        max_idx = np.argmax(self.prob)
         max_label = self.labels[max_idx]
-        first_pos = self.labels[0].get_corner(DL)
         
         anims = [
-            Transform(max_label, max_label.copy().move_to(first_pos, aligned_edge=DL), **aargs),
+            Transform(max_label, max_label.copy().move_to(self.labels[0], aligned_edge=DL), **aargs),
         ]
         labels_to_remove = []
         for i in range(len(self.labels)):
             if i != max_idx:
-                anims.append(Unwrite(self.labels[i], **aargs))
+                anims.append(FadeOut(self.labels[i], **aargs))  # or Unwrite?
                 labels_to_remove.append(self.labels[i])
 
-        self.labels.remove(*labels_to_remove)
+        self.rect.set_stroke(color=PBAR_COLORS[max_idx])
+        anims.append(self.mob.animate(**aargs).set_stroke(color=PBAR_COLORS[max_idx]))
 
-        # anims = [
-        #     Transform(max_label, max_label.copy().move_to(first_pos, aligned_edge=DL), **aargs),
-        #     *(Unwrite(self.labels[i], **aargs)
-        #       for i in range(len(self.labels))
-        #       if i != max_idx)
-        # ]
+        self.labels.remove(*labels_to_remove)
         
-        # self.labels = VGroup(max_label)
-        return AnimationGroup(*anims, **gargs) if anims else Wait(0.1)
+        return AnimationGroup(*anims, **gargs)
     
     def clip_to_background(
         self,
@@ -660,13 +626,12 @@ class AnchorPoint(VMobject):
         **aargs,        # for both labels and rect
     ) -> Animation:
         anims = []
-        inter_rect = self._compute_intersection(
+        inter_rect = self._intersect_bg(
             background,
         )
         if inter_rect is None:
             anims.append(Unwrite(self)) # TODO, or fade out???
         else:
-            # inter_rect.match_style(self.mob)
             self.remove(self.rect)
             self.rect = inter_rect
             anims.append(AnimationGroup(
@@ -681,7 +646,7 @@ class AnchorPoint(VMobject):
             ))
         return AnimationGroup(*anims)
     
-    def _compute_intersection(
+    def _intersect_bg(
         self,
         background,
     ) -> Rectangle | None:
@@ -706,6 +671,40 @@ class AnchorPoint(VMobject):
             return rect.match_style(self.mob)
         
         return None # no intersection
+
+    def _align_ts_to_arrows(
+        self,
+        ts,         # VGroup of 4 Texts
+    ) -> Self:
+        for i, direction in enumerate(DIRECTION_SERIES):
+            ts[i].next_to(
+                self.arrows[i],
+                TEXT_DIRECTION_MAP[direction],
+                buff=TEXT_DIRECTION_BUFF,
+            )
+        return self
+
+    @property
+    def dir_to_idx(self) -> dict:
+        return {
+            'left':  self.index[1],
+            'up':    self.index[0],
+            'right': self.index[1],
+            'down':  self.index[0],
+        }
+    
+    @property
+    def dir_to_sign(self) -> dict:
+        return {
+            'left':  '-',
+            'up':    '-',
+            'right': '+',
+            'down':  '+',
+        }
+    
+    @property
+    def sf_screen(self) -> float:
+        return self.ref.width
 
     @property
     def node_left(self) -> np.ndarray:
@@ -736,48 +735,51 @@ class AnchorPoint(VMobject):
 class Demo(Scene):
     def construct(self):
         ap = AnchorPoint(
-            offset=(1,2,3,4),
+            point=ORIGIN,
+            dist=(1.3,2.8,3.3,4.5),
+            xyxy=(10,20,30,40),
+            prob=(0.5,0.5,0.5),
+            index=(0,1),
+            sf_nominal=32,
             sf_screen=0.5,
-            idx=(5,6),
-            xyxy=(120,230,312,23),
-        ).scale(1.5)
+        )
         self.play(Create(ap, run_time=0.3))
         self.wait()
 
         # self.play(ap.show_arrows(
-        #     lag_ratio=0.3,
-        #     run_time=0.3,
+        #     lag_ratio=0.2,
+        #     rate_func=rate_functions.ease_out_back,
         # ))
-        # self.wait(0.3)
+        # self.wait()
 
-        self.play(
-            ap.show_rect_mlabels(
-                label_config={'fill_opacity': 0.5,},
-            )
-        )
+        # self.play(ap.show_pbars())
+        # self.wait()
+
+        ap.prob = np.array([0.7, 0.8, 0.2])
+        # self.play(ap.sync_pbars())
+        # self.wait()
+
+        # self.play(ap.hide_pbars())
+        # self.wait()
+
+        # self.play(ap.to_rect())
+        # self.wait()
+
+        # self.play(ap.show_multi_labels())
+        # self.wait()
+
+        self.play(ap.show_rect_mlabels(
+            gargs={'lag_ratio': 0.5,}
+        ))
         self.wait()
 
-        # self.play(ap.to_rect(
-        #     rect_config={'width': 1},
-        # ))
-        # self.wait()
 
-        # # self.play(ap.show_pbars())
-        # # self.wait()
+        rect = Rectangle()
+        self.play(Write(rect))
+        self.wait()
 
-        # self.play(ap.show_multi_labels(
-        #     label_config={'fill_opacity': 0.3},
-        # ))
-        # self.wait()
+        self.play(ap.clip_to_background(rect))
+        self.wait()
 
         self.play(ap.keep_max_label())
         self.wait()
-
-        # bg = Rectangle().scale(2)
-        # self.play(Write(bg))
-        # self.wait()
-
-        # self.play(ap.clip_to_background(
-        #     bg,
-        # ))
-        # self.wait()

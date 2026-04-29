@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sys
 sys.path.append('..')
 
@@ -14,6 +15,7 @@ from utils.tensor_2d import Tensor2D
 import numpy as np
 import torch
 
+# TODO, rename
 PATH_DIST_BBOX = 'assets/tensors/_dist_box.pt'
 PATH_NORM_CLS = 'assets/tensors/_norm_cls.pt'
 PATH_DIST_BBOX_MINI = 'assets/numpy/mini_32_dist.npy'
@@ -30,53 +32,71 @@ class Explainer(VGroup):
     def __init__(
         self,
         background: ImageRaw | ImagePad | None = None,
-        data_dist: np.ndarray = np.ones((4,4,4)),   # (h, w, 4)
-        data_prob: np.ndarray = np.ones((4,4,3)),   # (h, w, 3)
+        dist_3d: np.ndarray = np.ones((4,4,4)),     # (h, w, 4)
+        prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
         sf_nominal: int = 32,                       # 8/16/32
     ):
         super().__init__()
         self.background = background
         self.sf_nominal = sf_nominal,
-        self.raw_dist = None                        # (h*w, 4)
-        self.raw_xyxy = None                        # (h*w, 4)
-        self.raw_prob = None                        # (h*w, 3)
-        self.raw_idx = None                         # (h*w, 2)
 
-        self.data_box = data_box
-        self.data_cls = data_cls
-        assert data_box.shape[:2] == data_cls[:2]
-        self.shape = data_box.shape[:2]             # (h, w)
+        assert dist_3d.shape[:2] == prob_3d.shape[:2]
 
-        # TODO, more elegant way?
+        dist_2d = dist_3d.reshape(-1, 4)
+        prob_2d = prob_3d.reshape(-1, 3)
+
+        h, w = dist_3d.shape[:2]
+        ys, xs = np.meshgrid(
+            np.arange(h),
+            np.arange(w),
+            indexing='ij',
+        )
+        indices_3d = np.stack([ys, xs], axis=-1)
+        indices_2d = indices_3d.reshape(-1, 2)
+
+        # xs = (xs + 0.5) * self.sf_nominal
+        # ys = (ys + 0.5) * self.sf_nominal
+        xs = xs + 0.5
+        ys = ys + 0.5
+
+        center_3d = np.stack([ys, xs], axis=-1)
+        center_2d = center_3d.reshape(-1, 2)
+
+        xs_2d = xs.reshape(-1)
+        ys_2d = ys.reshape(-1)
+
+        dist_2d = dist_3d.reshape(-1, 4)
+        prob_2d = prob_3d.reshape(-1, 3)
+
+        x1 = xs_2d - dist_2d[:, 0]
+        y1 = ys_2d - dist_2d[:, 1]
+        x2 = xs_2d + dist_2d[:, 2]
+        y2 = ys_2d + dist_2d[:, 3]
+
+        xyxy_2d = np.stack([x1, y1, x2, y2], axis=-1)
+        xyxy_3d = xyxy_2d.reshape(h, w, 4)
+
+        xyxycls_2d = np.concat([xyxy_2d, prob_2d], axis=-1)
+        xyxycls_3d = xyxycls_2d.reshape(h, w, 4+3)
+
+        # common 2d/3d tensors
+        self.shape = (h, w)
+        self.indices_3d = indices_3d
+        self.indices_2d = indices_2d
+        self.center_3d = center_3d
+        self.center_2d = center_2d
+        self.dist_3d = dist_3d
+        self.dist_2d = dist_2d
+        self.xyxy_3d = xyxy_3d
+        self.xyxy_2d = xyxy_2d
+        self.prob_3d = prob_3d
+        self.prob_2d = prob_2d
+        self.xyxycls_3d = xyxycls_3d
+        self.xyxycls_2d = xyxycls_2d
+
+        # FIXME, more elegant way?
         self.tmp_txts = None
-
-    def _compute_xyxy_2d(self):
-        h, w = self.shape
-
-        rows = self.keep_indices // w
-        cols = self.keep_indices % w
-
-        data = self.data.reshape(-1, 4)
-        d = data[self.keep_indices]
-
-        return np.stack([
-            (cols + 0.5 - d[:, 0]) * self.sf_nominal,
-            (rows + 0.5 - d[:, 1]) * self.sf_nominal,
-            (cols + 0.5 + d[:, 2]) * self.sf_nominal,
-            (rows + 0.5 + d[:, 3]) * self.sf_nominal,
-        ], axis=-1).astype(np.int32)
     
-    def _compute_cls_2d(self) -> np.ndarray:
-        """
-        Return class data for currently active anchor points.
-        Output shape: (n_active, 3)
-        """
-        # flatten class map once
-        cls_flat = self.data_cls.reshape(-1, 3) # TODO, 3 is hardcoded
-
-        # gather active rows
-        return cls_flat[self.keep_indices]
-
     def create_grid(
         self,
     ) -> VMobject:
@@ -84,8 +104,8 @@ class Explainer(VGroup):
             width=self.background.width,
             height=self.background.height,
             stroke_width=1,
-            grid_xstep=self.step,
-            grid_ystep=self.step,
+            grid_xstep=self.sf_screen,
+            grid_ystep=self.sf_screen,
         )
         grid.grid_lines.set_stroke(width=1)
         grid.move_to(
@@ -114,18 +134,18 @@ class Explainer(VGroup):
     def create_anchor_points(
         self,
     ) -> VGroup:
-        base = self.background.get_corner(UL)
         anchor_points = VGroup(*[
             AnchorPoint(
-                base+DOWN*self.step*(i+0.5)+RIGHT*self.step*(j+0.5),
-                offset=self.data[i,j],
-                sf_screen=self.step,
+                point=self.background.get_corner(UL)+
+                    self.center_3d[i,j][0]*DOWN*self.sf_screen+
+                    self.center_3d[i,j][1]*RIGHT*self.sf_screen,
+                dist=self.dist_3d[i,j],
+                xyxy=self.xyxy_3d[i,j],
+                prob=self.prob_3d[i,j],
+                index=self.indices_3d[i,j],
                 sf_nominal=self.sf_nominal,
-                idx=(i, j),
-                xyxy=self.xyxy[i, j],
-                probs=self.data_cls[i, j],
-            )
-            for i in range(self.shape[0])
+                sf_screen=self.sf_screen,
+            ) for i in range(self.shape[0])
             for j in range(self.shape[1])
         ])
 
@@ -177,6 +197,7 @@ class Explainer(VGroup):
         )
         return anim
     
+    # FIXME, sync_pbars
     def to_probs(
         self,
         probs: np.ndarray | None = None,        # (h, w, 3)
@@ -531,33 +552,82 @@ class Explainer(VGroup):
         )
 
     @property
-    def step(self) -> float:
-        # FIXME, assume that width and height hold same scale
-        return self.background.width / self.shape[1]
-
-    @property
-    def xyxy(
-        self,
-    ) -> np.ndarray:
-        """Compute decoded x1y1x2y2, (h, w, 4)
-        TODO, make this a property?
-        FIXME, only for 3d data, need to be more general
+    def sf_screen(self) -> float:
+        """Screen distance / unit distance.
+           Assume that width and height direction share the same factor.
         """
-        rows = np.arange(self.shape[0])[:, None]
-        cols = np.arange(self.shape[1])[None, :]
-        return np.stack([
-            (cols + 0.5 - self.data[...,0]) * self.sf_nominal,  # x1
-            (rows + 0.5 - self.data[...,1]) * self.sf_nominal,  # y1
-            (cols + 0.5 + self.data[...,2]) * self.sf_nominal,  # x2
-            (rows + 0.5 + self.data[...,3]) * self.sf_nominal,  # y2
-        ], axis=-1).astype(np.int32)
+        return self.background.width / self.shape[1]
+    
+    @property
+    def dots(self) -> VGroup:
+        """Fast reference to all dots
+        """
+        vg = VGroup(*(ap.mob for ap in self.anchor_points))
+        return vg
+
+    @staticmethod
+    def from_random(
+        background,
+        dist_range: tuple = (0, 5),
+        prob_range: tuple = (0, 1),
+        shape: tuple = (4, 4),
+        sf_nominal: int = 32,
+    ) -> Explainer:
+        """Create random explainer.
+        """
+        dist_3d = np.random.uniform(dist_range[0], dist_range[1], shape+(4,))
+        prob_3d = np.random.uniform(prob_range[0], prob_range[1], shape+(3,))
+
+        return Explainer(
+            background=background,
+            dist_3d=dist_3d,
+            prob_3d=prob_3d,
+            sf_nominal=sf_nominal,
+        )
+    
+    @staticmethod
+    def from_file(
+        background,
+        version: str = 'mini',
+        sf_nominal: int = 32,
+    ) -> Explainer:
+        if version == 'mini':
+            dist_3d = np.load(PATH_DIST_BBOX_MINI)
+            prob_3d = np.load(PATH_NORM_CLS_MINI)
+        elif version == 'general':
+            dist_3d = torch.load(
+                PATH_DIST_BBOX,
+                weights_only=True,
+                map_location='cpu',
+            )  # (1, 4, 8400)
+            prob_3d = torch.load(
+                PATH_NORM_CLS,
+                weights_only=True,
+                map_location='cpu',
+            )  # (1, 3, 8400)
+            if sf_nominal == 32:
+                dist_3d = dist_3d[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
+                prob_3d = prob_3d[0,:,8000:].transpose(0,1).reshape(20,20,3).numpy()
+            elif sf_nominal == 16:
+                dist_3d = dist_3d[0,:,6400:8000].transpose(0,1).reshape(40,40,4).numpy()
+                prob_3d = prob_3d[0,:,6400:8000].transpose(0,1).reshape(20,20,3).numpy()
+            elif sf_nominal == 8:
+                dist_3d = dist_3d[0,:,:6400].transpose(0,1).reshape(80,80,4).numpy()
+                prob_3d = prob_3d[0,:,:6400].transpose(0,1).reshape(20,20,3).numpy()
+        explainer = Explainer(
+            background=background,
+            dist_3d=dist_3d,
+            prob_3d=prob_3d,
+            sf_nominal=32,
+        )
+        return explainer
         
 def load_explainer(
     background,
     version: str = 'mini',  # mini/general
     scale: int = 32,        # 32/16/8 for general
     random_probs: bool = False,   # random overriden probs for demo purpose
-) -> ExplainerBbox:
+) -> Explainer:
     """User interface for explainer.
        TODO, make all data np/torch
        and make mini version customizable
@@ -589,7 +659,7 @@ def load_explainer(
         if random_probs:
             data_cls = np.random.uniform(0.0,0.98,(640//random_probs,640//random_probs,3))
 
-    explainer = ExplainerBbox(
+    explainer = Explainer(
         background=background,
         data=data_dist,
         data_cls=data_cls,
@@ -603,170 +673,43 @@ class Demo(Scene):
             stroke_opacity=0,
             fill_opacity=0.3,
         ).scale(2.)
-        explainer = ExplainerBbox(
-            sq,
-            data=np.random.uniform(0.3,1.3,(6,6,4)),
-            data_cls=np.random.uniform(0.1,0.9,(6,6,3)),
+        explainer = Explainer.from_random(
+            background=sq,
+            dist_range=(1,2.5),
+            prob_range=(0,1),
+            shape=(5,5),
             sf_nominal=32,
         )
-        explainer_system = Group(sq, explainer)
-        self.add(explainer_system)
-        self.wait(0.3)
+
+        system = Group(explainer, sq)
+        self.add(system)
 
         # self.play(explainer.show_grid())
         # self.wait()
 
         self.play(explainer.show_anchor_points(
-            lag_ratio=0,
             run_time=0.5,
         ))
-        self.wait(0.3)
+        self.wait()
 
         # self.play(explainer.hide_grid())
         # self.wait()
-        
-        # self.play(explainer.to_rects())
-        # self.wait()
 
-        # self.play(explainer.show_multi_labels(
-        #     label_config={
-        #         'fill_opacity': 0.5,
-        #         'stroke_opacity': 0.6,
-        #     },
-        #     aargs={
-        #         'lag_ratio': 0.1,
-        #     }
+        # self.play(explainer.show_arrows(
+        #     aargs={'lag_ratio':0.1},
+        #     gargs={'lag_ratio':0.1, 'run_time': 1.0},
         # ))
         # self.wait()
 
-        self.play(explainer.show_rect_mlabels(
-            rect_config={},
-            label_config={
-                'fill_opacity': 0.5,
-                'stroke_opacity': 0.6,
-            },
-            gargs={'lag_ratio': 0.8},
-            ggargs={'lag_ratio': 0.1, 'run_time': 3,},
-        ))
+        # self.play(explainer.hide_arrows(
+        #     aargs={'lag_ratio':0.1},
+        #     gargs={'lag_ratio':0.1, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        dots = explainer.dots.save_state()
+        self.play(dots.animate.set_stroke(opacity=0))
         self.wait()
 
-        self.play(explainer.keep_max_label(
-            aargs={
-                'lag_ratio': 0.1,
-            }
-        ))
+        self.play(explainer.show_pbars())
         self.wait()
-
-        self.play(explainer.keep_ratio(ratio=0.5))
-        self.wait()
-
-        self.play(explainer.clip_to_background())
-        self.wait()
-
-        # self.play(explainer.to_dots())
-        # self.wait()
-
-        # self.play(explainer.hide_anchor_points())
-        # self.wait()
-
-        # self.play(explainer.hide_anchor_points(
-        #     lag_ratio=0,
-        #     run_time=0.5,
-        # ))
-
-        # self.play(AnimationGroup(
-        #     *(ap.animate.set_pattern(color=GRAY,opacity=0.1)
-        #       for ap in explainer.anchor_points),
-        #       lag_ratio=0,
-        #       run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(explainer.show_pbars())
-        # self.wait()
-
-        # new_probs = np.random.uniform(0.1,0.3,(6,6,3))
-        # self.play(explainer.to_probs(new_probs))
-        # self.wait()
-
-        # probs_tensor = explainer.create_probs_tensor().shift(RIGHT*2)
-        # self.play(explainer_system.animate.shift(LEFT*2))
-        # self.play(Write(probs_tensor, lag_ratio=0.1))
-        # self.wait()
-
-        # self.play(explainer.show_arrows())
-        # self.wait()
-
-        # self.play(explainer.hide_arrows())
-        # self.wait()
-
-        # self.play(explainer.hide_anchor_points())
-        # self.wait()
-        # self.remove(explainer)
-
-        # explainer = ExplainerBbox(
-        #     sq,
-        #     data=np.load('../assets/numpy/mini_32.npy'),
-        #     sf_nominal=32,
-        # )
-        # explainer_system = Group(sq, explainer)
-        # self.add(explainer_system)
-        # self.wait(0.3)
-
-        # self.play(explainer.show_anchor_points())
-        # self.wait()
-
-        # self.play(explainer.to_rects())
-        # self.wait()
-
-        # self.play(explainer.show_pbars())
-        # self.wait()
-
-        # self.play(explainer.show_arrows())
-        # self.wait()
-
-        # self.play(explainer.hide_arrows())
-        # self.wait()
-
-        # self.play(explainer.to_rects())
-        # self.wait()
-
-        # self.play(explainer.to_rects(
-        #     rect_config={'width': 2.0},
-        #     gargs={'lag_ratio':0.2, 'run_time':0.5,},
-        # ))
-        # self.wait()
-
-        # self.play(explainer_system.animate(run_time=0.5).shift(LEFT*3))
-        # self.wait()
-
-        # xyxy = explainer.create_xyxy_tensor()
-        # xyxy.center()
-        # self.play(Write(xyxy, lag_ratio=0, run_time=0.5))
-        # self.wait(0.3)
-
-
-        # line_matrix = explainer.create_line_matrix().scale(0.3).shift(RIGHT*4)
-        # self.play(Write(line_matrix))
-        # self.wait()
-
-        # self.play(tensor_to_line_matrix(
-        #     tensor=xyxy,
-        #     lmatrix=line_matrix,
-        #     targs={},
-        #     gargs={'lag_ratio':0.02, 'run_time':0.1,},
-        #     ggargs={'lag_ratio':0.05, 'run_time':1.0,},
-        # ))
-        # self.wait()
-
-        # self.play(explainer.to_dots())
-        # self.wait()
-
-        # self.play(system.animate.scale(0.7).shift(RIGHT*2))
-        # self.wait()
-
-        # self.play(explainer.to_rects())
-        # self.wait()
-
-        # self.play(explainer.to_dots())
-        # self.wait()
