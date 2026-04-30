@@ -288,7 +288,6 @@ class Explainer(VGroup):
         label_config: dict = {},             # rectangle config
         aargs: dict = {},
         gargs: dict = {},
-        ggargs: dict = {},
     ) -> Animation:
         """Show multi-labels for all anchor points.
            Assume that rects is ready.
@@ -296,11 +295,9 @@ class Explainer(VGroup):
         anim = AnimationGroup(
             *(ap.show_multi_labels(
                 label_config=label_config,
-                aargs=aargs,
-                gargs=gargs,
-                # **aargs,
+                **aargs,
             ) for ap in self.anchor_points),
-            **ggargs,
+            **gargs,
         )
         return anim
 
@@ -327,57 +324,96 @@ class Explainer(VGroup):
         )
         return anim
 
-    def keep_max_label(
+    def apply_max_select(
         self,
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
         ggargs: dict = {},      # group of group args
     ) -> Animation:
-        """Keep max label for all anchor points.
+        """[A] Apply max conf filter.
+           Keep max label for all anchor points.
+           cls and conf created here.
         """
         anim = AnimationGroup(
-            *(ap.keep_max_label(
+            *(ap.apply_max_select(
                 aargs=aargs,
                 gargs=gargs,
             ) for ap in self.anchor_points),
             **ggargs,
         )
         return anim
-
-    def keep_ratio(
+    
+    def apply_conf_filter(
         self,
-        ratio: float = 0.5,    # ratio of anchor points to keep (0-1)
-        aargs: dict = {},       # animation args
-        gargs: dict = {},       # group args
     ) -> Animation:
-        """Keep only a random subset of anchor points based on ratio.
-        Can be called multiple times successively to further filter.
+        """[B] Apply conf filter.
         """
-        import random
-        n_keep = max(1, int(len(self.anchor_points) * ratio))
-        keep_indices = random.sample(range(len(self.anchor_points)), n_keep)
+        pass
+    
+    def apply_sort(
+        self,
+    ) -> Animation:
+        """Sort aps according to conf.
+           Cool expansion->sorting animation.
+           No significant change after sort.
+        """
+        pass
+    
+    def apply_nms_filter(
+        self,
+    ) -> Animation:
+        """[C] Apply NMS filter.
+        """
+        pass
+    
+    def apply_max_count_filter(
+        self,
+    ) -> Animation:
+        """[O] Apply max count filter.
+        """
+        pass
 
-        # data_flat = self.data.reshape(-1, 4)       # (h*w, 4)
-        # data_cls_flat = self.data_cls.reshape(-1, 3)  # (h*w, 3)
-        # self.data = data_flat[keep_indices] # FIXME, 3d -> 2d
-        # self.data_cls = data_cls_flat[keep_indices]
+    def apply_scale_back(
+        self,
+    ) -> Animation:
+        """[D] Apply scale back.
+        """
+        pass
+
+    # def keep_ratio(
+    #     self,
+    #     ratio: float = 0.5,    # ratio of anchor points to keep (0-1)
+    #     aargs: dict = {},       # animation args
+    #     gargs: dict = {},       # group args
+    # ) -> Animation:
+    #     """Keep only a random subset of anchor points based on ratio.
+    #     Can be called multiple times successively to further filter.
+    #     """
+    #     import random
+    #     n_keep = max(1, int(len(self.anchor_points) * ratio))
+    #     keep_indices = random.sample(range(len(self.anchor_points)), n_keep)
+
+    #     # data_flat = self.data.reshape(-1, 4)       # (h*w, 4)
+    #     # data_cls_flat = self.data_cls.reshape(-1, 3)  # (h*w, 3)
+    #     # self.data = data_flat[keep_indices] # FIXME, 3d -> 2d
+    #     # self.data_cls = data_cls_flat[keep_indices]
         
-        # remember kept indices to be used later
-        self.keep_indices = np.array(keep_indices, dtype=np.int64)
+    #     # remember kept indices to be used later
+    #     self.keep_indices = np.array(keep_indices, dtype=np.int64)
 
-        aps_to_remove = [
-            ap for i, ap in enumerate(self.anchor_points)
-              if i not in keep_indices
-        ]
-        self.anchor_points.remove(*aps_to_remove)
-        if aps_to_remove:
-            anims = AnimationGroup(
-                *(Unwrite(ap, **aargs) for ap in aps_to_remove),
-                **gargs,
-            )
-        else:
-            anims = Wait(0.1)
-        return anims
+    #     aps_to_remove = [
+    #         ap for i, ap in enumerate(self.anchor_points)
+    #           if i not in keep_indices
+    #     ]
+    #     self.anchor_points.remove(*aps_to_remove)
+    #     if aps_to_remove:
+    #         anims = AnimationGroup(
+    #             *(Unwrite(ap, **aargs) for ap in aps_to_remove),
+    #             **gargs,
+    #         )
+    #     else:
+    #         anims = Wait(0.1)
+    #     return anims
 
     def hide_anchor_points(
         self,
@@ -723,7 +759,7 @@ class Demo(Scene):
             sf_nominal=32,
         )
 
-        system = Group(explainer, sq)
+        system = Group(sq, explainer)
         self.add(system)
 
         # self.play(explainer.show_grid())
@@ -749,39 +785,39 @@ class Demo(Scene):
         # ))
         # self.wait()
 
-        self.play(explainer.show_multi_labels(
-            label_config={
-                'width_ratio': 0.3,
-                'height_ratio': 0.2,
-                'fill_opacity': 1.0,
-                'stroke_opacity': 1.0,
-            },
-            aargs={'lag_ratio': 0.1},
-            gargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        ))
-        self.wait()
-
-        # self.play(explainer.show_rect_mlabels(
-        #     rect_config={},
+        # self.play(explainer.show_multi_labels(
         #     label_config={
         #         'width_ratio': 0.3,
         #         'height_ratio': 0.2,
-        #         # 'fill_opacity': 0.8,
-        #         # 'stroke_opacity': 0.8,
+        #         'fill_opacity': 0.8,
+        #         'stroke_opacity': 0.8,
         #     },
-        #     # rargs={'rate_func': rate_functions.ease_out_back},
-        #     largs={'lag_ratio': 0.0},
-        #     gargs={'lag_ratio': 0.3},
-        #     ggargs={'lag_ratio': 0.1, 'run_time': 2.0},
+        #     aargs={'lag_ratio': 0.1},
+        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
         # ))
         # self.wait()
 
-        # self.play(explainer.keep_max_label(
-        #     aargs={},
-        #     gargs={},
-        #     ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
+        self.play(explainer.show_rect_mlabels(
+            rect_config={},
+            label_config={
+                'width_ratio': 0.3,
+                'height_ratio': 0.2,
+                'fill_opacity': 0.8,
+                'stroke_opacity': 0.8,
+            },
+            rargs={'rate_func': rate_functions.ease_out_back},
+            largs={'lag_ratio': 0.0},
+            gargs={'lag_ratio': 0.3},
+            ggargs={'lag_ratio': 0.1, 'run_time': 2.0},
+        ))
+        self.wait()
+
+        self.play(explainer.apply_max_select(
+            aargs={},
+            gargs={},
+            ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
+        ))
+        self.wait()
 
         # self.play(explainer.hide_arrows(
         #     aargs={},

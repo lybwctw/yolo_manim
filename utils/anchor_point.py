@@ -571,8 +571,7 @@ class AnchorPoint(VMobject):
     def show_multi_labels(
         self,
         label_config: dict = {},             # rectangle config
-        aargs: dict = {},
-        gargs: dict = {},
+        **aargs,
     ) -> Animation:
         """Add labels as new member.
         """
@@ -581,15 +580,15 @@ class AnchorPoint(VMobject):
         ).move_to(
             self.rect.get_corner(UL),
             aligned_edge=DL,
-        ).set_z_index(1)            # FIXME: why the fuck added to back?
+        )
         self.labels = labels
         self.add(self.labels)
 
-        return AnimationGroup(
-            *(Write(label, **aargs) for label in labels),
-            **gargs,
-        )
-        # return Write(self.labels, **aargs)
+        return Write(self.labels, **aargs)
+        # return AnimationGroup(
+        #     *(Write(label, **aargs) for label in labels),
+        #     **gargs,
+        # )
     
     def show_rect_mlabels(
         self,
@@ -601,17 +600,6 @@ class AnchorPoint(VMobject):
     ) -> Animation:
         """Show rect and multi labels at a time.
         """
-        # anims = [
-        #     self.to_rect(
-        #         rect_config=rect_config,
-        #         **rargs,
-        #     ),
-        #     self.show_multi_labels(
-        #         label_config=label_config,
-        #         **largs
-        #     ),
-        # ]
-        # return AnimationGroup(*anims, **gargs)
         anims = AnimationGroup(
             self.to_rect(
                 rect_config=rect_config,
@@ -625,15 +613,19 @@ class AnchorPoint(VMobject):
         )
         return anims
 
-    def keep_max_label(
+    def apply_max_select(
         self,
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Keep max label.
+        """Apply max conf filter.
+           cls and conf created here.
         """
         max_idx = np.argmax(self.prob)
         max_label = self.labels[max_idx]
+
+        self.cls = max_idx              # remember max class index
+        self.conf = self.prob[max_idx]  # remember max class conf
         
         anims = [
             Transform(max_label, max_label.copy().move_to(self.labels[0], aligned_edge=DL), **aargs),
@@ -813,7 +805,7 @@ class Demo(Scene):
         ))
         self.wait()
 
-        self.play(ap.keep_max_label())
+        self.play(ap.apply_max_select())
         self.wait()
 
 

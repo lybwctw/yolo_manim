@@ -7,7 +7,7 @@ from utils.general import load_everything
 from utils.arrow_comment import ArrowComment
 from utils.yolo_annotation import YoloAnnotation
 from utils.layers_fake import LayersFake
-from utils.explainer_bbox import ExplainerBbox
+from utils.explainer import Explainer
 from utils.multi_arrow import MultiArrow
 from utils.general import save_everything
 
@@ -21,7 +21,7 @@ class MainScene(Scene):
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
-        explainer = ExplainerBbox(
+        explainer = Explainer(
             background=background,
             data=np.load(MINI_32_DIST_PATH),
             data_cls=np.load(MINI_32_PROB_PATH),
