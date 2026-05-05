@@ -76,3 +76,59 @@ def tensor_to_line_matrix(
         **ggargs,
     )
     return anim
+
+
+def compute_iou(box, boxes):
+    """
+    box: (4,)
+    boxes: (m, 4)
+    """
+
+    xx1 = np.maximum(box[0], boxes[:, 0])
+    yy1 = np.maximum(box[1], boxes[:, 1])
+    xx2 = np.minimum(box[2], boxes[:, 2])
+    yy2 = np.minimum(box[3], boxes[:, 3])
+
+    w = np.maximum(0, xx2 - xx1)
+    h = np.maximum(0, yy2 - yy1)
+
+    inter = w * h
+
+    area1 = (
+        (box[2] - box[0])
+        * (box[3] - box[1])
+    )
+
+    area2 = (
+        (boxes[:, 2] - boxes[:, 0])
+        * (boxes[:, 3] - boxes[:, 1])
+    )
+
+    union = area1 + area2 - inter
+
+    return inter / union
+
+def random_boxes(n, max_coord=640):
+    # random corners
+    p1 = np.random.randint(
+        0,
+        max_coord,
+        size=(n, 2),
+    )
+
+    p2 = np.random.randint(
+        0,
+        max_coord,
+        size=(n, 2),
+    )
+
+    # enforce x1<x2, y1<y2
+    xy1 = np.minimum(p1, p2)
+    xy2 = np.maximum(p1, p2)
+
+    boxes = np.hstack([
+        xy1,
+        xy2,
+    ])
+
+    return boxes

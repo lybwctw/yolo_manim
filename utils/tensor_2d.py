@@ -7,6 +7,10 @@ import itertools
 import numpy as np
 from typing import Self
 
+from utils.constants import KK_COLORS
+from utils.general import compute_iou, random_boxes
+
+
 DECIMAL_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 22,
@@ -17,20 +21,33 @@ DECIMAL_CONFIG = {
 FONT_SIZE_WIDTH_RATIO = 0.06
 FONT_SIZE_HEIGHT_RATIO = 0.02
 
-# helper functions
+# helper functions here...
 
-
+# TODO, store color_map as member
 class Tensor2D(VMobject):
     def __init__(
         self,
-        data: list | None = None,   # [(n, a), (n, b), (n, c), ...]
+        data: list | np.ndarray | None = None,   # [(n, a), (n, b), (n, c), ...]
+        objs: list | None = None,       # create anew or out-of-the-box
+        mobs: list | None = None,       # create anew or out-of-the-box
+        formatters: list | None = None, # create anew or out-of-the-box
+        col_ratios: list | None = None, # create anew or out-of-the-box
         decimal_config: dict = {},
         arrange_config: dict = {},
     ):
+        """Most complicated and general way of init.
+        """
         super().__init__()
         # TODO, make sure all dim is the same except the last
-        self.formatters, self.col_ratios = self._create_formatters(data)
-        self.data = np.concat(data, axis=-1)    # (n,7)
+        if isinstance(data, np.ndarray):
+            # init from existing
+            self.data = data                        # given array
+            self.formatters = formatters
+            self.col_ratios = col_ratios
+        else:
+            # init anew
+            self.data = np.concat(data, axis=-1)    # a list -> (n,7)
+            self.formatters, self.col_ratios = self._create_formatters(data)
         self.shape = self.data.shape
         self.ndim = self.data.ndim
         self.decimal_config = {**DECIMAL_CONFIG, **decimal_config}
@@ -40,16 +57,25 @@ class Tensor2D(VMobject):
         }
         self.arrange_config = {**auto_arrange_config, **arrange_config}
 
-        self.objs = self._create_objs()
-        self.mobs = self._create_mobs()
-        self._arrange_mobs()
+        if objs and mobs:
+            # init from existing
+            self.objs = objs
+            self.mobs = mobs
+        else:
+            # init anew
+            self.objs = self._create_objs()
+            self.mobs = self._create_mobs()
+            self._arrange_mobs()
+            self.mobs.center()      # invalid center after arrange
+        
+        self.nms_done = False       # FIXME, used while start nms loop
 
         self.add(self.mobs)
     
     def _create_formatters(
         self,
         group: list,
-    ):
+    ) -> tuple:
         """Compute formatter for each col.
            Compute col ratio for each col.
         """
@@ -68,10 +94,12 @@ class Tensor2D(VMobject):
 
     def _create_objs(
         self,
+        data: list | None = None,
     ) -> list:
         """Create a list of list of decimal vmobject.
         """
-        data = self.data.tolist()   # start with list of list
+        if data is None:
+            data = self.data.tolist()   # start with list of list
 
         mobs = []
         for row in data:
@@ -87,27 +115,36 @@ class Tensor2D(VMobject):
     
     def _create_mobs(
         self,
+        objs: list | None = None,
     ) -> VGroup:
-        """Create a vgroup of vgroup of Text based on objs.
+        """Create a vgroup of Text based on objs.
         """
-        return VGroup( *(VGroup(*row) for row in self.objs))
+        if objs is None:
+            objs = self.objs
+        return VGroup(*(mob for row in self.objs for mob in row))
+        # return VGroup( *(VGroup(*row) for row in self.objs))
     
     def _arrange_mobs(
         self,
+        objs: list | VGroup | None = None,
     ) -> Self:
-        """Arrange rows and cols separately
+        """Arrange rows and cols separately.
+           Need manual center.
         """
+        if objs is None:
+            objs = self.objs
+
         cfg = self.arrange_config
 
-        for i, row in enumerate(self.mobs):
+        for i, row in enumerate(objs):
             for j, mob in enumerate(row):
                 dy = i * cfg['cell_height'] * DOWN
                 dx = sum(self.col_ratios[:j+1]) * cfg['cell_width'] * RIGHT
                 mob.align_to(dy, DOWN)
                 mob.align_to(dx, RIGHT)
             
-        self.mobs.center()  # to origin after arrange
-        return self
+        # self.mobs.center()  # to origin after arrange
+        return self     # FIXME: or what else?
 
     def __getitem__(
         self,
@@ -226,7 +263,7 @@ class Tensor2D(VMobject):
         anims = [
             keep_obj.animate.move_to(
                 row_objs[4],
-                aligned_edge=(UL),
+                aligned_edge=RIGHT,
             )
         ]
         for obj in rm_objs:
@@ -271,7 +308,7 @@ class Tensor2D(VMobject):
         mob = Text(
             self.formatters[5].format(self.data[n,5]),
             **self.decimal_config,
-        )
+        ).set_color(KK_COLORS[int(self.data[n,5])])  # from color map
         mob.move_to(self[n,-1], aligned_edge=RIGHT)
         mob.shift(RIGHT * self.col_ratios[5] * self.arrange_config['cell_width'])
 
@@ -364,7 +401,7 @@ class Tensor2D(VMobject):
         **aargs,
     ) -> Animation:
         """Rearrange current rows.
-           Used after filter function.
+           Fill the gaps after filter function.
         """
         buff = buff or self.arrange_config['cell_height']
 
@@ -392,29 +429,255 @@ class Tensor2D(VMobject):
     
     def sort(
         self,
-        reversed: bool = True, # 1->0 by default
+        reverse: bool = True, # 1->0 by default
+        **aargs,
     ) -> Animation:
         """Animation to sort rows according to conf.
            Used before NMS.
         """
-        pass
+        orig_x = self.mobs.get_x()
+        orig_top = self.mobs.get_top()
+
+        # idx = sorted(
+        #     range(len(self.objs)),
+        #     key = lambda i: self.data[i][4],
+        #     reverse = reverse,
+        # )
+        idx = np.argsort(self.data[:,4])
+        if reverse:
+            idx = idx[::-1]
+        self.data = self.data[idx]
+        self.objs = [self.objs[i] for i in idx]
+        mobs = VGroup( VGroup(*row) for row in self.objs)   # vg of vg
+        mobs.generate_target()
+
+        # reposition target tensor
+        self._arrange_mobs(mobs.target)
+        mobs.target.set_x(orig_x).align_to(orig_top, UP)
+        self.mobs = mobs        # update mobs with sorted version
+
+        anim = MoveToTarget(mobs, **aargs)
+        return anim
     
     def split_into_classes(
         self,
-        direction: np.ndarray = DOWN,
-    ) -> list:      # -> (n,6)*[3|2|1]
-        pass
+        buff: float = 0.5,          # vertical buff by default
+        horizontal: bool = False,   # vertical split by default
+        **aargs,
+    ) -> Animation:      # -> (n,6)*[3|2|1], 3 generally
+        """Assume to be 3 classes by default.
+           save ghost data/objs/mobs to popped out later.
+        """
+        ghost_data = {}     # {n -> np.array}
+        ghost_objs = {}     # {n -> list of list of vmobject}
+        ghost_mobs = {}     # {n -> vgroup of vmobject}
 
-    def apply_whole_filter_nms(
+        keys = np.unique(self.data[:, 5])
+        for k in keys:
+            idx = np.where(self.data[:, 5] == k)[0]
+            ghost_data[k] = self.data[idx]
+            ghost_objs[k] = [self.objs[i] for i in idx]
+            # ghost_mobs[k] = VGroup(
+            #     *(mob for i in idx for mob in self[i])
+            # )
+            ghost_mobs[k] = VGroup(
+                VGroup(mob for mob in self[i]) for i in idx 
+            )   # vgroup of vgroup for now, flatten later
+
+        # position reference
+        orig_x = self.mobs.get_x()  # for horizontal split
+        orig_y = self.mobs.get_y()  # for vertical split
+        orig_left = self.mobs.get_left()
+
+        mobs = VGroup(ghost_mobs[k] for k in keys)  # vg of vg of vg
+        mobs.generate_target()
+
+        for t in mobs.target:
+            self._arrange_mobs(t)
+        
+        mobs.target.arrange(
+            direction=DOWN,
+            buff=buff,
+        ).set_y(orig_y).align_to(orig_left, LEFT)
+
+        # remember ghosts to pop out later
+        self.ghost_keys = keys
+        self.ghost_data = ghost_data
+        self.ghost_objs = ghost_objs
+        # flatten mobs first
+        for k in keys:
+            ghost_mobs[k] = VGroup(mob for row in ghost_mobs[k] for mob in row)
+        self.ghost_mobs = ghost_mobs
+        
+        anim = MoveToTarget(mobs, **aargs)
+        return anim
+        
+        # # color setup for test
+        # anims = AnimationGroup(
+        #     vg.animate.set_color(random_color())
+        #     for vg in ghost_mobs.values()
+        # )
+        # return anims
+
+    def pop_ghosts(
         self,
+    ) -> list:      # a list of Tensor2d
+        """Assume to be 3 classes by default.
+           Pop out a list of Tensor2d from ghosts content.
+           TODO, more general and better naming...
+        """
+        res = []
+        for k in self.ghost_keys:
+            data = self.ghost_data[k]
+            objs = self.ghost_objs[k]
+            mobs = self.ghost_mobs[k]
+            formatters = self.formatters
+            col_ratios = self.col_ratios
+            decimal_config = self.decimal_config
+            arrange_config = self.arrange_config
+            res.append(Tensor2D(
+                data,
+                objs,
+                mobs,
+                formatters,
+                col_ratios,
+                decimal_config,
+                arrange_config,
+            ))
+        
+        return res
+
+    def nms_take_best(
+        self,
+        shift: float = 3.5,     # keep mobs shift amount
+        **aargs,
     ) -> Animation:
-        pass
+        """Take the best from candidates.
+           Assume that conf already sorted.
+        """
+        if not hasattr(self, 'nms_keep_data'):
+            self.nms_keep_data = np.empty((0, self.data.shape[1]))
+            self.nms_cand_idxs = list(range(self.data.shape[0]))
+            self.nms_keep_idxs = []
+            self.nms_keep_objs = []
+            self.nms_keep_mobs = VGroup()
+            self.nms_done = False
+
+        # check if the last candidate
+        if len(self.nms_cand_idxs) == 1:
+            self.nms_done = True
+
+        best_idx = self.nms_cand_idxs.pop(0)
+
+        # update idxs for nms
+        self.nms_keep_idxs.append(best_idx)  # a list of kept idx
+
+        # update data for nms
+        self.nms_keep_data = np.vstack([self.nms_keep_data, self.data[best_idx]])
+
+        # update objs and mobs for nms
+        keep_objs = [mob.copy() for mob in self.objs[best_idx]]
+        keep_mobs = VGroup(*keep_objs)
+        self.nms_keep_objs.append(keep_objs)
+        self.nms_keep_mobs.add(keep_mobs)
+        self.add(keep_mobs)
+
+        anims = AnimationGroup(
+            ApplyMethod(self[best_idx].set_opacity, 0.2),       # TODO, fade out factor
+            ApplyMethod(
+                keep_mobs.shift,
+                RIGHT*shift,
+                rate_func=rate_functions.ease_out_back,
+            ),              # shift out copy
+            **aargs,
+        ) # FIXME, at the same time?
+
+        return anims
+    
+    def nms_verify_candidates(
+        self,
+        scene: Scene,
+        iou_thresh: float = 0.25,
+        aargs: dict = {},
+        gargs: dict = {},
+    ):
+        """Compute iou between current best with candicates
+        """
+        ref_idx = self.nms_keep_idxs[-1]
+        ref_box = self.data[ref_idx, :4]
+        ref_mobs = self.nms_keep_mobs[-1]
+
+        auth_idxs = self.nms_cand_idxs
+        auth_boxes = self.data[auth_idxs, :4]
+
+        ious = compute_iou(ref_box, auth_boxes)
+
+        survive_mask = ious <= iou_thresh
+
+        # filter internal candidate idxs
+        self.nms_cand_idxs = [x for x, s in zip(auth_idxs, survive_mask) if s]
+
+        rt = 0.05    # FIXME, replace with aargs
+        mob_line = Line(
+            start=ref_mobs.get_left()-[0.1,0,0],
+            end=self[idx].get_right()+[0.1,0,0],
+            stroke_width=2.4,
+        )
+        mob_iou = Text(
+            text='{:.2f}'.format(iou),
+            font='JetBrains Mono',
+            font_size=15,
+            color=PURE_GREEN if survive else PURE_RED,
+        ).move_to(mob_line)
+
+        for i, idx, survive, iou in zip(range(len(ious)), auth_idxs, survive_mask, ious):
+            if i == 0:
+                scene.play(
+                    Create(mob_line, run_time=rt),
+                )
+                # scene.wait(rt)
+                scene.play(Succession(
+                    mob_line.animate(run_time=rt).set_opacity(0.2),
+                    Create(mob_iou, run_time=rt),
+                ))
+                scene.wait(rt)
+            else:
+                mob_line_target = mob_line.copy().set_end(
+                    end=self[idx].get_right()+[0.1,0,0],
+                )
+                # FIXME, here
+                scene.play(
+                    Transform(mob_line, mob_line_target, run_time=rt),
+                    mob_iou.animate(run_time=rt).move_to(mob_line_target),
+                )
+
+            if not survive:
+                scene.play(ApplyMethod(
+                    self[idx].set_opacity,
+                    0.2,    # TODO, fadeout factor
+                    run_time=rt,
+                ))
+                scene.wait(rt)
+
+            scene.play(
+                Uncreate(mob_iou, run_time=rt),
+            )
+            # scene.wait(rt)
+            scene.play(
+                Uncreate(mob_line, run_time=rt),
+
+            )
+            scene.wait(rt)
+
+        if len(self.nms_cand_idxs) == 0:
+            self.nms_done = True
     
 class Demo(Scene):
     def construct(self):
         tensor = Tensor2D(
             data=[
-                np.random.randint(0,999,(20,4)),
+                # np.random.randint(0,999,(20,4)),
+                random_boxes(20),
                 np.random.uniform(0,1,(20,3))
             ],
             decimal_config={
@@ -435,15 +698,15 @@ class Demo(Scene):
         self.wait()
 
         self.play(AnimationGroup(
-            tensor[:,4].animate.set_color(RED),
-            tensor[:,5].animate.set_color(GREEN),
-            tensor[:,6].animate.set_color(BLUE),
+            tensor[:,4].animate.set_color(KK_COLORS[0]),
+            tensor[:,5].animate.set_color(KK_COLORS[1]),
+            tensor[:,6].animate.set_color(KK_COLORS[2]),
         ))
         self.wait()
 
         self.play(tensor.apply_whole_take_max(
-            aargs={},
-            gargs={'lag_ratio': 0.5, 'run_time': 0.5}
+            aargs={'rate_func': rate_functions.ease_out_back,}, # TODO: rate_func works?
+            gargs={'lag_ratio': 0.2, 'run_time': 1.5}
         ))
         # self.play(AnimationGroup(
         #     *(tensor.apply_row_take_max(i) for i in range(tensor.shape[0])),
@@ -458,7 +721,7 @@ class Demo(Scene):
         ))
         self.wait()
 
-        self.play(tensor[:,4].animate(
+        self.play(tensor[:,4:].animate(
             lag_ratio=0.5,
             run_time=0.5,
         ).set_color(WHITE))
@@ -471,15 +734,88 @@ class Demo(Scene):
         #     lag_ratio=0.5,
         #     run_time=2.0,
         # ))
-        self.play(tensor.apply_whole_filter_conf(
-            conf=0.7,
-            aargs={},
-            gargs={'lag_ratio':0.5, 'run_time':1.0},
-        ))
-        self.wait()
+        # self.play(tensor.apply_whole_filter_conf(
+        #     conf=0.7,
+        #     aargs={},
+        #     gargs={'lag_ratio':0.5, 'run_time':1.0},
+        # ))
+        # self.wait()
 
-        self.play(tensor.rearrange_after_filter(
+        # self.play(tensor.rearrange_after_filter(
+        #     run_time=1.0,
+        #     rate_func=rate_functions.ease_out_back,
+        # ))
+        # self.wait()
+
+        # TODO: setup colors according to cls
+
+        self.play(tensor.sort(
+            reverse=True,
             run_time=1.0,
             rate_func=rate_functions.ease_out_back,
         ))
         self.wait()
+
+        # conf = tensor[:, 4]
+        # self.play(AnimationGroup(
+        #     *(c.animate(
+        #         rate_func=rate_functions.there_and_back,
+        #     ).scale(2.0) for c in conf),
+        #     lag_ratio=0.3,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+        # self.play(tensor[:, 4].animate(
+        #     lag_ratio=0.1,
+        #     run_time=2.0,
+        #     rate_func=rate_functions.there_and_back,
+        # ).scale(2.5))
+        # self.wait()
+
+        # # split into classes
+        # self.play(tensor.split_into_classes(
+        #     buff=0.5,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # tensor_vg = tensor.pop_ghosts()
+        # ta, tb, tc = tensor_vg
+        # tensor_vg = VGroup(*tensor_vg)
+        # self.play(tensor_vg.animate.arrange(RIGHT))
+        # self.wait()
+
+        # # for test new tensors
+        # self.play(AnimationGroup(
+        #     ta[:, 2].animate.set_color(GREEN),
+        #     tb[1:3, 2:4].animate.set_color(RED),
+        #     tc[1, :].animate.set_color(BLUE),
+        # ))
+        # self.wait()
+
+        # TODO, need elegant way..
+        while True:
+            # self.play(tensor.apply_once_nms(
+            #     iou_thresh=0.05,
+            # ))
+            # self.wait(0.5)
+            self.play(tensor.nms_take_best(
+                shift=3.6,
+                run_time=0.3,
+            ))
+            self.wait(0.5)
+
+            if tensor.nms_done:
+                break
+
+            # self.play(tensor.nms_verify_candidates(
+            tensor.nms_verify_candidates(
+                self,
+                iou_thresh=0.05,
+                aargs={},
+                gargs={},
+            )
+            self.wait(0.5)
+
+            if tensor.nms_done:
+                break
