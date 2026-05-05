@@ -92,6 +92,7 @@ class Card(VMobject):
         )
         self.add(self.square, self.decimal)
 
+# TODO: use objs as naming of list of list
 class MCube(VMobject):
     def __init__(
         self,
