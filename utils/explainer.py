@@ -10,7 +10,7 @@ from utils.yolo_annotation import SingleAnnotation
 from utils.line_matrix import LineMatrix
 from utils.general import tensor_to_line_matrix
 from utils.constants import MINI_32_DIST_PATH, MINI_32_PROB_PATH
-from utils.tensor_2d import Tensor2D
+from deprecated.tensor_2d_depre import Tensor2D
 
 import numpy as np
 import torch
@@ -38,7 +38,7 @@ class Explainer(VGroup):
     ):
         super().__init__()
         self.background = background
-        self.sf_nominal = sf_nominal,
+        self.sf_nominal = sf_nominal
 
         assert dist_3d.shape[:2] == prob_3d.shape[:2]
 
@@ -54,8 +54,6 @@ class Explainer(VGroup):
         indices_3d = np.stack([ys, xs], axis=-1)
         indices_2d = indices_3d.reshape(-1, 2)
 
-        # xs = (xs + 0.5) * self.sf_nominal
-        # ys = (ys + 0.5) * self.sf_nominal
         xs = xs + 0.5
         ys = ys + 0.5
 
@@ -65,8 +63,8 @@ class Explainer(VGroup):
         xs_2d = xs.reshape(-1)
         ys_2d = ys.reshape(-1)
 
-        dist_2d = dist_3d.reshape(-1, 4)
-        prob_2d = prob_3d.reshape(-1, 3)
+        # dist_2d = dist_3d.reshape(-1, 4)
+        # prob_2d = prob_3d.reshape(-1, 3)
 
         x1 = xs_2d - dist_2d[:, 0]
         y1 = ys_2d - dist_2d[:, 1]
@@ -77,22 +75,23 @@ class Explainer(VGroup):
         xyxy_3d = xyxy_2d.reshape(h, w, 4)
 
         xyxycls_2d = np.concat([xyxy_2d, prob_2d], axis=-1)
-        xyxycls_3d = xyxycls_2d.reshape(h, w, 4+3)
+        # xyxycls_3d = xyxycls_2d.reshape(h, w, 4+3)
+        xyxycls_3d = xyxycls_2d.reshape(h, w, -1)
 
-        # common 2d/3d tensors
+        # init core members
         self.shape = (h, w)
-        self.indices_3d = indices_3d
-        self.indices_2d = indices_2d
-        self.center_3d = center_3d
-        self.center_2d = center_2d
-        self.dist_3d = dist_3d
-        self.dist_2d = dist_2d
-        self.xyxy_3d = xyxy_3d
-        self.xyxy_2d = xyxy_2d
-        self.prob_3d = prob_3d
-        self.prob_2d = prob_2d
-        self.xyxycls_3d = xyxycls_3d
-        self.xyxycls_2d = xyxycls_2d
+        self.indices_3d = indices_3d        # (h,w, 2)
+        self.indices_2d = indices_2d        # (h*w, 2)
+        self.center_3d = center_3d          # (h,w, 2)
+        self.center_2d = center_2d          # (h*w, 2)
+        self.dist_3d = dist_3d              # (h,w, 4)
+        self.dist_2d = dist_2d              # (h*w, 4)
+        self.xyxy_3d = xyxy_3d              # (h,w, 4)
+        self.xyxy_2d = xyxy_2d              # (h*w, 4)
+        self.prob_3d = prob_3d              # (h,w, 3)
+        self.prob_2d = prob_2d              # (h*w, 3)
+        self.xyxycls_3d = xyxycls_3d        # (h,w, 7)
+        self.xyxycls_2d = xyxycls_2d        # (h*w, 7)
 
         # FIXME, more elegant way?
         self.tmp_txts = None
@@ -285,7 +284,8 @@ class Explainer(VGroup):
     
     def show_multi_labels(
         self,
-        label_config: dict = {},             # rectangle config
+        label_config: dict = {},    # font size 12 by default
+        box_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
@@ -295,6 +295,7 @@ class Explainer(VGroup):
         anim = AnimationGroup(
             *(ap.show_multi_labels(
                 label_config=label_config,
+                box_config=box_config,
                 **aargs,
             ) for ap in self.anchor_points),
             **gargs,
@@ -305,6 +306,7 @@ class Explainer(VGroup):
         self,
         rect_config: dict = {},
         label_config: dict = {},
+        box_config: dict = {},
         rargs: dict = {},       # to_rect animation args
         largs: dict = {},       # show_multi_labels animation args
         gargs: dict = {},       # ap.show_rect_mlabels group args
@@ -316,6 +318,7 @@ class Explainer(VGroup):
             *(ap.show_rect_mlabels(
                 rect_config=rect_config,
                 label_config=label_config,
+                box_config=box_config,
                 rargs=rargs,
                 largs=largs,
                 gargs=gargs,

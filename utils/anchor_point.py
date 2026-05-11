@@ -70,14 +70,50 @@ PBAR_CONFIG = {
 CLASS_COLORS = PBAR_COLORS
 
 # label related
-LABEL_WIDTH_RATIO = 0.6             # label width / unit
-LABEL_HEIGHT_RATIO = 0.4            # label height / width
 LABEL_COLORS = PBAR_COLORS
 LABEL_CONFIG = {
-    'stroke_width': 2,
-    'stroke_opacity': 1.0,
-    'fill_opacity': 1.0,
+    'font': 'JetBrains Mono',
+    'font_size': 12,
+    'color': WHITE,
 }
+BOX_CONFIG = {
+    'stroke_width': 0,
+    'stroke_opacity': 0.0,
+    'opacity': 1.0,
+    'buff': 0.03,
+}
+
+class AnchorLabel(VMobject):
+    def __init__(
+        self,
+        text: str = 'None',
+        label_config: dict = {},        # text config
+        box_config: dict = {},          # background config
+    ):
+        """Use the same interface as native Label class.
+        """
+        super().__init__()
+        self.text = text
+        self.label_config = {**LABEL_CONFIG, **label_config}
+        self.box_config = {**BOX_CONFIG, **box_config}
+
+        mob_text = Text(
+            text=self.text,
+            **self.label_config,
+        ).add_background_rectangle(
+            **self.box_config,
+        )
+
+        mob_box = Rectangle(
+            stroke_width=0,
+            width=mob_text.background_rectangle.width,
+            height=mob_text.background_rectangle.height,
+        ).set_style(
+            **mob_text.background_rectangle.get_style(simple=True),
+        ).move_to(mob_text.background_rectangle)
+        mob_text.remove(mob_text.background_rectangle)
+
+        self.add(mob_box, mob_text)
 
 class AnchorPoint(VMobject):
     def __init__(
@@ -548,35 +584,34 @@ class AnchorPoint(VMobject):
     
     def create_multi_labels(
         self,
-        **label_config,                      # rectangle config
+        label_config: dict = {},        # font size 12 by default
+        box_config: dict = {},
     ) -> VGroup:
         """Create multi labels, not positioned.
         """
-        label_width_ratio = label_config.pop('width_ratio', LABEL_WIDTH_RATIO)
-        label_height_ratio = label_config.pop('height_ratio', LABEL_HEIGHT_RATIO)
-        label_width = self.sf_screen * label_width_ratio
-        label_height = self.sf_screen * label_height_ratio
-        cfg = {**LABEL_CONFIG, **label_config}
+        label_config = {**LABEL_CONFIG, **label_config}
+        box_config = {**BOX_CONFIG, **box_config}
+
         labels = VGroup(
-            Rectangle(
-                width=label_width,
-                height=label_height,
-                stroke_color=color,
-                fill_color=color,
-                **cfg,
-            ) for color in LABEL_COLORS
-        ).arrange(buff=0)
+            AnchorLabel(
+                text='{:.2f}'.format(prob),
+                label_config=label_config,
+                box_config={**box_config, 'color': color},  # TODO: Label's interface
+            ) for prob, color in zip(self.prob, LABEL_COLORS)
+        ).arrange(RIGHT, buff=0.0)
         return labels
     
     def show_multi_labels(
         self,
-        label_config: dict = {},             # rectangle config
+        label_config: dict = {},        # font size 12 by default
+        box_config: dict = {},
         **aargs,
     ) -> Animation:
         """Add labels as new member.
         """
         labels = self.create_multi_labels(
-            **label_config,
+            label_config=label_config,
+            box_config=box_config,
         ).move_to(
             self.rect.get_corner(UL),
             aligned_edge=DL,
@@ -585,15 +620,12 @@ class AnchorPoint(VMobject):
         self.add(self.labels)
 
         return Write(self.labels, **aargs)
-        # return AnimationGroup(
-        #     *(Write(label, **aargs) for label in labels),
-        #     **gargs,
-        # )
     
     def show_rect_mlabels(
         self,
         rect_config: dict = {},
         label_config: dict = {},
+        box_config: dict = {},
         rargs: dict = {},       # to_rect animation args
         largs: dict = {},       # show_multi_labels animation args
         gargs: dict = {},       # group args
@@ -607,6 +639,7 @@ class AnchorPoint(VMobject):
             ),
             self.show_multi_labels(
                 label_config=label_config,
+                box_config=box_config,
                 **largs
             ),
             **gargs,
@@ -618,8 +651,7 @@ class AnchorPoint(VMobject):
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Apply max conf filter.
-           cls and conf created here.
+        """FIXME: Apply max conf selection from parent explainer.
         """
         max_idx = np.argmax(self.prob)
         max_label = self.labels[max_idx]
