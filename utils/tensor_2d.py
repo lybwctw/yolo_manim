@@ -134,7 +134,8 @@ class Tensor2D(VMobject):
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
     ) -> Tensor2D:
-        """Replace the last n-4 cols with max.
+        """[Internal animation]
+           Replace the last n-4 cols with max.
         """
         # containers for building new tensor
         res_data = np.empty((0, 6))     # always 4+2
@@ -244,11 +245,12 @@ class Tensor2D(VMobject):
     def into_filter_conf(
         self,
         scene: Scene,
-        conf: float = 0.25,
+        conf_thresh: float = 0.25,
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
     ) -> Tensor2D:
-        """Filter out rows with small conf score.
+        """[Internal animation]
+           Filter out rows with small conf score.
         """
         # containers for building new tensor
         res_data = np.empty((0, 6))     # always 4+2
@@ -259,7 +261,7 @@ class Tensor2D(VMobject):
         mobs_failed = VGroup()
 
         for data_row, obj_row, mob_row in zip(self.data, self.objs, self.mobs):
-            failed = data_row[4] < conf
+            failed = data_row[4] < conf_thresh
             if failed:
                 mobs_failed.add(mob_row)
             else:
@@ -319,7 +321,8 @@ class Tensor2D(VMobject):
         buff: float = 0.25,
         run_time_ratio: float = 1.0,
     ) -> list:
-        """Split into multiple Tensor2D based on cls index.
+        """[Internal animation]
+           Split into multiple Tensor2D based on cls index.
            NOTE: Assume that col [5] is cls index.
         """
         # containers for building new tensors
@@ -388,7 +391,8 @@ class Tensor2D(VMobject):
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
     ) -> Tensor2D:
-        """Sort rows according to conf col [4].
+        """[Internal animation]
+           Sort rows according to conf col [4].
         """
         idxs = np.argsort(self.data[:,4])
         if reverse:
@@ -438,7 +442,8 @@ class Tensor2D(VMobject):
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
     ) -> Tensor2D:
-        """Apply NMS filter.
+        """[Internal animation]
+           Apply NMS filter.
         """
         # containers for building new tensor
         res_data = np.empty((0, 6))     # always 4+2

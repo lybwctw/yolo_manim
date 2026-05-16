@@ -113,7 +113,9 @@ class AnchorLabel(VMobject):
         ).move_to(mob_text.background_rectangle)
         mob_text.remove(mob_text.background_rectangle)
 
-        self.add(mob_box, mob_text)
+        self.mob_text = mob_text
+        self.mob_box = mob_box
+        self.add(self.mob_box, self.mob_text)
 
 class AnchorPoint(VMobject):
     def __init__(
@@ -624,7 +626,7 @@ class AnchorPoint(VMobject):
     def show_rect_mlabels(
         self,
         rect_config: dict = {},
-        label_config: dict = {},
+        label_config: dict = {},        # font size 12 by default
         box_config: dict = {},
         rargs: dict = {},       # to_rect animation args
         largs: dict = {},       # show_multi_labels animation args
@@ -648,12 +650,13 @@ class AnchorPoint(VMobject):
 
     def apply_max_select(
         self,
+        max_idx: int = 0,       # the max index to keep
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """FIXME: Apply max conf selection from parent explainer.
+        """Select max conf label and append cls label.
         """
-        max_idx = np.argmax(self.prob)
+        # max_idx = np.argmax(self.prob)
         max_label = self.labels[max_idx]
 
         self.cls = max_idx              # remember max class index
@@ -674,6 +677,30 @@ class AnchorPoint(VMobject):
         self.labels.remove(*labels_to_remove)
         
         return AnimationGroup(*anims, **gargs)
+    
+    def use_color(
+        self,
+        color: ManimColor = PURE_YELLOW,
+    ) -> Self:
+        """TODO: better naming?
+           Setup fill color of labels[0].mob_box and stroke color of mob.
+           Usually used after save_state, to be restored soon.
+        """
+        self.labels[0].mob_box.set_fill(color=color, opacity=1.0)
+        self.mob.set_stroke(color=color)
+        return self
+    
+    def use_opacity(
+        self,
+        opacity: float = 1.0,
+    ) -> Self:
+        """TODO: better naming?
+           Setup fill opacity of labels[0].mob_box and stroke opacity of mob.
+           Usually used after save_state, to be restored soon.
+        """
+        self.labels[0].mob_box.set_fill(opacity=opacity)
+        self.mob.set_stroke(opacity=opacity)
+        return self
     
     def clip_to_background(
         self,

@@ -8,7 +8,7 @@ from utils.image_raw import ImageRaw
 from utils.image_pad import ImagePad
 from utils.yolo_annotation import SingleAnnotation
 from utils.line_matrix import LineMatrix
-from utils.general import tensor_to_line_matrix
+from utils.general import tensor_to_line_matrix, compute_iou
 from utils.constants import MINI_32_DIST_PATH, MINI_32_PROB_PATH
 from deprecated.tensor_2d_depre import Tensor2D
 
@@ -81,17 +81,18 @@ class Explainer(VGroup):
         # init core members
         self.shape = (h, w)
         self.indices_3d = indices_3d        # (h,w, 2)
-        self.indices_2d = indices_2d        # (h*w, 2)
+        self.indices_2d = indices_2d        # (h*w, 2), TODO: update?
         self.center_3d = center_3d          # (h,w, 2)
-        self.center_2d = center_2d          # (h*w, 2)
+        self.center_2d = center_2d          # (h*w, 2), TODO: update?
         self.dist_3d = dist_3d              # (h,w, 4)
-        self.dist_2d = dist_2d              # (h*w, 4)
+        self.dist_2d = dist_2d              # (h*w, 4), TODO: update?
         self.xyxy_3d = xyxy_3d              # (h,w, 4)
-        self.xyxy_2d = xyxy_2d              # (h*w, 4)
+        self.xyxy_2d = xyxy_2d              # (h*w, 4), TODO: update?
         self.prob_3d = prob_3d              # (h,w, 3)
-        self.prob_2d = prob_2d              # (h*w, 3)
+        self.prob_2d = prob_2d              # (h*w, 3), TODO: update?
         self.xyxycls_3d = xyxycls_3d        # (h,w, 7)
-        self.xyxycls_2d = xyxycls_2d        # (h*w, 7)
+        self.xyxycls_2d = xyxycls_2d        # (h*w, 7), TODO: update?
+        self.data = xyxycls_2d.copy()       # (h*w, 7), for manipulation
 
         # FIXME, more elegant way?
         self.tmp_txts = None
@@ -329,57 +330,302 @@ class Explainer(VGroup):
 
     def apply_max_select(
         self,
-        aargs: dict = {},       # animation args
-        gargs: dict = {},       # group args
-        ggargs: dict = {},      # group of group args
-    ) -> Animation:
-        """[A] Apply max conf filter.
+        scene: Scene,
+        run_time_ratio: float = 1.0,
+    ) -> None:
+        """[Internal animation]
+           Apply max conf filter.
            Keep max label for all anchor points.
            cls and conf created here.
         """
-        anim = AnimationGroup(
+        res_data = np.empty((0, 6))     # always 4+2
+
+        max_idxs = []
+        for row in self.data:
+            max_idx = row[4:].argmax()    # local max index
+            max_idxs.append(max_idx)
+
+            row_n = np.concat([row[:4], [row[max_idx+4], max_idx]])  # (x1,y1,x2,y2,conf,cls)
+            res_data = np.vstack([res_data, row_n])
+
+        # update internal data
+        self.data = res_data
+
+        # show take max animation
+        anims = AnimationGroup(
             *(ap.apply_max_select(
-                aargs=aargs,
-                gargs=gargs,
-            ) for ap in self.anchor_points),
-            **ggargs,
+                max_idx=max_idx,
+                aargs={},
+                gargs={},
+            ) for ap, max_idx in zip(self.anchor_points, max_idxs)),
+            run_time=1.0*run_time_ratio,
         )
-        return anim
-    
+        scene.play(anims)
+
+    def show_3d_aps(
+        self,
+        scene: ThreeDScene,     # NOTE: only work for 3d scene
+        offset: float = 5.0,    # distance between bg and conf 1.0
+        run_time_ratio: float = 1.0,
+    ) -> None:
+        """[Internal animation]
+           Show anchor points in a 3d scene.
+        """
+        # change view point
+        scene.move_camera(
+            phi=90*DEGREES,
+            theta=-180*DEGREES,
+            gamma=-90*DEGREES,
+            run_time=1.0 * run_time_ratio,
+            added_anims=[
+                AnimationGroup(
+                    self.animate.shift(IN*offset),
+                    self.background.animate.shift(IN*offset),
+                ),
+            ],
+        )
+        scene.wait(1.0*run_time_ratio)
+
+        for ap in self.anchor_points:
+            ap.save_state()
+        
+        # cool animation to show distribution of conf
+        scene.play(AnimationGroup(
+            *(ap.animate(
+                rate_func=rate_functions.ease_out_back,
+                ).shift(OUT*10*ap.conf)
+                for ap in self.anchor_points),
+            run_time=5.0 * run_time_ratio,
+            lag_ratio=0.5,
+            rate_func=rate_functions.ease_in_out_quart,
+        ))
+        scene.wait(1.0*run_time_ratio)
+
+        # restore anchor points
+        scene.play(AnimationGroup(
+            *(ap.animate(
+                rate_func=rate_functions.ease_in_out_quart,
+                ).restore()
+                for ap in self.anchor_points),
+            run_time=1.0 * run_time_ratio,
+            lag_ratio=0.0,
+        ))
+        scene.wait(1.0*run_time_ratio)
+
+        # change view back
+        scene.move_camera(
+            phi=0*DEGREES,
+            theta=-90*DEGREES,
+            gamma=0*DEGREES,
+            run_time=1.0*run_time_ratio,
+            added_anims=[
+                AnimationGroup(
+                    self.animate.shift(OUT*offset),
+                    self.background.animate.shift(OUT*offset),
+                ),
+            ],
+        )
+        scene.wait(1.0*run_time_ratio)
+
     def apply_conf_filter(
         self,
-    ) -> Animation:
-        """[B] Apply conf filter.
+        scene: Scene,
+        conf_thresh: float = 0.25,
+        run_time_ratio: float = 1.0,
+    ) -> None:
+        """[Internal animation]
+           Apply conf filter inplace.
         """
-        pass
+        res_data = np.empty((0, self.data.shape[1]))
+
+        remove_idxs = []
+        remove_aps = VGroup()
+        for idx, row in enumerate(self.data):
+            if row[4] < conf_thresh:
+                remove_idxs.append(idx)
+                remove_aps.add(self.anchor_points[idx])
+            else:
+                res_data = np.vstack([res_data, row])
+        
+        # update internal data
+        self.data = res_data
+
+        # fade all low conf aps before removing
+        scene.play(AnimationGroup(
+            *(ApplyMethod(ap.fade, 0.8)
+             for ap in remove_aps),
+            lag_ratio=0.3,
+            run_time=1.0*run_time_ratio,
+        ))
+        scene.wait(1.0*run_time_ratio)
+
+        # unwrite all low conf aps
+        anims = AnimationGroup(
+            *(Unwrite(ap) for ap in remove_aps[::-1]),  # reverse for better visual effect
+            lag_ratio=0.3,
+            run_time=1.0*run_time_ratio,
+        )
+        scene.play(anims)
+        scene.wait(1.0*run_time_ratio)
+
+        # remove aps from group
+        self.anchor_points.remove(*remove_aps)
     
     def apply_sort(
         self,
-    ) -> Animation:
+        scene: Scene,
+    ) -> None:
         """Sort aps according to conf.
            Cool expansion->sorting animation.
            No significant change after sort.
+           Nothing for now.
         """
         pass
+
+    def take_aps_with_cls(
+        self,
+        cls: int = -1,  # NMS between all classes by default
+    ) -> tuple:
+        """Take aps with specific cls, return their indices and the rest.
+        """
+        work_idxs = []
+        other_idxs = []
+        for idx, row in enumerate(self.data):
+            if cls == -1 or int(row[5]) == cls:
+                work_idxs.append(idx)
+            else:
+                other_idxs.append(idx)
+        return work_idxs, other_idxs
     
     def apply_nms_filter(
         self,
-    ) -> Animation:
-        """[C] Apply NMS filter.
+        scene: ThreeDScene,             # only works for 3d scene
+        cls: int = -1,                  # NMS between all classes by default
+        iou_thresh: float = 0.75,       # IOU threshold for NMS
+        offset: float = 2.0,            # keep space offset
+        run_time_ratio: float = 1.0,
+    ) -> None:
+        """[Internal animation]
+           Apply NMS filter for specific class or for all.
+           Sort aps and append, sort data and append.
         """
-        pass
+        work_idxs, other_idxs = self.take_aps_with_cls(cls)
+        if len(work_idxs) == 0:
+            return
+
+        work_aps = VGroup(self.anchor_points[idx] for idx in work_idxs)
+        work_data = self.data[work_idxs]
+        other_aps = VGroup(self.anchor_points[idx] for idx in other_idxs)
+        other_data = self.data[other_idxs]
+
+        # sort working aps and data according to conf
+        idxs = np.argsort(work_data[:,4])[::-1]         # sorted idxs
+        work_data = work_data[idxs]                     # sorted data
+        work_aps = VGroup(*(work_aps[i] for i in idxs)) # sorted aps
+
+        # before NMS: fade other aps
+        if other_aps:
+            other_aps.save_state()
+            scene.play(other_aps.animate(
+                lag_ratio=0.0,      # fade all at once
+                run_time=1.0 * run_time_ratio,
+            ).fade(0.9)) # send to back
+            scene.wait(1.0 * run_time_ratio)
+        
+        # NMS animations
+        res_data = np.empty((0, work_data.shape[1]))
+        cand_idxs = list(range(len(work_aps)))
+        while len(cand_idxs) > 0:
+            k_idx = cand_idxs.pop(0)
+            k_data = work_data[k_idx]
+            k_box = k_data[:4]
+            k_ap = work_aps[k_idx]
+
+            res_data = np.vstack([res_data, k_data])
+
+            # shift out current best ap and stress it
+            scene.play(k_ap.animate(
+                run_time=1.0*run_time_ratio,
+                rate_func=rate_functions.ease_out_back,
+            ).shift(OUT*offset))
+            k_ap.save_state()       # always save state for those kept
+            scene.play(k_ap.animate(
+                run_time=1.0*run_time_ratio,
+            ).use_color(PURE_YELLOW))
+            scene.wait(1.0*run_time_ratio)
+
+            # done if the last shifted out
+            if len(cand_idxs) == 0:
+                break
+
+            # compute ious between best and candidates
+            cand_boxes = work_data[cand_idxs, :4]
+            ious = compute_iou(k_box, cand_boxes)
+            survive_mask = ious <= iou_thresh
+
+            for idx, survive, iou in zip(cand_idxs, survive_mask, ious):
+                # shift out animation
+                scene.play(work_aps[idx].animate(
+                    run_time=1.0*run_time_ratio,
+                ).shift(OUT*offset))
+                scene.wait(0.5*run_time_ratio)
+
+                # TODO: verify animation, show iou?
+
+                # back or quit
+                if survive:
+                    scene.play(ApplyMethod(
+                        work_aps[idx].use_color, PURE_GREEN,
+                        run_time=0.5*run_time_ratio,
+                        rate_func=rate_functions.there_and_back,
+                    ))
+                    scene.play(work_aps[idx].animate(
+                        run_time=0.5*run_time_ratio,
+                    ).shift(IN*offset))
+                    scene.wait(0.5*run_time_ratio)
+                else:
+                    scene.play(ApplyMethod(
+                        work_aps[idx].use_color, PURE_RED,
+                        run_time=0.5*run_time_ratio,
+                        rate_func=rate_functions.there_and_back,
+                    ))
+                    scene.play(Unwrite(
+                        work_aps[idx],
+                        run_time=0.5*run_time_ratio,
+                    ))
+                    scene.wait(0.5*run_time_ratio)
+            
+            # NOTE: filter cand_idxs using survive_mask
+            cand_idxs = [x for x, s in zip(cand_idxs, survive_mask) if s]
+            scene.play(k_ap.animate(
+                run_time=1.0*run_time_ratio,
+            ).use_opacity(0.3))
+
+
+        # after NMS: restore other aps
+        if other_aps:
+            scene.play(other_aps.animate(
+                lag_ratio=0.0,      # back all at once
+                run_time=1.0 * run_time_ratio,
+            ).restore())
+            scene.wait(1.0 * run_time_ratio)
+        
+        # TODO, update self.data and self.anchor_points
+        
     
     def apply_max_count_filter(
         self,
-    ) -> Animation:
-        """[O] Apply max count filter.
+        scene: Scene,
+    ) -> None:
+        """Apply max count filter.
         """
         pass
 
     def apply_scale_back(
         self,
-    ) -> Animation:
-        """[D] Apply scale back.
+        scene: Scene,
+    ) -> None:
+        """Apply scale back.
         """
         pass
 
@@ -632,6 +878,12 @@ class Explainer(VGroup):
         """Only expose 2d version to user.
         """
         return self.prob_2d
+    
+    # @property
+    # def shape(self):
+    #     """Height of the internal data, changing.
+    #     """
+    #     return self.data.shape
     
     @prob.setter
     def prob(self, prob: np.ndarray):
