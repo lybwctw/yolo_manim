@@ -662,8 +662,14 @@ class AnchorPoint(VMobject):
         self.cls = max_idx              # remember max class index
         self.conf = self.prob[max_idx]  # remember max class conf
         
+        max_target = max_label.copy().move_to(self.labels[0], aligned_edge=DL)
+        max_target.mob_box.set_stroke(
+            color=max_target.mob_box.fill_color,
+            opacity=1.0,
+            width=2,
+        )   # NOTE, visual adjustment for max label
         anims = [
-            Transform(max_label, max_label.copy().move_to(self.labels[0], aligned_edge=DL), **aargs),
+            Transform(max_label, max_target, **aargs),
         ]
         labels_to_remove = []
         for i in range(len(self.labels)):
@@ -681,25 +687,31 @@ class AnchorPoint(VMobject):
     def use_color(
         self,
         color: ManimColor = PURE_YELLOW,
+        font_color: ManimColor = None,
     ) -> Self:
         """TODO: better naming?
            Setup fill color of labels[0].mob_box and stroke color of mob.
            Usually used after save_state, to be restored soon.
         """
-        self.labels[0].mob_box.set_fill(color=color, opacity=1.0)
+        # self.labels[0].mob_box.set_fill(color=color, opacity=1.0)
+        # self.labels[0].mob_box.set_stroke(color=color, opacity=1.0)
+        self.labels[0].mob_box.set_color(color=color)
         self.mob.set_stroke(color=color)
+        if font_color is not None:
+            self.labels[0].mob_text.set_color(color=font_color)
         return self
     
-    def use_opacity(
+    def use_fade(
         self,
-        opacity: float = 1.0,
+        darkness: float = 0.5,
     ) -> Self:
-        """TODO: better naming?
-           Setup fill opacity of labels[0].mob_box and stroke opacity of mob.
-           Usually used after save_state, to be restored soon.
+        """NOTE: better naming?
+           Fade all, hide label_box's stroke for better visual effect.
         """
-        self.labels[0].mob_box.set_fill(opacity=opacity)
-        self.mob.set_stroke(opacity=opacity)
+        self.labels[0].mob_box.fade(darkness=darkness)
+        self.labels[0].mob_box.set_stroke(opacity=0.0)
+        self.labels[0].mob_text.fade(darkness=darkness)
+        self.mob.fade(darkness=darkness)
         return self
     
     def clip_to_background(

@@ -18,8 +18,8 @@ import torch
 # TODO, rename
 PATH_DIST_BBOX = 'assets/tensors/_dist_box.pt'
 PATH_NORM_CLS = 'assets/tensors/_norm_cls.pt'
-PATH_DIST_BBOX_MINI = 'assets/numpy/mini_32_dist.npy'
-PATH_NORM_CLS_MINI = 'assets/numpy/mini_32_prob.npy'
+PATH_DIST_BBOX_MINI = 'assets/numpy/dist_10x10.npy'
+PATH_NORM_CLS_MINI = 'assets/numpy/prob_10x10.npy'
 
 TEXT_XY_CONFIG = {
     'font': 'JetBrains Mono',
@@ -452,7 +452,7 @@ class Explainer(VGroup):
 
         # fade all low conf aps before removing
         scene.play(AnimationGroup(
-            *(ApplyMethod(ap.fade, 0.8)
+            *(ApplyMethod(ap.use_fade, 0.8)
              for ap in remove_aps),
             lag_ratio=0.3,
             run_time=1.0*run_time_ratio,
@@ -508,6 +508,7 @@ class Explainer(VGroup):
         """[Internal animation]
            Apply NMS filter for specific class or for all.
            Sort aps and append, sort data and append.
+           TODO: fast mode, filter candidates all at onces.
         """
         work_idxs, other_idxs = self.take_aps_with_cls(cls)
         if len(work_idxs) == 0:
@@ -523,17 +524,23 @@ class Explainer(VGroup):
         work_data = work_data[idxs]                     # sorted data
         work_aps = VGroup(*(work_aps[i] for i in idxs)) # sorted aps
 
-        # before NMS: fade other aps
+        # fade other aps before NMS
         if other_aps:
             other_aps.save_state()
-            scene.play(other_aps.animate(
-                lag_ratio=0.0,      # fade all at once
-                run_time=1.0 * run_time_ratio,
-            ).fade(0.9)) # send to back
+            scene.play(AnimationGroup(
+                *(ap.animate.use_fade(0.9) for ap in other_aps),
+                lag_ratio=0.0,
+                run_time=1.0*run_time_ratio,
+            ))
+            # scene.play(other_aps.animate(
+            #     lag_ratio=0.0,      # fade all at once
+            #     run_time=1.0 * run_time_ratio,
+            # ).fade(0.9)) # send to back
             scene.wait(1.0 * run_time_ratio)
         
         # NMS animations
         res_data = np.empty((0, work_data.shape[1]))
+        res_aps = VGroup()
         cand_idxs = list(range(len(work_aps)))
         while len(cand_idxs) > 0:
             k_idx = cand_idxs.pop(0)
@@ -542,20 +549,29 @@ class Explainer(VGroup):
             k_ap = work_aps[k_idx]
 
             res_data = np.vstack([res_data, k_data])
+            res_aps.add(k_ap)
 
             # shift out current best ap and stress it
             scene.play(k_ap.animate(
                 run_time=1.0*run_time_ratio,
-                rate_func=rate_functions.ease_out_back,
+                # rate_func=rate_functions.ease_out_back,
             ).shift(OUT*offset))
-            k_ap.save_state()       # always save state for those kept
+            k_ap.set_z_index(1)     # bring to front
+            k_ap.save_state()       # save state for kept aps
             scene.play(k_ap.animate(
                 run_time=1.0*run_time_ratio,
-            ).use_color(PURE_YELLOW))
-            scene.wait(1.0*run_time_ratio)
+            ).use_color(
+                color=PURE_YELLOW,
+                font_color=BLACK,
+            ))
+            # scene.wait(1.0*run_time_ratio)
 
             # done if the last shifted out
             if len(cand_idxs) == 0:
+                # NOTE: optional fade of out the last ap
+                scene.play(k_ap.animate(
+                    run_time=1.0*run_time_ratio,
+                ).use_fade(0.8))
                 break
 
             # compute ious between best and candidates
@@ -564,54 +580,77 @@ class Explainer(VGroup):
             survive_mask = ious <= iou_thresh
 
             for idx, survive, iou in zip(cand_idxs, survive_mask, ious):
-                # shift out animation
+                # shift out to verify
+                work_aps[idx].save_state()
                 scene.play(work_aps[idx].animate(
                     run_time=1.0*run_time_ratio,
                 ).shift(OUT*offset))
-                scene.wait(0.5*run_time_ratio)
+                # scene.wait(0.5*run_time_ratio)
 
                 # TODO: verify animation, show iou?
 
                 # back or quit
                 if survive:
-                    scene.play(ApplyMethod(
-                        work_aps[idx].use_color, PURE_GREEN,
-                        run_time=0.5*run_time_ratio,
-                        rate_func=rate_functions.there_and_back,
-                    ))
+                    # scene.play(ApplyMethod(
+                    #     work_aps[idx].use_color, PURE_GREEN,
+                    #     run_time=0.5*run_time_ratio,
+                    # ))
                     scene.play(work_aps[idx].animate(
                         run_time=0.5*run_time_ratio,
-                    ).shift(IN*offset))
-                    scene.wait(0.5*run_time_ratio)
+                    ).restore())
+                    # scene.play(work_aps[idx].animate(
+                    #     run_time=0.5*run_time_ratio,
+                    # ).shift(IN*offset))
+                    # scene.wait(0.5*run_time_ratio)
                 else:
                     scene.play(ApplyMethod(
                         work_aps[idx].use_color, PURE_RED,
-                        run_time=0.5*run_time_ratio,
-                        rate_func=rate_functions.there_and_back,
+                        run_time=1.0*run_time_ratio,
                     ))
                     scene.play(Unwrite(
                         work_aps[idx],
-                        run_time=0.5*run_time_ratio,
+                        run_time=1.0*run_time_ratio,
                     ))
-                    scene.wait(0.5*run_time_ratio)
+                    # scene.remove(work_aps[idx]) # remove from scene?
+                    # scene.wait(0.5*run_time_ratio)
             
-            # NOTE: filter cand_idxs using survive_mask
-            cand_idxs = [x for x, s in zip(cand_idxs, survive_mask) if s]
+            # fade current best ap
             scene.play(k_ap.animate(
                 run_time=1.0*run_time_ratio,
-            ).use_opacity(0.3))
+            ).use_fade(0.8))
+            # scene.wait(0.5*run_time_ratio)
 
+            # NOTE: filter cand_idxs using survive_mask
+            cand_idxs = [x for x, s in zip(cand_idxs, survive_mask) if s]
+        
+        # restore opacity and color of all kept aps
+        scene.play(AnimationGroup(
+            *(ap.animate.restore() for ap in res_aps),
+            run_time=1.0*run_time_ratio,
+            lag_ratio=0.5,
+        ))
+        scene.wait(1.0*run_time_ratio)
 
-        # after NMS: restore other aps
+        # shift back those kept
+        scene.play(AnimationGroup(
+            *(ap.animate.shift(IN*offset) for ap in res_aps),
+            run_time=1.0*run_time_ratio,
+            lag_ratio=0.5,
+        ))
+
+        # restore other aps
         if other_aps:
             scene.play(other_aps.animate(
                 lag_ratio=0.0,      # back all at once
                 run_time=1.0 * run_time_ratio,
             ).restore())
             scene.wait(1.0 * run_time_ratio)
-        
-        # TODO, update self.data and self.anchor_points
-        
+
+        # rebuild anchor_points and data
+        self.anchor_points = VGroup(*other_aps, *res_aps)
+        self.data = np.vstack([other_data, res_data])
+
+        return None
     
     def apply_max_count_filter(
         self,
@@ -1055,8 +1094,6 @@ class Demo(Scene):
         self.play(explainer.show_rect_mlabels(
             rect_config={},
             label_config={
-                'width_ratio': 0.3,
-                'height_ratio': 0.2,
                 'fill_opacity': 0.8,
                 'stroke_opacity': 0.8,
             },

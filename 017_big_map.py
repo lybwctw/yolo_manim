@@ -11,6 +11,7 @@ from utils.explainer import Explainer
 from utils.multi_arrow import MultiArrow
 from utils.general import save_everything
 
+# FIXME: update order issue of system
 class MainScene(Scene):
     def construct(self) -> None:
         # TODO, shift in through video editting

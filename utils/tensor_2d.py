@@ -11,6 +11,8 @@ from typing import Self
 from utils.constants import KK_COLORS
 from utils.general import compute_iou, random_boxes
 
+from utils.explainer import Explainer
+
 DECIMAL_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 22,
@@ -240,6 +242,16 @@ class Tensor2D(VMobject):
             mobs=res_mobs,
         )
         scene.add(result)       # auto add after creation
+
+        # arrange animation to fill gaps
+        scene.play(ApplyMethod(
+            result.arrange_matrix,
+            np.array([result.get_x(), self.get_y(), 0]),
+            rate_func=rate_functions.ease_out_back,
+            run_time=1.0*run_time_ratio,
+        ))
+        scene.wait(0.5*run_time_ratio)
+
         return result
 
     def into_filter_conf(
@@ -308,6 +320,7 @@ class Tensor2D(VMobject):
             result.arrange_matrix,
             np.array([result.get_x(), self.get_y(), 0]),
             rate_func=rate_functions.ease_out_back,
+            run_time=1.0*run_time_ratio,
         ))
         scene.wait(0.5*run_time_ratio)
         
@@ -667,7 +680,18 @@ class Tensor2D(VMobject):
         if len(keys) == 1:
             return nested_get(self.objs, keys[0])
         return VGroup(*(nested_get(self.objs, k) for k in keys))
+    
 
+    def scale(
+        self,
+        scale_factor: float,
+        **kwargs,
+    ) -> Tensor2D:
+        """Override native scale method.
+        """
+        self.cell_width *= scale_factor
+        self.cell_height *= scale_factor
+        return super().scale(scale_factor, **kwargs)
     
     @property
     def rows(self):
@@ -710,14 +734,23 @@ class Tensor2D(VMobject):
     @classmethod
     def from_ref(
         cls,
-        data,
-        objs,
-        mobs,
-        ref,
+        ref: Explainer,
+        decimal_config: dict = {},          # auto or override
+        cell_width: float | None = None,    # auto or override
+        cell_height: float | None = None,   # auto or override
     ):
-        pass
-
-
+        """Build Tensor2D from reference explainer.
+           Use out-of-the-box data.
+        """
+        return Tensor2D.from_list(
+            data_list=[
+                (ref.xyxy_2d * ref.sf_nominal).astype(int),
+                ref.prob_2d,
+            ],
+            decimal_config=decimal_config,
+            cell_width=cell_width,
+            cell_height=cell_height,
+        )
 
 class Demo(Scene):
     def construct(self):
