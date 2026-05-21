@@ -36,7 +36,7 @@ def create_col_ratios(data: np.ndarray) -> list:
 
 
 class Tensor2D(VMobject):
-    """TODO: fade input before animation?
+    """TODO: fade input before animation for better visual effects.
     """
     def __init__(
         self,
@@ -714,6 +714,7 @@ class Tensor2D(VMobject):
         cell_height: float | None = None,   # auto or override
     ):
         """Build Tensor2D from a list of arrays.
+           (m, n1), (m, n2), (m, n3), ...
         """
         # create raw data
         data_raw = np.concat(data_list, axis=-1)
@@ -729,6 +730,30 @@ class Tensor2D(VMobject):
             decimal_config=decimal_config,
             cell_width=cell_width,
             cell_height=cell_height,
+        )
+    
+    @classmethod
+    def from_tensors(
+        cls,
+        tensor_list: list,
+    ):
+        """Concat multiple Tensor2D into a single one.
+           (m1, n), (m2, n), (m3, n), ...
+        """
+        data_new = np.concat([t.data for t in tensor_list])
+        objs_new = [row for t in tensor_list for row in t.objs]
+        mobs_new = VGroup(row for t in tensor_list for row in t.mobs)
+
+        # TODO: use format members from the first
+        return Tensor2D(
+            data=data_new,
+            formatters=tensor_list[0].formatters,
+            col_ratios=tensor_list[0].col_ratios,
+            decimal_config=tensor_list[0].decimal_config,
+            cell_width=tensor_list[0].cell_width,
+            cell_height=tensor_list[0].cell_height,
+            objs=objs_new,
+            mobs=mobs_new,
         )
     
     @classmethod

@@ -14,14 +14,14 @@ TENSOR_GAP = 3
 FAST_RT = 0.1
 
 CONF_THRESH = 0.7
-IOU_THRESH = 0.2
+IOU_THRESH = 0.05
 
 class MainScene(Scene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'start with xyxyccc format',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # FIXME: use background from 017 for better continuity
@@ -53,7 +53,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply take max',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         tensor_cmax = tensor_raw.into_take_max(
@@ -76,7 +76,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply conf filter',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         tensor_conf = tensor_cmax.into_filter_conf(
@@ -100,7 +100,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply class split',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         tensors_split = tensor_conf.into_splitted(
@@ -109,7 +109,6 @@ class MainScene(Scene):
             buff=0.3,
             run_time_ratio=FAST_RT,
         )
-        tensors_split = VGroup(*tensors_split)
         self.wait(FAST_RT)
 
         # TODO: make sure all classes survived?
@@ -119,15 +118,17 @@ class MainScene(Scene):
             tensor_conf,
             run_time=FAST_RT,
         ))
-        self.play(tensors_split.animate(
+        self.play(AnimationGroup(
+            *(t.animate.shift(LEFT*TENSOR_GAP) for t in tensors_split),
+            lag_ratio=0.0,
             run_time=FAST_RT,
-        ).shift(LEFT*TENSOR_GAP))
-        self.wait(1.0)
+        ))
+        self.wait(FAST_RT)
 
         # ************************************************************
         self.next_section(
             'sort each class',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         tensors_sort = []
@@ -135,8 +136,66 @@ class MainScene(Scene):
             t_s = t.into_sort(
                 scene=self,
                 offset=RIGHT*TENSOR_GAP,
-                run_time_ratio=1.0,
+                run_time_ratio=FAST_RT,
             )
             tensors_sort.append(t_s)
+        self.wait(FAST_RT)
+        
+        # replace the multiple olds with multiple news
+        self.play(AnimationGroup(
+            *(Uncreate(t, run_time=1.0) for t in tensors_split),
+            lag_ratio=0.0,
+            run_time=FAST_RT,
+        ))
+        self.play(AnimationGroup(
+            *(t.animate.shift(LEFT*TENSOR_GAP) for t in tensors_sort),
+            lag_ratio=0.0,
+            run_time=FAST_RT,
+        ))
+        self.wait(FAST_RT)
+
+        # ************************************************************
+        self.next_section(
+            'NMS each class',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tensors_nms = []
+        for t in tensors_sort:
+            t_nms = t.into_filter_nms(
+                scene=self,
+                iou_thresh=IOU_THRESH,
+                offset=RIGHT*TENSOR_GAP,
+                run_time_ratio=FAST_RT*0.85,     # even faster run time
+            )
+            tensors_nms.append(t_nms)
             self.wait(0.5)
-        self.wait()
+        
+        # replace the multiple olds with multiple news
+        self.play(AnimationGroup(
+            *(Uncreate(t, run_time=1.0) for t in tensors_sort),
+            lag_ratio=0.0,
+            run_time=FAST_RT,
+        ))
+        self.play(AnimationGroup(
+            *(t.animate.shift(LEFT*TENSOR_GAP) for t in tensors_nms),
+            lag_ratio=0.0,
+            run_time=FAST_RT,
+        ))
+
+        # ************************************************************
+        self.next_section(
+            'concat nms result into a single one',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tensor_nms = Tensor2D.from_tensors(
+            tensor_list=tensors_nms,
+        )
+        self.play(ApplyMethod(
+            tensor_nms.arrange_matrix,
+            ORIGIN,     # NOTE: use screen center as new center
+            rate_func=rate_functions.ease_out_back,
+            run_time=0.5,
+        ))
+        self.wait(0.5)

@@ -3,46 +3,45 @@ from manim import *
 from utils.constants import *
 from utils.image_raw import ImageRaw
 from utils.image_pad import ImagePad
-from utils.general import load_everything
 from utils.arrow_comment import ArrowComment
 from utils.yolo_annotation import YoloAnnotation
 from utils.layers_fake import LayersFake
 from utils.explainer import Explainer
 from utils.multi_arrow import MultiArrow
-from utils.general import save_everything
+from utils.show_shape import ShowShape, HideShape
+from utils.general import export_mobs
 
 # FIXME: update order issue of system
 class MainScene(Scene):
     def construct(self) -> None:
-        # TODO, shift in through video editting
+        # NOTE, shift in box flowchart by video editting
         # ************************************************************
         self.next_section(
             'init all mobs from start',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
-        explainer = Explainer(
+        e32_dist = Explainer.from_random(       # explainer of stride 32 for distance(box)
             background=background,
-            data=np.load(MINI_32_DIST_PATH),
-            data_cls=np.load(MINI_32_PROB_PATH),
-            sf_nominal=32,
+            dist_range=(0.5, 1),
+            prob_range=(0, 1),
+            shape=(4, 4),
         )
 
-        # bbox output flowchart
-        system_dist = Group(explainer, background)
-        system_xyxy = system_dist.copy()
-        system_xyxy_2d = system_xyxy.copy()
-        tensor_32_dist = LayersFake(
+        s32_dist = Group(background, e32_dist)  # system of stride 32 for distance(box)
+        s32_xyxy = s32_dist.copy()              # system of stride 32 for xyxy(box)
+        s32_xyxy_2d = s32_xyxy.copy()           # system of stride 32 for 2d xyxy(box)
+        t32_dist = LayersFake(                  # tensor of stride 32 for distance(box)
             n=4,
-            ref=system_dist[1],
+            ref=s32_dist[0],
             width_nominal=20,
             height_nominal=20,
             buff=0.05,
             expanded=True,
         ).scale(0.92)
-        tensor_32_xyxy = tensor_32_dist.copy()
-        tensor_32_xyxy_2d = LayersFake(
+        t32_xyxy = t32_dist.copy()              # tensor of stride 32 for xyxy(box)
+        t32_xyxy_2d = LayersFake(               # tensor of stride 32 for 2d xyxy(box)
             n=1,
             width=0.5,
             height=2.0,
@@ -51,95 +50,104 @@ class MainScene(Scene):
             expanded=True,
         )
 
-        # class output flowchart
-        system_probs = system_dist.copy()
-        system_probs_2d = system_probs.copy()
-        tensor_32_probs = LayersFake(
+        s32_prob = s32_dist.copy()              # system of stride 32 for prob(cls)
+        s32_prob_2d = s32_prob.copy()           # system of stride 32 for 2d prob(cls)
+        t32_prob = LayersFake(                  # tensor of stride 32 for prob(cls)
             n=3,
-            ref=system_probs[1],
+            ref=s32_prob[0],
             width_nominal=20,
             height_nominal=20,
             buff=0.05,
             expanded=True,
         ).scale(0.92)
-        tensor_32_probs_2d = LayersFake(
+        t32_prob_2d = LayersFake(               # tensor of stride 32 for 2d prob(cls)
             n=1,
-            width=0.3,
+            width=0.4,
             height=2.0,
             width_nominal=3,
             height_nominal=400,
             expanded=True,
         )
 
-        # acb -> ac for bbox
+        # acb -> arrowcomment for box
         acb_ab = ArrowComment(False, RIGHT, '?')
         acb_bc = ArrowComment(False, RIGHT, '?')
-        acb_game = ArrowComment(False, RIGHT, '?')      # stand out
+        acb_game = ArrowComment(False, RIGHT, '?')      # TODO: stand out
         acb_12 = ArrowComment(False, RIGHT, '?')
         acb_23 = ArrowComment(False, RIGHT, '?')
-        acb_post = ArrowComment(False, RIGHT, '?')      # stand out
+        acb_post = ArrowComment(False, RIGHT, '?')      # TODO: stand out
 
-        # acc -> ac for bbox
+        # acc -> arrowcomment for cls
         acc_ab = ArrowComment(False, RIGHT, '?')
-        acc_game = ArrowComment(False, RIGHT, '?')      # stand out
+        acc_game = ArrowComment(False, RIGHT, '?')      # TODO: stand out
         acc_12 = ArrowComment(False, RIGHT, '?')
-        acc_post = ArrowComment(False, RIGHT, '?')      # stand out
+        acc_post = ArrowComment(False, RIGHT, '?')      # TODO: stand out
 
-        # for reference
-        acb_all = VGroup(
-            acb_ab, acb_bc,
+        # reference groups
+        ac_all = VGroup(
+                      acb_ab, acb_bc,
             acb_game, acb_12, acb_23, acb_post,
-        ).scale(0.4)
-        acc_all = VGroup(
-            acc_ab,
+                      acc_ab,
             acc_game, acc_12, acc_post,
-        ).scale(0.4)
+        ).scale(0.4)    # all arrow with comments
+
+        iv32_box = Group(
+            *[Mobject(), s32_dist, acb_ab, s32_xyxy, acb_bc, s32_xyxy_2d, VMobject()],
+        )   # intuition view of stride 32 box
+        tv32_box = Group(
+            *[acb_game,  t32_dist, acb_12, t32_xyxy, acb_23, t32_xyxy_2d, acb_post],
+        )   # tensor view of stride 32 box
+        iv32_cls = Group(
+            *[Mobject(), s32_prob, acc_ab, s32_prob_2d, Mobject()],
+        )   # intuition view of stride 32 cls
+        tv32_cls = Group(
+            *[acc_game,  t32_prob, acc_12, t32_prob_2d, acc_post],
+        )   # tensor view of stride 32 cls
+        flowchart_box = Group(
+            *iv32_box,
+            *tv32_box,
+        ).arrange_in_grid(rows=3, cols=7, buff=0.3,)
+        flowchart_cls = Group(
+            *iv32_cls,
+            *tv32_cls,
+        ).arrange_in_grid(rows=3, cols=5, buff=0.3,).shift(DOWN*10)
         
         # ************************************************************
         self.next_section(
-            'start with bbox output flowchart',
-            skip_animations=False,
+            'show box prediction flowchart',
+            skip_animations=True,
         )
         # ************************************************************
-        manager_bbox = Group(
-            *[VMobject(), system_dist, acb_ab, system_xyxy, acb_bc, system_xyxy_2d, VMobject()],
-            *[acb_game, tensor_32_dist, acb_12, tensor_32_xyxy, acb_23, tensor_32_xyxy_2d, acb_post],
-        ).arrange_in_grid(
-            rows=3,
-            cols=7,
-            buff=0.3,
-        )
-        manager_cls = Group(
-            *[VMobject(), system_probs, acc_ab, system_probs_2d, VMobject()],
-            *[acc_game, tensor_32_probs, acc_12, tensor_32_probs_2d, acc_post],
-        ).arrange_in_grid(
-            rows=3,
-            cols=5,
-            buff=0.3,
-        ).shift(DOWN*10)    # hide for now
-
-        # start with manager_bbox
-        self.add(manager_bbox)
+        self.add(flowchart_box)
         self.wait()
         
-        # bbox: show anchor points for each system
+        # box: show anchor points for each system
         self.play(AnimationGroup(
-            system_dist[0].show_anchor_points(lag_ratio=0),
-            system_xyxy[0].show_anchor_points(lag_ratio=0),
-            system_xyxy_2d[0].show_anchor_points(lag_ratio=0),
+            s32_dist[-1].show_anchor_points(lag_ratio=0),
+            s32_xyxy[-1].show_anchor_points(lag_ratio=0),
+            s32_xyxy_2d[-1].show_anchor_points(lag_ratio=0),
         ))
         self.wait()
 
-        # bbox: show target for each system
+        # box: show target for each system
         self.play(AnimationGroup(
-            system_dist[0].show_arrows(aargs={'lag_ratio':0}, gargs={'run_time':1}),
-            system_xyxy[0].to_rects(
-                rect_config={'width':1, 'color':GRAY},
+            s32_dist[-1].show_arrows(
                 aargs={'lag_ratio':0},
                 gargs={'run_time':1},
             ),
-            system_xyxy_2d[0].to_rects(
-                rect_config={'width':1, 'color':GRAY},
+            s32_xyxy[-1].to_rects(
+                rect_config={
+                    'stroke_width':1,
+                    'stroke_color':GRAY,
+                },
+                aargs={'lag_ratio':0},
+                gargs={'run_time':1},
+            ),
+            s32_xyxy_2d[-1].to_rects(
+                rect_config={
+                    'stroke_width':1,
+                    'stroke_color':GRAY,
+                },
                 aargs={'lag_ratio':0},
                 gargs={'run_time':1},
             ),
@@ -148,31 +156,43 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'shift in class output flowchart',
-            skip_animations=False,
+            'shift in class prediction flowchart',
+            skip_animations=True,
         )
         # ************************************************************
-        self.add(manager_cls)
+        self.add(flowchart_cls)
         self.play(AnimationGroup(
-            manager_bbox.animate.scale(0.63).shift(UP*2),
-            manager_cls.animate.scale(0.63).shift(UP*8.5),
+            flowchart_box.animate.scale(0.63).shift(UP*1.9),
+            flowchart_cls.animate.scale(0.63).shift(UP*8.5),
         ))
         self.wait()
 
-        # class: show anchor points
+        # show anchor points
         self.play(AnimationGroup(
-            system_probs[0].show_anchor_points(lag_ratio=0),
-            system_probs_2d[0].show_anchor_points(lag_ratio=0),
+            s32_prob[-1].show_anchor_points(lag_ratio=0),
+            s32_prob_2d[-1].show_anchor_points(lag_ratio=0),
         ))
 
-        # class: show target for each system
+        # hide anchor points and show pbars
         self.play(AnimationGroup(
-            system_probs[0].show_pbars(
+            AnimationGroup(
+                *(ap.mob.animate.set_opacity(0.0)
+                  for ap in s32_prob[-1].anchor_points),
+                lag_ratio=0.0,
+                run_time=1.0,
+            ),
+            AnimationGroup(
+                *(ap.mob.animate.set_opacity(0.0)
+                  for ap in s32_prob_2d[-1].anchor_points),
+                lag_ratio=0.0,
+                run_time=1.0,
+            ),
+            s32_prob[-1].show_pbars(
                 aargs={},
                 gargs={},
                 ggargs={},
             ),
-            system_probs_2d[0].show_pbars(
+            s32_prob_2d[-1].show_pbars(
                 aargs={},
                 gargs={},
                 ggargs={},
@@ -183,57 +203,46 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
-        # TODO, font size issue on shape texts
-        # bbox: show shapes of each tensor
-        acb_all.save_state()
-        acc_all.save_state()
-        system_dist.save_state()
-        system_xyxy.save_state()
-        system_xyxy_2d.save_state()
-        system_probs.save_state()
-        system_probs_2d.save_state()
+        ac_all.save_state()
+        iv32_box.save_state()
+        iv32_cls.save_state()
+        shape_text_config = {
+            'buff': 0.15,
+            'font_size': 15,
+        }
         self.play(AnimationGroup(
             AnimationGroup(
-                acb_all.animate.fade(0.8),
-                acc_all.animate.fade(0.8),
-                system_dist.animate.fade(0.8),
-                system_xyxy.animate.fade(0.8),
-                system_xyxy_2d.animate.fade(0.8),
-                system_probs.animate.fade(0.8),
-                system_probs_2d.animate.fade(0.8),
+                ac_all.animate.fade(0.8),
+                iv32_box.animate.fade(0.8),
+                iv32_cls.animate.fade(0.8),
             ),
             AnimationGroup(
-                tensor_32_dist.show_passing_flash(),
-                tensor_32_xyxy.show_passing_flash(),
-                tensor_32_xyxy_2d.show_passing_flash(),
-                tensor_32_probs.show_passing_flash(),
-                tensor_32_probs_2d.show_passing_flash(),
+                ShowShape(t32_dist, text_config=shape_text_config),
+                ShowShape(t32_xyxy, text_config=shape_text_config),
+                ShowShape(t32_xyxy_2d, text_config=shape_text_config),
+                ShowShape(t32_prob, text_config=shape_text_config),
+                ShowShape(t32_prob_2d, text_config=shape_text_config),
             ),
             lag_ratio=0.5,
         ))
         self.wait()
 
-        # bbox: hide shapes
-        # restore fails for system objects due to color interpolation issue
+        # FIXME: restore fails for system objects due to color interpolation issue
         self.play(AnimationGroup(
             AnimationGroup(
-                tensor_32_dist.unwrite_shape_texts(),
-                tensor_32_xyxy.unwrite_shape_texts(),
-                tensor_32_xyxy_2d.unwrite_shape_texts(),
-                tensor_32_probs.unwrite_shape_texts(),
-                tensor_32_probs_2d.unwrite_shape_texts(),
+                HideShape(t32_dist),
+                HideShape(t32_xyxy),
+                HideShape(t32_xyxy_2d),
+                HideShape(t32_prob),
+                HideShape(t32_prob_2d),
             ),
             AnimationGroup(
-                acb_all.animate.restore(),
-                acc_all.animate.restore(),
-                Transform(system_dist, system_dist.saved_state),
-                Transform(system_xyxy, system_xyxy.saved_state),
-                Transform(system_xyxy_2d, system_xyxy_2d.saved_state),
-                Transform(system_probs, system_probs.saved_state),
-                Transform(system_probs_2d, system_probs_2d.saved_state),
+                ac_all.animate.restore(),
+                Transform(iv32_box, iv32_box.saved_state),
+                Transform(iv32_cls, iv32_cls.saved_state),
             ),
             lag_ratio=0.5,
         ))
@@ -241,42 +250,30 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'merge bbox line and class flowchart',
-            skip_animations=False,
+            'merge box+cls intuition view and tensor view',
+            skip_animations=True,
         )
         # ************************************************************
-        iview_bbox = Group(
-            *[system_dist, acb_ab, system_xyxy, acb_bc, system_xyxy_2d],
-        )
-        tview_bbox = VGroup(
-            *[acb_game, tensor_32_dist, acb_12, tensor_32_xyxy, acb_23, tensor_32_xyxy_2d, acb_post],
-        )
-        iview_cls = Group(
-            *[system_probs, acc_ab, system_probs_2d],
-        )
-        tview_cls = VGroup(
-            *[acc_game, tensor_32_probs, acc_12, tensor_32_probs_2d, acc_post],
-        )
-
         # rearrange intuition view and tensor view
-        self.play(AnimationGroup(
-            tview_bbox.animate.shift(DOWN*2),
-            iview_cls.animate.shift(UP*2),
-        ))
+        # self.play(AnimationGroup(
+        #     tview_box.animate.shift(DOWN*2),
+        #     iview_cls.animate.shift(UP*2),
+        # ))
+        self.play(Swap(tv32_box, iv32_cls))
         self.wait()
 
         # ************************************************************
         self.next_section(
-            'the merged output in both views',
-            skip_animations=False,
+            'merge input and output arrows in tensor view',
+            skip_animations=True,
         )
         # ************************************************************
-        marrow_in = MultiArrow(
+        marrow_in_tview = MultiArrow(
             one_to_many=True,
             p1=acb_game.get_right(),
             p2=acc_game.get_right(),
         )
-        marrow_out = MultiArrow(
+        marrow_out_tview = MultiArrow(
             one_to_many=False,
             p1=acb_post.get_left()+LEFT*0,
             p2=acc_post.get_left()+LEFT*0,
@@ -291,10 +288,9 @@ class MainScene(Scene):
                 Unwrite(acb_game),
                 Unwrite(acc_game),
             ),
-            Write(marrow_in),
+            Write(marrow_in_tview),
             lag_ratio=0.5,
         ))
-        self.wait()
 
         # merge output arrows
         self.play(AnimationGroup(
@@ -302,94 +298,87 @@ class MainScene(Scene):
                 Unwrite(acb_post),
                 Unwrite(acc_post),
             ),
-            Write(marrow_out),
+            Write(marrow_out_tview),
             lag_ratio=0.5,
         ))
         self.wait()
 
+        # update reference group
+        ac_all.remove(acb_game, acb_post, acc_game, acc_post)
+        ac_all.add(marrow_in_tview, marrow_out_tview)
+        # TODO: iv32, tv32, flowchart..
+
         # ************************************************************
         self.next_section(
-            'tensor view, merge 2d tensors',
-            skip_animations=False,
+            'tensor view: create merged 2d tensor',
+            skip_animations=True,
         )
         # ************************************************************
-        tensor_32_xyxy_2d_copy = tensor_32_xyxy_2d.copy()
-        tensor_32_probs_2d_copy = tensor_32_probs_2d.copy()
+        t32_xyxy_2d_copy = t32_xyxy_2d.copy()
+        t32_prob_2d_copy = t32_prob_2d.copy()
         self.play(AnimationGroup(
-            FadeIn(tensor_32_xyxy_2d_copy),
-            FadeIn(tensor_32_probs_2d_copy),
+            FadeIn(t32_xyxy_2d_copy),
+            FadeIn(t32_prob_2d_copy),
             run_time=0.3,
         ))
         self.wait(0.3)
 
-        tensor_32_xyxy_2d_copy.generate_target()
-        tensor_32_xyxy_2d_copy.target.next_to(marrow_out, RIGHT, buff=0.5)      # manual adjusted
-        tensor_32_probs_2d_copy.generate_target()
-        tensor_32_probs_2d_copy.target.next_to(tensor_32_xyxy_2d_copy.target, RIGHT, buff=0)
-        tensor_copy = VGroup(
-            tensor_32_xyxy_2d_copy,
-            tensor_32_probs_2d_copy,
+        t32_xyxy_2d_copy.generate_target()
+        t32_xyxy_2d_copy.target.next_to(marrow_out_tview, RIGHT, buff=0.5)
+        t32_prob_2d_copy.generate_target()
+        t32_prob_2d_copy.target.next_to(t32_xyxy_2d_copy.target, RIGHT, buff=0)
+        t32_combined = VGroup(
+            t32_xyxy_2d_copy,
+            t32_prob_2d_copy,
         )
         self.play(AnimationGroup(
-            MoveToTarget(tensor_32_xyxy_2d_copy),
-            MoveToTarget(tensor_32_probs_2d_copy),
+            MoveToTarget(t32_xyxy_2d_copy),
+            MoveToTarget(t32_prob_2d_copy),
         ))
         self.wait()
 
         # replace with a single tensor
-        tensor_merged_2d = LayersFake(
+        t32_merged_2d = LayersFake(
             n=1,
-            ref=tensor_copy,
+            ref=t32_combined,
             expanded=True,
             width_nominal=7,
             height_nominal=400,
-        ).move_to(tensor_copy)
+        ).move_to(t32_combined)
         self.play(AnimationGroup(
-            FadeOut(tensor_copy),
-            FadeIn(tensor_merged_2d),       # simply add?
+            FadeOut(t32_combined),
+            FadeIn(t32_merged_2d),       # simply add?
         ))
         self.wait()
 
         # show shape of the merged 2d
-        marrow_out.save_state()
+        marrow_out_tview.save_state()
         self.play(AnimationGroup(
-            marrow_out.animate.fade(0.8),
-            tensor_merged_2d.show_passing_flash(),
+            marrow_out_tview.animate.fade(0.8),
+            ShowShape(t32_merged_2d, text_config=shape_text_config),
             lag_ratio=0.5,
         ))
         self.wait()
         self.play(AnimationGroup(
-            tensor_merged_2d.unwrite_shape_texts(),
-            marrow_out.animate.restore(),
+            HideShape(t32_merged_2d),
+            marrow_out_tview.animate.restore(),
             lag_ratio=0.5,
         ))
         self.wait()
 
         # ************************************************************
         self.next_section(
-            'intuition view, merge outputs',
+            'intuition view, create merge system',
             skip_animations=False,
         )
         # ************************************************************
-        # used in post-process part, scale back later
-        scale_factor = 1.1
-
-        # make a copy of marrow_out in intuition view
-        # marrow_out_iview = marrow_out.copy()
-        # self.add(marrow_out_iview)
-        # self.play(
-        #     marrow_out_iview\
-        #     .animate(run_time=1.0)\
-        #     .align_to(system_xyxy_2d, UP)\
-        #     .shift(system_xyxy_2d.height/2*DOWN),
-        # )
-        # self.wait()
+        merged_scale_factor = 1.1
 
         # use new marrow instead of copy
         marrow_out_iview = MultiArrow(
             one_to_many=False,
-            p1=system_xyxy_2d.get_right()+RIGHT*.2,
-            p2=system_probs_2d.get_right()+RIGHT*.2,
+            p1=s32_xyxy_2d.get_right()+RIGHT*.2,
+            p2=s32_prob_2d.get_right()+RIGHT*.2,
             ratio_input=0.1,
             ratio_brace=0.4,
             ratio_output=0.1,
@@ -398,23 +387,23 @@ class MainScene(Scene):
         self.wait()
 
         # system_merged as a copy of system_xyxy_2d
-        system_merged = system_xyxy_2d.copy()
-        self.play(FadeIn(system_merged, run_time=0.3))
-        self.play(
-            system_merged\
-            .animate(run_time=1.0)\
-            .scale(scale_factor)\
+        s32_merged_2d = s32_xyxy_2d.copy()
+        self.play(FadeIn(s32_merged_2d, run_time=0.3))
+        self.play((
+            s32_merged_2d
+            .animate(run_time=1.0)
+            .scale(merged_scale_factor)
             .next_to(marrow_out_iview, RIGHT, buff=0.26)
-        )
+        ))
         self.wait()
 
         # generate fake labels for each bbox
-        self.play(system_merged[0].show_multi_labels(
-            width_ratio=0.3,
-            height_ratio=0.2,
-            label_config={
-                'fill_opacity': 0.9,
-                'stroke_opacity': 0.0,
+        self.play(s32_merged_2d[-1].show_multi_labels(
+            include_text=False,
+            box_config={
+                'width': 0.1,
+                'height': 0.05,
+                'fill_opacity': 1.0,
             },
             aargs={
                 'lag_ratio': 0.1,
@@ -432,36 +421,38 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        everything = Group(
-            *iview_bbox, *iview_cls, *tview_bbox, *tview_cls,
-            marrow_in, marrow_out, marrow_out_iview,
-            system_merged, tensor_merged_2d,
+        mobs = Group(
+            s32_dist, acb_ab, s32_xyxy, acb_bc, s32_xyxy_2d, marrow_out_iview, s32_merged_2d,
+            s32_prob, acc_12, s32_prob_2d,
+            marrow_in_tview,
+            t32_dist, acb_12, t32_xyxy, acb_23, t32_xyxy_2d, marrow_out_tview, t32_merged_2d,
+            t32_prob, acc_12, t32_prob_2d,
         )
-        save_everything(S017_EVERYTHING_BM, everything)
+        export_mobs(__file__, mobs)
 
-        # ************************************************************
-        self.next_section("""
-            focus on system_merged and tensor_merged_2d,
-            used by 018.
-            """,
-            skip_animations=False,
-        )
-        # ************************************************************
-        # manual init position for scene 018
-        self.play(AnimationGroup(
-            system_merged[1].animate(run_time=1.0).center().scale(4.0).to_edge(LEFT,buff=1.0),  # manual adjust background scale factor
-            Unwrite(system_merged[0], lag_ratio=0, run_time=0.3),
-            Unwrite(tensor_merged_2d, lag_ratio=0, run_time=0.3),
-            FadeOut(iview_bbox, lag_ratio=0, run_time=0.3),
-            FadeOut(iview_cls, lag_ratio=0, run_time=0.3),
-            Unwrite(tview_bbox, lag_ratio=0, run_time=0.3),
-            Unwrite(tview_cls, lag_ratio=0, run_time=0.3),
-            Unwrite(marrow_in, lag_ratio=0, run_time=0.3),
-            Unwrite(marrow_out, lag_ratio=0, run_time=0.3),
-            Unwrite(marrow_out_iview, lag_ratio=0, run_time=0.3),
-        ))
-        self.wait()
-        everything = Group(
-            system_merged[1],
-        )
-        save_everything(S017_EVERYTHING_PP, everything)
+        # # # # ************************************************************
+        # # # self.next_section("""
+        # # #     focus on system_merged and tensor_merged_2d,
+        # # #     used by 018.
+        # # #     """,
+        # # #     skip_animations=False,
+        # # # )
+        # # # # ************************************************************
+        # # # # manual init position for scene 018
+        # # # self.play(AnimationGroup(
+        # # #     system_merged[1].animate(run_time=1.0).center().scale(4.0).to_edge(LEFT,buff=1.0),  # manual adjust background scale factor
+        # # #     Unwrite(system_merged[0], lag_ratio=0, run_time=0.3),
+        # # #     Unwrite(tensor_merged_2d, lag_ratio=0, run_time=0.3),
+        # # #     FadeOut(iview_bbox, lag_ratio=0, run_time=0.3),
+        # # #     FadeOut(iview_cls, lag_ratio=0, run_time=0.3),
+        # # #     Unwrite(tview_bbox, lag_ratio=0, run_time=0.3),
+        # # #     Unwrite(tview_cls, lag_ratio=0, run_time=0.3),
+        # # #     Unwrite(marrow_in, lag_ratio=0, run_time=0.3),
+        # # #     Unwrite(marrow_out, lag_ratio=0, run_time=0.3),
+        # # #     Unwrite(marrow_out_iview, lag_ratio=0, run_time=0.3),
+        # # # ))
+        # # # self.wait()
+        # # # everything = Group(
+        # # #     system_merged[1],
+        # # # )
+        # # # save_everything(S017_EVERYTHING_PP, everything)

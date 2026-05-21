@@ -7,13 +7,7 @@ import numpy as np
 from utils.show_shape import ShowShape
 from utils.image_raw import ImageRaw
 from utils.image_pad import ImagePad
-from utils.constants import (
-    KK_NAME_MAP,
-    KK_COLOR_MAP,
-    PATH_IMAGE_640,
-    PATH_LABEL_640,
-)
-
+from utils.constants import *
 
 ANNO_BBOX_CONFIG = {
     'stroke_width': 3,
@@ -92,7 +86,7 @@ class YoloAnnotation(VMobject):
     def __init__(
         self,
         background: str | ImageRaw | ImagePad | None = None,
-        annotation: str | np.ndarray = PATH_LABEL_640,
+        annotation: str | np.ndarray = PATH_LABEL,
         name_map: dict = KK_NAME_MAP,
         color_map: dict = KK_COLOR_MAP,
     ):

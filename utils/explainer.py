@@ -9,21 +9,24 @@ from utils.image_pad import ImagePad
 from utils.yolo_annotation import SingleAnnotation
 from utils.line_matrix import LineMatrix
 from utils.general import tensor_to_line_matrix, compute_iou
-from utils.constants import MINI_32_DIST_PATH, MINI_32_PROB_PATH
-from deprecated.tensor_2d_depre import Tensor2D
+from utils.general import sf2dir
+# from utils.tensor_2d import Tensor2D
+from utils.constants import *
 
 import numpy as np
-import torch
-
-# TODO, rename
-PATH_DIST_BBOX = 'assets/tensors/_dist_box.pt'
-PATH_NORM_CLS = 'assets/tensors/_norm_cls.pt'
-PATH_DIST_BBOX_MINI = 'assets/numpy/dist_10x10.npy'
-PATH_NORM_CLS_MINI = 'assets/numpy/prob_10x10.npy'
+import os
 
 TEXT_XY_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 15,
+}
+
+SF_TO_DIR = {
+    8:  os.path.join(DIR_NUMPY, '008_80x80'),
+    16: os.path.join(DIR_NUMPY, '016_40x40'),
+    32: os.path.join(DIR_NUMPY, '032_20x20'),
+    64: os.path.join(DIR_NUMPY, '064_10x10'),
+    160: os.path.join(DIR_NUMPY, '160_04x04'),
 }
 
 class Explainer(VGroup):
@@ -34,7 +37,7 @@ class Explainer(VGroup):
         background: ImageRaw | ImagePad | None = None,
         dist_3d: np.ndarray = np.ones((4,4,4)),     # (h, w, 4)
         prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
-        sf_nominal: int = 32,                       # 8/16/32
+        sf_nominal: int = 32,                       # 8|16|32
     ):
         super().__init__()
         self.background = background
@@ -285,6 +288,7 @@ class Explainer(VGroup):
     
     def show_multi_labels(
         self,
+        include_text: bool = True,  # show conf text or not
         label_config: dict = {},    # font size 12 by default
         box_config: dict = {},
         aargs: dict = {},
@@ -295,6 +299,7 @@ class Explainer(VGroup):
         """
         anim = AnimationGroup(
             *(ap.show_multi_labels(
+                include_text=include_text,
                 label_config=label_config,
                 box_config=box_config,
                 **aargs,
@@ -940,15 +945,17 @@ class Explainer(VGroup):
     @staticmethod
     def from_random(
         background,
-        dist_range: tuple = (0, 5),
+        dist_range: tuple = (0, 3),
         prob_range: tuple = (0, 1),
         shape: tuple = (4, 4),
-        sf_nominal: int = 32,
+        sf_nominal: int | None = None,
     ) -> Explainer:
         """Create random explainer.
         """
         dist_3d = np.random.uniform(dist_range[0], dist_range[1], shape+(4,))
         prob_3d = np.random.uniform(prob_range[0], prob_range[1], shape+(3,))
+
+        sf_nominal = sf_nominal or (640 // shape[0])
 
         return Explainer(
             background=background,
@@ -960,84 +967,25 @@ class Explainer(VGroup):
     @staticmethod
     def from_file(
         background,
-        version: str = 'mini',
-        sf_nominal: int = 32,
+        version: int = 32,      # 8 | 16 | 32
+        sf_nominal: int | None = None,
     ) -> Explainer:
-        if version == 'mini':
-            dist_3d = np.load(PATH_DIST_BBOX_MINI)
-            prob_3d = np.load(PATH_NORM_CLS_MINI)
-        elif version == 'general':
-            dist_3d = torch.load(
-                PATH_DIST_BBOX,
-                weights_only=True,
-                map_location='cpu',
-            )  # (1, 4, 8400)
-            prob_3d = torch.load(
-                PATH_NORM_CLS,
-                weights_only=True,
-                map_location='cpu',
-            )  # (1, 3, 8400)
-            if sf_nominal == 32:
-                dist_3d = dist_3d[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
-                prob_3d = prob_3d[0,:,8000:].transpose(0,1).reshape(20,20,3).numpy()
-            elif sf_nominal == 16:
-                dist_3d = dist_3d[0,:,6400:8000].transpose(0,1).reshape(40,40,4).numpy()
-                prob_3d = prob_3d[0,:,6400:8000].transpose(0,1).reshape(20,20,3).numpy()
-            elif sf_nominal == 8:
-                dist_3d = dist_3d[0,:,:6400].transpose(0,1).reshape(80,80,4).numpy()
-                prob_3d = prob_3d[0,:,:6400].transpose(0,1).reshape(20,20,3).numpy()
+        dir_array = SF_TO_DIR[version]
+        path_dist = os.path.join(dir_array, 'box_dist.npy')
+        path_prob = os.path.join(dir_array, 'cls_sigmoid.npy')
+
+        dist_3d = np.load(path_dist)
+        prob_3d = np.load(path_prob)
+
+        sf_nominal = sf_nominal or (640//dist_3d.shape[0])
+            
         explainer = Explainer(
             background=background,
             dist_3d=dist_3d,
             prob_3d=prob_3d,
-            sf_nominal=32,
+            sf_nominal=sf_nominal,
         )
         return explainer
-        
-# def load_explainer(
-#     background,
-#     version: str = 'mini',  # mini/general
-#     scale: int = 32,        # 32/16/8 for general
-#     random_probs: bool = False,   # random overriden probs for demo purpose
-# ) -> Explainer:
-#     """User interface for explainer.
-#        TODO, make all data np/torch
-#        and make mini version customizable
-#     """
-#     if version == 'mini':
-#         data_dist = np.load(PATH_DIST_BBOX_MINI)
-#         data_cls = np.load(PATH_NORM_CLS_MINI)
-#     elif version == 'general':
-#         data_dist = torch.load(
-#             PATH_DIST_BBOX,
-#             weights_only=True,
-#             map_location='cpu',
-#         )  # (1, 4, 8400)
-#         data_cls = torch.load(
-#             PATH_NORM_CLS,
-#             weights_only=True,
-#             map_location='cpu',
-#         )  # (1, 3, 8400)
-#         if scale == 32:
-#             data_dist = data_dist[0,:,8000:].transpose(0,1).reshape(20,20,4).numpy()
-#             data_cls = data_cls[0,:,8000:].transpose(0,1).reshape(20,20,3).numpy()
-#         elif scale == 16:
-#             data_dist = data_dist[0,:,6400:8000].transpose(0,1).reshape(40,40,4).numpy()
-#             data_cls = data_cls[0,:,6400:8000].transpose(0,1).reshape(20,20,3).numpy()
-#         elif scale == 8:
-#             data_dist = data_dist[0,:,:6400].transpose(0,1).reshape(80,80,4).numpy()
-#             data_cls = data_cls[0,:,:6400].transpose(0,1).reshape(20,20,3).numpy()
-        
-#         if random_probs:
-#             data_cls = np.random.uniform(0.0,0.98,(640//random_probs,640//random_probs,3))
-
-#     explainer = Explainer(
-#         background=background,
-#         data=data_dist,
-#         data_cls=data_cls,
-#         sf_nominal=scale,
-#     )
-#     return explainer
 
 class Demo(Scene):
     def construct(self):

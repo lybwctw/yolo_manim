@@ -76,46 +76,64 @@ LABEL_CONFIG = {
     'font_size': 12,
     'color': WHITE,
 }
-BOX_CONFIG = {
+
+# box for label with text
+BOX_BG_CONFIG = {
     'stroke_width': 0,
     'stroke_opacity': 0.0,
-    'opacity': 1.0,
-    'buff': 0.03,
+    'opacity': 1.0,         # background rectangle interface
+}
+# box for label without text
+BOX_RAW_CONFIG = {
+    'stroke_width': 0,
+    'stroke_opacity': 0.0,
+    'fill_opacity': 1.0,    # native rectangle interface
 }
 
 class AnchorLabel(VMobject):
     def __init__(
         self,
-        text: str = 'None',
+        include_text: bool = True,      # include conf text or not
+        text: str = 'None',             # conf text content
         label_config: dict = {},        # text config
         box_config: dict = {},          # background config
     ):
         """Use the same interface as native Label class.
         """
         super().__init__()
-        self.text = text
-        self.label_config = {**LABEL_CONFIG, **label_config}
-        self.box_config = {**BOX_CONFIG, **box_config}
+        self.include_text = include_text
+        self.text = text if include_text else None
+        self.label_config = {**LABEL_CONFIG, **label_config} if include_text else {}
+        self.box_config = {**(
+            BOX_BG_CONFIG if include_text else BOX_RAW_CONFIG
+            ), **box_config}
 
-        mob_text = Text(
-            text=self.text,
-            **self.label_config,
-        ).add_background_rectangle(
-            **self.box_config,
-        )
+        if include_text:
+            mob_text = Text(
+                text=self.text,
+                **self.label_config,
+            ).add_background_rectangle(
+                **self.box_config,
+            )
 
-        mob_box = Rectangle(
-            stroke_width=0,
-            width=mob_text.background_rectangle.width,
-            height=mob_text.background_rectangle.height,
-        ).set_style(
-            **mob_text.background_rectangle.get_style(simple=True),
-        ).move_to(mob_text.background_rectangle)
-        mob_text.remove(mob_text.background_rectangle)
+            # fix background rectangle
+            mob_box = Rectangle(
+                width=mob_text.background_rectangle.width,
+                height=mob_text.background_rectangle.height,
+            ).set_style(
+                **mob_text.background_rectangle.get_style(simple=True),
+            ).move_to(mob_text.background_rectangle)
+            mob_text.remove(mob_text.background_rectangle)
 
-        self.mob_text = mob_text
-        self.mob_box = mob_box
-        self.add(self.mob_box, self.mob_text)
+            self.mob_text = mob_text
+            self.mob_box = mob_box
+            self.add(self.mob_box, self.mob_text)
+        else:
+            mob_box = Rectangle(
+                **self.box_config,
+            )
+            self.mob_box = mob_box
+            self.add(self.mob_box)
 
 class AnchorPoint(VMobject):
     def __init__(
@@ -586,16 +604,15 @@ class AnchorPoint(VMobject):
     
     def create_multi_labels(
         self,
+        include_text: bool = True,      # include conf text or not
         label_config: dict = {},        # font size 12 by default
         box_config: dict = {},
     ) -> VGroup:
         """Create multi labels, not positioned.
         """
-        label_config = {**LABEL_CONFIG, **label_config}
-        box_config = {**BOX_CONFIG, **box_config}
-
         labels = VGroup(
             AnchorLabel(
+                include_text=include_text,
                 text='{:.2f}'.format(prob),
                 label_config=label_config,
                 box_config={**box_config, 'color': color},  # TODO: Label's interface
@@ -605,6 +622,7 @@ class AnchorPoint(VMobject):
     
     def show_multi_labels(
         self,
+        include_text: bool = True,      # show conf text or not
         label_config: dict = {},        # font size 12 by default
         box_config: dict = {},
         **aargs,
@@ -612,6 +630,7 @@ class AnchorPoint(VMobject):
         """Add labels as new member.
         """
         labels = self.create_multi_labels(
+            include_text=include_text,
             label_config=label_config,
             box_config=box_config,
         ).move_to(

@@ -1,12 +1,28 @@
 from manim import *
 import os
 
-# kk dataset config
+# path related
+DIR_ROOT = 'D:/deeplearning/yolo_manim'
+DIR_ASSETS = os.path.join(DIR_ROOT, 'assets')
+DIR_IMAGES = os.path.join(DIR_ASSETS, 'images')
+DIR_LABELS = os.path.join(DIR_ASSETS, 'labels')
+DIR_NUMPY = os.path.join(DIR_ASSETS, 'numpy')
+DIR_TENSOR = os.path.join(DIR_ASSETS, 'ultralytics')
+DIR_PICKLE = os.path.join(DIR_ROOT, 'pickle')
+
+PATH_IMAGE_640 = os.path.join(DIR_IMAGES, 'sample_640x360.jpg')
+PATH_IMAGE_960 = os.path.join(DIR_IMAGES, 'sample_960x540.jpg')
+PATH_IMAGE_1280 = os.path.join(DIR_IMAGES, 'sample_1280x720.jpg')
+PATH_LABEL = os.path.join(DIR_LABELS, 'labels.txt')
+PATH_LABEL = 'assets/images/labels.txt'
+
+# kk dataset related
 KK_NAMES = ['kunkun', 'coke', 'pepsi']
 KK_COLORS = [GREEN, RED, BLUE]
 KK_NAME_MAP = dict(enumerate(KK_NAMES))
 KK_COLOR_MAP = dict(enumerate(KK_COLORS))
 
+# FIXME: all others
 # everything filename
 S000_EVERYTHING = 's000_everything.pkl'
 S001_EVERYTHING = 's001_everything.pkl'
@@ -30,8 +46,6 @@ S017_EVERYTHING_BM = 's017_everything_bm.pkl'       # for 019 big map
 
 S019_EVERYTHING = 's019_everything.pkl'
 
-PATH_IMAGE_640 = 'assets/images/sample_640_360.jpg'
-PATH_LABEL_640 = 'assets/images/labels.txt'
 
 PATH_TENSOR_32_BOX = None
 PATH_TENSOR_32_CLS = None

@@ -1,10 +1,10 @@
 from manim import *
 
 from utils.constants import *
-from utils.general import load_everything, save_everything
 from utils.layers_fake import LayersFake
 from utils.multi_arrow import MultiArrow
 from utils.arrow_comment import ArrowComment
+from utils.general import import_mobs, export_mobs
 
 class MainScene(Scene):
     def construct(self):
@@ -14,30 +14,14 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        everything = load_everything(S017_EVERYTHING_BM)
+        mobs = import_mobs(S017_EVERYTHING_BM)
         (
-            system_dist, acb_ab, system_xyxy, acb_bc, system_xyxy_2d,
-            system_probs, acc_ab, system_probs_2d,
-            acb_game, tensor_32_dist, acb_12, tensor_32_xyxy, acb_23, tensor_32_xyxy_2d, acb_post,
-            acc_game, tensor_32_probs, acc_12, tensor_32_probs_2d, acc_post,
-            marrow_in, marrow_out, marrow_out_iview,
-            system_merged, tensor_merged_2d,
-        ) = everything
-        system_dist: Group
-        system_xyxy: Group
-        system_xyxy_2d: Group
-        system_probs: Group
-        system_probs_2d: Group
-        system_merged: Group
-        tensor_32_dist: LayersFake
-        tensor_32_xyxy: LayersFake
-        tensor_32_xyxy_2d: LayersFake
-        tensor_32_probs: LayersFake
-        tensor_32_probs_2d: LayersFake
-        tensor_merged_2d: LayersFake
-        marrow_in: MultiArrow
-        marrow_out: MultiArrow
-        marrow_out_iview: MultiArrow
+            s32_dist, acb_ab, s32_xyxy, acb_bc, s32_xyxy_2d, marrow_out_iview, s32_merged_2d,
+            s32_prob, acc_12, s32_prob_2d,
+            marrow_in_tview,
+            t32_dist, acb_12, t32_xyxy, acb_23, t32_xyxy_2d, marrow_out_tview, t32_merged_2d,
+            t32_prob, acc_12, t32_prob_2d,
+        ) = mobs
 
         # for reference
         acb_all = VGroup(

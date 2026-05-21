@@ -7,8 +7,8 @@ SHAPE_PATH_CONFIG = {
 }
 
 SHAPE_TEXT_CONFIG = {
-    'buff': 0.25,
-    'font_size': 20,
+    'buff': 0.15,
+    'font_size': 15,
     'font': 'JetBrains Mono',
 }
 

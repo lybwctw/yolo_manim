@@ -3,19 +3,24 @@ sys.path.append('..')
 
 from manim import *
 import pickle
+import os
 import cv2
 import torch
 import numpy as np
 
 from utils.color_cell import ColorCell
 from utils.line_matrix import LineMatrix
+from utils.constants import DIR_PICKLE
 
-def save_everything(file, everything):
-    with open(file, 'wb') as f:
+def export_mobs(path_source, everything):
+    name_target = os.path.basename(path_source).split('.')[0] + '.pkl'
+    path_target = os.path.join(DIR_PICKLE, name_target)
+    os.makedirs(DIR_PICKLE, exist_ok=True)  # make sure pickle dir exists
+    with open(path_target, 'wb') as f:
         pickle.dump(everything, f)
 
-def load_everything(file):
-    with open(file, 'rb') as f:
+def import_mobs(path):
+    with open(path, 'rb') as f:
         data = pickle.load(f)
     return data
 
@@ -132,3 +137,8 @@ def random_boxes(n, max_coord=640):
     ])
 
     return boxes
+
+
+def sf2dir(sf: int) -> str:
+    size = 640 // sf
+    return f"{sf:03d}_{size:02d}x{size:02d}"

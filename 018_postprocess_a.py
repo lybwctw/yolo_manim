@@ -12,14 +12,16 @@ from utils.image_pad import ImagePad
 FAST_RT = 0.1
 
 CONF_THRESH = 0.7
-IOU_THRESH = 0.2
+IOU_THRESH = 0.05
 
-class MainScene(Scene):
+# TODO: multi-label option
+# TODO: nms-ignore option
+class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'start with xyxyccc format',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # FIXME: use background from 017 for better continuity
@@ -53,7 +55,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply take max',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         explainer.apply_max_select(
@@ -65,7 +67,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply conf filter',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         explainer.apply_conf_filter(
@@ -78,7 +80,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply class split',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # nothing for now
@@ -86,7 +88,69 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sort each class',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # nothing for now
+
+        # ************************************************************
+        self.next_section(
+            'NMS each class',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # change perspective
+        BG_GAP = 3.0
+        self.move_camera(
+            phi=45*DEGREES,
+            theta=-180*DEGREES,
+            gamma=-90*DEGREES,
+            run_time=0.5,
+            added_anims=[
+                system.animate.shift(IN*BG_GAP),
+            ],
+        )
+        self.wait(0.5)
+
+        # show background for kept predictions
+        target_bg = Rectangle(
+            width=background.width,
+            height=background.height,
+            stroke_width=2.6,
+            stroke_color=WHITE,
+            fill_color=BLACK,
+            fill_opacity=0.0,
+            # shade_in_3d=True,
+        ).move_to(background, aligned_edge=UL)
+        self.play(Write(target_bg))
+        self.play(target_bg.animate(
+            run_time=0.5,
+        ).shift(OUT*BG_GAP*2))
+        self.wait(0.5)
+
+        # apply NMS for each class
+        for cls in range(3):
+            explainer.apply_nms_filter(
+                self,
+                cls=cls,
+                iou_thresh=IOU_THRESH,
+                offset=BG_GAP*2,
+                run_time_ratio=FAST_RT,
+            )
+            self.wait(0.3)
+        
+        # back to 2d perspective
+        self.play(Unwrite(
+            target_bg,
+            run_time=0.5,
+        ))
+        self.move_camera(
+            phi=0*DEGREES,
+            theta=-90*DEGREES,
+            gamma=0*DEGREES,
+            run_time=0.5,
+            added_anims=[
+                system.animate.shift(OUT*BG_GAP),
+            ],
+        )
+        self.wait(0.5)
