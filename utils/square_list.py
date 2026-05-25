@@ -1,3 +1,13 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.square_list import Slist
+
+    squares = Slist(5)
+    self.play(Write(squares))
+"""
+
 # NOTE: this is for exploration of customized vmobject design
 from manim import *
 
@@ -6,6 +16,11 @@ class Slist(VMobject):
         self,
         n,
     ):
+        """
+        Example
+        -------
+        squares = Slist(5)
+        """
         super().__init__()
         self.squares = VGroup(
             Square(
@@ -16,7 +31,7 @@ class Slist(VMobject):
             ) for _ in range(n)
         ).arrange(RIGHT)
         self.add(self.squares)
-    
+
 class Demo(Scene):
     def construct(self):
         banner = ManimBanner()

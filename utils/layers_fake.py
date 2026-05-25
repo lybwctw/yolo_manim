@@ -1,3 +1,16 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.layers_fake import LayersFake
+    from utils.show_shape import ShowShape, HideShape
+
+    lf = LayersFake(n=3, width=3, height=4, width_nominal=300, height_nominal=400, expanded=True)
+    self.play(Write(lf))
+    self.play(ShowShape(lf, text_config={'buff': 0.2, 'font_size': 25}, path_config={'color': BLUE}))
+    self.play(HideShape(lf))
+"""
+
 import sys
 sys.path.append('..')
 
@@ -25,6 +38,11 @@ class LayersFake(VMobject, ShowShapeMixin):
         width_nominal: int = 300,       # nominal width
         height_nominal: int = 200,      # nominal height
     ):
+        """
+        Example
+        -------
+        lf = LayersFake(n=3, width=3, height=4)
+        """
         super().__init__()
 
         self.n = n
@@ -50,13 +68,19 @@ class LayersFake(VMobject, ShowShapeMixin):
         self.shape_texts = None
 
         self.add(self.rects)
-        
+
         # auto center?
         self.center()
 
     def expand(
         self,
     ) -> Animation:
+        """
+        Example
+        -------
+        lf = LayersFake(n=3, width=3, height=4)
+        self.play(lf.expand())
+        """
         if self.expanded or self.n==1:
             return Wait()       # null animation
         orig_center = self.get_center()
@@ -70,7 +94,7 @@ class LayersFake(VMobject, ShowShapeMixin):
         self.expanded = True
 
         return MoveToTarget(self.rects)
-    
+
     def stretch_to_fit(
         self,
         width: float | None = None,     # target width of single layer
@@ -79,7 +103,13 @@ class LayersFake(VMobject, ShowShapeMixin):
         height_nominal: int | None = None,   # new nominal height
         **aargs,
     ) -> Animation:
-        """Stretch single layers to target width and height.
+        """
+        Stretch single layers to target width and height.
+
+        Example
+        -------
+        lf = LayersFake(n=3, width=3, height=4)
+        self.play(lf.stretch_to_fit())
         """
         # update nominal width and height
         if width_nominal:
@@ -95,12 +125,18 @@ class LayersFake(VMobject, ShowShapeMixin):
             **aargs,
         )
         return anims
-    
+
     def stretch_to_fit_square(
         self,
         **aargs,
     ) -> Animation:
-        """Stretch single layers to square according to nominal width/height.
+        """
+        Stretch single layers to square according to nominal width/height.
+
+        Example
+        -------
+        lf = LayersFake(n=3, width=3, height=4)
+        self.play(lf.stretch_to_fit_square())
         """
         if self.width_nominal == self.height_nominal:
             return Wait(1)      # do nothing
@@ -126,7 +162,13 @@ class LayersFake(VMobject, ShowShapeMixin):
         self,
         **path_config,
     ) -> VMobject:
-        # same z_index as the first rect
+        """
+        Example
+        -------
+        lf = LayersFake(n=3, width=3, height=4)
+        result = lf.get_shape_path()
+        """
+        # NOTE: same z_index as the first rect
         path = VMobject().set_z_index(self.n)
         if self.n == 1:
             path.set_points_as_corners([
@@ -147,8 +189,13 @@ class LayersFake(VMobject, ShowShapeMixin):
         self,
         **text_config,
     ) -> VGroup:
-
-        buff = text_config.pop('buff', 0.25)
+        """
+        Example
+        -------
+        lf = LayersFake(n=3, width=3, height=4)
+        result = lf.get_shape_text()
+        """
+        buff = text_config.pop('buff', 0.15)
         if self.n == 1:
             text_h = Text(
                 str(self.height_nominal),
@@ -187,7 +234,7 @@ class Demo(Scene):
         )
         self.play(Write(lf))
         self.wait()
-        
+
         self.play(ShowShape(
             lf,
             text_config={'buff': 0.2, 'font_size': 25,},

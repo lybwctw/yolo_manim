@@ -1,3 +1,16 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.multi_arrow import MultiArrow
+
+    marrow = MultiArrow(one_to_many=True, p1=UR, p2=DR + LEFT*2)
+    self.play(Write(marrow))
+    marrow.save_state()
+    self.play(marrow.animate.fade(0.9))
+    self.play(marrow.animate.restore())
+"""
+
 import sys
 sys.path.append('..')
 
@@ -29,6 +42,11 @@ class BraceLike(VMobject):
         height: float = 2,              # height of the brace space
         stroke_width: float = 3,        # stroke width
     ):
+        """
+        Example
+        -------
+        brace = BraceLike()
+        """
         super().__init__()
         self.one_to_many = one_to_many
 
@@ -53,7 +71,7 @@ class BraceLike(VMobject):
         self.b1 = b1
         self.b2 = b2
         self.add(self.b1, self.b2)
-    
+
 
 class MultiArrow(VMobject):
     def __init__(
@@ -64,7 +82,13 @@ class MultiArrow(VMobject):
         ratio_input: float = RATIO_INPUT,
         ratio_brace: float = RATIO_BRACE,
         ratio_output: float = RATIO_OUTPUT,
+        comment: str = '',
     ):
+        """
+        Example
+        -------
+        marrow = MultiArrow()
+        """
         super().__init__()
         self.one_to_many = one_to_many
         self.ratio_input = ratio_input
@@ -84,14 +108,20 @@ class MultiArrow(VMobject):
         self.add(self.input)
         self.add(self.brace)
         self.add(self.output)
-    
+
     def _load_ibo(
         self,
         one_to_many: bool = True,
         p1: np.ndarray = UR,
         p2: np.ndarray = DR,
     ) -> tuple:
-        """Load input, brace, output.
+        """
+        Load input, brace, output.
+
+        Example
+        -------
+        marrow = MultiArrow()
+        result = marrow._load_ibo()
         """
         bwidth = abs(float(p1[1] - p2[1]))
         input_width = bwidth * self.ratio_input
@@ -183,7 +213,7 @@ class Demo(Scene):
         )
         self.play(Write(marrow))
         self.wait()
-        
+
         marrow.save_state()
         self.play(marrow.animate.fade(0.9))
         self.wait()

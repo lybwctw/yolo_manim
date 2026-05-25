@@ -22,31 +22,27 @@ KK_COLORS = [GREEN, RED, BLUE]
 KK_NAME_MAP = dict(enumerate(KK_NAMES))
 KK_COLOR_MAP = dict(enumerate(KK_COLORS))
 
+# show shape related
+MINI_SHAPE_TEXT_CONFIG = {
+    'buff': 0.10,
+    'font_size': 10,
+    'font': 'JetBrains Mono',
+    'color': WHITE,
+}
+SMALL_SHAPE_TEXT_CONFIG = {
+    'buff': 0.15,
+    'font_size': 15,
+    'font': 'JetBrains Mono',
+    'color': WHITE,
+}
+BIG_SHAPE_TEXT_CONFIG = {
+    'buff': 0.25,
+    'font_size': 25,
+    'font': 'JetBrains Mono',
+    'color': WHITE,
+}
+
 # FIXME: all others
-# everything filename
-S000_EVERYTHING = 's000_everything.pkl'
-S001_EVERYTHING = 's001_everything.pkl'
-S002_EVERYTHING = 's002_everything.pkl'
-
-S004_EVERYTHING = 's004_everything.pkl'
-S005_EVERYTHING = 's005_everything.pkl'
-S006_EVERYTHING = 's006_everything.pkl'
-S007_EVERYTHING = 's007_everything.pkl'
-
-S009_EVERYTHING = 's009_everything.pkl'
-S010_EVERYTHING = 's010_everything.pkl'
-S011_EVERYTHING = 's011_everything.pkl'
-S012_EVERYTHING = 's012_everything.pkl'
-S013_EVERYTHING = 's013_everything.pkl'
-
-S015_EVERYTHING = 's015_everything.pkl'
-
-S017_EVERYTHING_PP = 's017_everything_pp.pkl'       # for 018 postprocess
-S017_EVERYTHING_BM = 's017_everything_bm.pkl'       # for 019 big map
-
-S019_EVERYTHING = 's019_everything.pkl'
-
-
 PATH_TENSOR_32_BOX = None
 PATH_TENSOR_32_CLS = None
 

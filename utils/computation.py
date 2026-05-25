@@ -13,10 +13,15 @@ class Computation(VGroup):
         values: list = [],
         **text_config,
     ):
+        """
+        Example
+        -------
+        computation = Computation(formatter="{:.2f}", values=[1.0])
+        """
         super().__init__()
         self.formatter = formatter
         self.values = values
-        
+
         text = self.formatter.format(*values)
         computation = MarkupText(
             text,

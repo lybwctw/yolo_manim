@@ -7,12 +7,27 @@ from typing import Self
 from utils.computation import Computation
 from utils.constants import KK_COLORS
 
+
 DIRECTION_SERIES = [
     'left',
     'up',
     'right',
     'down',
 ]
+
+DIRECTION_MAP = {
+    'left': LEFT,
+    'up': UP,
+    'right': RIGHT,
+    'down': DOWN,
+}
+
+COLOR_MAP = {
+    'left':  PURE_RED,
+    'up':    PURE_GREEN,
+    'right': PURE_BLUE,
+    'down':  PURE_MAGENTA,
+}
 
 DOT_CONFIG = {
     'fill_opacity': 0.0,
@@ -69,11 +84,11 @@ PBAR_CONFIG = {
 }
 CLASS_COLORS = PBAR_COLORS
 
-# label related
+################### anchorlabel related ###################
 LABEL_COLORS = PBAR_COLORS
 LABEL_CONFIG = {
     'font': 'JetBrains Mono',
-    'font_size': 12,
+    'font_size': 9,
     'color': WHITE,
 }
 
@@ -90,6 +105,66 @@ BOX_RAW_CONFIG = {
     'fill_opacity': 1.0,    # native rectangle interface
 }
 
+################### probcell related ###################
+PCELL_LABEL_CONFIG = {
+    # 'font': 'JetBrains Mono',
+    'font_size': 54,
+    'color': WHITE,
+}
+
+PCELL_BOX_CONFIG = {
+    'stroke_width': 1,
+    'stroke_opacity': 1.0,
+}
+PCELL_STROKE_OPACITY_E = 0.5
+PCELL_FILL_OPACITY_E = 0.7
+
+class ProbCell(VMobject):
+    def __init__(
+        self,
+        include_text: bool = True,
+        prob: float = 0.00,
+        label_config: dict = {},
+        box_config: dict = {},
+    ):
+        """
+        Use the same interface as native Label class.
+
+        Example
+        -------
+        pcell = ProbCell()
+        """
+        super().__init__()
+        self.prob = prob
+        self.label_config = {
+            **PCELL_LABEL_CONFIG,
+            **label_config,
+        }
+        self.box_config = {
+            **PCELL_BOX_CONFIG,
+            **box_config,
+        }
+
+        mob_box = Square(
+            **self.box_config,
+        )
+        self.mob_box = mob_box
+        self.add(self.mob_box)
+
+        # mob_text = Text(
+        #     text='{:.2f}'.format(self.prob),
+        #     **self.label_config,
+        # )
+        mob_text = DecimalNumber(
+            self.prob,
+            num_decimal_places=2,
+            **self.label_config,
+        )
+        self.mob_text = mob_text
+        if not include_text:
+            self.mob_text.set_opacity(0.0)
+        self.add(self.mob_text)
+
 class AnchorLabel(VMobject):
     def __init__(
         self,
@@ -98,7 +173,12 @@ class AnchorLabel(VMobject):
         label_config: dict = {},        # text config
         box_config: dict = {},          # background config
     ):
-        """Use the same interface as native Label class.
+        """
+        Use the same interface as native Label class.
+
+        Example
+        -------
+        label = AnchorLabel(text="0.95")
         """
         super().__init__()
         self.include_text = include_text
@@ -139,6 +219,7 @@ class AnchorPoint(VMobject):
     def __init__(
         self,
         point: np.ndarray = ORIGIN,                         # starting position
+        reg: np.ndarray | list | None = None,               # left, up, right, down
         dist: np.ndarray | list | tuple = (1.,1.,1.,1.),    # left, up, right, down
         xyxy: np.ndarray | list | tuple = (10,20,30,40),    # x1, y1, x2, y2
         prob: np.ndarray | list | tuple = (.5,.5,.5),       # c1, c2, c3
@@ -146,8 +227,15 @@ class AnchorPoint(VMobject):
         sf_nominal: int = 32,                               # nominal distance / unit distance
         sf_screen: int = 0.5,                               # screen distance / unit distance
     ):
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        """
         super().__init__()
         # user is responsible for providing matching tensors
+        self.reg = np.array(reg)
+        self.nreg = self.reg.shape[1]
         self.dist = np.array(dist)
         self.xyxy = np.array(xyxy)
         self.prob = np.array(prob)
@@ -186,7 +274,13 @@ class AnchorPoint(VMobject):
         rect_config: dict = {}, # target rect config
         **aargs,
     ) -> Animation:
-        """Apply config only once.
+        """
+        Apply config only once.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.to_rect())
         """
         rect_config = {'stroke_opacity': 1.0, **rect_config}
         target = self.rect.copy().set_style(**rect_config)
@@ -201,7 +295,13 @@ class AnchorPoint(VMobject):
         dot_config: dict = {}, # target dot config
         **aargs,
     ) -> Animation:
-        """Apply config only once.
+        """
+        Apply config only once.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.to_dot())
         """
         dot_config = {'stroke_opacity': 1.0, **dot_config}
         target = self.dot.copy().set_style(**dot_config)
@@ -211,11 +311,379 @@ class AnchorPoint(VMobject):
             **aargs,
         )
 
+    def create_pcells_direction(
+        self,
+        direction: str = 'left',
+        label_config: dict = {},
+        box_config: dict = {},
+    ) -> VGroup:
+        """
+        Create probcells in one specific direction.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_pcells_direction()
+        """
+        row_idx = DIRECTION_SERIES.index(direction)
+        row_data = self.reg[row_idx]
+        pcells = VGroup(
+            ProbCell(
+                include_text=False,
+                prob=float(x),
+                label_config=label_config,
+                box_config={
+                    'side_length': self.sf_screen,
+                    'stroke_color': COLOR_MAP[direction],
+                    'stroke_opacity': float(x)**PCELL_STROKE_OPACITY_E,
+                    'fill_color': COLOR_MAP[direction],
+                    'fill_opacity': float(x)**PCELL_FILL_OPACITY_E,
+                    **box_config,
+                },
+            ).move_to(self.dot.get_center()).shift(
+                DIRECTION_MAP[direction] * i * self.sf_screen
+            ) for i, x in enumerate(row_data)
+        )
+        return pcells
+
+    def show_pcells_direction(
+        self,
+        direction: str = 'left',
+        label_config: dict = {},
+        box_config: dict = {},
+        **aargs,
+    ) -> Animation:
+        """
+        Show DFL prob cells in specific direction.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells_direction())
+        """
+        pcells = self.create_pcells_direction(
+            direction=direction,
+            label_config=label_config,
+            box_config=box_config,
+        )
+        if hasattr(self, 'pcells'):
+            self.pcells.add(*pcells)
+        else:
+            self.pcells = pcells
+            self.add(self.pcells)
+        return Create(
+            pcells,
+            **aargs,
+        )
+
+    def create_pcells(
+        self,
+        label_config: dict = {},
+        box_config: dict = {},
+    ) -> VGroup:
+        """
+        Create probcells in four directions.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_pcells()
+        """
+        pcells = VGroup(
+            ProbCell(
+                include_text=False,
+                prob=float(x),
+                label_config=label_config,
+                box_config={
+                    'side_length': self.sf_screen,
+                    'stroke_color': COLOR_MAP[direction],
+                    'stroke_opacity': float(x)**PCELL_STROKE_OPACITY_E,
+                    'fill_color': COLOR_MAP[direction],
+                    'fill_opacity': float(x)**PCELL_FILL_OPACITY_E,
+                    **box_config,
+                },
+            ).move_to(self.dot.get_center()).shift(
+                DIRECTION_MAP[direction] * i * self.sf_screen
+            ) for direction, reg in zip(DIRECTION_SERIES, self.reg)
+                for i, x in enumerate(reg)
+        )
+        return pcells
+
+    def show_pcells(
+        self,
+        label_config: dict = {},
+        box_config: dict = {},
+        **aargs,
+    ) -> Animation:
+        """
+        Show DFL prob cells in four directions.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells())
+        """
+        self.pcells = self.create_pcells(
+            label_config=label_config,
+            box_config=box_config,
+        )
+        self.add(self.pcells)
+        return Create(
+            self.pcells,
+            **aargs,
+        )
+
+    def create_pcells_arranged(
+        self,
+        label_config: dict = {},
+        box_config: dict = {},
+        buff: float = 0.1,
+    ) -> VGroup:
+        """
+        Create probcells already stacked along the depth axis.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_pcells_arranged()
+        """
+        pcells = self.create_pcells(
+            label_config=label_config,
+            box_config=box_config,
+        )
+        pcells.arrange(
+            direction=IN,
+            buff=buff,
+        ).move_to(self.dot)
+        return pcells
+
+    def show_pcells_arranged(
+        self,
+        label_config: dict = {},
+        box_config: dict = {},
+        buff: float = 0.1,
+        **aargs,
+    ) -> Animation:
+        """
+        Show DFL prob cells already stacked along the depth axis.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells_arranged())
+        """
+        self.pcells = self.create_pcells_arranged(
+            label_config=label_config,
+            box_config=box_config,
+            buff=buff,
+        )
+        self.add(self.pcells)
+        return Create(
+            self.pcells,
+            **aargs,
+        )
+
+    def show_pcells_text_direction(
+        self,
+        direction: str = 'left',
+        **aargs,
+    ) -> Animation:
+        """
+        Show probability text for pcells in one direction.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells())
+        self.play(ap.show_pcells_text_direction())
+        """
+        start_idx = DIRECTION_SERIES.index(direction) * self.nreg
+        end_idx = start_idx + self.nreg
+        pcs = self.pcells[start_idx: end_idx]
+
+        anim = AnimationGroup(
+            *(pc.mob_text.animate.set_opacity(1.0)
+             for pc in pcs),
+             **aargs,
+        )
+        return anim
+
+    def hide_pcells_text_direction(
+        self,
+        direction: str = 'left',
+        **aargs,
+    ) -> Animation:
+        """
+        Hide probability text for pcells in one direction.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells())
+        self.play(ap.hide_pcells_text_direction())
+        """
+        start_idx = DIRECTION_SERIES.index(direction) * self.nreg
+        end_idx = start_idx + self.nreg
+        pcs = self.pcells[start_idx: end_idx]
+
+        anim = AnimationGroup(
+            *(pc.mob_text.animate.set_opacity(0.0)
+             for pc in pcs),
+             **aargs,
+        )
+        return anim
+
+    def show_pcells_text(
+        self,
+        **aargs,
+    ) -> Animation:
+        """
+        Show probability text for all pcells.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells())
+        self.play(ap.show_pcells_text())
+        """
+        anim = AnimationGroup(
+            *(pc.mob_text.animate.set_opacity(1.0)
+             for pc in self.pcells),
+             **aargs,
+        )
+        return anim
+
+    def hide_pcells_text(
+        self,
+        **aargs,
+    ) -> Animation:
+        """
+        Hide probability text for all pcells.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells())
+        self.play(ap.hide_pcells_text())
+        """
+        anim = AnimationGroup(
+            *(pc.mob_text.animate.set_opacity(0.0)
+             for pc in self.pcells),
+             **aargs,
+        )
+        return anim
+
+    def hide_pcells(
+        self,
+        **aargs,
+    ) -> Animation:
+        """
+        Hide all DFL prob cells.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells())
+        self.play(ap.hide_pcells())
+        """
+        self.remove(self.pcells)
+        return Unwrite(self.pcells, **aargs)
+
+    def arrange_pcells(
+        self,
+        **aargs,
+    ) -> Animation:
+        """
+        Stack existing pcells along the depth axis.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pcells())
+        self.play(ap.arrange_pcells())
+        """
+        self.pcells.generate_target()
+
+        # TODO
+        self.pcells.target.arrange(
+            direction=IN,
+            buff=0.1,
+        ).move_to(self.dot)
+        return MoveToTarget(
+            self.pcells,
+            **aargs,
+        )
+
+    def create_arrow_direction(
+        self,
+        direction: str = 'left',
+        arrow_config: dict = {},
+    ) -> Arrow:
+        """
+        Create arrow in specific direction.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_arrow_direction()
+        """
+        cfg = {**ARROW_CONFIG, **arrow_config}
+        arrow = Arrow(
+            start=self.dot.get_center(),
+            end=self.node_map[direction],
+            color=ARROW_COLOR_MAP[direction],
+            **cfg,
+        )
+        return arrow
+
+    def show_arrow_direction(
+        self,
+        direction: str = 'left',
+        arrow_config: dict = {},
+        **aargs,
+    ) -> Animation:
+        """
+        Show arrow in specific direction.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrow_direction())
+        """
+        arrow = self.create_arrow_direction(
+            direction=direction,
+            arrow_config=arrow_config,
+        )
+        if hasattr(self, 'arrows'):
+            self.arrows.add(arrow)
+        else:
+            self.arrows = VGroup(arrow)
+            self.add(self.arrows)
+        return GrowArrow(
+            arrow,
+            **aargs,
+        )
+
     def create_arrows(
         self,
         arrow_config: dict={},
     ) -> VGroup:
-        """Create arrows based on dot and rect.
+        """
+        Create arrows based on dot and rect.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_arrows()
         """
         cfg = {**ARROW_CONFIG, **arrow_config}
         arrows = VGroup(
@@ -227,14 +695,23 @@ class AnchorPoint(VMobject):
             ) for direction in DIRECTION_SERIES),
         )
         return arrows
-    
+
     def show_arrows(
         self,
         arrow_config: dict={},
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """ NOTE: rate_func for arrow is inside aargs.
+        """
+        Show arrows in all four directions.
+
+                NOTE: rate_func for arrow is inside aargs.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
         """
         # rfunc = aargs.pop('rate_func', rate_functions.smooth)
         self.arrows = self.create_arrows(
@@ -249,12 +726,18 @@ class AnchorPoint(VMobject):
             **gargs,
         )
         # return Write(self.arrows, **aargs)
-    
+
     def hide_arrows(
         self,
         **aargs,
     ) -> Animation:
-        """TODO, shrink version?
+        """
+        TODO, shrink version?
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.hide_arrows())
         """
         self.remove(self.arrows)
         return Unwrite(self.arrows, **aargs)
@@ -263,7 +746,14 @@ class AnchorPoint(VMobject):
         self,
         font_size: int = 15,            # specify font size manually
     ) -> VGroup :
-        """Create distance Texts, not aligned.
+        """
+        Create distance Texts, not aligned.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        result = ap.create_dist()
         """
         ts = VGroup(
             *(Text(
@@ -280,7 +770,14 @@ class AnchorPoint(VMobject):
         font_size: int = 15,            # specifiy font manually
         **aargs,
     ) -> Animation:
-        """Show distance Texts, aligned to arrows.
+        """
+        Show distance Texts, aligned to arrows.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        self.play(ap.show_dist())
         """
         self.ts_dist = self.create_dist(
             font_size=font_size,
@@ -293,6 +790,13 @@ class AnchorPoint(VMobject):
         self,
         **aargs,
     ) -> Animation:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        self.play(ap.hide_dist())
+        """
         self.remove(self.ts_dist)
         return Unwrite(self.ts_dist, **aargs)
 
@@ -300,7 +804,14 @@ class AnchorPoint(VMobject):
         self,
         font_size: int = 15,
     ) -> VGroup :
-        """Create nominal distance Texts, not aligned.
+        """
+        Create nominal distance Texts, not aligned.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        result = ap.create_dist_nominal()
         """
         ts = VGroup(
             *(Text(
@@ -322,7 +833,14 @@ class AnchorPoint(VMobject):
         font_size: int = 15,
         **aargs,
     ) -> Animation:
-        """Show nominal distance Texts, aligned to arrows.
+        """
+        Show nominal distance Texts, aligned to arrows.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        self.play(ap.show_dist_nominal())
         """
         self.ts_dist_nominal = self.create_dist_nominal(
             font_size=font_size,
@@ -335,6 +853,13 @@ class AnchorPoint(VMobject):
         self,
         **aargs,
     ) -> Animation:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        self.play(ap.hide_dist_nominal())
+        """
         self.remove(self.ts_dist_nominal)
         return Unwrite(self.ts_dist_nominal, **aargs)
 
@@ -342,7 +867,14 @@ class AnchorPoint(VMobject):
         self,
         font_size: int = 15,
     ) -> VGroup:
-        """Create '/sf_nominal' for each dist_nominal.
+        """
+        Create '/sf_nominal' for each dist_nominal.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        result = ap.create_divide()
         """
         divide = VGroup(*(
             Text(
@@ -357,24 +889,39 @@ class AnchorPoint(VMobject):
             ) for i, direction in enumerate(DIRECTION_SERIES)
         ))
         return divide
-    
+
     def show_divide(
         self,
         **aargs,
     ) -> Animation:
-        """Append '/sf_nominal' into each dist_nominal.
+        """
+        Append '/sf_nominal' into each dist_nominal.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        self.play(ap.show_divide())
         """
         divide = self.create_divide()
         for dist, div in zip(self.ts_dist_nominal, divide):
             dist.add(div)
         return Write(divide, **aargs)
-    
+
     def nominal_to_rela(
         self,
         aargs: dict = {},       # ReplacementTransform args
         gargs: dict = {},       # AnimationGroup args
     ) -> Animation:
-        """ Convert ts_dist_nominal with divide into ts_dist.
+        """
+        Convert ts_dist_nominal with divide into ts_dist.
+
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_arrows())
+        self.play(ap.nominal_to_rela())
         """
         self.remove(self.ts_dist_nominal)
         self.ts_dist = self.create_dist()
@@ -385,7 +932,7 @@ class AnchorPoint(VMobject):
             for dist_nominal, dist_rela in zip(self.ts_dist_nominal, self.ts_dist)),
             **gargs,
         )
-    
+
     # def create_xyxy(
     #     self,
     #     font_size: int = 15,            # specify font size manually
@@ -401,7 +948,7 @@ class AnchorPoint(VMobject):
     #         ) for i in range(4))
     #     )
     #     return xyxy
-    
+
     # def create_probs(
     #     self,
     #     font_size: int = 15,
@@ -417,7 +964,7 @@ class AnchorPoint(VMobject):
     #         ) for i in range(3))
     #     )
     #     return probs
-    
+
     # def create_ordered_distance(
     #     self,
     #     font_size: int = 8,             # smaller for tensor
@@ -435,7 +982,7 @@ class AnchorPoint(VMobject):
 
     #     dists.move_to(self.dot)
     #     return dists
-    
+
     # def create_ordered_xyxy(
     #         self,
     #         font_size: int = 8,         # smaller for tensor
@@ -450,10 +997,10 @@ class AnchorPoint(VMobject):
     #         t.set_z_index(4-i)
     #         t.set_opacity(opacity=1-i*0.2)
     #         t.shift((RIGHT*0.05 + UP*0.06)*i)
-        
+
     #     xyxy.move_to(self.dot)
     #     return xyxy
-    
+
     # def create_ordered_probs(
     #     self,
     #     font_size: int = 8,
@@ -468,10 +1015,10 @@ class AnchorPoint(VMobject):
     #         t.set_z_index(4-i)
     #         t.set_opacity(opacity=1-i*0.2)
     #         t.shift((RIGHT*0.05 + UP*0.06)*i)
-        
+
     #     probs.move_to(self.dot)
     #     return probs
-    
+
 
     # def get_center(
     #     self,
@@ -480,13 +1027,67 @@ class AnchorPoint(VMobject):
     #     """
     #     return self.dot.get_center()
 
+    def create_DFL_computations(
+        self,
+        buff: float = 0.3,
+        text_config: dict = {},
+    ) -> VGroup:
+        """
+        Create 4 computations from distribution to distance.
+                   not positioned.
+                   FIXME: use 16 reg by default.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_DFL_computations()
+        """
+        cws = [ # color wrappers
+            f'<span foreground="{TEXT_COLOR_MAP[d]}">{{:.2f}}</span>'
+              for d in DIRECTION_SERIES
+            ]
+        formatters = [
+            (
+                f'  {cw}x 0 + {cw}x 1 + {cw}x 2 + {cw}x 3\n'
+                f'+ {cw}x 4 + {cw}x 5 + {cw}x 6 + {cw}x 7\n'
+                f'+ {cw}x 8 + {cw}x 9 + {cw}x10 + {cw}x11\n'
+                f'+ {cw}x12 + {cw}x13 + {cw}x14 + {cw}x15\n'
+                f'= <span foreground="white">{{:.2f}}</span>'
+            ) for cw in cws
+        ]
+        values = [
+            [float(v) for v in row] + [float(d)]
+             for row, d in zip(self.reg, self.dist)
+        ]
+
+        computations = VGroup(
+            Computation(
+                formatter=formatter,
+                values=vs,
+                **text_config,
+            ) for formatter, vs in zip(formatters, values)
+        ).arrange(
+            DOWN,
+            buff=buff,
+            aligned_edge=LEFT,
+        ).center()   # TODO, arrange args
+
+        return computations
+
+
     def create_decode_computations(
         self,
         buff: float = 0.3,              # up-down buff between computations
         text_config: dict = {},         # for computation
     ) -> VGroup:
-        """Create 4 Equations show computing from distance to position,
-           not positioned, not arranged.
+        """
+        Create 4 computations from distance to position,
+                   not positioned.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_decode_computations()
         """
         # f'({self.dir_to_idx[direction]:>2d}+0.5{self.dir_to_sign[direction]}'
         # f'<span foreground="{TEXT_COLOR_MAP[direction]}">{self.offset[i]:.2f}</span>'
@@ -520,12 +1121,19 @@ class AnchorPoint(VMobject):
         ).center()   # TODO, arrange args
 
         return computations
-    
+
+
     def create_pbars(
         self,
         pbar_config: dict={},
     ) -> VGroup:
-        """Realtime pbars based on given prob.
+        """
+        Realtime pbars based on given prob.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.create_pbars()
         """
         n_probs = len(self.prob)
         pbar_space = self.sf_screen * PBAR_SPACE_RATIO
@@ -545,14 +1153,20 @@ class AnchorPoint(VMobject):
             for i, p in enumerate(self.prob)
         )
         return pbars
-    
+
     def show_pbars(
         self,
         pbar_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """Grow pbars from baseline.
+        """
+        Grow pbars from baseline.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_pbars())
         """
         pbars_end = self.create_pbars(
             pbar_config=pbar_config,
@@ -567,14 +1181,20 @@ class AnchorPoint(VMobject):
             for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
-    
+
     def sync_pbars(
         self,
         pbar_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """Sync pbars into current prob.
+        """
+        Sync pbars into current prob.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.sync_pbars())
         """
         pbars_end = self.create_pbars(
             pbar_config=pbar_config,
@@ -584,13 +1204,19 @@ class AnchorPoint(VMobject):
             for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
-    
+
     def hide_pbars(
         self,
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """Shrink pbars into baseline.
+        """
+        Shrink pbars into baseline.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.hide_pbars())
         """
         pbars_end = self.pbars.copy()
         for bar in pbars_end:
@@ -601,14 +1227,21 @@ class AnchorPoint(VMobject):
             for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
-    
+
     def create_multi_labels(
         self,
         include_text: bool = True,      # include conf text or not
         label_config: dict = {},        # font size 12 by default
         box_config: dict = {},
     ) -> VGroup:
-        """Create multi labels, not positioned.
+        """
+        Create multi labels, not positioned.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_multi_labels())
+        result = ap.create_multi_labels()
         """
         labels = VGroup(
             AnchorLabel(
@@ -619,7 +1252,7 @@ class AnchorPoint(VMobject):
             ) for prob, color in zip(self.prob, LABEL_COLORS)
         ).arrange(RIGHT, buff=0.0)
         return labels
-    
+
     def show_multi_labels(
         self,
         include_text: bool = True,      # show conf text or not
@@ -627,7 +1260,14 @@ class AnchorPoint(VMobject):
         box_config: dict = {},
         **aargs,
     ) -> Animation:
-        """Add labels as new member.
+        """
+        Add labels as new member.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_multi_labels())
+        self.play(ap.show_multi_labels())
         """
         labels = self.create_multi_labels(
             include_text=include_text,
@@ -641,7 +1281,7 @@ class AnchorPoint(VMobject):
         self.add(self.labels)
 
         return Write(self.labels, **aargs)
-    
+
     def show_rect_mlabels(
         self,
         rect_config: dict = {},
@@ -651,7 +1291,14 @@ class AnchorPoint(VMobject):
         largs: dict = {},       # show_multi_labels animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Show rect and multi labels at a time.
+        """
+        Show rect and multi labels at a time.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_multi_labels())
+        self.play(ap.show_rect_mlabels())
         """
         anims = AnimationGroup(
             self.to_rect(
@@ -673,14 +1320,21 @@ class AnchorPoint(VMobject):
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Select max conf label and append cls label.
+        """
+        Select max conf label and append cls label.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_multi_labels())
+        result = ap.apply_max_select()
         """
         # max_idx = np.argmax(self.prob)
         max_label = self.labels[max_idx]
 
         self.cls = max_idx              # remember max class index
         self.conf = self.prob[max_idx]  # remember max class conf
-        
+
         max_target = max_label.copy().move_to(self.labels[0], aligned_edge=DL)
         max_target.mob_box.set_stroke(
             color=max_target.mob_box.fill_color,
@@ -700,17 +1354,24 @@ class AnchorPoint(VMobject):
         anims.append(self.mob.animate(**aargs).set_stroke(color=PBAR_COLORS[max_idx]))
 
         self.labels.remove(*labels_to_remove)
-        
+
         return AnimationGroup(*anims, **gargs)
-    
+
     def use_color(
         self,
         color: ManimColor = PURE_YELLOW,
         font_color: ManimColor = None,
     ) -> Self:
-        """TODO: better naming?
-           Setup fill color of labels[0].mob_box and stroke color of mob.
-           Usually used after save_state, to be restored soon.
+        """
+        TODO: better naming?
+                   Setup fill color of labels[0].mob_box and stroke color of mob.
+                   Usually used after save_state, to be restored soon.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_multi_labels())
+        ap.use_color()
         """
         # self.labels[0].mob_box.set_fill(color=color, opacity=1.0)
         # self.labels[0].mob_box.set_stroke(color=color, opacity=1.0)
@@ -719,52 +1380,98 @@ class AnchorPoint(VMobject):
         if font_color is not None:
             self.labels[0].mob_text.set_color(color=font_color)
         return self
-    
+
     def use_fade(
         self,
         darkness: float = 0.5,
     ) -> Self:
-        """NOTE: better naming?
-           Fade all, hide label_box's stroke for better visual effect.
+        """
+        NOTE: better naming?
+                   Fade all, hide label_box's stroke for better visual effect.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_multi_labels())
+        ap.use_fade()
         """
         self.labels[0].mob_box.fade(darkness=darkness)
         self.labels[0].mob_box.set_stroke(opacity=0.0)
         self.labels[0].mob_text.fade(darkness=darkness)
         self.mob.fade(darkness=darkness)
         return self
-    
-    def clip_to_background(
+
+    def check_clip(
         self,
         background,
+    ) -> bool:
+        """
+        Check if current ap remains after clipping.
+                   Save target intersection by the way.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap.check_clip(background=Square())
+        """
+        self.clip_target = self._intersect_background(background)
+        return self.clip_target is not None
+
+    def do_clip(
+        self,
         **aargs,        # for both labels and rect
     ) -> Animation:
-        anims = []
-        inter_rect = self._intersect_bg(
-            background,
+        """
+        Make rect clipping.
+                   clip_target should be properly setup.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        self.play(ap.show_multi_labels())
+        self.play(ap.do_clip())
+        """
+        self.remove(self.rect)
+        self.rect = self.clip_target    # NOTE: use's responsibility
+        anims = AnimationGroup(
+            self.to_rect(
+                rect_config={},
+            ),
+            self.labels.animate.move_to(
+                self.rect.get_corner(UL),
+                aligned_edge=DL,
+            ),
+            **aargs,
         )
-        if inter_rect is None:
-            anims.append(Unwrite(self)) # TODO, or fade out???
-        else:
-            self.remove(self.rect)
-            self.rect = inter_rect
-            anims.append(AnimationGroup(
-                self.to_rect(
-                    rect_config={},
-                    **aargs,
-                ),
-                self.labels.animate(**aargs).move_to(
-                    self.rect.get_corner(UL),
-                    aligned_edge=DL,
-                ),
-            ))
-        return AnimationGroup(*anims)
-    
-    def _intersect_bg(
+        return anims
+        #     anims.append(Unwrite(self)) # TODO, or fade out???
+        # else:
+        #     self.remove(self.rect)
+        #     self.rect = inter_rect
+        #     anims.append(AnimationGroup(
+        #         self.to_rect(
+        #             rect_config={},
+        #             **aargs,
+        #         ),
+        #         self.labels.animate(**aargs).move_to(
+        #             self.rect.get_corner(UL),
+        #             aligned_edge=DL,
+        #         ),
+        #     ))
+        # return AnimationGroup(*anims)
+
+    def _intersect_background(
         self,
         background,
     ) -> Rectangle | None:
-        """Compute the intersection between self.rect and background
-        return a new Rectangle if intersected, otherwise return None.
+        """
+        Compute the intersection between self.rect and background
+                   return a new Rectangle if intersected, None otherwise.
+
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap._intersect_background(background=Square())
         """
         r1, r2 = self.rect, background
         # compute edges of intersection
@@ -779,16 +1486,22 @@ class AnchorPoint(VMobject):
             height = y_max - y_min
             # The center is the average of the min and max coordinates
             center = [(x_min + x_max) / 2, (y_min + y_max) / 2, 0]
-            
+
             rect = Rectangle(width=width, height=height).move_to(center)
             return rect.match_style(self.mob)
-        
+
         return None # no intersection
 
     def _align_ts_to_arrows(
         self,
         ts,         # VGroup of 4 Texts
     ) -> Self:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        result = ap._align_ts_to_arrows(ts=VGroup(Text("1"), Text("2"), Text("3"), Text("4")))
+        """
         for i, direction in enumerate(DIRECTION_SERIES):
             ts[i].next_to(
                 self.arrows[i],
@@ -799,44 +1512,92 @@ class AnchorPoint(VMobject):
 
     @property
     def dir_to_idx(self) -> dict:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.dir_to_idx
+        """
         return {
             'left':  self.index[1],
             'up':    self.index[0],
             'right': self.index[1],
             'down':  self.index[0],
         }
-    
+
     @property
     def dir_to_sign(self) -> dict:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.dir_to_sign
+        """
         return {
             'left':  '-',
             'up':    '-',
             'right': '+',
             'down':  '+',
         }
-    
+
     @property
     def sf_screen(self) -> float:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.sf_screen
+        """
         return self.ref.width
 
     @property
     def node_left(self) -> np.ndarray:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.node_left
+        """
         return np.array([self.rect.get_left()[0], self.dot.get_center()[1], 0])
-    
+
     @property
     def node_up(self) -> np.ndarray:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.node_up
+        """
         return np.array([self.dot.get_center()[0], self.rect.get_top()[1], 0])
 
     @property
     def node_right(self) -> np.ndarray:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.node_right
+        """
         return np.array([self.rect.get_right()[0], self.dot.get_center()[1], 0])
 
     @property
     def node_down(self) -> np.ndarray:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.node_down
+        """
         return np.array([self.dot.get_center()[0], self.rect.get_bottom()[1], 0])
 
     @property
     def node_map(self) -> dict:
+        """
+        Example
+        -------
+        ap = AnchorPoint(reg=np.random.rand(4, 16))
+        value = ap.node_map
+        """
         return {
             'left':  self.node_left,
             'up':    self.node_up,
@@ -845,66 +1606,58 @@ class AnchorPoint(VMobject):
         }
 
 
-class Demo(Scene):
+class Demo(ThreeDScene):
     def construct(self):
+        reg = np.random.rand(4, 16)
+        reg /= reg.sum(axis=1, keepdims=True)
         ap = AnchorPoint(
             point=ORIGIN,
+            reg=reg,
             dist=(1.3,2.8,3.3,4.5),
             xyxy=(10,20,30,40),
             prob=(0.5,0.5,0.5),
             index=(0,1),
             sf_nominal=32,
-            sf_screen=0.5,
+            sf_screen=0.2,
         )
         self.play(Create(ap, run_time=0.3))
         self.wait()
 
-        # self.play(ap.show_arrows(
-        #     lag_ratio=0.2,
-        #     rate_func=rate_functions.ease_out_back,
-        # ))
-        # self.wait()
+        cps = ap.create_DFL_computations()
 
-        # self.play(ap.show_pbars())
-        # self.wait()
+        for i, direction in enumerate(DIRECTION_SERIES):
+            self.play(ap.show_pcells_direction(
+                direction=direction,
+                label_config={
+                    'font_size': 10,
+                    'color': WHITE,
+                },
+                box_config={},
+                lag_ratio = 0.5,
+                run_time = 0.5,
+            ))
+            self.wait(0.5)
 
-        ap.prob = np.array([0.7, 0.8, 0.2])
-        # self.play(ap.sync_pbars())
-        # self.wait()
+            self.play(ap.show_pcells_text_direction(
+                direction=direction,
+                lag_ratio=0.5,
+                run_time=0.5
+            ))
+            self.wait(0.5)
 
-        # self.play(ap.hide_pbars())
-        # self.wait()
+            self.play(Create(cps[i]))
+            self.wait(0.5)
 
-        # self.play(ap.to_rect())
-        # self.wait()
+            self.play(ap.hide_pcells_text_direction(
+                direction=direction,
+                lag_ratio=0.5,
+                run_time=0.5
+            ))
+            self.wait(0.5)
 
-        # self.play(ap.show_multi_labels())
-        # self.wait()
-
-        self.play(ap.show_rect_mlabels(
-            rect_config={},
-            label_config={
-                'width_ratio': 0.3,
-                'height_ratio': 0.2,
-                # 'fill_opacity': 0.8,
-                # 'stroke_opacity': 0.8,
-            },
-            rargs={'rate_func': rate_functions.ease_out_back},
-            largs={'lag_ratio': 0.1},
-            gargs={'lag_ratio': 0.0},
-        ))
-        self.wait()
-
-        self.play(ap.apply_max_select())
-        self.wait()
-
-
-        # rect = Rectangle()
-        # self.play(Write(rect))
-        # self.wait()
-
-        # self.play(ap.clip_to_background(rect))
-        # self.wait()
-
-        # self.play(ap.keep_max_label())
-        # self.wait()
+            self.play(ap.show_arrow_direction(
+                direction=direction,
+                arrow_config={},
+                run_time=0.5,
+            ))
+            self.wait(0.5)

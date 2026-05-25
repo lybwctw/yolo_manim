@@ -1,21 +1,41 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.image_pad import ImagePad
+    from utils.show_shape import ShowShape, HideShape
+
+    ipad = ImagePad(path='../assets/images/sample_640x360.jpg', padded=False)
+    self.add(ipad)
+    self.play(ipad.show_natural_paddings())
+    self.play(ipad.hide_paddings(width_nominal=640, height_nominal=360))
+    self.play(ShowShape(ipad))
+    self.play(HideShape(ipad))
+"""
+
 import sys
 sys.path.append('..')
 
 from manim import *
 
 from utils.image_raw import ImageRaw
-from utils.show_shape import ShowShape
+from utils.show_shape import *
 from utils.constants import *
 
-class ImagePad(Mobject, ShowShape):
+class ImagePad(Mobject, ShowShapeMixin):
     def __init__(
         self,
         image_raw: ImageRaw = None,         # from ImageRaw
         path: str = PATH_IMAGE_640,         # from image path
         width_nominal: int | None = None,   # nominal width
         height_nominal: int | None = None,  # nominal height
-        padded: bool = False,               # padded or not 
+        padded: bool = False,               # padded or not
     ):
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        """
         super().__init__()
 
         if image_raw:
@@ -50,11 +70,18 @@ class ImagePad(Mobject, ShowShape):
                 self.height_nominal = max(self.width_nominal, self.height_nominal)
                 self.paddings = paddings
                 self.add(self.paddings)
-    
+
     def set_opacity(self, alpha):
-        """ Override set_opacity because there are 
-            different interfaces when setting opacity
-            for ImageMobject and VMobject.
+        """
+        Override set_opacity because there are
+                   different interfaces when setting opacity
+                   for ImageMobject and VMobject.
+
+
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        ipad.set_opacity(alpha=0.5)
         """
         self.image.set_opacity(alpha)
 
@@ -63,18 +90,51 @@ class ImagePad(Mobject, ShowShape):
 
         return self
 
-    def get_shape_path(self):
+    def get_shape_path(
+        self,
+        **path_config,
+    ) -> VMobject:
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        result = ipad.get_shape_path()
+        """
         path = VMobject()
         path.set_points_as_corners([
             self.get_corner(DL),
             self.get_corner(UL),
             self.get_corner(UR),
-        ]).set_stroke(color=YELLOW)
+        ]).set_stroke(**path_config)
         return path
-    
-    def get_shape_text(self):
-        text_h = Text(str(self.height_nominal), font_size=20).next_to(self, LEFT)
-        text_w = Text(str(self.width_nominal), font_size=20).next_to(self, UP)
+
+    def get_shape_text(
+        self,
+        **text_config,
+    ) -> VGroup:
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        result = ipad.get_shape_text()
+        """
+        buff = text_config.pop('buff', 0.15)
+        text_h = Text(
+            str(self.height_nominal),
+            **text_config,
+        ).next_to(
+            self,
+            LEFT,
+            buff=buff,
+        )
+        text_w = Text(
+            str(self.width_nominal),
+            **text_config,
+        ).next_to(
+            self,
+            UP,
+            buff=buff,
+        )
         text = VGroup(text_h, text_w)
         return text
 
@@ -84,6 +144,12 @@ class ImagePad(Mobject, ShowShape):
         paddings: tuple = (1,1),
         **config,
     ):
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        result = ipad.create_paddings()
+        """
         width, height = self.image.width, self.image.height
 
         if updown:
@@ -110,11 +176,17 @@ class ImagePad(Mobject, ShowShape):
             ).next_to(self.image, RIGHT, buff=0)
 
         return VGroup(p1, p2)
-    
+
     def create_natural_paddings(
         self,
         paddings: tuple | None = None,
     ):
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        result = ipad.create_natural_paddings()
+        """
         if self.width_nominal == self.height_nominal:
             paddings = None
         elif self.width_nominal > self.height_nominal:
@@ -123,7 +195,7 @@ class ImagePad(Mobject, ShowShape):
                     (self.image.width-self.image.height)/2,
                     (self.image.width-self.image.height)/2,
                 )
-                
+
             paddings = self.create_paddings(
                 updown=True,
                 paddings=paddings,
@@ -135,7 +207,7 @@ class ImagePad(Mobject, ShowShape):
                     (self.image.height-self.image.width)/2,
                     (self.image.height-self.image.width)/2,
                 )
-                
+
             paddings = self.create_paddings(
                 updown=False,
                 paddings=paddings,
@@ -151,6 +223,12 @@ class ImagePad(Mobject, ShowShape):
         width_nominal: int | None = None,       # manual nominal update
         height_nominal: int | None = None,      # manual nominal update
     ):
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        self.play(ipad.show_paddings())
+        """
         # empty animation if already padded
         if self.paddings:
             return Wait()
@@ -184,6 +262,12 @@ class ImagePad(Mobject, ShowShape):
     def show_natural_paddings(
         self,
     ):
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        self.play(ipad.show_natural_paddings())
+        """
         if self.width_nominal == self.height_nominal:
             return Wait()
         elif self.width_nominal > self.height_nominal:
@@ -204,7 +288,7 @@ class ImagePad(Mobject, ShowShape):
                 ),
                 width_nominal=self.height_nominal,
             )
-        
+
     def hide_paddings(
         self,
         updown: bool = True,    # user is responsible for providing correct updown
@@ -213,6 +297,13 @@ class ImagePad(Mobject, ShowShape):
         aargs: dict = {},       # transform args
         gargs: dict = {},       # group args
     ) -> Animation:
+        """
+        Example
+        -------
+        ipad = ImagePad(padded=True)
+        self.play(ipad.show_natural_paddings())
+        self.play(ipad.hide_paddings())
+        """
         if not self.paddings:
             return Wait()
 

@@ -1,7 +1,7 @@
 from manim import *
 
 from utils.constants import *
-from utils.general import load_everything
+from utils.general import import_mobs
 from utils.layers_fake import LayersFake
 from utils.multi_arrow import MultiArrow
 from utils.arrow_comment import ArrowComment
@@ -21,7 +21,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start with xyxyccc format',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # FIXME: use background from 017 for better continuity
@@ -29,9 +29,8 @@ class MainScene(Scene):
         # FIXME: use random 10x10 for now
         explainer = Explainer.from_file(
             background=background,
-            version='mini',
-            sf_nominal=64,
-        )   # for reference
+            version=64,
+        )
 
         # tensor starts with xyxyccc
         tensor_raw = Tensor2D.from_ref(
@@ -53,7 +52,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply take max',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor_cmax = tensor_raw.into_take_max(
@@ -76,7 +75,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply conf filter',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor_conf = tensor_cmax.into_filter_conf(
@@ -100,7 +99,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply class split',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensors_split = tensor_conf.into_splitted(
@@ -128,7 +127,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sort each class',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensors_sort = []

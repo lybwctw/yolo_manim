@@ -1,3 +1,19 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.image_pad import ImagePad
+    from utils.yolo_annotation import YoloAnnotation
+
+    background = ImagePad(path='../assets/images/sample_640_360.jpg', padded=False)
+    annotation = YoloAnnotation(background=background, annotation='../assets/images/labels.txt')
+    anno_with_bg = Group(background, annotation)
+    self.add(background)
+    self.play(Write(annotation))
+    self.play(anno_with_bg.animate.scale(1.5).shift(LEFT*2))
+    self.play(annotation.show_passing_flash())
+"""
+
 import sys
 sys.path.append('..')
 
@@ -45,6 +61,11 @@ class SingleAnnotation(VMobject):
         label_bg_config: dict = {},
         bbox_config: dict = {},     # width, height
     ):
+        """
+        Example
+        -------
+        annotation = SingleAnnotation({"bbox": [0, 0, 1, 1], "cls": 0})
+        """
         super().__init__()
         self.text = text
         self.label_config = {**ANNO_LABEL_CONFIG, **label_config}
@@ -80,7 +101,7 @@ class SingleAnnotation(VMobject):
         self.bbox = bbox
         self.label = label
         self.add(self.bbox, self.label)
-        
+
 
 class YoloAnnotation(VMobject):
     def __init__(
@@ -90,11 +111,16 @@ class YoloAnnotation(VMobject):
         name_map: dict = KK_NAME_MAP,
         color_map: dict = KK_COLOR_MAP,
     ):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        """
         super().__init__()
-        
+
         if isinstance(background, (str, type(None))):
             background = ImageRaw(background or PATH_IMAGE_640)
-        
+
         self.background = background
         self.name_map = name_map
         self.color_map = color_map
@@ -143,21 +169,51 @@ class YoloAnnotation(VMobject):
     def show_passing_flash(
         self,
     ):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        self.play(annotation.show_passing_flash())
+        """
         return self.background.show_passing_flash()
 
     def unwrite_shape_texts(
         self,
     ):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        result = annotation.unwrite_shape_texts()
+        """
         return self.background.unwrite_shape_texts()
 
     def hide_text(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        self.play(annotation.hide_text())
+        """
         pass
 
     def unhide_text(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        result = annotation.unhide_text()
+        """
         pass
 
     @property
     def labels(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        value = annotation.labels
+        """
         res = VGroup()
         for anno in self.annotation:
             res.add(anno.label)
@@ -165,6 +221,12 @@ class YoloAnnotation(VMobject):
 
     @property
     def bboxes(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        value = annotation.bboxes
+        """
         res = VGroup()
         for anno in self.annotation:
             res.add(anno.bbox)
@@ -172,14 +234,32 @@ class YoloAnnotation(VMobject):
 
     @property
     def cls(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        value = annotation.cls
+        """
         return self.data[:, 0].astype(np.int32)
 
     @property
     def xywh(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        value = annotation.xywh
+        """
         return self.data[:, 1:5]
 
     @property
     def xywh_abs(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        value = annotation.xywh_abs
+        """
         scale = np.array([
             self.background.width_nominal,
             self.background.height_nominal,
@@ -187,9 +267,15 @@ class YoloAnnotation(VMobject):
             self.background.height_nominal,
         ])
         return self.xywh * scale
-    
+
     @property
     def xyxy(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        value = annotation.xyxy
+        """
         cx, cy, w, h = self.xywh.T
         x1 = cx - w / 2
         y1 = cy - h / 2
@@ -199,6 +285,12 @@ class YoloAnnotation(VMobject):
 
     @property
     def xyxy_abs(self):
+        """
+        Example
+        -------
+        annotation = YoloAnnotation(background=background, annotation="assets/images/labels.txt")
+        value = annotation.xyxy_abs
+        """
         cx, cy, w, h = self.xywh.T
         x1 = (cx - w / 2) * self.background.width_nominal
         y1 = (cy - h / 2) * self.background.height_nominal
@@ -206,7 +298,7 @@ class YoloAnnotation(VMobject):
         y2 = (cy + h / 2) * self.background.height_nominal
 
         return np.stack([x1, y1, x2, y2], axis=1)
-        
+
 
 # FIXME: copy of ImageRepad, expediency
 class AnnotationRepad(Mobject, ShowShape):
@@ -215,6 +307,11 @@ class AnnotationRepad(Mobject, ShowShape):
         annotation,
         padded=False,
     ):
+        """
+        Example
+        -------
+        annotation_repad = AnnotationRepad(annotation)
+        """
         super().__init__()
         self.scale_factor = 1.0
         self.annotation = annotation    # ImageAnnotation
@@ -255,6 +352,12 @@ class AnnotationRepad(Mobject, ShowShape):
         self.add(annotation)
 
     def get_shape_path(self):
+        """
+        Example
+        -------
+        annotation_repad = AnnotationRepad(annotation)
+        result = annotation_repad.get_shape_path()
+        """
         path = VMobject()
         if self.natural_pad:
             path.set_points_as_corners([
@@ -271,6 +374,12 @@ class AnnotationRepad(Mobject, ShowShape):
         return path
 
     def get_shape_text(self):
+        """
+        Example
+        -------
+        annotation_repad = AnnotationRepad(annotation)
+        result = annotation_repad.get_shape_text()
+        """
         if self.natural_pad:
             text_h = Text(str(self._h), font_size=20).next_to(self.annotation, LEFT)
             text_w = Text(str(self._w), font_size=20).next_to(self.paddings[1], UP)
@@ -281,6 +390,12 @@ class AnnotationRepad(Mobject, ShowShape):
         return text
 
     def show_paddings(self):
+        """
+        Example
+        -------
+        annotation_repad = AnnotationRepad(annotation)
+        self.play(annotation_repad.show_paddings())
+        """
         if self.padded:
             return None
 

@@ -1,7 +1,7 @@
 from manim import *
 
 from utils.constants import *
-from utils.general import load_everything
+from utils.general import import_mobs
 from utils.layers_fake import LayersFake
 from utils.multi_arrow import MultiArrow
 from utils.arrow_comment import ArrowComment
@@ -11,7 +11,7 @@ from utils.image_pad import ImagePad
 
 FAST_RT = 0.1
 
-CONF_THRESH = 0.7
+CONF_THRESH = 0.5
 IOU_THRESH = 0.05
 
 # TODO: multi-label option
@@ -21,7 +21,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'start with xyxyccc format',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # FIXME: use background from 017 for better continuity
@@ -29,8 +29,7 @@ class MainScene(ThreeDScene):
         # FIXME: use random 10x10 for now
         explainer = Explainer.from_file(
             background=background,
-            version='mini',
-            sf_nominal=64,
+            version=64,
         )
         system = Group(background, explainer)
         self.add(system)
@@ -55,7 +54,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply take max',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         explainer.apply_max_select(
@@ -67,7 +66,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply conf filter',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         explainer.apply_conf_filter(
@@ -80,7 +79,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply class split',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # nothing for now
@@ -88,7 +87,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'sort each class',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # nothing for now
@@ -128,16 +127,16 @@ class MainScene(ThreeDScene):
         ).shift(OUT*BG_GAP*2))
         self.wait(0.5)
 
-        # apply NMS for each class
-        for cls in range(3):
-            explainer.apply_nms_filter(
-                self,
-                cls=cls,
-                iou_thresh=IOU_THRESH,
-                offset=BG_GAP*2,
-                run_time_ratio=FAST_RT,
-            )
-            self.wait(0.3)
+        # # apply NMS for each class
+        # for cls in range(3):
+        #     explainer.apply_nms_filter(
+        #         self,
+        #         cls=cls,
+        #         iou_thresh=IOU_THRESH,
+        #         offset=BG_GAP*2,
+        #         run_time_ratio=FAST_RT,
+        #     )
+        #     self.wait(0.3)
         
         # back to 2d perspective
         self.play(Unwrite(

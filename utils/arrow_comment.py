@@ -1,3 +1,13 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.arrow_comment import ArrowComment
+
+    a1 = ArrowComment(double=True, direction=DOWN)
+    self.play(Write(a1))
+"""
+
 import sys
 sys.path.append('..')
 
@@ -17,8 +27,13 @@ class ArrowComment(VMobject):
         self,
         double: bool = False,                   # double arrow or not
         direction: np.ndarray = RIGHT,          # direction of arrow
-        comment: str = '?',                     # pop out comment
+        comment: str = '',                     # pop out comment
     ):
+        """
+        Example
+        -------
+        arrow_comment = ArrowComment()
+        """
         super().__init__()
         self.comment = comment      # not implemented yet
 
@@ -36,7 +51,6 @@ class ArrowComment(VMobject):
             )
 
         self.add(self.arrow)
-
 
 class Demo(Scene):
     def construct(self):

@@ -13,6 +13,7 @@ from utils.general import sf2dir
 # from utils.tensor_2d import Tensor2D
 from utils.constants import *
 
+import random
 import numpy as np
 import os
 
@@ -35,20 +36,28 @@ class Explainer(VGroup):
     def __init__(
         self,
         background: ImageRaw | ImagePad | None = None,
+        reg_3d: np.ndarray = np.ones((4,4,64)),     # (h, w, 64)
         dist_3d: np.ndarray = np.ones((4,4,4)),     # (h, w, 4)
         prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
         sf_nominal: int = 32,                       # 8|16|32
     ):
+        """
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        """
         super().__init__()
         self.background = background
         self.sf_nominal = sf_nominal
 
-        assert dist_3d.shape[:2] == prob_3d.shape[:2]
-
-        dist_2d = dist_3d.reshape(-1, 4)
-        prob_2d = prob_3d.reshape(-1, 3)
+        assert reg_3d.shape[:2] == dist_3d.shape[:2] == prob_3d.shape[:2]
 
         h, w = dist_3d.shape[:2]
+
+        reg_2d = reg_3d.reshape(h*w, -1)        # (h*w, 64)
+        dist_2d = dist_3d.reshape(h*w, -1)      # (h*w, 4)
+        prob_2d = prob_3d.reshape(h*w, -1)      # (h*w, 3)
+
         ys, xs = np.meshgrid(
             np.arange(h),
             np.arange(w),
@@ -87,6 +96,8 @@ class Explainer(VGroup):
         self.indices_2d = indices_2d        # (h*w, 2), TODO: update?
         self.center_3d = center_3d          # (h,w, 2)
         self.center_2d = center_2d          # (h*w, 2), TODO: update?
+        self.reg_3d = reg_3d                # (h,w, 64)
+        self.reg_2d = reg_2d                # (h*w, 64)
         self.dist_3d = dist_3d              # (h,w, 4)
         self.dist_2d = dist_2d              # (h*w, 4), TODO: update?
         self.xyxy_3d = xyxy_3d              # (h,w, 4)
@@ -99,10 +110,16 @@ class Explainer(VGroup):
 
         # FIXME, more elegant way?
         self.tmp_txts = None
-    
+
     def create_grid(
         self,
     ) -> VMobject:
+        """
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = explainer.create_grid()
+        """
         grid = Rectangle(
             width=self.background.width,
             height=self.background.height,
@@ -117,11 +134,20 @@ class Explainer(VGroup):
         )
 
         return grid
-    
+
     def show_grid(
         self,
         **aargs,
     ) -> Animation:
+        """
+        Show the stride grid over the background.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_grid())
+        """
         self.grid = self.create_grid()
         self.add(self.grid)
 
@@ -131,17 +157,34 @@ class Explainer(VGroup):
         self,
         **aargs,
     ) -> Animation:
+        """
+        Hide the stride grid.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.hide_grid())
+        """
         self.remove(self.grid)
         return Unwrite(self.grid, **aargs)
 
     def create_anchor_points(
         self,
     ) -> VGroup:
+        """
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        result = explainer.create_anchor_points()
+        """
         anchor_points = VGroup(*[
             AnchorPoint(
                 point=self.background.get_corner(UL)+
                     self.center_3d[i,j][0]*DOWN*self.sf_screen+
                     self.center_3d[i,j][1]*RIGHT*self.sf_screen,
+                reg=self.reg_3d[i,j].reshape(4,-1),
                 dist=self.dist_3d[i,j],
                 xyxy=self.xyxy_3d[i,j],
                 prob=self.prob_3d[i,j],
@@ -158,6 +201,13 @@ class Explainer(VGroup):
         self,
         **aargs,
     ) -> Animation:
+        """
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.show_anchor_points())
+        """
         self.anchor_points = self.create_anchor_points()
         self.add(self.anchor_points)
         return Write(self.anchor_points,**aargs)
@@ -168,7 +218,15 @@ class Explainer(VGroup):
         aargs: dict = {},       # to_rect args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Capture target for all anchor points.
+        """
+        Capture target for all anchor points.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_rects())
         """
         anims = AnimationGroup(
             *(ap.to_rect(
@@ -185,7 +243,15 @@ class Explainer(VGroup):
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """Back to dot for all anchor points.
+        """
+        Back to dot for all anchor points.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_dots())
         """
         anims = AnimationGroup(
             *(ap.to_dot(
@@ -195,7 +261,7 @@ class Explainer(VGroup):
             **gargs,
         )
         return anims
-    
+
     def show_arrows(
         self,
         arrow_config: dict={},
@@ -203,7 +269,15 @@ class Explainer(VGroup):
         gargs: dict = {},
         ggargs: dict = {},
     ) -> Animation:
-        """Show arrows for all anchor points.
+        """
+        Show arrows for all anchor points.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.show_arrows())
         """
         anim = AnimationGroup(
             *(ap.show_arrows(
@@ -214,13 +288,21 @@ class Explainer(VGroup):
             **ggargs,
         )
         return anim
-    
+
     def hide_arrows(
         self,
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """Hide Arrows for all anchor points.
+        """
+        Hide Arrows for all anchor points.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.hide_arrows())
         """
         anim = AnimationGroup(
             *(ap.hide_arrows(
@@ -229,7 +311,7 @@ class Explainer(VGroup):
             **gargs,
         )
         return anim
-    
+
     def show_pbars(
         self,
         pbar_config: dict = {},
@@ -237,7 +319,15 @@ class Explainer(VGroup):
         gargs: dict = {},
         ggargs: dict = {},
     ) -> Animation:
-        """Show pbars for each anchor points.
+        """
+        Show pbars for each anchor points.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.show_pbars())
         """
         anim = AnimationGroup(
             *(ap.show_pbars(
@@ -248,7 +338,7 @@ class Explainer(VGroup):
             **ggargs,
         )
         return anim
-    
+
     def sync_pbars(
         self,
         pbar_config: dict = {},
@@ -256,8 +346,16 @@ class Explainer(VGroup):
         gargs: dict = {},
         ggargs: dict = {},
     ) -> Animation:
-        """Sync pbars into current prob for all anchor points.
-           Used after explainer.prob = ....
+        """
+        Sync pbars into current prob for all anchor points.
+        Used after updating explainer.prob.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.sync_pbars())
         """
         anim = AnimationGroup(
             *(ap.sync_pbars(
@@ -268,14 +366,22 @@ class Explainer(VGroup):
             **ggargs,
         )
         return anim
-    
+
     def hide_pbars(
         self,
         aargs: dict = {},
         gargs: dict = {},
         ggargs: dict = {},
     ) -> Animation:
-        """Hide pbars for all anchor points.
+        """
+        Hide pbars for all anchor points.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.hide_pbars())
         """
         anim = AnimationGroup(
             *(ap.hide_pbars(
@@ -285,7 +391,7 @@ class Explainer(VGroup):
             **ggargs,
         )
         return anim
-    
+
     def show_multi_labels(
         self,
         include_text: bool = True,  # show conf text or not
@@ -294,8 +400,17 @@ class Explainer(VGroup):
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        """Show multi-labels for all anchor points.
-           Assume that rects is ready.
+        """
+        Show multi-labels for all anchor points.
+                   Assume that rects is ready.
+
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_rects())
+        self.play(explainer.show_multi_labels())
         """
         anim = AnimationGroup(
             *(ap.show_multi_labels(
@@ -318,7 +433,14 @@ class Explainer(VGroup):
         gargs: dict = {},       # ap.show_rect_mlabels group args
         ggargs: dict = {},      # group of ap.show_rect_mlabels group args
     ) -> Animation:
-        """FIXME: display issue.
+        """
+        FIXME: display issue.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.to_rects())
+        self.play(explainer.show_rect_mlabels())
         """
         anim = AnimationGroup(
             *(ap.show_rect_mlabels(
@@ -338,10 +460,18 @@ class Explainer(VGroup):
         scene: Scene,
         run_time_ratio: float = 1.0,
     ) -> None:
-        """[Internal animation]
-           Apply max conf filter.
-           Keep max label for all anchor points.
-           cls and conf created here.
+        """
+        [Internal animation]
+                   Apply max conf filter.
+                   Keep max label for all anchor points.
+                   cls and conf created here.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_rects())
+        result = explainer.apply_max_select(scene=self)
         """
         res_data = np.empty((0, 6))     # always 4+2
 
@@ -373,8 +503,15 @@ class Explainer(VGroup):
         offset: float = 5.0,    # distance between bg and conf 1.0
         run_time_ratio: float = 1.0,
     ) -> None:
-        """[Internal animation]
-           Show anchor points in a 3d scene.
+        """
+        [Internal animation]
+                   Show anchor points in a 3d scene.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.show_3d_aps(scene=self))
         """
         # change view point
         scene.move_camera(
@@ -393,7 +530,7 @@ class Explainer(VGroup):
 
         for ap in self.anchor_points:
             ap.save_state()
-        
+
         # cool animation to show distribution of conf
         scene.play(AnimationGroup(
             *(ap.animate(
@@ -438,8 +575,16 @@ class Explainer(VGroup):
         conf_thresh: float = 0.25,
         run_time_ratio: float = 1.0,
     ) -> None:
-        """[Internal animation]
-           Apply conf filter inplace.
+        """
+        [Internal animation]
+                   Apply conf filter inplace.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_rects())
+        result = explainer.apply_conf_filter(scene=self)
         """
         res_data = np.empty((0, self.data.shape[1]))
 
@@ -451,39 +596,43 @@ class Explainer(VGroup):
                 remove_aps.add(self.anchor_points[idx])
             else:
                 res_data = np.vstack([res_data, row])
-        
+
         # update internal data
         self.data = res_data
 
-        # fade all low conf aps before removing
-        scene.play(AnimationGroup(
-            *(ApplyMethod(ap.use_fade, 0.8)
-             for ap in remove_aps),
-            lag_ratio=0.3,
-            run_time=1.0*run_time_ratio,
-        ))
-        scene.wait(1.0*run_time_ratio)
+        # fade and unwrite all low conf aps
+        if remove_aps:
+            scene.play(AnimationGroup(
+                *(ApplyMethod(ap.use_fade, 0.8)
+                for ap in remove_aps),
+                lag_ratio=0.3,
+                run_time=1.0*run_time_ratio,
+            ))
+            scene.wait(1.0*run_time_ratio)
+            scene.play(AnimationGroup(
+                *(Unwrite(ap) for ap in remove_aps[::-1]),  # reverse for better visual effect
+                lag_ratio=0.3,
+                run_time=1.0*run_time_ratio,
+            ))
+            scene.wait(1.0*run_time_ratio)
 
-        # unwrite all low conf aps
-        anims = AnimationGroup(
-            *(Unwrite(ap) for ap in remove_aps[::-1]),  # reverse for better visual effect
-            lag_ratio=0.3,
-            run_time=1.0*run_time_ratio,
-        )
-        scene.play(anims)
-        scene.wait(1.0*run_time_ratio)
+            # remove aps from group
+            self.anchor_points.remove(*remove_aps)
 
-        # remove aps from group
-        self.anchor_points.remove(*remove_aps)
-    
     def apply_sort(
         self,
         scene: Scene,
     ) -> None:
-        """Sort aps according to conf.
-           Cool expansion->sorting animation.
-           No significant change after sort.
-           Nothing for now.
+        """
+        Sort aps according to conf.
+                   Cool expansion->sorting animation.
+                   No significant change after sort.
+                   Nothing for now.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = explainer.apply_sort(scene=self)
         """
         pass
 
@@ -491,7 +640,13 @@ class Explainer(VGroup):
         self,
         cls: int = -1,  # NMS between all classes by default
     ) -> tuple:
-        """Take aps with specific cls, return their indices and the rest.
+        """
+        Take aps with specific cls, return their indices and the rest.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = explainer.take_aps_with_cls()
         """
         work_idxs = []
         other_idxs = []
@@ -501,7 +656,7 @@ class Explainer(VGroup):
             else:
                 other_idxs.append(idx)
         return work_idxs, other_idxs
-    
+
     def apply_nms_filter(
         self,
         scene: ThreeDScene,             # only works for 3d scene
@@ -510,10 +665,18 @@ class Explainer(VGroup):
         offset: float = 2.0,            # keep space offset
         run_time_ratio: float = 1.0,
     ) -> None:
-        """[Internal animation]
-           Apply NMS filter for specific class or for all.
-           Sort aps and append, sort data and append.
-           TODO: fast mode, filter candidates all at onces.
+        """
+        [Internal animation]
+                   Apply NMS filter for specific class or for all.
+                   Sort aps and append, sort data and append.
+                   TODO: fast mode, filter candidates all at onces.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_rects())
+        result = explainer.apply_nms_filter(scene=self)
         """
         work_idxs, other_idxs = self.take_aps_with_cls(cls)
         if len(work_idxs) == 0:
@@ -542,7 +705,7 @@ class Explainer(VGroup):
             #     run_time=1.0 * run_time_ratio,
             # ).fade(0.9)) # send to back
             scene.wait(1.0 * run_time_ratio)
-        
+
         # NMS animations
         res_data = np.empty((0, work_data.shape[1]))
         res_aps = VGroup()
@@ -618,7 +781,7 @@ class Explainer(VGroup):
                     ))
                     # scene.remove(work_aps[idx]) # remove from scene?
                     # scene.wait(0.5*run_time_ratio)
-            
+
             # fade current best ap
             scene.play(k_ap.animate(
                 run_time=1.0*run_time_ratio,
@@ -627,7 +790,7 @@ class Explainer(VGroup):
 
             # NOTE: filter cand_idxs using survive_mask
             cand_idxs = [x for x, s in zip(cand_idxs, survive_mask) if s]
-        
+
         # restore opacity and color of all kept aps
         scene.play(AnimationGroup(
             *(ap.animate.restore() for ap in res_aps),
@@ -656,12 +819,18 @@ class Explainer(VGroup):
         self.data = np.vstack([other_data, res_data])
 
         return None
-    
+
     def apply_max_count_filter(
         self,
         scene: Scene,
     ) -> None:
-        """Apply max count filter.
+        """
+        Apply max count filter.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = explainer.apply_max_count_filter(scene=self)
         """
         pass
 
@@ -669,227 +838,302 @@ class Explainer(VGroup):
         self,
         scene: Scene,
     ) -> None:
-        """Apply scale back.
+        """
+        Apply scale back.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = explainer.apply_scale_back(scene=self)
         """
         pass
 
-    # def keep_ratio(
-    #     self,
-    #     ratio: float = 0.5,    # ratio of anchor points to keep (0-1)
-    #     aargs: dict = {},       # animation args
-    #     gargs: dict = {},       # group args
-    # ) -> Animation:
-    #     """Keep only a random subset of anchor points based on ratio.
-    #     Can be called multiple times successively to further filter.
-    #     """
-    #     import random
-    #     n_keep = max(1, int(len(self.anchor_points) * ratio))
-    #     keep_indices = random.sample(range(len(self.anchor_points)), n_keep)
+    def apply_keep_random(
+        self,
+        scene: Scene,
+        ratio: float = 0.5,             # ratio of anchor points to keep
+        run_time_ratio: float = 1.0,
+    ) -> None:
+        """
+        [Internal animation]
+                   Keep random subset of anchor points based on ratio.
+                   Used to simulate filtering processes.
 
-    #     # data_flat = self.data.reshape(-1, 4)       # (h*w, 4)
-    #     # data_cls_flat = self.data_cls.reshape(-1, 3)  # (h*w, 3)
-    #     # self.data = data_flat[keep_indices] # FIXME, 3d -> 2d
-    #     # self.data_cls = data_cls_flat[keep_indices]
-        
-    #     # remember kept indices to be used later
-    #     self.keep_indices = np.array(keep_indices, dtype=np.int64)
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        result = explainer.apply_keep_random(scene=self)
+        """
+        n_keep = max(1, int(self.data.shape[0] * ratio))
+        k_idxs = random.sample(range(self.data.shape[0]), n_keep)
 
-    #     aps_to_remove = [
-    #         ap for i, ap in enumerate(self.anchor_points)
-    #           if i not in keep_indices
-    #     ]
-    #     self.anchor_points.remove(*aps_to_remove)
-    #     if aps_to_remove:
-    #         anims = AnimationGroup(
-    #             *(Unwrite(ap, **aargs) for ap in aps_to_remove),
-    #             **gargs,
-    #         )
-    #     else:
-    #         anims = Wait(0.1)
-    #     return anims
+        aps_to_remove = [
+            ap for i, ap in enumerate(self.anchor_points)
+              if i not in k_idxs
+        ]
+
+        if aps_to_remove:
+            scene.play(AnimationGroup(
+                *(Unwrite(ap) for ap in aps_to_remove),
+                lag_ratio=0.5,
+                run_time=1.0*run_time_ratio,
+            ))
+            self.anchor_points.remove(*aps_to_remove)
+
+        self.data = self.data[k_idxs]
 
     def hide_anchor_points(
         self,
         **aargs,
     ) -> Animation:
+        """
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.hide_anchor_points())
+        """
         self.remove(self.anchor_points)
         return Unwrite(self.anchor_points,**aargs)
 
-    def collect_in_out_aps(
+    def random_ap(
         self,
-        annotation: VGroup | None,      # VGroup of SingleAnnotation
+        idx: int | None = None,     # can be provided
     ) -> tuple:
-        """FIXME, collect aps inside/outside a group of SingleAnnotation.
         """
-        def _inside(point, anno):
-            x, y, _ = point
-            return (
-                anno.bbox.get_left()[0] <= x <= anno.bbox.get_right()[0]
-                and anno.bbox.get_bottom()[1] <= y <= anno.bbox.get_top()[1]
-            )
-        in_aps = VGroup()
-        out_aps = VGroup()
-        for ap in self.anchor_points:
-            if any(_inside(ap.get_center(), anno) for anno in annotation):
-                in_aps.add(ap)
-            else:
-                out_aps.add(ap)
-        return in_aps, out_aps
-    
-    def collect_focus_ap(
-        self,
-        idx: int = 0,                   # sample anchor point index
-    ) -> tuple:
-        """Collect sample ap and others as VGroup.
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        result = explainer.random_ap()
         """
-        sample_ap = self.anchor_points[idx]
-        others = VGroup(*(ap for i, ap in enumerate(self.anchor_points) if i!=idx))
-        return sample_ap, others
+        if idx is None:
+            idx = random.randrange(len(self.anchor_points))
+        sap = self.anchor_points[idx]
+        others = VGroup(*[
+            ap for i, ap in enumerate(self.anchor_points)
+            if i != idx
+        ])
+        return sap, others
 
-    def collect_nth_result(
+    # def collect_in_out_aps(
+    #     self,
+    #     annotation: VGroup | None,      # VGroup of SingleAnnotation
+    # ) -> tuple:
+    #     """FIXME, collect aps inside/outside a group of SingleAnnotation.
+    #     """
+    #     def _inside(point, anno):
+    #         x, y, _ = point
+    #         return (
+    #             anno.bbox.get_left()[0] <= x <= anno.bbox.get_right()[0]
+    #             and anno.bbox.get_bottom()[1] <= y <= anno.bbox.get_top()[1]
+    #         )
+    #     in_aps = VGroup()
+    #     out_aps = VGroup()
+    #     for ap in self.anchor_points:
+    #         if any(_inside(ap.get_center(), anno) for anno in annotation):
+    #             in_aps.add(ap)
+    #         else:
+    #             out_aps.add(ap)
+    #     return in_aps, out_aps
+
+    # def collect_focus_ap(
+    #     self,
+    #     idx: int = 0,                   # sample anchor point index
+    # ) -> tuple:
+    #     """Collect sample ap and others as VGroup.
+    #     """
+    #     sample_ap = self.anchor_points[idx]
+    #     others = VGroup(*(ap for i, ap in enumerate(self.anchor_points) if i!=idx))
+    #     return sample_ap, others
+
+    # def collect_nth_result(
+    #     self,
+    #     idx: int = 0,                   # sample result index
+    # ) -> list:
+    #     """Collect specific result as a list.
+    #     TODO: rename, exposure problem
+    #     """
+    #     res = self.xyxy.reshape(-1, 4)[idx].tolist()
+    #     res = [int(t) for t in res]
+    #     return res
+
+    # def show_point_from_xy(
+    #     self,
+    #     idx: int = 0,                   # index of anchor point
+    #     direction: np.ndarray = UL,     # corner direction of ap's rect, UL/DR
+    #     pargs: dict = {},               # path animation args
+    #     targs: dict = {},               # text animation args
+    #     gargs: dict = {},               # group animation args
+    # ) -> Animation:
+    #     """Animation illustrating x,y -> point
+    #         TODO, config separation
+    #     """
+    #     # create two paths into (x,y)
+    #     ap = self.anchor_points[idx]
+    #     px = VMobject().set_points_as_corners([
+    #         self.background.get_corner(UL),
+    #         np.array([ap.get_corner(direction)[0], self.background.get_top()[1], 0]),
+    #         ap.get_corner(direction),
+    #     ]).set_stroke(color=PURE_YELLOW, width=3)
+    #     py = VMobject().set_points_as_corners([
+    #         self.background.get_corner(UL),
+    #         np.array([self.background.get_left()[0], ap.get_corner(direction)[1], 0]),
+    #         ap.get_corner(direction),
+    #     ]).set_stroke(color=PURE_YELLOW, width=3)
+
+    #     # create x y texts
+    #     # TODO: only UL and DR are available now
+    #     if np.array_equal(direction, UL):
+    #         _tx = str(ap.xyxy[0])
+    #         _ty = str(ap.xyxy[1])
+    #     elif np.array_equal(direction, DR):
+    #         _tx = str(ap.xyxy[2])
+    #         _ty = str(ap.xyxy[3])
+    #     tx = Text(
+    #         _tx,
+    #         color=WHITE,
+    #         **TEXT_XY_CONFIG,
+    #     ).next_to(px, UP, buff=0.2)
+    #     ty = Text(
+    #         _ty,
+    #         color=WHITE,
+    #         **TEXT_XY_CONFIG,
+    #     ).next_to(px, LEFT, buff=0.2)
+
+    #     # TODO, more elegant way of storing tmp text?
+    #     if self.tmp_txts is None:
+    #         self.tmp_txts = VGroup(tx, ty)
+    #     else:
+    #         self.tmp_txts.add(tx, ty)
+
+    #     anim = AnimationGroup(
+    #         AnimationGroup(
+    #             ShowPassingFlash(px, **pargs,),
+    #             Write(tx, **targs),
+    #             **gargs,
+    #         ),
+    #         AnimationGroup(
+    #             ShowPassingFlash(py, **pargs,),
+    #             Write(ty, **targs),
+    #             **gargs,
+    #         ),
+    #     )
+    #     return anim
+
+    # def hide_xy_txts(
+    #     self,
+    #     **aargs,
+    # ) -> Animation:
+    #     mobs = self.tmp_txts
+    #     self.tmp_txts = None
+    #     return Unwrite(mobs, **aargs)
+
+    # def create_distance_tensor(
+    #     self,
+    #     font_size: int=8,               # small for tensor
+    # ) -> VGroup:
+    #     dists = VGroup()
+    #     for ap in self.anchor_points:
+    #         dist = ap.create_ordered_distance(font_size=font_size)
+    #         dists.add(dist)
+    #     return dists
+
+    # def create_xyxy_tensor(
+    #     self,
+    #     font_size: int=8,               # small for tensor
+    # ) -> VGroup:
+    #     xyxys = VGroup()
+    #     for ap in self.anchor_points:
+    #         xyxy = ap.create_ordered_xyxy(font_size=font_size)
+    #         xyxys.add(xyxy)
+    #     return xyxys
+
+    # def create_probs_tensor(
+    #     self,
+    #     font_size: int=8,
+    # ) -> VGroup:
+    #     probs = VGroup()
+    #     for ap in self.anchor_points:
+    #         ps = ap.create_ordered_probs(font_size=font_size)
+    #         probs.add(ps)
+    #     return probs
+
+    # def create_line_matrix(
+    #     self,
+    #     n: int=4,              # n lines in a rows
+    # ):
+    #     """Create 2d LineMatrix according to xyxy shape.
+    #     """
+    #     matrix = LineMatrix(
+    #         (self.shape[0]*self.shape[1], n),
+    #     )
+    #     return matrix
+
+    def check_clip(
         self,
-        idx: int = 0,                   # sample result index
     ) -> list:
-        """Collect specific result as a list.
-        TODO: rename, exposure problem
         """
-        res = self.xyxy.reshape(-1, 4)[idx].tolist()
-        res = [int(t) for t in res]
-        return res
-    
-    def show_point_from_xy(
-        self,
-        idx: int = 0,                   # index of anchor point
-        direction: np.ndarray = UL,     # corner direction of ap's rect, UL/DR
-        pargs: dict = {},               # path animation args
-        targs: dict = {},               # text animation args
-        gargs: dict = {},               # group animation args
-    ) -> Animation:
-        """Animation illustrating x,y -> point
-            TODO, config separation
+        Check which aps remain after clipping.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_rects())
+        result = explainer.check_clip()
         """
-        # create two paths into (x,y)
-        ap = self.anchor_points[idx]
-        px = VMobject().set_points_as_corners([
-            self.background.get_corner(UL),
-            np.array([ap.get_corner(direction)[0], self.background.get_top()[1], 0]),
-            ap.get_corner(direction),
-        ]).set_stroke(color=PURE_YELLOW, width=3)
-        py = VMobject().set_points_as_corners([
-            self.background.get_corner(UL),
-            np.array([self.background.get_left()[0], ap.get_corner(direction)[1], 0]),
-            ap.get_corner(direction),
-        ]).set_stroke(color=PURE_YELLOW, width=3)
+        idxs = [idx for idx in range(len(self.anchor_points))
+            if self.anchor_points[idx].check_clip(self.background)]
+        return idxs
 
-        # create x y texts
-        # TODO: only UL and DR are available now
-        if np.array_equal(direction, UL):
-            _tx = str(ap.xyxy[0])
-            _ty = str(ap.xyxy[1])
-        elif np.array_equal(direction, DR):
-            _tx = str(ap.xyxy[2])
-            _ty = str(ap.xyxy[3])
-        tx = Text(
-            _tx,
-            color=WHITE,
-            **TEXT_XY_CONFIG,
-        ).next_to(px, UP, buff=0.2)
-        ty = Text(
-            _ty,
-            color=WHITE,
-            **TEXT_XY_CONFIG,
-        ).next_to(px, LEFT, buff=0.2)
-
-        # TODO, more elegant way of storing tmp text?
-        if self.tmp_txts is None:
-            self.tmp_txts = VGroup(tx, ty)
-        else:
-            self.tmp_txts.add(tx, ty)
-
-        anim = AnimationGroup(
-            AnimationGroup(
-                ShowPassingFlash(px, **pargs,),
-                Write(tx, **targs),
-                **gargs,
-            ),
-            AnimationGroup(
-                ShowPassingFlash(py, **pargs,),
-                Write(ty, **targs),
-                **gargs,
-            ),
-        )
-        return anim
-    
-    def hide_xy_txts(
+    def apply_clip(
         self,
-        **aargs,
-    ) -> Animation:
-        mobs = self.tmp_txts
-        self.tmp_txts = None
-        return Unwrite(mobs, **aargs)
-    
-    def create_distance_tensor(
-        self,
-        font_size: int=8,               # small for tensor
-    ) -> VGroup:
-        dists = VGroup()
-        for ap in self.anchor_points:
-            dist = ap.create_ordered_distance(font_size=font_size)
-            dists.add(dist)
-        return dists
-
-    def create_xyxy_tensor(
-        self,
-        font_size: int=8,               # small for tensor
-    ) -> VGroup:
-        xyxys = VGroup()
-        for ap in self.anchor_points:
-            xyxy = ap.create_ordered_xyxy(font_size=font_size)
-            xyxys.add(xyxy)
-        return xyxys
-    
-    def create_probs_tensor(
-        self,
-        font_size: int=8,
-    ) -> VGroup:
-        probs = VGroup()
-        for ap in self.anchor_points:
-            ps = ap.create_ordered_probs(font_size=font_size)
-            probs.add(ps)
-        return probs
-    
-    def create_line_matrix(
-        self,
-        n: int=4,              # n lines in a rows
-    ):
-        """Create 2d LineMatrix according to xyxy shape.
+        scene: Scene,
+        run_time_ratio: float = 1.0,
+    ) -> None:
         """
-        matrix = LineMatrix(
-            (self.shape[0]*self.shape[1], n),
-        )
-        return matrix
-    
-    def clip_to_background(
-        self,
-        aargs: dict = {},
-        gargs: dict = {},
-    ) -> Animation:
-        """Clip aps cross border, remove if fully outside.
+        [Internal Animation]
+                   Clip aps crossing border, remove if outside.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        self.play(explainer.to_rects())
+        result = explainer.apply_clip(scene=self)
         """
-        anims = []
-        aps_to_remove = []
-        for ap in self.anchor_points:
-            anim = ap.clip_to_background(self.background, **aargs)
-            if isinstance(anim.animations[0], Unwrite):   # TODO, better solution?
-                aps_to_remove.append(ap)
-            anims.append(anim)
-        self.anchor_points.remove(*aps_to_remove)
-        return AnimationGroup(*anims, **gargs)
-    
+        idxs_remain = self.check_clip()   # on background by default
+        idxs_remove = [idx for idx in range(len(self.anchor_points)) if idx not in idxs_remain]
+        aps_remain = [ self.anchor_points[idx] for idx in idxs_remain ]
+        aps_remove = [ self.anchor_points[idx] for idx in idxs_remove ]
+
+        if aps_remove:
+            scene.play(AnimationGroup(
+                *(Unwrite(ap) for ap in aps_remove),
+                lag_ratio=0.5,
+                run_time=1.0*run_time_ratio,
+            ))
+            self.anchor_points.remove(*aps_remove)
+
+        scene.play(AnimationGroup(
+            *(ap.do_clip() for ap in aps_remain),
+            lag_ratio=0.5,
+            run_time=1.0*run_time_ratio,
+        ))
+        self.data = self.data[idxs_remain]
+
     def xyxyccc(
         self,
     ) -> Tensor2D:
-        """Combined xyxy and cls info, (h*w, 7)
+        """
+        Combined xyxy and cls info, (h*w, 7)
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = explainer.xyxyccc()
         """
         data = [
             self._compute_xyxy_2d(),
@@ -905,34 +1149,61 @@ class Explainer(VGroup):
 
     @property
     def sf_screen(self) -> float:
-        """Screen distance / unit distance.
-           Assume that width and height direction share the same factor.
+        """
+        Screen distance / unit distance.
+                   Assume that width and height direction share the same factor.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        value = explainer.sf_screen
         """
         return self.background.width / self.shape[1]
-    
+
     @property
     def dots(self) -> VGroup:
-        """Fast reference to all dots
+        """
+        Fast reference to all dots
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        value = explainer.dots
         """
         vg = VGroup(*(ap.mob for ap in self.anchor_points))
         return vg
-    
+
     @property
     def prob(self):
-        """Only expose 2d version to user.
+        """
+        Only expose 2d version to user.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        value = explainer.prob
         """
         return self.prob_2d
-    
+
     # @property
     # def shape(self):
     #     """Height of the internal data, changing.
     #     """
     #     return self.data.shape
-    
+
     @prob.setter
     def prob(self, prob: np.ndarray):
-        """Update global prob_2d and anchor points.
-           Expect immediate sync_pbars.
+        """
+        Update global prob_2d and anchor points.
+                   Expect immediate sync_pbars.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        self.play(explainer.show_anchor_points())
+        explainer.prob = np.random.uniform(0, 1, explainer.prob_2d.shape)
         """
         assert prob.ndim == 2
         self.prob_2d = prob
@@ -941,7 +1212,7 @@ class Explainer(VGroup):
             ap.prob = prob
 
     # TODO, setters and sync animations for other members
-    
+
     @staticmethod
     def from_random(
         background,
@@ -950,7 +1221,13 @@ class Explainer(VGroup):
         shape: tuple = (4, 4),
         sf_nominal: int | None = None,
     ) -> Explainer:
-        """Create random explainer.
+        """
+        Create random explainer.
+
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = Explainer.from_random(background=Square())
         """
         dist_3d = np.random.uniform(dist_range[0], dist_range[1], shape+(4,))
         prob_3d = np.random.uniform(prob_range[0], prob_range[1], shape+(3,))
@@ -963,24 +1240,34 @@ class Explainer(VGroup):
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
         )
-    
+
     @staticmethod
     def from_file(
         background,
-        version: int = 32,      # 8 | 16 | 32
+        version: int = 32,      # 8 | 16 | 32 | 64 | 160
         sf_nominal: int | None = None,
     ) -> Explainer:
+        """
+        Example
+        -------
+        explainer = Explainer.from_random(background=Square())
+        result = Explainer.from_file(background=Square())
+        """
         dir_array = SF_TO_DIR[version]
+
+        path_reg = os.path.join(dir_array, 'box_softmax.npy')
         path_dist = os.path.join(dir_array, 'box_dist.npy')
         path_prob = os.path.join(dir_array, 'cls_sigmoid.npy')
 
+        reg_3d = np.load(path_reg)
         dist_3d = np.load(path_dist)
         prob_3d = np.load(path_prob)
 
         sf_nominal = sf_nominal or (640//dist_3d.shape[0])
-            
+
         explainer = Explainer(
             background=background,
+            reg_3d=reg_3d,
             dist_3d=dist_3d,
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
@@ -1004,40 +1291,10 @@ class Demo(Scene):
         system = Group(sq, explainer)
         self.add(system)
 
-        # self.play(explainer.show_grid())
-        # self.wait()
-
         self.play(explainer.show_anchor_points(
             run_time=0.5,
         ))
         self.wait()
-
-        # self.play(explainer.show_arrows(
-        #     arrow_config={},
-        #     aargs={'rate_func': rate_functions.ease_out_back},
-        #     gargs={'lag_ratio': 0.2},
-        #     ggargs={'lag_ratio': 0.2, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # self.play(explainer.to_rects(
-        #     rect_config={},
-        #     aargs={'rate_func': rate_functions.ease_out_back},
-        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # self.play(explainer.show_multi_labels(
-        #     label_config={
-        #         'width_ratio': 0.3,
-        #         'height_ratio': 0.2,
-        #         'fill_opacity': 0.8,
-        #         'stroke_opacity': 0.8,
-        #     },
-        #     aargs={'lag_ratio': 0.1},
-        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
 
         self.play(explainer.show_rect_mlabels(
             rect_config={},
@@ -1051,66 +1308,3 @@ class Demo(Scene):
             ggargs={'lag_ratio': 0.1, 'run_time': 2.0},
         ))
         self.wait()
-
-        self.play(explainer.apply_max_select(
-            aargs={},
-            gargs={},
-            ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        ))
-        self.wait()
-
-        # self.play(explainer.hide_arrows(
-        #     aargs={},
-        #     gargs={'lag_ratio': 0.2, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # self.play(explainer.to_dots(
-        #     dot_config={},
-        #     aargs={},
-        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # self.play(explainer.hide_grid())
-        # self.wait()
-
-        # self.play(explainer.show_arrows(
-        #     aargs={'lag_ratio':0.1},
-        #     gargs={'lag_ratio':0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # self.play(explainer.hide_arrows(
-        #     aargs={'lag_ratio':0.1},
-        #     gargs={'lag_ratio':0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # dots = explainer.dots.save_state()
-        # self.play(dots.animate.set_stroke(opacity=0))
-        # self.wait()
-
-        # self.play(explainer.show_pbars(
-        #     pbar_config={},
-        #     aargs={'rate_func': rate_functions.ease_out_back},
-        #     gargs={'lag_ratio': 0.1},
-        #     ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # explainer.prob = np.random.uniform(0.4, 1.0, (25, 3))
-
-        # self.play(explainer.sync_pbars(
-        #     pbar_config={},
-        #     aargs={'rate_func': rate_functions.ease_out_back},
-        #     gargs={'lag_ratio': 0.1},
-        #     ggargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()
-
-        # self.play(explainer.hide_pbars(
-        #     aargs={'lag_ratio': 0.1},
-        #     gargs={'lag_ratio': 0.1, 'run_time': 1.0},
-        # ))
-        # self.wait()

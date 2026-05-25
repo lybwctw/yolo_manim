@@ -11,6 +11,8 @@ from utils.multi_arrow import MultiArrow
 from utils.show_shape import ShowShape, HideShape
 from utils.general import export_mobs
 
+MERGED_SCALE_FACTOR = 1.1
+
 # FIXME: update order issue of system
 class MainScene(Scene):
     def construct(self) -> None:
@@ -18,7 +20,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs from start',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
@@ -83,7 +85,7 @@ class MainScene(Scene):
         acc_12 = ArrowComment(False, RIGHT, '?')
         acc_post = ArrowComment(False, RIGHT, '?')      # TODO: stand out
 
-        # reference groups
+        # reference
         ac_all = VGroup(
                       acb_ab, acb_bc,
             acb_game, acb_12, acb_23, acb_post,
@@ -115,7 +117,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show box prediction flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.add(flowchart_box)
@@ -157,7 +159,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'shift in class prediction flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.add(flowchart_cls)
@@ -203,16 +205,12 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         ac_all.save_state()
         iv32_box.save_state()
         iv32_cls.save_state()
-        shape_text_config = {
-            'buff': 0.15,
-            'font_size': 15,
-        }
         self.play(AnimationGroup(
             AnimationGroup(
                 ac_all.animate.fade(0.8),
@@ -220,11 +218,11 @@ class MainScene(Scene):
                 iv32_cls.animate.fade(0.8),
             ),
             AnimationGroup(
-                ShowShape(t32_dist, text_config=shape_text_config),
-                ShowShape(t32_xyxy, text_config=shape_text_config),
-                ShowShape(t32_xyxy_2d, text_config=shape_text_config),
-                ShowShape(t32_prob, text_config=shape_text_config),
-                ShowShape(t32_prob_2d, text_config=shape_text_config),
+                ShowShape(t32_dist, text_config=SMALL_SHAPE_TEXT_CONFIG),
+                ShowShape(t32_xyxy, text_config=SMALL_SHAPE_TEXT_CONFIG),
+                ShowShape(t32_xyxy_2d, text_config=SMALL_SHAPE_TEXT_CONFIG),
+                ShowShape(t32_prob, text_config=SMALL_SHAPE_TEXT_CONFIG),
+                ShowShape(t32_prob_2d, text_config=SMALL_SHAPE_TEXT_CONFIG),
             ),
             lag_ratio=0.5,
         ))
@@ -251,10 +249,10 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge box+cls intuition view and tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        # rearrange intuition view and tensor view
+        # # swap box intuition view and cls tensor view manually
         # self.play(AnimationGroup(
         #     tview_box.animate.shift(DOWN*2),
         #     iview_cls.animate.shift(UP*2),
@@ -265,7 +263,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge input and output arrows in tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         marrow_in_tview = MultiArrow(
@@ -311,7 +309,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor view: create merged 2d tensor',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         t32_xyxy_2d_copy = t32_xyxy_2d.copy()
@@ -347,15 +345,15 @@ class MainScene(Scene):
         ).move_to(t32_combined)
         self.play(AnimationGroup(
             FadeOut(t32_combined),
-            FadeIn(t32_merged_2d),       # simply add?
+            FadeIn(t32_merged_2d),       # or simply add?
         ))
         self.wait()
 
-        # show shape of the merged 2d
+        # show shape of the just merged
         marrow_out_tview.save_state()
         self.play(AnimationGroup(
             marrow_out_tview.animate.fade(0.8),
-            ShowShape(t32_merged_2d, text_config=shape_text_config),
+            ShowShape(t32_merged_2d, text_config=SMALL_SHAPE_TEXT_CONFIG),
             lag_ratio=0.5,
         ))
         self.wait()
@@ -372,7 +370,6 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        merged_scale_factor = 1.1
 
         # use new marrow instead of copy
         marrow_out_iview = MultiArrow(
@@ -392,7 +389,7 @@ class MainScene(Scene):
         self.play((
             s32_merged_2d
             .animate(run_time=1.0)
-            .scale(merged_scale_factor)
+            .scale(MERGED_SCALE_FACTOR)
             .next_to(marrow_out_iview, RIGHT, buff=0.26)
         ))
         self.wait()
@@ -423,36 +420,9 @@ class MainScene(Scene):
         # ************************************************************
         mobs = Group(
             s32_dist, acb_ab, s32_xyxy, acb_bc, s32_xyxy_2d, marrow_out_iview, s32_merged_2d,
-            s32_prob, acc_12, s32_prob_2d,
+            s32_prob, acc_ab, s32_prob_2d,
             marrow_in_tview,
             t32_dist, acb_12, t32_xyxy, acb_23, t32_xyxy_2d, marrow_out_tview, t32_merged_2d,
             t32_prob, acc_12, t32_prob_2d,
         )
         export_mobs(__file__, mobs)
-
-        # # # # ************************************************************
-        # # # self.next_section("""
-        # # #     focus on system_merged and tensor_merged_2d,
-        # # #     used by 018.
-        # # #     """,
-        # # #     skip_animations=False,
-        # # # )
-        # # # # ************************************************************
-        # # # # manual init position for scene 018
-        # # # self.play(AnimationGroup(
-        # # #     system_merged[1].animate(run_time=1.0).center().scale(4.0).to_edge(LEFT,buff=1.0),  # manual adjust background scale factor
-        # # #     Unwrite(system_merged[0], lag_ratio=0, run_time=0.3),
-        # # #     Unwrite(tensor_merged_2d, lag_ratio=0, run_time=0.3),
-        # # #     FadeOut(iview_bbox, lag_ratio=0, run_time=0.3),
-        # # #     FadeOut(iview_cls, lag_ratio=0, run_time=0.3),
-        # # #     Unwrite(tview_bbox, lag_ratio=0, run_time=0.3),
-        # # #     Unwrite(tview_cls, lag_ratio=0, run_time=0.3),
-        # # #     Unwrite(marrow_in, lag_ratio=0, run_time=0.3),
-        # # #     Unwrite(marrow_out, lag_ratio=0, run_time=0.3),
-        # # #     Unwrite(marrow_out_iview, lag_ratio=0, run_time=0.3),
-        # # # ))
-        # # # self.wait()
-        # # # everything = Group(
-        # # #     system_merged[1],
-        # # # )
-        # # # save_everything(S017_EVERYTHING_PP, everything)

@@ -1,3 +1,16 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.colorcube import ColorCube
+
+    self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
+    axes = ThreeDAxes(x_range=[0, 1.2], y_range=[0, 1.2], z_range=[0, 1.2])
+    cubes = ColorCube(axis=axes)
+    self.play(cubes.create(type='beam', direction=UP))
+    self.play(cubes.highlight_channel(2))
+"""
+
 from manim import *
 import itertools
 import random
@@ -42,6 +55,11 @@ class ColorCube(VMobject):
         size=0.5,
         cube_config=None,
     ):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        """
         super().__init__()
         self.axis = axis
         self.shape = (shape,shape,shape)
@@ -91,6 +109,12 @@ class ColorCube(VMobject):
         self.add(self.mobs)
 
     def _build_indices(self, shape=None):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes._build_indices()
+        """
         if shape is None:
             shape = self.shape
         i, j, k = shape
@@ -105,6 +129,12 @@ class ColorCube(VMobject):
         return indices
 
     def _compute_z_index_m(self, shape=None):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes._compute_z_index_m()
+        """
         if shape is None:
             shape = self.shape
         i, j, k = shape
@@ -114,6 +144,12 @@ class ColorCube(VMobject):
         return z_index_m
 
     def __getitem__(self, idx):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes[0, 0, 0]
+        """
         idx = _normalize_idx(idx)
         idx = _expand_ellipsis(idx, self.ndim)
         idx = _fill_missing_dims(idx, self.ndim)
@@ -131,6 +167,12 @@ class ColorCube(VMobject):
         return VGroup(*(self.obs[k] for k in keys))
 
     def get_beams(self, direction=OUT):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes.get_beams()
+        """
         direction = direction.astype(np.int32)
         n = self.shape[0]   # colorcube always use the same c,h,w
         if direction[0] != 0:
@@ -151,6 +193,12 @@ class ColorCube(VMobject):
         return vgs
 
     def get_layers(self, direction=OUT):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes.get_layers()
+        """
         direction = direction.astype(np.int32)
         n = self.shape[0]
         if direction[0] != 0:
@@ -168,6 +216,11 @@ class ColorCube(VMobject):
         """
             get boolean mask
             filled with True by default
+
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes._get_mask(start=0, end=0, mask=0)
         """
         if mask is not None:
             return mask
@@ -181,6 +234,12 @@ class ColorCube(VMobject):
         return mask
 
     def _highlight(self, start=None, end=None, mask=None):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes._highlight()
+        """
         start_mask = self.current_hl
         target_mask = self._get_mask(start, end, mask)
         _unhighlight_mask = start_mask & ~target_mask
@@ -205,6 +264,11 @@ class ColorCube(VMobject):
                 run_time=1,
                 rate_func=ease_in_quart,
             ))
+
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        self.play(cubes.highlight())
         """
         start_mask = self.current_hl
         target_mask = self._get_mask(start, end, mask)
@@ -225,6 +289,12 @@ class ColorCube(VMobject):
         )
 
     def _highlight_channel(self, n):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        result = cubes._highlight_channel(n=0)
+        """
         c, h, w = self.shape
         self._highlight((n, 0, 0), (n+1, h, w))
         return self
@@ -236,6 +306,11 @@ class ColorCube(VMobject):
                 run_time=3,
                 rate_func=ease_in_quart,
             ))
+
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        self.play(cubes.highlight_channel(n=0))
         """
         c, h, w = self.shape
         anims = self.highlight((n, 0, 0), (n+1, h, w))
@@ -249,6 +324,12 @@ class ColorCube(VMobject):
             anim=Write,
             run_time=2,
     ):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        self.play(cubes.create())
+        """
         if type == 'layer':
             layers = self.get_layers(direction=direction)
             anims = Succession(
@@ -277,6 +358,12 @@ class ColorCube(VMobject):
             anim=Unwrite,
             run_time=2,
     ):
+        """
+        Example
+        -------
+        cubes = ColorCube(axis=ThreeDAxes())
+        self.play(cubes.uncreate())
+        """
         anims = self.create(
             type=type,
             direction=direction,

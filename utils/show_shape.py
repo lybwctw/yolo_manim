@@ -7,6 +7,7 @@ SHAPE_PATH_CONFIG = {
 }
 
 SHAPE_TEXT_CONFIG = {
+    'color': WHITE,
     'buff': 0.15,
     'font_size': 15,
     'font': 'JetBrains Mono',
@@ -25,12 +26,23 @@ TEXT_AARGS = {
 GARGS = {
 }
 
-
 class ShowShapeMixin:
     def get_shape_path(self, **path_config) -> VMobject:
+        """
+        Example
+        -------
+        shape = ImagePad()
+        result = show_shape_mixin.get_shape_path()
+        """
         raise NotImplementedError
 
-    def get_shape_text(self, buff, **text_config) -> VGroup:
+    def get_shape_text(self, **text_config) -> VGroup:
+        """
+        Example
+        -------
+        shape = ImagePad()
+        result = show_shape_mixin.get_shape_text()
+        """
         raise NotImplementedError
 
 class ShowShape(AnimationGroup):
@@ -43,6 +55,11 @@ class ShowShape(AnimationGroup):
         text_aargs: dict = {},      # text Writing group args
         gargs: dict = {},           # lag_ratio
     ):
+        """
+        Example
+        -------
+        anim = ShowShape(shape)
+        """
         path_config = {**SHAPE_PATH_CONFIG, **path_config}
         text_config = {**SHAPE_TEXT_CONFIG, **text_config}
         path_aargs = {**PATH_AARGS, **path_aargs}
@@ -73,6 +90,11 @@ class HideShape(AnimationGroup):
         shape: ShowShapeMixin | None = None,
         **gargs,
     ):
+        """
+        Example
+        -------
+        anim = HideShape(shape)
+        """
         texts = getattr(shape, "_shape_texts", VGroup())
         shape.remove(texts)
 

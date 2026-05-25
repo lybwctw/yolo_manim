@@ -1,3 +1,18 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.slider import Slider
+
+    r = ValueTracker(0)
+    g = ValueTracker(0)
+    b = ValueTracker(0)
+    sliders = VGroup(Slider(r, 'R', color=RED), Slider(g, 'G', color=GREEN), Slider(b, 'B', color=BLUE))
+    sliders.arrange(DOWN, buff=0.6).to_edge(LEFT)
+    self.add(sliders)
+    self.play(r.animate.set_value(255), g.animate.set_value(128), b.animate.set_value(64))
+"""
+
 from manim import *
 
 class Slider(VGroup):
@@ -8,6 +23,11 @@ class Slider(VGroup):
         width=2.5,
         color=WHITE,
     ):
+        """
+        Example
+        -------
+        slider = Slider(ValueTracker(0), "R", color=RED)
+        """
         super().__init__()
 
         self.tracker = tracker
@@ -43,7 +63,6 @@ class Slider(VGroup):
         )
 
         self.add(self.line, self.handle, self.label, self.value_text)
-
 
 class RGBSliderAnimation(Scene):
     def construct(self):

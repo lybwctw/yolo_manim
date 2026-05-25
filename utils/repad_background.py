@@ -5,6 +5,11 @@ from utils.show_shape import ShowShape
 class RepadBackground(Mobject, ShowShape):
     # init from annotation_repad for convenience
     def __init__(self, annotation_repad):
+        """
+        Example
+        -------
+        background = RepadBackground(annotation_repad)
+        """
         super().__init__()
         self.natural_pad = annotation_repad.natural_pad
         self._w = annotation_repad._w
@@ -34,6 +39,12 @@ class RepadBackground(Mobject, ShowShape):
         self.add(self.paddings)
 
     def get_shape_path(self):
+        """
+        Example
+        -------
+        background = RepadBackground(annotation_repad)
+        result = background.get_shape_path()
+        """
         path = VMobject()
         if self.natural_pad:
             path.set_points_as_corners([
@@ -50,6 +61,12 @@ class RepadBackground(Mobject, ShowShape):
         return path
 
     def get_shape_text(self):
+        """
+        Example
+        -------
+        background = RepadBackground(annotation_repad)
+        result = background.get_shape_text()
+        """
         if self.natural_pad:
             text_h = Text(str(self._h), font_size=20).next_to(self.background, LEFT)
             text_w = Text(str(self._w), font_size=20).next_to(self.paddings[1], UP)

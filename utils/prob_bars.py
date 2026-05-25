@@ -1,3 +1,13 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.prob_bars import ProbBars
+
+    bars = ProbBars(point=UR, probs=[0.2, 0.7, 0.4])
+    self.play(Create(bars))
+"""
+
 import sys
 sys.path.append('..')
 
@@ -15,6 +25,11 @@ class ProbBars(VGroup):
         probs: list | tuple | np.ndarray = [0.3,0.9,0.7],    # assume in the range (0,1)
         color_map: list = COLOR_MAP,        # color for each bar
     ):
+        """
+        Example
+        -------
+        bars = ProbBars()
+        """
         super().__init__()
 
         if isinstance(probs, np.ndarray):
@@ -56,7 +71,7 @@ class ProbBars(VGroup):
 
         # move to point
         self.shift(point-self.baseline.get_center())
-    
+
     # @override_animation(Create)
     # def create(
     #     self,
@@ -70,7 +85,7 @@ class ProbBars(VGroup):
     #           for _bar, bar in zip(_bars, self.bars)),
     #         **aargs,
     #     )
-        
+
 class Demo(Scene):
     def construct(self):
         probs = [0.2, 0.7, 0.4]

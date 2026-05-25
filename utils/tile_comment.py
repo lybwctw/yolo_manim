@@ -2,6 +2,11 @@ from manim import *
 
 class TileComment(VMobject):
     def __init__(self, text='None'):
+        """
+        Example
+        -------
+        comment = TileComment("note")
+        """
         super().__init__()
         self.text = Text(
             text=text,

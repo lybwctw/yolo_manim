@@ -1,3 +1,14 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.image_raw import ImageRaw
+
+    img = ImageRaw(path='../assets/images/sample_640_360.jpg')
+    self.add(img)
+    self.play(img.show_passing_flash())
+"""
+
 import sys
 sys.path.append('..')
 
@@ -13,6 +24,11 @@ class ImageRaw(Mobject, ShowShape):
         width_nominal: int | None = None,
         height_nominal: int | None = None,
     ):
+        """
+        Example
+        -------
+        img = ImageRaw()
+        """
         super().__init__()
         self.path = path
 
@@ -26,6 +42,12 @@ class ImageRaw(Mobject, ShowShape):
         self.add(self.image)
 
     def get_shape_path(self):
+        """
+        Example
+        -------
+        img = ImageRaw()
+        result = img.get_shape_path()
+        """
         path = VMobject()
         path.set_points_as_corners([
             self.image.get_corner(LEFT + DOWN),
@@ -35,6 +57,12 @@ class ImageRaw(Mobject, ShowShape):
         return path
 
     def get_shape_text(self):
+        """
+        Example
+        -------
+        img = ImageRaw()
+        result = img.get_shape_text()
+        """
         text_h = Text(str(self.height_nominal), font_size=20).next_to(self.image, LEFT)
         text_w = Text(str(self.width_nominal), font_size=20).next_to(self.image, UP)
         text = VGroup(text_h, text_w)

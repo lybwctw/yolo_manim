@@ -1,9 +1,24 @@
+"""Usage
+-----
+Example inside a scene outside ``utils/``::
+
+    from utils.color_cell import ColorCell
+
+    cell = ColorCell(1, 2, 3)
+    self.add(cell)
+"""
+
 from typing import Self
 
 from manim import *
 
 class ColorCell(VMobject):
     def __init__(self, r, g, b, **kwargs):
+        """
+        Example
+        -------
+        cell = ColorCell(1, 2, 3)
+        """
         super().__init__(**kwargs)
         self.r = r
         self.g = g
@@ -21,6 +36,12 @@ class ColorCell(VMobject):
         self.add(self.rect)
 
     def write_digit(self, target='r'):
+        """
+        Example
+        -------
+        cell = ColorCell(1, 2, 3)
+        result = cell.write_digit()
+        """
         if target=='r':
             digit = self.r
             zidx = 6
@@ -48,6 +69,12 @@ class ColorCell(VMobject):
         )
         return anims
     def unwrite_digit(self, target):
+        """
+        Example
+        -------
+        cell = ColorCell(1, 2, 3)
+        result = cell.unwrite_digit(target='r')
+        """
         if target=='r':
             tcolor = rgb_to_color((self.r, 0, 0))
         elif target=='g':

@@ -12,14 +12,28 @@ from utils.color_cell import ColorCell
 from utils.line_matrix import LineMatrix
 from utils.constants import DIR_PICKLE
 
-def export_mobs(path_source, everything):
+def export_mobs(path_source, mobs):
+    """Dump manim mobs according to given path.
+    """
     name_target = os.path.basename(path_source).split('.')[0] + '.pkl'
     path_target = os.path.join(DIR_PICKLE, name_target)
     os.makedirs(DIR_PICKLE, exist_ok=True)  # make sure pickle dir exists
     with open(path_target, 'wb') as f:
-        pickle.dump(everything, f)
+        pickle.dump(mobs, f)
 
-def import_mobs(path):
+def import_mobs(hint):
+    """Find pickle files starts with hint and load the first one.
+    """
+    path = None
+    for name in os.listdir(DIR_PICKLE):
+        if name.startswith(hint):
+            path = os.path.join(DIR_PICKLE, name)
+            break
+    if path is None:
+        raise FileNotFoundError(
+            f"No pickle file found with hint '{hint}' in {DIR_PICKLE}"
+            )
+
     with open(path, 'rb') as f:
         data = pickle.load(f)
     return data
