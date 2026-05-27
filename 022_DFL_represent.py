@@ -7,12 +7,14 @@ from utils.multi_arrow import MultiArrow
 from utils.arrow_comment import ArrowComment
 from utils.image_pad import ImagePad
 from utils.explainer import Explainer
-from utils.anchor_point import DIRECTION_SERIES
+from utils.anchor_point import COLOR_MAP, DIRECTION_SERIES
+from utils.show_shape import ShowShape, HideShape
 
 import random
 
 COMPUTE_IDX = 190
-N_COMPUTE_SAMPLES = 36
+N_COMPUTE_SAMPLES = 3
+PCELLS_BUFF = 0.1
 
 class MainScene(ThreeDScene):
     def construct(self):
@@ -21,7 +23,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init background + explainer from 021',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # NOTE: import from 2d scene failed.
@@ -47,7 +49,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show probcells on specific anchor point',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         sap, oaps = e32.random_ap(COMPUTE_IDX)
@@ -94,7 +96,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'stack probcells in 3d',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.move_camera(
@@ -119,7 +121,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'loop through several samples with aligned pcells',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO: better move path.
@@ -149,6 +151,7 @@ class MainScene(ThreeDScene):
                     'stroke_opacity': 0.8,
                     'stroke_width': 0.8,
                 },
+                buff=PCELLS_BUFF,
             )
             self.play(
                 Transform(
@@ -166,10 +169,97 @@ class MainScene(ThreeDScene):
             )
             sap.pcells = pcells
 
-        # self.play(AnimationGroup(
-        #     *(ap.mob.animate.set_opacity(1.0)
-        #     for ap in e32.anchor_points),
-        #     lag_ratio=0.0,
-        #     run_time=0.5,
-        # ))
-        # self.wait(1.0)
+        # ************************************************************
+        self.next_section(
+            'replace pcells with 64-layer DFL tensor',
+            skip_animations=False,
+        )
+        # ************************************************************
+        layer_center = background.get_center()
+        layer_width = background.width
+        layer_height = background.height
+        layer_buff = PCELLS_BUFF    # share buff with pcells
+
+        self.play(Unwrite(
+            pcells,
+            lag_ratio=0.0,
+            run_time=0.5,
+        ))
+        self.wait(0.2)
+
+        self.play(e32.hide_anchor_points(
+            lag_ratio=0.0,
+            run_time=0.5,
+        ))
+        self.wait(0.2)
+
+        l64 = LayersFake(
+            n=64,
+            width=layer_width,
+            height=layer_height,
+            width_nominal=20,
+            height_nominal=20,
+            buff=0.04,
+            rect_config={
+                'fill_color': BLACK,
+                'fill_opacity': 0.0,
+            },
+        ).move_to(layer_center)
+
+        self.play(Write(l64))
+        # self.wait()
+
+        # manually expand layers
+        l64.generate_target()
+        l64.target.rects.arrange(
+            direction=IN,
+            buff=layer_buff,
+        )
+        for i, layer in enumerate(l64.target.rects):
+            color = COLOR_MAP[DIRECTION_SERIES[i//16]]
+            layer.set_style(
+                fill_color=BLACK,
+                fill_opacity=0.5,
+                stroke_width=0.8,
+                stroke_color=color,
+                stroke_opacity=1.0,
+            )
+        self.play(MoveToTarget(l64))
+        self.wait()
+
+        # change perspective and adjust arrange of layers
+        l64.generate_target()
+        l64.target.rects.scale(0.3)
+        layer_buff = -l64.target.rects[0].width + 0.02
+        l64.target.rects.arrange(
+            direction=UR,
+            buff=layer_buff,    # native arrange issue
+        )
+        self.move_camera(
+            phi=0*DEGREES,
+            theta=-90*DEGREES,
+            added_anims=[
+                MoveToTarget(
+                    l64,
+                ),
+                background.animate.set_opacity(
+                    0.0,
+                )
+            ],
+        )
+        self.wait()
+
+        self.play(ShowShape(
+            l64,
+            text_config=SMALL_SHAPE_TEXT_CONFIG,
+        ))
+        self.wait()
+        self.play(HideShape(
+            l64,
+        ))
+        self.wait()
+        self.play(Unwrite(
+            l64,
+            run_time=0.5,
+        ))
+        self.wait()

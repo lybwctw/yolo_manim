@@ -40,6 +40,7 @@ class Explainer(VGroup):
         dist_3d: np.ndarray = np.ones((4,4,4)),     # (h, w, 4)
         prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
         sf_nominal: int = 32,                       # 8|16|32
+        sf_pcell: float = 1.0,                      # < 1.0 if mini
     ):
         """
         Example
@@ -49,6 +50,7 @@ class Explainer(VGroup):
         super().__init__()
         self.background = background
         self.sf_nominal = sf_nominal
+        self.sf_pcell = sf_pcell
 
         assert reg_3d.shape[:2] == dist_3d.shape[:2] == prob_3d.shape[:2]
 
@@ -191,6 +193,7 @@ class Explainer(VGroup):
                 index=self.indices_3d[i,j],
                 sf_nominal=self.sf_nominal,
                 sf_screen=self.sf_screen,
+                sf_pcell=self.sf_pcell,
             ) for i in range(self.shape[0])
             for j in range(self.shape[1])
         ])
@@ -261,6 +264,23 @@ class Explainer(VGroup):
             **gargs,
         )
         return anims
+    
+    def show_pcells(
+        self,
+        label_config: dict = {},
+        box_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        anim = AnimationGroup(
+            *(ap.show_pcells(
+                label_config=label_config,
+                box_config=box_config,
+                **aargs,
+            ) for ap in self.anchor_points),
+            **gargs,
+        )
+        return anim
 
     def show_arrows(
         self,
@@ -1216,10 +1236,12 @@ class Explainer(VGroup):
     @staticmethod
     def from_random(
         background,
+        reg_max: int = 4,
         dist_range: tuple = (0, 3),
         prob_range: tuple = (0, 1),
         shape: tuple = (4, 4),
         sf_nominal: int | None = None,
+        sf_pcell: float | None = 1.0,   # <1.0 for mini ones
     ) -> Explainer:
         """
         Create random explainer.
@@ -1229,6 +1251,9 @@ class Explainer(VGroup):
         explainer = Explainer.from_random(background=Square())
         result = Explainer.from_random(background=Square())
         """
+        reg = np.random.rand(*shape, 4, reg_max)
+        reg /= reg.sum(axis=-1, keepdims=True)
+        reg_3d = reg.reshape(*shape, 4 * reg_max)
         dist_3d = np.random.uniform(dist_range[0], dist_range[1], shape+(4,))
         prob_3d = np.random.uniform(prob_range[0], prob_range[1], shape+(3,))
 
@@ -1236,9 +1261,11 @@ class Explainer(VGroup):
 
         return Explainer(
             background=background,
+            reg_3d=reg_3d,
             dist_3d=dist_3d,
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
+            sf_pcell=sf_pcell,
         )
 
     @staticmethod
@@ -1271,6 +1298,7 @@ class Explainer(VGroup):
             dist_3d=dist_3d,
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
+            sf_pcell=1.0,   # non-mini default
         )
         return explainer
 
@@ -1282,10 +1310,12 @@ class Demo(Scene):
         ).scale(2.)
         explainer = Explainer.from_random(
             background=sq,
+            reg_max=2,
             dist_range=(0.3,1.0),
             prob_range=(0,1),
-            shape=(5,5),
+            shape=(4,4),
             sf_nominal=32,
+            sf_pcell=0.5,
         )
 
         system = Group(sq, explainer)
@@ -1296,15 +1326,23 @@ class Demo(Scene):
         ))
         self.wait()
 
-        self.play(explainer.show_rect_mlabels(
-            rect_config={},
-            label_config={
-                'fill_opacity': 0.8,
-                'stroke_opacity': 0.8,
-            },
-            rargs={'rate_func': rate_functions.ease_out_back},
-            largs={'lag_ratio': 0.0},
-            gargs={'lag_ratio': 0.3},
-            ggargs={'lag_ratio': 0.1, 'run_time': 2.0},
+        self.play(explainer.show_pcells(
+            label_config={},
+            box_config={},
+            aargs={'lag_ratio': 0.0,},
+            gargs={'run_time': 1.0, 'lag_ratio': 0.5,},
         ))
         self.wait()
+
+        # self.play(explainer.show_rect_mlabels(
+        #     rect_config={},
+        #     label_config={
+        #         'fill_opacity': 0.8,
+        #         'stroke_opacity': 0.8,
+        #     },
+        #     rargs={'rate_func': rate_functions.ease_out_back},
+        #     largs={'lag_ratio': 0.0},
+        #     gargs={'lag_ratio': 0.3},
+        #     ggargs={'lag_ratio': 0.1, 'run_time': 2.0},
+        # ))
+        # self.wait()

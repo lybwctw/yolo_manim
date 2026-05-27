@@ -226,6 +226,7 @@ class AnchorPoint(VMobject):
         index: np.ndarray | list | tuple = (0, 0),          # index in explainer
         sf_nominal: int = 32,                               # nominal distance / unit distance
         sf_screen: int = 0.5,                               # screen distance / unit distance
+        sf_pcell: float = 1.0,                              # pcell size / unit distance
     ):
         """
         Example
@@ -241,6 +242,7 @@ class AnchorPoint(VMobject):
         self.prob = np.array(prob)
         self.index = np.array(index)
         self.sf_nominal = sf_nominal
+        self.sf_pcell = sf_pcell
 
         dot = Square(
             stroke_opacity=0.0,
@@ -333,7 +335,7 @@ class AnchorPoint(VMobject):
                 prob=float(x),
                 label_config=label_config,
                 box_config={
-                    'side_length': self.sf_screen,
+                    'side_length': self.sf_screen*self.sf_pcell,
                     'stroke_color': COLOR_MAP[direction],
                     'stroke_opacity': float(x)**PCELL_STROKE_OPACITY_E,
                     'fill_color': COLOR_MAP[direction],
@@ -341,7 +343,7 @@ class AnchorPoint(VMobject):
                     **box_config,
                 },
             ).move_to(self.dot.get_center()).shift(
-                DIRECTION_MAP[direction] * i * self.sf_screen
+                DIRECTION_MAP[direction] * i * self.sf_screen * self.sf_pcell
             ) for i, x in enumerate(row_data)
         )
         return pcells
@@ -396,7 +398,7 @@ class AnchorPoint(VMobject):
                 prob=float(x),
                 label_config=label_config,
                 box_config={
-                    'side_length': self.sf_screen,
+                    'side_length': self.sf_screen*self.sf_pcell,
                     'stroke_color': COLOR_MAP[direction],
                     'stroke_opacity': float(x)**PCELL_STROKE_OPACITY_E,
                     'fill_color': COLOR_MAP[direction],
@@ -404,7 +406,7 @@ class AnchorPoint(VMobject):
                     **box_config,
                 },
             ).move_to(self.dot.get_center()).shift(
-                DIRECTION_MAP[direction] * i * self.sf_screen
+                DIRECTION_MAP[direction] * i * self.sf_screen * self.sf_pcell
             ) for direction, reg in zip(DIRECTION_SERIES, self.reg)
                 for i, x in enumerate(reg)
         )

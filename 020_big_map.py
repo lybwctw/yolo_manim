@@ -15,7 +15,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs according to 017',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mobs = import_mobs('017')
@@ -41,7 +41,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             "Make room in the right",
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(mobs.animate.shift(LEFT*10.))
@@ -54,7 +54,7 @@ class MainScene(Scene):
                 (6400,7) -> (6400,6) [xyxy, conf, cls]
                 [option] multi-label
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # intuition view append new
@@ -137,7 +137,7 @@ class MainScene(Scene):
                 (6400,6) -> (k,6) [xyxy, conf, cls]
                 [value] conf = ?
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # intuition view append new
@@ -223,7 +223,7 @@ class MainScene(Scene):
                 [value] iou = ?
                 [option] agnostic_nms
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # intuition view append new
@@ -307,7 +307,7 @@ class MainScene(Scene):
             [4] scale back to original image size: (m,6) -> (n,6)
                 maybe convert to desired output format (e.g. xywh)
             """,
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # intuition view append new
@@ -410,11 +410,22 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'back to output big map',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # scale down the big map
-        mobs = Group(*self.get_top_level_mobjects())
+        # mobs = Group(*self.get_top_level_mobjects())
+        mobs = Group(
+            s32_dist, acb_ab, s32_xyxy, acb_bc, s32_xyxy_2d,
+            s32_prob, acc_ab, s32_prob_2d,
+            marrow_out_iview,
+            s32_merged_2d, ac_a, s32_max, ac_b, s32_conf, ac_c, s32_nms, ac_d, s32_back,
+            marrow_in_tview,
+            t32_dist, acb_12, t32_xyxy, acb_23, t32_xyxy_2d,
+            t32_prob, acc_12, t32_prob_2d,
+            marrow_out_tview,
+            t32_merged_2d, ac_1, t32_max, ac_2, t32_conf, ac_3, t32_nms, ac_4, t32_back,
+        )
         self.play(mobs.animate.scale(0.7).center())
         self.wait()
 
@@ -463,8 +474,16 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
+            'save everything, used by 023',
+            skip_animations=False,
+        )
+        # ************************************************************
+        export_mobs(__file__, mobs)
+
+        # ************************************************************
+        self.next_section(
             "highlight decode stage and postprocess stage",
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         s32_mid_decode = Group(
@@ -495,7 +514,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'simplify into two steps on raw output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO: alignment issue, maybe to do with clipping
@@ -581,6 +600,12 @@ class MainScene(Scene):
 
         # TODO, pop out comments from acs
 
+        # ************************************************************
+        self.next_section(
+            'show shape on simplified output map',
+            skip_animations=False,
+        )
+        # ************************************************************
         tensor_mobs = VGroup(
             tin_raw, tin_pad, t32_dist, t32_prob, t32_merged_2d, t32_back,
         )
@@ -618,11 +643,3 @@ class MainScene(Scene):
             run_time=0.5,
         ))
         self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'save everything, used by ???',
-            skip_animations=False,
-        )
-        # ************************************************************
-        export_mobs(__file__, mobs)

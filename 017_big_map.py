@@ -26,9 +26,11 @@ class MainScene(Scene):
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
         e32_dist = Explainer.from_random(       # explainer of stride 32 for distance(box)
             background=background,
+            reg_max=4,
             dist_range=(0.5, 1),
             prob_range=(0, 1),
             shape=(4, 4),
+            sf_pcell=0.5,
         )
 
         s32_dist = Group(background, e32_dist)  # system of stride 32 for distance(box)

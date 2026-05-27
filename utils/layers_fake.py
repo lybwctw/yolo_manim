@@ -37,6 +37,7 @@ class LayersFake(VMobject, ShowShapeMixin):
         buff: float = 0.2,              # buff between layers
         width_nominal: int = 300,       # nominal width
         height_nominal: int = 200,      # nominal height
+        rect_config: dict = {},         # rectangle config
     ):
         """
         Example
@@ -55,11 +56,12 @@ class LayersFake(VMobject, ShowShapeMixin):
         width = width or ref.width
         height = height or ref.height
 
+        cfg = {**RECT_CONFIG, **rect_config}
         rects = VGroup(
             Rectangle(
                 width=width,
                 height=height,
-                **RECT_CONFIG,
+                **cfg,
             ).shift(UR*self.buff*i*self.expanded).set_z_index(self.n-i)
             for i in range(self.n)
         )
