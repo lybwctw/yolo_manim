@@ -1310,12 +1310,12 @@ class Demo(Scene):
         ).scale(2.)
         explainer = Explainer.from_random(
             background=sq,
-            reg_max=2,
+            reg_max=3,
             dist_range=(0.3,1.0),
             prob_range=(0,1),
             shape=(4,4),
             sf_nominal=32,
-            sf_pcell=0.5,
+            sf_pcell=1/3,
         )
 
         system = Group(sq, explainer)
@@ -1330,7 +1330,7 @@ class Demo(Scene):
             label_config={},
             box_config={},
             aargs={'lag_ratio': 0.0,},
-            gargs={'run_time': 1.0, 'lag_ratio': 0.5,},
+            gargs={'run_time': 1.0, 'lag_ratio': 0.2,},
         ))
         self.wait()
 

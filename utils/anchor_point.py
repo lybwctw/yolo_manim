@@ -1610,7 +1610,7 @@ class AnchorPoint(VMobject):
 
 class Demo(ThreeDScene):
     def construct(self):
-        reg = np.random.rand(4, 16)
+        reg = np.random.rand(4, 4)
         reg /= reg.sum(axis=1, keepdims=True)
         ap = AnchorPoint(
             point=ORIGIN,
@@ -1625,41 +1625,58 @@ class Demo(ThreeDScene):
         self.play(Create(ap, run_time=0.3))
         self.wait()
 
-        cps = ap.create_DFL_computations()
+        self.play(ap.show_pcells(
+            label_config={
+                'font_size': 5,
+            },
+            box_config={},
+            run_time=0.5,
+        ))
+        self.wait(0.5)
 
-        for i, direction in enumerate(DIRECTION_SERIES):
-            self.play(ap.show_pcells_direction(
-                direction=direction,
-                label_config={
-                    'font_size': 10,
-                    'color': WHITE,
-                },
-                box_config={},
-                lag_ratio = 0.5,
-                run_time = 0.5,
-            ))
-            self.wait(0.5)
+        self.play(ap.show_pcells_text(
+            run_time=0.5,
+        ))
+        self.wait(0.5)
 
-            self.play(ap.show_pcells_text_direction(
-                direction=direction,
-                lag_ratio=0.5,
-                run_time=0.5
-            ))
-            self.wait(0.5)
+        self.play(Write(Dot(point=ap.get_corner(RIGHT))))
+        self.wait(0.5)
 
-            self.play(Create(cps[i]))
-            self.wait(0.5)
+        # cps = ap.create_DFL_computations()
 
-            self.play(ap.hide_pcells_text_direction(
-                direction=direction,
-                lag_ratio=0.5,
-                run_time=0.5
-            ))
-            self.wait(0.5)
+        # for i, direction in enumerate(DIRECTION_SERIES):
+        #     self.play(ap.show_pcells_direction(
+        #         direction=direction,
+        #         label_config={
+        #             'font_size': 10,
+        #             'color': WHITE,
+        #         },
+        #         box_config={},
+        #         lag_ratio = 0.5,
+        #         run_time = 0.5,
+        #     ))
+        #     self.wait(0.5)
 
-            self.play(ap.show_arrow_direction(
-                direction=direction,
-                arrow_config={},
-                run_time=0.5,
-            ))
-            self.wait(0.5)
+        #     self.play(ap.show_pcells_text_direction(
+        #         direction=direction,
+        #         lag_ratio=0.5,
+        #         run_time=0.5
+        #     ))
+        #     self.wait(0.5)
+
+        #     self.play(Create(cps[i]))
+        #     self.wait(0.5)
+
+        #     self.play(ap.hide_pcells_text_direction(
+        #         direction=direction,
+        #         lag_ratio=0.5,
+        #         run_time=0.5
+        #     ))
+        #     self.wait(0.5)
+
+        #     self.play(ap.show_arrow_direction(
+        #         direction=direction,
+        #         arrow_config={},
+        #         run_time=0.5,
+        #     ))
+        #     self.wait(0.5)

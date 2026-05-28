@@ -13,7 +13,6 @@ from utils.general import export_mobs
 
 MERGED_SCALE_FACTOR = 1.1
 
-# FIXME: update order issue of system
 class MainScene(Scene):
     def construct(self) -> None:
         # NOTE, shift in box flowchart by video editting

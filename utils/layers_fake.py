@@ -37,6 +37,7 @@ class LayersFake(VMobject, ShowShapeMixin):
         buff: float = 0.2,              # buff between layers
         width_nominal: int = 300,       # nominal width
         height_nominal: int = 200,      # nominal height
+        depth_nominal: int | None = None,   # nominal depth, n by default
         rect_config: dict = {},         # rectangle config
     ):
         """
@@ -49,12 +50,17 @@ class LayersFake(VMobject, ShowShapeMixin):
         self.n = n
         self.width_nominal = width_nominal
         self.height_nominal = height_nominal
+        self.depth_nominal = depth_nominal or n
         self.expanded=expanded
         self.buff=buff
 
         # width and height not members
-        width = width or ref.width
-        height = height or ref.height
+        if width is None:
+            width = ref.rects[0].width if isinstance(ref, LayersFake) else ref.width
+        if height is None:
+            height = ref.rects[0].height if isinstance(ref, LayersFake) else ref.height
+        # width = width or ref.width
+        # height = height or ref.height
 
         cfg = {**RECT_CONFIG, **rect_config}
         rects = VGroup(
@@ -210,7 +216,7 @@ class LayersFake(VMobject, ShowShapeMixin):
             text = VGroup(text_h, text_w)
         else:
             text_c = Text(
-                str(self.n),
+                str(self.depth_nominal),        # nominal instead of true layers
                 **text_config,
             ).next_to(self.rects[self.n//2], (LEFT + UP), buff=buff*.6)
             text_h = Text(

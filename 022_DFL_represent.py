@@ -23,7 +23,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init background + explainer from 021',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # NOTE: import from 2d scene failed.
@@ -49,7 +49,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show probcells on specific anchor point',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         sap, oaps = e32.random_ap(COMPUTE_IDX)
@@ -96,7 +96,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'stack probcells in 3d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.move_camera(
@@ -121,7 +121,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'loop through several samples with aligned pcells',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO: better move path.
@@ -193,7 +193,7 @@ class MainScene(ThreeDScene):
         ))
         self.wait(0.2)
 
-        l64 = LayersFake(
+        tensor_64 = LayersFake(
             n=64,
             width=layer_width,
             height=layer_height,
@@ -206,16 +206,16 @@ class MainScene(ThreeDScene):
             },
         ).move_to(layer_center)
 
-        self.play(Write(l64))
+        self.play(Write(tensor_64))
         # self.wait()
 
         # manually expand layers
-        l64.generate_target()
-        l64.target.rects.arrange(
+        tensor_64.generate_target()
+        tensor_64.target.rects.arrange(
             direction=IN,
             buff=layer_buff,
         )
-        for i, layer in enumerate(l64.target.rects):
+        for i, layer in enumerate(tensor_64.target.rects):
             color = COLOR_MAP[DIRECTION_SERIES[i//16]]
             layer.set_style(
                 fill_color=BLACK,
@@ -224,14 +224,20 @@ class MainScene(ThreeDScene):
                 stroke_color=color,
                 stroke_opacity=1.0,
             )
-        self.play(MoveToTarget(l64))
+        self.play(MoveToTarget(tensor_64))
         self.wait()
 
+        # ************************************************************
+        self.next_section(
+            'DFL tensor in 2d perspective',
+            skip_animations=False,
+        )
+        # ************************************************************
         # change perspective and adjust arrange of layers
-        l64.generate_target()
-        l64.target.rects.scale(0.3)
-        layer_buff = -l64.target.rects[0].width + 0.02
-        l64.target.rects.arrange(
+        tensor_64.generate_target()
+        tensor_64.target.rects.scale(0.3)
+        layer_buff = -tensor_64.target.rects[0].width + 0.02
+        tensor_64.target.rects.arrange(
             direction=UR,
             buff=layer_buff,    # native arrange issue
         )
@@ -240,7 +246,7 @@ class MainScene(ThreeDScene):
             theta=-90*DEGREES,
             added_anims=[
                 MoveToTarget(
-                    l64,
+                    tensor_64,
                 ),
                 background.animate.set_opacity(
                     0.0,
@@ -250,16 +256,49 @@ class MainScene(ThreeDScene):
         self.wait()
 
         self.play(ShowShape(
-            l64,
+            tensor_64,
             text_config=SMALL_SHAPE_TEXT_CONFIG,
         ))
         self.wait()
         self.play(HideShape(
-            l64,
+            tensor_64,
         ))
         self.wait()
+
+        # ************************************************************
+        self.next_section(
+            'replace 64-layer tensor with 8-layer substitute',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tensor_sub = LayersFake(
+            n=16,                       # variable?
+            ref=tensor_64,
+            expanded=True,
+            buff=0.08,
+            width_nominal=20,
+            height_nominal=20,
+            depth_nominal=64,
+        ).move_to(tensor_64)
+
+        self.wait()
         self.play(Unwrite(
-            l64,
+            tensor_64,
             run_time=0.5,
+        ))
+        self.play(Write(
+            tensor_sub,
+            run_time=0.5,
+            lag_ratio=0.5,
+        ))
+        self.wait()
+
+        self.play(ShowShape(
+            tensor_sub,
+            text_config=SMALL_SHAPE_TEXT_CONFIG,
+        ))
+        self.wait()
+        self.play(HideShape(
+            tensor_sub,
         ))
         self.wait()
