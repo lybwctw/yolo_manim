@@ -7,6 +7,7 @@ import os
 import cv2
 import torch
 import numpy as np
+import random
 
 from utils.color_cell import ColorCell
 from utils.line_matrix import LineMatrix
@@ -156,3 +157,25 @@ def random_boxes(n, max_coord=640):
 def sf2dir(sf: int) -> str:
     size = 640 // sf
     return f"{sf:03d}_{size:02d}x{size:02d}"
+
+def random_path(
+    n: int,
+    step: int,
+    shape: tuple,
+    start_idx: int,
+) -> list:
+    """generate random idx path in anchor point grid.
+    """
+    h, w = shape
+    row, col = divmod(start_idx, w)
+    sample_idxs = []
+    for _ in range(n):
+        dr, dc = random.choice([
+            (-step, -step), (-step, 0), (-step, step),
+            (0,     -step),             (0,     step),
+            ( step, -step), ( step, 0), (step,  step),
+        ])
+        row = min(max(row + dr, 0), h - 1)
+        col = min(max(col + dc, 0), w - 1)
+        sample_idxs.append(row*w + col)
+    return sample_idxs

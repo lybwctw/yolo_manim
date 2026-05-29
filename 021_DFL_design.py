@@ -12,6 +12,7 @@ from utils.anchor_point import DIRECTION_SERIES
 import random
 
 N_COMPUTE_SAMPLES = 5
+SAMPLE_IDX = 190
 
 class MainScene(Scene):
     def construct(self):
@@ -42,9 +43,8 @@ class MainScene(Scene):
         ))
         self.wait(0.5)
 
-        compute_idx = 190
         # sample anchor point, other anchor points
-        sap, oaps = e32.random_ap(compute_idx)
+        sap, oaps = e32.random_ap(SAMPLE_IDX)
 
         # focus on sample anchor point
         self.play(
@@ -115,6 +115,7 @@ class MainScene(Scene):
             self.wait(0.5)
         
         # highlight prob number for each direction
+        # TODO: make stroke highlight a method
         sap.pcells.save_state()
         self.play(AnimationGroup(
             *(pc.mob_box.animate.set_stroke(

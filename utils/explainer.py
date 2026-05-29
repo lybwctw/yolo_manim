@@ -41,6 +41,8 @@ class Explainer(VGroup):
         prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
         sf_nominal: int = 32,                       # 8|16|32
         sf_pcell: float = 1.0,                      # < 1.0 if mini
+        dot_config: dict = {},                      # default dot config
+        rect_config: dict = {},                     # default rect config
     ):
         """
         Example
@@ -51,6 +53,8 @@ class Explainer(VGroup):
         self.background = background
         self.sf_nominal = sf_nominal
         self.sf_pcell = sf_pcell
+        self.dot_config = dot_config
+        self.rect_config = rect_config
 
         assert reg_3d.shape[:2] == dist_3d.shape[:2] == prob_3d.shape[:2]
 
@@ -194,6 +198,8 @@ class Explainer(VGroup):
                 sf_nominal=self.sf_nominal,
                 sf_screen=self.sf_screen,
                 sf_pcell=self.sf_pcell,
+                dot_config=self.dot_config,
+                rect_config=self.rect_config,
             ) for i in range(self.shape[0])
             for j in range(self.shape[1])
         ])
@@ -1242,6 +1248,8 @@ class Explainer(VGroup):
         shape: tuple = (4, 4),
         sf_nominal: int | None = None,
         sf_pcell: float | None = 1.0,   # <1.0 for mini ones
+        dot_config: dict = {},                      # default dot config
+        rect_config: dict = {},                     # default rect config
     ) -> Explainer:
         """
         Create random explainer.
@@ -1266,6 +1274,8 @@ class Explainer(VGroup):
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
             sf_pcell=sf_pcell,
+            dot_config=dot_config,
+            rect_config=rect_config,
         )
 
     @staticmethod
@@ -1273,6 +1283,8 @@ class Explainer(VGroup):
         background,
         version: int = 32,      # 8 | 16 | 32 | 64 | 160
         sf_nominal: int | None = None,
+        dot_config: dict = {},                      # default dot config
+        rect_config: dict = {},                     # default rect config
     ) -> Explainer:
         """
         Example
@@ -1299,6 +1311,8 @@ class Explainer(VGroup):
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
             sf_pcell=1.0,   # non-mini default
+            dot_config=dot_config,
+            rect_config=rect_config,
         )
         return explainer
 
@@ -1307,32 +1321,47 @@ class Demo(Scene):
         sq = Square(
             stroke_opacity=0,
             fill_opacity=0.3,
-        ).scale(2.)
-        explainer = Explainer.from_random(
+        ).scale(3.)
+
+        e16 = Explainer.from_file(
             background=sq,
-            reg_max=3,
-            dist_range=(0.3,1.0),
-            prob_range=(0,1),
-            shape=(4,4),
-            sf_nominal=32,
-            sf_pcell=1/3,
+            version=32,
+            dot_config=MINI_DOT_CONFIG,
         )
 
-        system = Group(sq, explainer)
-        self.add(system)
+        self.add(sq, e16)
 
-        self.play(explainer.show_anchor_points(
+        self.play(e16.show_anchor_points(
+            lag_ratio=0.0,
             run_time=0.5,
         ))
-        self.wait()
+        self.wait(0.5)
 
-        self.play(explainer.show_pcells(
-            label_config={},
-            box_config={},
-            aargs={'lag_ratio': 0.0,},
-            gargs={'run_time': 1.0, 'lag_ratio': 0.2,},
-        ))
-        self.wait()
+        # explainer = Explainer.from_random(
+        #     background=sq,
+        #     reg_max=3,
+        #     dist_range=(0.3,1.0),
+        #     prob_range=(0,1),
+        #     shape=(4,4),
+        #     sf_nominal=32,
+        #     sf_pcell=1/3,
+        # )
+
+        # system = Group(sq, explainer)
+        # self.add(system)
+
+        # self.play(explainer.show_anchor_points(
+        #     run_time=0.5,
+        # ))
+        # self.wait()
+
+        # self.play(explainer.show_pcells(
+        #     label_config={},
+        #     box_config={},
+        #     aargs={'lag_ratio': 0.0,},
+        #     gargs={'run_time': 1.0, 'lag_ratio': 0.2,},
+        # ))
+        # self.wait()
 
         # self.play(explainer.show_rect_mlabels(
         #     rect_config={},

@@ -227,6 +227,8 @@ class AnchorPoint(VMobject):
         sf_nominal: int = 32,                               # nominal distance / unit distance
         sf_screen: int = 0.5,                               # screen distance / unit distance
         sf_pcell: float = 1.0,                              # pcell size / unit distance
+        dot_config: dict = {},                              # default dot config
+        rect_config: dict = {},                             # default rect config
     ):
         """
         Example
@@ -244,9 +246,12 @@ class AnchorPoint(VMobject):
         self.sf_nominal = sf_nominal
         self.sf_pcell = sf_pcell
 
+        dot_config = {**DOT_CONFIG, **dot_config}
+        rect_config = {**RECT_CONFIG, **rect_config}
+
         dot = Square(
             stroke_opacity=0.0,
-            **DOT_CONFIG,
+            **dot_config,
         ).move_to(point)
         self.dot = dot
 
@@ -263,7 +268,7 @@ class AnchorPoint(VMobject):
             width=width,
             height=height,
             stroke_opacity=0.0,
-            **RECT_CONFIG,
+            **rect_config,
         ).move_to(point + center_offset)
         self.rect = rect
 

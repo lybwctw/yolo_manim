@@ -1,7 +1,7 @@
 from manim import *
 
 from utils.constants import *
-from utils.general import import_mobs
+from utils.general import import_mobs, random_path
 from utils.layers_fake import LayersFake
 from utils.multi_arrow import MultiArrow
 from utils.arrow_comment import ArrowComment
@@ -124,19 +124,25 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # TODO: better move path.
-        h, w = e32.shape
-        row, col = divmod(COMPUTE_IDX, w)
-        sample_idxs = []
-        for _ in range(N_COMPUTE_SAMPLES):
-            dr, dc = random.choice([
-                (-2, -2), (-2, 0), (-2, 2),
-                (0, -2),           (0, 2),
-                (2, -2),  (2, 0),  (2, 2),
-            ])
-            row = min(max(row + dr, 0), h - 1)
-            col = min(max(col + dc, 0), w - 1)
-            sample_idxs.append(row*w + col)
+        # h, w = e32.shape
+        # row, col = divmod(COMPUTE_IDX, w)
+        # sample_idxs = []
+        # for _ in range(N_COMPUTE_SAMPLES):
+        #     dr, dc = random.choice([
+        #         (-2, -2), (-2, 0), (-2, 2),
+        #         (0, -2),           (0, 2),
+        #         (2, -2),  (2, 0),  (2, 2),
+        #     ])
+        #     row = min(max(row + dr, 0), h - 1)
+        #     col = min(max(col + dc, 0), w - 1)
+        #     sample_idxs.append(row*w + col)
+        
+        sample_idxs = random_path(
+            n=N_COMPUTE_SAMPLES,
+            step=2,
+            shape=e32.shape,
+            start_idx=COMPUTE_IDX,
+        )
         pcells = sap.pcells
 
         for idx in sample_idxs:

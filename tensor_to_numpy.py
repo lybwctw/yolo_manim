@@ -46,7 +46,7 @@ def tensor_to_numpy(
     result = (
         selected
         .transpose(0, 1)
-        .reshape(20, 20, -1)
+        .reshape(640//sf, 640//sf, -1)
         .numpy()
     )
 

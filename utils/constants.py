@@ -42,6 +42,30 @@ BIG_SHAPE_TEXT_CONFIG = {
     'color': WHITE,
 }
 
+# explainer related
+MINI_DOT_CONFIG = {
+    'side_length': 0.002,
+    'stroke_width': 1,
+}
+SMALL_DOT_CONFIG = {
+    'side_length': 0.005,
+    'stroke_width': 2,
+}
+MEDIUM_DOT_CONFIG = {
+    'side_length': 0.01,
+    'stroke_width': 3,
+}
+
+MINI_RECT_CONFIG = {
+    'stroke_width': 0.2
+}
+SMALL_RECT_CONFIG = {
+    'stroke_width': 0.5,
+}
+MEDIUM_RECT_CONFIG = {
+    'stroke_width': 1.0,
+}
+
 # FIXME: all others
 PATH_TENSOR_32_BOX = None
 PATH_TENSOR_32_CLS = None
