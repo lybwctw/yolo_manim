@@ -102,6 +102,16 @@ class LayersFake(VMobject, ShowShapeMixin):
         self.expanded = True
 
         return MoveToTarget(self.rects)
+    
+    def scale_layers(
+        self,
+        scale_factor: float = 1.0,
+    ) -> Self:
+        """Alternative to native scale.
+        """
+        for rect in self.rects:
+            rect.scale(scale_factor)
+        return self
 
     def stretch_to_fit(
         self,

@@ -40,7 +40,7 @@ class MainScene(Scene):
             ref=s32_dist[0],
             width_nominal=20,
             height_nominal=20,
-            buff=0.05,
+            buff=0.1,
             expanded=True,
         ).scale(0.92)
         t32_xyxy = t32_dist.copy()              # tensor of stride 32 for xyxy(box)
@@ -60,7 +60,7 @@ class MainScene(Scene):
             ref=s32_prob[0],
             width_nominal=20,
             height_nominal=20,
-            buff=0.05,                          # TODO: make this variable
+            buff=0.1,                          # TODO: make this variable
             expanded=True,
         ).scale(0.92)
         t32_prob_2d = LayersFake(               # tensor of stride 32 for 2d prob(cls)

@@ -99,7 +99,7 @@ class MainScene(Scene):
         t32_reg = LayersFake(
             n=8,                            # fake 64
             ref=t32_dist,
-            buff=0.015,                  # TODO: make this constant
+            buff=0.05,                  # TODO: make this constant
             width_nominal=20,
             height_nominal=20,
             depth_nominal=64,
