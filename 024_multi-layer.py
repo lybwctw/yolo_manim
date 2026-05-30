@@ -13,7 +13,7 @@ SAMPLE_IDX_8 = 6400//2 - 80//2
 SAMPLE_IDX_16 = 1600//2 - 40//2
 SAMPLE_IDX_32 = 400//2 - 20//2
 
-N_SAMPLES = 100
+N_SAMPLES = 3
 
 class MainScene(Scene):
     def construct(self):
@@ -205,7 +205,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show pcells for each sample anchor point',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -263,7 +263,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop through random aps for each stride',
-            skip_animations=False,
+            skip_animations=True,
         )
         # TODO: naming of variables
         # TODO: better looping path, fashion and cool

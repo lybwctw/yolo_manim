@@ -19,7 +19,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs from start',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
@@ -60,7 +60,7 @@ class MainScene(Scene):
             ref=s32_prob[0],
             width_nominal=20,
             height_nominal=20,
-            buff=0.05,
+            buff=0.05,                          # TODO: make this variable
             expanded=True,
         ).scale(0.92)
         t32_prob_2d = LayersFake(               # tensor of stride 32 for 2d prob(cls)
@@ -118,7 +118,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show box prediction flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.add(flowchart_box)
@@ -160,7 +160,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'shift in class prediction flowchart',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.add(flowchart_cls)
@@ -206,7 +206,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         ac_all.save_state()
@@ -250,7 +250,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge box+cls intuition view and tensor view',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # # swap box intuition view and cls tensor view manually
@@ -264,7 +264,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge input and output arrows in tensor view',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         marrow_in_tview = MultiArrow(
@@ -310,7 +310,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor view: create merged 2d tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         t32_xyxy_2d_copy = t32_xyxy_2d.copy()
@@ -340,9 +340,9 @@ class MainScene(Scene):
         t32_merged_2d = LayersFake(
             n=1,
             ref=t32_combined,
-            expanded=True,
             width_nominal=7,
             height_nominal=400,
+            expanded=True,
         ).move_to(t32_combined)
         self.play(AnimationGroup(
             FadeOut(t32_combined),

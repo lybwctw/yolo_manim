@@ -43,7 +43,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert s32_reg in intuition view',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make a copy of s32_dist
@@ -82,7 +82,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert t32_reg in tensor view',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # shift marrow_in_tview to make room
@@ -97,9 +97,9 @@ class MainScene(Scene):
         )
         # create t32_reg as a mini version of reality
         t32_reg = LayersFake(
-            n=8,                            # fake layers
+            n=8,                            # fake 64
             ref=t32_dist,
-            buff=0.015,                  # manual buff
+            buff=0.015,                  # TODO: make this constant
             width_nominal=20,
             height_nominal=20,
             depth_nominal=64,
@@ -140,7 +140,7 @@ class MainScene(Scene):
         # NOTE: a copy from 020
         self.next_section(
             "highlight decode stage and postprocess stage",
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         s32_mid_decode = Group(
@@ -172,7 +172,7 @@ class MainScene(Scene):
         # NOTE: a copy from 020
         self.next_section(
             'simplify into two steps on raw output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         aco_a = ArrowComment(False, RIGHT).scale(0.2).shift(UP*10)
@@ -214,7 +214,7 @@ class MainScene(Scene):
         # NOTE: a copy from 020
         self.next_section(
             'into bigger map: from input to output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         aci_a = aco_a.copy().move_to(LEFT*10)
@@ -310,7 +310,7 @@ class MainScene(Scene):
         )
         # ************************************************************
         mobs = Group(
-            sin_raw, aci_a, sin_pad,            s32_reg, s32_prob, aco_a, s32_merged_2d, aco_b, s32_back,
-            tin_raw, aci_1, tin_pad, ac_game,   t32_reg, t32_prob, aco_1, t32_merged_2d, aco_2, t32_back,
+            sin_raw, aci_a, sin_pad,          s32_reg, s32_prob, aco_a, s32_merged_2d, aco_b, s32_back,
+            tin_raw, aci_1, tin_pad, ac_game, t32_reg, t32_prob, aco_1, t32_merged_2d, aco_2, t32_back,
         )
         export_mobs(__file__, mobs)

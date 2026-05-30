@@ -15,7 +15,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs according to 017',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mobs = import_mobs('017')
@@ -41,7 +41,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             "Make room in the right",
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(mobs.animate.shift(LEFT*10.))
@@ -54,7 +54,7 @@ class MainScene(Scene):
                 (6400,7) -> (6400,6) [xyxy, conf, cls]
                 [option] multi-label
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # intuition view append new
@@ -137,7 +137,7 @@ class MainScene(Scene):
                 (6400,6) -> (k,6) [xyxy, conf, cls]
                 [value] conf = ?
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # intuition view append new
@@ -223,7 +223,7 @@ class MainScene(Scene):
                 [value] iou = ?
                 [option] agnostic_nms
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # intuition view append new
@@ -307,7 +307,7 @@ class MainScene(Scene):
             [4] scale back to original image size: (m,6) -> (n,6)
                 maybe convert to desired output format (e.g. xywh)
             """,
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # intuition view append new
@@ -410,7 +410,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'back to output big map',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # scale down the big map
@@ -475,7 +475,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'save everything, used by 023',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         export_mobs(__file__, mobs)
@@ -483,7 +483,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             "highlight decode stage and postprocess stage",
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         s32_mid_decode = Group(
@@ -514,7 +514,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'simplify into two steps on raw output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO: alignment issue, maybe to do with clipping
@@ -556,7 +556,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'into bigger map: from input to output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         aci_a = aco_a.copy().move_to(LEFT*10)

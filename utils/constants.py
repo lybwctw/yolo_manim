@@ -2,7 +2,10 @@ from manim import *
 import os
 
 # path related
-DIR_ROOT = 'D:/deeplearning/yolo_manim'
+# DIR_ROOT = 'D:/deeplearning/yolo_manim'
+DIR_ROOT = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
 DIR_ASSETS = os.path.join(DIR_ROOT, 'assets')
 DIR_IMAGES = os.path.join(DIR_ASSETS, 'images')
 DIR_LABELS = os.path.join(DIR_ASSETS, 'labels')
