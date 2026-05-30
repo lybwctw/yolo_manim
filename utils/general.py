@@ -173,7 +173,7 @@ def random_path(
         dr, dc = random.choice([
             (-step, -step), (-step, 0), (-step, step),
             (0,     -step),             (0,     step),
-            ( step, -step), ( step, 0), (step,  step),
+            ( step, -step), ( step, 0), ( step, step),
         ])
         row = min(max(row + dr, 0), h - 1)
         col = min(max(col + dc, 0), w - 1)

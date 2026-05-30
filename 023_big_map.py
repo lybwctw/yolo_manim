@@ -302,3 +302,15 @@ class MainScene(Scene):
             run_time=0.5,
         ))
         self.wait()
+
+        # ************************************************************
+        self.next_section(
+            "save everything, used by 025",
+            skip_animations=False,
+        )
+        # ************************************************************
+        mobs = Group(
+            sin_raw, aci_a, sin_pad,            s32_reg, s32_prob, aco_a, s32_merged_2d, aco_b, s32_back,
+            tin_raw, aci_1, tin_pad, ac_game,   t32_reg, t32_prob, aco_1, t32_merged_2d, aco_2, t32_back,
+        )
+        export_mobs(__file__, mobs)
