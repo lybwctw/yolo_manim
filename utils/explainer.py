@@ -452,6 +452,7 @@ class Explainer(VGroup):
     def show_rect_mlabels(
         self,
         rect_config: dict = {},
+        include_text: bool = True,      # show conf score or not
         label_config: dict = {},
         box_config: dict = {},
         rargs: dict = {},       # to_rect animation args
@@ -471,6 +472,7 @@ class Explainer(VGroup):
         anim = AnimationGroup(
             *(ap.show_rect_mlabels(
                 rect_config=rect_config,
+                include_text=include_text,
                 label_config=label_config,
                 box_config=box_config,
                 rargs=rargs,

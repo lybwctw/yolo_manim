@@ -1292,6 +1292,7 @@ class AnchorPoint(VMobject):
     def show_rect_mlabels(
         self,
         rect_config: dict = {},
+        include_text: bool = True,      # show conf score or not
         label_config: dict = {},        # font size 12 by default
         box_config: dict = {},
         rargs: dict = {},       # to_rect animation args
@@ -1313,6 +1314,7 @@ class AnchorPoint(VMobject):
                 **rargs,
             ),
             self.show_multi_labels(
+                include_text=include_text,
                 label_config=label_config,
                 box_config=box_config,
                 **largs

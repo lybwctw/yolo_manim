@@ -53,12 +53,12 @@ class MainScene(Scene):
             reg_max=4,
             dist_range=(0.5, 1),
             prob_range=(0, 1),
-            shape=(6, 6),       # 6x6 as stride-8's fake
+            shape=(8, 8),       # 6x6 as stride-8's fake
             sf_pcell=0.5,
         )
+        s8_reg = Group(b8, e8).shift(RIGHT*10)
         # FIXME: create aps thus arrange works properly
         self.play(e8.show_anchor_points(run_time=0.02, lag_ratio=0.0))
-        s8_reg = Group(b8, e8).shift(RIGHT*10)
         s8_prob = s8_reg.copy().shift(RIGHT*10)
         aco_a_8 = aco_a_32.copy().shift(RIGHT*10)
         s8_merged_2d = s8_reg.copy().shift(RIGHT*10)
@@ -70,12 +70,12 @@ class MainScene(Scene):
             reg_max=4,
             dist_range=(0.5, 1),
             prob_range=(0, 1),
-            shape=(5, 5),       # 5x5 as stride-16's fake
+            shape=(6, 6),       # 5x5 as stride-16's fake
             sf_pcell=0.5,
         )
+        s16_reg = Group(b16, e16).shift(RIGHT*10)
         # FIXME: create aps thus arrange works properly
         self.play(e16.show_anchor_points(run_time=0.02, lag_ratio=0.0))
-        s16_reg = Group(b16, e16).shift(RIGHT*10)
         s16_prob = s16_reg.copy().shift(RIGHT*10)
         aco_a_16 = aco_a_32.copy().shift(RIGHT*10)
         s16_merged_2d = s16_reg.copy().shift(RIGHT*10)
@@ -88,7 +88,7 @@ class MainScene(Scene):
         t8_prob.width_nominal = 80
         t8_prob.height_nominal = 80
         aco_1_8 = aco_1_32.copy().shift(RIGHT*10)
-        t8_merged_2d = t32_merged_2d.copy()
+        t8_merged_2d = t32_merged_2d.copy().shift(RIGHT*10)
         t8_merged_2d.height_nominal = 6400
 
         # init stride-16 series in tensor view
@@ -137,9 +137,87 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # # ************************************************************
-        # self.next_section(
-        #     'insert stride-8 and stride-16 series',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
+        # ************************************************************
+        self.next_section(
+            'expand systems in intuition view',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # realtime label label width / height
+        label_width = s32_merged_2d[-1].anchor_points[0].labels[0].width
+        label_height = s32_merged_2d[-1].anchor_points[0].labels[0].height
+        rect_stroke_width = s32_merged_2d[-1].anchor_points[0].mob.stroke_width
+        rect_stroke_color = GRAY
+        self.play(AnimationGroup(
+            s8_reg[-1].show_pcells(
+                label_config={},
+                box_config={},
+                aargs={'lag_ratio': 0.0,},
+                gargs={'lag_ratio': 0.2,},
+            ),
+            s16_reg[-1].show_pcells(
+                label_config={},
+                box_config={},
+                aargs={'lag_ratio': 0.0,},
+                gargs={'lag_ratio': 0.2,},
+            ),
+            AnimationGroup(
+                *(ap.mob.animate.set_opacity(0.0)
+                  for ap in s8_prob[-1].anchor_points),
+                lag_ratio=0.0,
+            ),
+            AnimationGroup(
+                *(ap.mob.animate.set_opacity(0.0)
+                  for ap in s16_prob[-1].anchor_points),
+                lag_ratio=0.0,
+            ),
+            s8_prob[-1].show_pbars(
+                pbar_config={},
+                aargs={},
+                gargs={},
+                ggargs={'lag_ratio': 0.2},
+            ),
+            s16_prob[-1].show_pbars(
+                pbar_config={},
+                aargs={},
+                gargs={},
+                ggargs={'lag_ratio': 0.2},
+            ),
+            s8_merged_2d[-1].show_rect_mlabels(
+                rect_config={
+                    'stroke_width': rect_stroke_width,
+                    'stroke_color': rect_stroke_color,
+                },
+                include_text=False,
+                label_config={},
+                box_config={
+                    'width': label_width,
+                    'height': label_height,
+                    'fill_opacity': 1.0,
+                },
+                rargs={},
+                largs={},
+                gargs={},
+                ggargs={'lag_ratio': 0.2},
+            ),
+            s16_merged_2d[-1].show_rect_mlabels(
+                rect_config={
+                    'stroke_width': rect_stroke_width,
+                    'stroke_color': rect_stroke_color,
+                },
+                include_text=False,
+                label_config={},
+                box_config={
+                    'width': label_width,
+                    'height': label_height,
+                    'fill_opacity': 1.0,
+                },
+                rargs={},
+                largs={},
+                gargs={},
+                ggargs={'lag_ratio': 0.2},
+            ),
+            lag_ratio=0.0,
+            run_time=1.0,
+        ))
+        self.wait(0.5)
