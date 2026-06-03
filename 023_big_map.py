@@ -15,7 +15,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs according to 020',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mobs = import_mobs('020')
@@ -43,7 +43,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert s32_reg in intuition view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of s32_dist
@@ -82,7 +82,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert t32_reg in tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # shift marrow_in_tview to make room
@@ -140,7 +140,7 @@ class MainScene(Scene):
         # NOTE: a copy from 020
         self.next_section(
             "highlight decode stage and postprocess stage",
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         s32_mid_decode = Group(
@@ -172,7 +172,7 @@ class MainScene(Scene):
         # NOTE: a copy from 020
         self.next_section(
             'simplify into two steps on raw output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         aco_a = ArrowComment(False, RIGHT).scale(0.2).shift(UP*10)
@@ -214,7 +214,7 @@ class MainScene(Scene):
         # NOTE: a copy from 020
         self.next_section(
             'into bigger map: from input to output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         aci_a = aco_a.copy().move_to(LEFT*10)

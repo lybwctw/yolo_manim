@@ -19,7 +19,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs from start',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True).scale(0.4).set_opacity(0.2)
@@ -118,7 +118,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show box prediction flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.add(flowchart_box)
@@ -160,7 +160,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'shift in class prediction flowchart',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.add(flowchart_cls)
@@ -206,7 +206,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensors',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         ac_all.save_state()
@@ -250,7 +250,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge box+cls intuition view and tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # # swap box intuition view and cls tensor view manually
@@ -264,7 +264,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge input and output arrows in tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         marrow_in_tview = MultiArrow(
@@ -310,7 +310,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor view: create merged 2d tensor',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         t32_xyxy_2d_copy = t32_xyxy_2d.copy()

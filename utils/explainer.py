@@ -1317,6 +1317,31 @@ class Explainer(VGroup):
             rect_config=rect_config,
         )
         return explainer
+    
+    @staticmethod
+    def from_explainers(
+        background,
+        explainers: list,
+    ) -> Explainer:
+        """Combine multiple explainers into one, for comparison.
+        """
+        # use the first as reference
+        res = explainers[1]
+        res.background = background
+        # res.anchor_points.remove(*res.anchor_points)
+
+        # update data and anchor points
+        data = []
+        anchor_points = VGroup()
+        for exp in explainers:
+            data.append(exp.data)
+            anchor_points.add(*exp.anchor_points)
+        res.data = np.vstack(data)
+        res.anchor_points = anchor_points
+        res.add(res.anchor_points)
+
+        return res
+
 
 class Demo(Scene):
     def construct(self):
