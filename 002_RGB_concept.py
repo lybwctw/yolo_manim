@@ -344,7 +344,7 @@ class MainScene(Scene):
         ]
         random_colors = [[0, 0, 0], [128, 128, 128]] +\
                         random_colors +\
-                        [0, 0, 0]
+                        [[0, 0, 0]]
         for colors in random_colors:
             r, g, b = colors
             self.play(AnimationGroup(
