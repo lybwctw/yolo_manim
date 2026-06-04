@@ -517,7 +517,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on AI game',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         focus_mobs = Group(
@@ -535,5 +535,39 @@ class MainScene(Scene):
             ).scale(1.5).center(),
             lag_ratio=0.0,
             run_time=1.0,
+        ))
+        self.wait(0.5)
+
+        # ************************************************************
+        self.next_section(
+            'show shapes on AI game',
+            skip_animations=False,
+        )
+        # ************************************************************
+        ac_game.save_state()
+        t_mobs = Group(
+            tin_pad,
+            t8_reg, t8_prob,
+            t16_reg, t16_prob,
+            t32_reg, t32_prob,
+        )
+        self.play(AnimationGroup(
+            ac_game.animate.fade(0.8),
+            AnimationGroup(
+                *(ShowShape(mob, text_config=MINI_SHAPE_TEXT_CONFIG)
+                  for mob in t_mobs),
+                lag_ratio=0.5,
+            ),
+            run_time=0.5,
+        ))
+        self.wait(0.5)
+
+        self.play(AnimationGroup(
+            ac_game.animate.restore(),
+            AnimationGroup(
+                *(HideShape(mob) for mob in t_mobs),
+                lag_ratio=0.5,
+            ),
+            run_time=0.5,
         ))
         self.wait(0.5)

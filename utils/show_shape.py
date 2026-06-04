@@ -1,104 +1,119 @@
 from manim import *
+from typing import Any
 
-SHAPE_PATH_CONFIG = {
+DEFAULT_SHAPE_PATH_CONFIG = {
     'color': PURE_YELLOW,
     'width': 3,
     'opacity': 1.0,
 }
 
-SHAPE_TEXT_CONFIG = {
-    'color': WHITE,
+DEFAULT_SHAPE_TEXT_CONFIG = {
     'buff': 0.15,
     'font_size': 15,
     'font': 'JetBrains Mono',
+    'color': WHITE,
 }
 
-PATH_AARGS = {
-    'time_width': 2.0,
-    'run_time': 2.0,
+DEFAULT_SHOW_AARGS = {
+    'lag_ratio': 0.0,
+    'run_time': 1.0,
 }
 
-TEXT_AARGS = {
-    'lag_ratio': 0.8,
-    'run_time': 2.0,
+DEFAULT_HIDE_AARGS = {
+    'lag_ratio': 0.0,
+    'run_time': 1.0,
 }
-
-GARGS = {
-}
-
-class ShowShapeMixin:
-    def get_shape_path(self, **path_config) -> VMobject:
-        """
-        Example
-        -------
-        shape = ImagePad()
-        result = show_shape_mixin.get_shape_path()
-        """
-        raise NotImplementedError
-
-    def get_shape_text(self, **text_config) -> VGroup:
-        """
-        Example
-        -------
-        shape = ImagePad()
-        result = show_shape_mixin.get_shape_text()
-        """
-        raise NotImplementedError
 
 class ShowShape(AnimationGroup):
+    """
+    Example
+    -------
+    from manim import *
+    from utils.image_raw import ImageRaw
+    from utils.show_shape import ShowShape, HideShape
+    from utils.constants import *
+
+    class Demo(Scene):
+        def construct(self):
+            img = ImageRaw(path=PATH_IMAGE_960)
+            self.add(img)
+            self.play(ShowShape(
+                img,
+                text_config=MEDIUM_SHAPE_TEXT_CONFIG,
+                aargs={'run_time': 1.0},
+            ))
+            self.wait()
+            self.play(HideShape(
+                img,
+                aargs={'run_time': 1.0},
+            ))
+            self.wait()
+    """
     def __init__(
         self,
-        shape: ShowShapeMixin | None = None,
-        path_config: dict = {},     # path config: color, width, opacity
-        text_config: dict = {},     # text config: font_size, font
-        path_aargs: dict = {},      # ShowPassingFlash args
-        text_aargs: dict = {},      # text Writing group args
-        gargs: dict = {},           # lag_ratio
+        mob: Any = None,
+        path_config: dict = {},     # color, width, opacity
+        text_config: dict = {},     # font_size, font, buff, color
+        aargs: dict = {},           # lag_ratio, run_time
     ):
-        """
-        Example
-        -------
-        anim = ShowShape(shape)
-        """
-        path_config = {**SHAPE_PATH_CONFIG, **path_config}
-        text_config = {**SHAPE_TEXT_CONFIG, **text_config}
-        path_aargs = {**PATH_AARGS, **path_aargs}
-        text_aargs = {**TEXT_AARGS, **text_aargs}
-        gargs = {**GARGS, **gargs}
+        path_config = {**DEFAULT_SHAPE_PATH_CONFIG, **path_config}
+        text_config = {**DEFAULT_SHAPE_TEXT_CONFIG, **text_config}
+        aargs = {**DEFAULT_SHOW_AARGS, **aargs}
 
-        path = shape.get_shape_path(**path_config)
-        texts = shape.get_shape_text(**text_config)
+        # NOTE: mob class SHOULD implement these methods
+        path = mob.get_shape_path(**path_config)
+        texts = mob.get_shape_text(**text_config)
 
-        shape._shape_texts = texts  # store on the mobject
-        shape.add(shape._shape_texts)
+        mob.shape_texts = texts      # as child of mob
+        mob.add(mob.shape_texts)
 
         super().__init__(
             ShowPassingFlash(
                 path,
-                **path_aargs,
+                time_width=1.0,
             ),
             AnimationGroup(
                 *(Write(t) for t in texts),
-                **text_aargs,
+                lag_ratio=0.5,
             ),
-            **gargs,
+            **aargs,
         )
 
 class HideShape(AnimationGroup):
+    """
+    Example
+    -------
+    from manim import *
+    from utils.image_raw import ImageRaw
+    from utils.show_shape import ShowShape, HideShape
+    from utils.constants import *
+
+    class Demo(Scene):
+        def construct(self):
+            img = ImageRaw(path=PATH_IMAGE_960)
+            self.add(img)
+            self.play(ShowShape(
+                img,
+                text_config=MEDIUM_SHAPE_TEXT_CONFIG,
+                aargs={'run_time': 1.0},
+            ))
+            self.wait()
+            self.play(HideShape(
+                img,
+                aargs={'run_time': 1.0},
+            ))
+            self.wait()
+    """
     def __init__(
         self,
-        shape: ShowShapeMixin | None = None,
-        **gargs,
+        mob: Any = None,
+        aargs: dict = {},           # lag_ratio, run_time
     ):
-        """
-        Example
-        -------
-        anim = HideShape(shape)
-        """
-        texts = getattr(shape, "_shape_texts", VGroup())
-        shape.remove(texts)
+        texts = getattr(mob, "shape_texts", VGroup())
+        mob.remove(texts)
 
+        aargs = {**DEFAULT_HIDE_AARGS, **aargs}
         super().__init__(
             *(Unwrite(t) for t in texts),
-            **gargs,
+            **aargs,
         )

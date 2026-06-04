@@ -6,10 +6,6 @@ from utils.arrow_comment import ArrowComment
 from utils.yolo_annotation import ImageAnnotation
 from utils.general import save_everything, load_everything, scale_manager_target
 
-# FIXME, floating filling flying digits
-# FIXME, floating filling flying digits
-# FIXME, floating filling flying digits
-# FIXME, delicate machine
 class MainScene(Scene):
     def construct(self) -> None:
         image_raw = ImageRaw(PATH_IMAGE_640)

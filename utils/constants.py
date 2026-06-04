@@ -2,7 +2,6 @@ from manim import *
 import os
 
 # path related
-# DIR_ROOT = 'D:/deeplearning/yolo_manim'
 DIR_ROOT = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
 )
@@ -19,20 +18,20 @@ PATH_IMAGE_1280 = os.path.join(DIR_IMAGES, 'sample_1280x720.jpg')
 PATH_LABEL = os.path.join(DIR_LABELS, 'labels.txt')
 PATH_LABEL = 'assets/images/labels.txt'
 
-# kk dataset related
+# dataset related
 KK_NAMES = ['kunkun', 'coke', 'pepsi']
 KK_COLORS = [GREEN, RED, BLUE]
 KK_NAME_MAP = dict(enumerate(KK_NAMES))
 KK_COLOR_MAP = dict(enumerate(KK_COLORS))
 
-# show shape related
-MINI_SHAPE_TEXT_CONFIG = {
+# shape related
+SMALL_SHAPE_TEXT_CONFIG = {
     'buff': 0.10,
     'font_size': 10,
     'font': 'JetBrains Mono',
     'color': WHITE,
 }
-SMALL_SHAPE_TEXT_CONFIG = {
+MEDIUM_SHAPE_TEXT_CONFIG = {
     'buff': 0.15,
     'font_size': 15,
     'font': 'JetBrains Mono',

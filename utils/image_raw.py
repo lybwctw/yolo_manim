@@ -1,23 +1,12 @@
-"""Usage
------
-Example inside a scene outside ``utils/``::
-
-    from utils.image_raw import ImageRaw
-
-    img = ImageRaw(path='../assets/images/sample_640_360.jpg')
-    self.add(img)
-    self.play(img.show_passing_flash())
-"""
-
+# FIXME: as backup, remove this
 import sys
 sys.path.append('..')
 
 from manim import *
-
+from utils.show_shape import ShowShape, HideShape
 from utils.constants import *
-from utils.show_shape import ShowShape
 
-class ImageRaw(Mobject, ShowShape):
+class ImageRaw(Mobject):
     def __init__(
         self,
         path: str = PATH_IMAGE_640,
@@ -27,7 +16,14 @@ class ImageRaw(Mobject, ShowShape):
         """
         Example
         -------
-        img = ImageRaw()
+        from manim import *
+        from utils.image_raw import ImageRaw
+
+        class Demo(Scene):
+            def construct(self):
+                img = ImageRaw()
+                self.add(img)
+                self.wait()
         """
         super().__init__()
         self.path = path
@@ -41,41 +37,30 @@ class ImageRaw(Mobject, ShowShape):
 
         self.add(self.image)
 
-    def get_shape_path(self):
-        """
-        Example
-        -------
-        img = ImageRaw()
-        result = img.get_shape_path()
-        """
+    def get_shape_path(
+        self,
+        **path_config,
+    ):
         path = VMobject()
         path.set_points_as_corners([
             self.image.get_corner(LEFT + DOWN),
             self.image.get_corner(LEFT + UP),
             self.image.get_corner(RIGHT + UP),
-        ]).set_stroke(color=YELLOW)
+        ]).set_stroke(**path_config)
         return path
 
-    def get_shape_text(self):
-        """
-        Example
-        -------
-        img = ImageRaw()
-        result = img.get_shape_text()
-        """
-        text_h = Text(str(self.height_nominal), font_size=20).next_to(self.image, LEFT)
-        text_w = Text(str(self.width_nominal), font_size=20).next_to(self.image, UP)
+    def get_shape_text(
+        self,
+        **text_config,
+    ):
+        buff = text_config.pop('buff')  # buff SHOULD be provided
+        text_h = Text(
+            str(self.height_nominal),
+            **text_config,
+        ).next_to(self.image, LEFT, buff=buff)
+        text_w = Text(
+            str(self.width_nominal),
+            **text_config,
+        ).next_to(self.image, UP, buff=buff)
         text = VGroup(text_h, text_w)
         return text
-
-class Demo(Scene):
-    def construct(self):
-        path = '../assets/images/sample_640_360.jpg'
-        img = ImageRaw(
-            path=path,
-        )
-        self.add(img)
-        self.wait()
-
-        self.play(img.show_passing_flash())
-        self.wait()

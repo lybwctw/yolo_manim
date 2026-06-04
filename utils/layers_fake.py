@@ -180,13 +180,7 @@ class LayersFake(VMobject, ShowShapeMixin):
         self,
         **path_config,
     ) -> VMobject:
-        """
-        Example
-        -------
-        lf = LayersFake(n=3, width=3, height=4)
-        result = lf.get_shape_path()
-        """
-        # NOTE: same z_index as the first rect
+        # same z_index as the first rect
         path = VMobject().set_z_index(self.n)
         if self.n == 1:
             path.set_points_as_corners([
@@ -207,12 +201,6 @@ class LayersFake(VMobject, ShowShapeMixin):
         self,
         **text_config,
     ) -> VGroup:
-        """
-        Example
-        -------
-        lf = LayersFake(n=3, width=3, height=4)
-        result = lf.get_shape_text()
-        """
         buff = text_config.pop('buff', 0.15)
         if self.n == 1:
             text_h = Text(

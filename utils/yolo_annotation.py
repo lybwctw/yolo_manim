@@ -1,19 +1,3 @@
-"""Usage
------
-Example inside a scene outside ``utils/``::
-
-    from utils.image_pad import ImagePad
-    from utils.yolo_annotation import YoloAnnotation
-
-    background = ImagePad(path='../assets/images/sample_640_360.jpg', padded=False)
-    annotation = YoloAnnotation(background=background, annotation='../assets/images/labels.txt')
-    anno_with_bg = Group(background, annotation)
-    self.add(background)
-    self.play(Write(annotation))
-    self.play(anno_with_bg.animate.scale(1.5).shift(LEFT*2))
-    self.play(annotation.show_passing_flash())
-"""
-
 import sys
 sys.path.append('..')
 
@@ -57,9 +41,9 @@ class SingleAnnotation(VMobject):
     def __init__(
         self,
         text: str = 'test',
-        label_config: dict = {},
+        label_txt_config: dict = {},
         label_bg_config: dict = {},
-        bbox_config: dict = {},     # width, height
+        box_config: dict = {},     # width, height
     ):
         """
         Example
@@ -68,9 +52,12 @@ class SingleAnnotation(VMobject):
         """
         super().__init__()
         self.text = text
-        self.label_config = {**ANNO_LABEL_CONFIG, **label_config}
-        self.label_bg_config = {**ANNO_LABEL_BG_CONFIG, **label_bg_config}
-        self.bbox_config = {**ANNO_BBOX_CONFIG, **bbox_config}
+        # self.label_txt_config = {**ANNO_LABEL_CONFIG, **label_txt_config}
+        # self.label_bg_config = {**ANNO_LABEL_BG_CONFIG, **label_bg_config}
+        # self.bbox_config = {**ANNO_BBOX_CONFIG, **bbox_config}
+        self.label_txt_config = label_txt_config
+        self.label_bg_config = label_bg_config
+        self.box_config = box_config
 
         bbox = Rectangle(
             **self.bbox_config,
@@ -300,160 +287,160 @@ class YoloAnnotation(VMobject):
         return np.stack([x1, y1, x2, y2], axis=1)
 
 
-# FIXME: copy of ImageRepad, expediency
-class AnnotationRepad(Mobject, ShowShape):
-    def __init__(
-        self,
-        annotation,
-        padded=False,
-    ):
-        """
-        Example
-        -------
-        annotation_repad = AnnotationRepad(annotation)
-        """
-        super().__init__()
-        self.scale_factor = 1.0
-        self.annotation = annotation    # ImageAnnotation
-        self._w = annotation._w
-        self._h = annotation._h
-        self.padded = padded
-        self.natural_pad = False  # natural means w>h
+# # FIXME: copy of ImageRepad, expediency
+# class AnnotationRepad(Mobject, ShowShape):
+#     def __init__(
+#         self,
+#         annotation,
+#         padded=False,
+#     ):
+#         """
+#         Example
+#         -------
+#         annotation_repad = AnnotationRepad(annotation)
+#         """
+#         super().__init__()
+#         self.scale_factor = 1.0
+#         self.annotation = annotation    # ImageAnnotation
+#         self._w = annotation._w
+#         self._h = annotation._h
+#         self.padded = padded
+#         self.natural_pad = False  # natural means w>h
 
-        if self.padded:
-            width, height = self.annotation.width, self.annotation.height
-            if self._w > self._h:
-                self.natural_pad = True
-                t_width, t_height = width, (width - height) / 2
-                p1 = Rectangle(
-                    width=t_width,
-                    height=t_height,
-                    stroke_width=0,
-                    fill_color=GRAY,  # FIXME, using exact 114,114,114
-                    fill_opacity=0.2,
-                ).next_to(self.annotation, DOWN, buff=0)
-                p2 = p1.copy().next_to(self.annotation, UP, buff=0)
-            else:
-                self.natural_pad = False
-                t_width, t_height = (height - width) / 2, height
-                p1 = Rectangle(
-                    width=t_width,
-                    height=t_height,
-                    stroke_width=0,
-                    fill_color=GRAY,  # FIXME, using exact 114,114,114
-                    fill_opacity=0.2,
-                ).next_to(self.annotation, LEFT, buff=0)
-                p2 = p1.copy().next_to(self.annotation, RIGHT, buff=0)
-            self.paddings = VGroup(p1, p2)
-            self.add(self.paddings)
-        else:
-            self.paddings = None
+#         if self.padded:
+#             width, height = self.annotation.width, self.annotation.height
+#             if self._w > self._h:
+#                 self.natural_pad = True
+#                 t_width, t_height = width, (width - height) / 2
+#                 p1 = Rectangle(
+#                     width=t_width,
+#                     height=t_height,
+#                     stroke_width=0,
+#                     fill_color=GRAY,  # FIXME, using exact 114,114,114
+#                     fill_opacity=0.2,
+#                 ).next_to(self.annotation, DOWN, buff=0)
+#                 p2 = p1.copy().next_to(self.annotation, UP, buff=0)
+#             else:
+#                 self.natural_pad = False
+#                 t_width, t_height = (height - width) / 2, height
+#                 p1 = Rectangle(
+#                     width=t_width,
+#                     height=t_height,
+#                     stroke_width=0,
+#                     fill_color=GRAY,  # FIXME, using exact 114,114,114
+#                     fill_opacity=0.2,
+#                 ).next_to(self.annotation, LEFT, buff=0)
+#                 p2 = p1.copy().next_to(self.annotation, RIGHT, buff=0)
+#             self.paddings = VGroup(p1, p2)
+#             self.add(self.paddings)
+#         else:
+#             self.paddings = None
 
-        self.add(annotation)
+#         self.add(annotation)
 
-    def get_shape_path(self):
-        """
-        Example
-        -------
-        annotation_repad = AnnotationRepad(annotation)
-        result = annotation_repad.get_shape_path()
-        """
-        path = VMobject()
-        if self.natural_pad:
-            path.set_points_as_corners([
-                self.paddings[0].get_corner(LEFT + DOWN),
-                self.paddings[1].get_corner(LEFT + UP),
-                self.paddings[1].get_corner(RIGHT + UP),
-            ]).set_stroke(color=BLUE)
-        else:
-            path.set_points_as_corners([
-                self.paddings[0].get_corner(LEFT + DOWN),
-                self.paddings[0].get_corner(LEFT + UP),
-                self.paddings[1].get_corner(RIGHT + UP),
-            ]).set_stroke(color=BLUE)
-        return path
+#     def get_shape_path(self):
+#         """
+#         Example
+#         -------
+#         annotation_repad = AnnotationRepad(annotation)
+#         result = annotation_repad.get_shape_path()
+#         """
+#         path = VMobject()
+#         if self.natural_pad:
+#             path.set_points_as_corners([
+#                 self.paddings[0].get_corner(LEFT + DOWN),
+#                 self.paddings[1].get_corner(LEFT + UP),
+#                 self.paddings[1].get_corner(RIGHT + UP),
+#             ]).set_stroke(color=BLUE)
+#         else:
+#             path.set_points_as_corners([
+#                 self.paddings[0].get_corner(LEFT + DOWN),
+#                 self.paddings[0].get_corner(LEFT + UP),
+#                 self.paddings[1].get_corner(RIGHT + UP),
+#             ]).set_stroke(color=BLUE)
+#         return path
 
-    def get_shape_text(self):
-        """
-        Example
-        -------
-        annotation_repad = AnnotationRepad(annotation)
-        result = annotation_repad.get_shape_text()
-        """
-        if self.natural_pad:
-            text_h = Text(str(self._h), font_size=20).next_to(self.annotation, LEFT)
-            text_w = Text(str(self._w), font_size=20).next_to(self.paddings[1], UP)
-        else:
-            text_h = Text(str(self._h), font_size=20).next_to(self.paddings[0], LEFT)
-            text_w = Text(str(self._w), font_size=20).next_to(self.annotation, UP)
-        text = VGroup(text_h, text_w)
-        return text
+#     def get_shape_text(self):
+#         """
+#         Example
+#         -------
+#         annotation_repad = AnnotationRepad(annotation)
+#         result = annotation_repad.get_shape_text()
+#         """
+#         if self.natural_pad:
+#             text_h = Text(str(self._h), font_size=20).next_to(self.annotation, LEFT)
+#             text_w = Text(str(self._w), font_size=20).next_to(self.paddings[1], UP)
+#         else:
+#             text_h = Text(str(self._h), font_size=20).next_to(self.paddings[0], LEFT)
+#             text_w = Text(str(self._w), font_size=20).next_to(self.annotation, UP)
+#         text = VGroup(text_h, text_w)
+#         return text
 
-    def show_paddings(self):
-        """
-        Example
-        -------
-        annotation_repad = AnnotationRepad(annotation)
-        self.play(annotation_repad.show_paddings())
-        """
-        if self.padded:
-            return None
+#     def show_paddings(self):
+#         """
+#         Example
+#         -------
+#         annotation_repad = AnnotationRepad(annotation)
+#         self.play(annotation_repad.show_paddings())
+#         """
+#         if self.padded:
+#             return None
 
-        width, height = self.annotation.width, self.annotation.height
-        if self._w > self._h:
-            self.natural_pad = True
-            t_width, t_height = width, (width - height) / 2
-            p1 = Rectangle(
-                width=t_width,
-                height=0,
-                stroke_width=0,
-                fill_color=GRAY,  # FIXME, using exact 114,114,114
-            ).next_to(self.annotation, DOWN, buff=0)
-            p2 = p1.copy().next_to(self.annotation, UP, buff=0)
-            p1_res = Rectangle(
-                width=t_width,
-                height=t_height,
-                stroke_width=0,
-                fill_color=GRAY,
-                fill_opacity=0.2,       # faded annotation as annotation
-            ).next_to(p1, DOWN, buff=0)
-            p2_res = p1_res.copy().next_to(p2, UP, buff=0)
+#         width, height = self.annotation.width, self.annotation.height
+#         if self._w > self._h:
+#             self.natural_pad = True
+#             t_width, t_height = width, (width - height) / 2
+#             p1 = Rectangle(
+#                 width=t_width,
+#                 height=0,
+#                 stroke_width=0,
+#                 fill_color=GRAY,  # FIXME, using exact 114,114,114
+#             ).next_to(self.annotation, DOWN, buff=0)
+#             p2 = p1.copy().next_to(self.annotation, UP, buff=0)
+#             p1_res = Rectangle(
+#                 width=t_width,
+#                 height=t_height,
+#                 stroke_width=0,
+#                 fill_color=GRAY,
+#                 fill_opacity=0.2,       # faded annotation as annotation
+#             ).next_to(p1, DOWN, buff=0)
+#             p2_res = p1_res.copy().next_to(p2, UP, buff=0)
 
-            self.paddings = VGroup(p1, p2)
-            self.add(self.paddings)
-            self.padded = True
-            self._h = self._w
-            return AnimationGroup(
-                Transform(p1, p1_res),
-                Transform(p2, p2_res),
-            )
-        else:
-            self.natural_pad = False
-            t_width, t_height = (height - width) / 2, height
-            p1 = Rectangle(
-                width=0,
-                height=t_height,
-                stroke_width=0,
-                fill_color=GRAY,  # FIXME, using exact 114,114,114
-            ).next_to(self.annotation, LEFT, buff=0)
-            p2 = p1.copy().next_to(self.annotation, RIGHT, buff=0)
-            p1_res = Rectangle(
-                width=t_width,
-                height=t_height,
-                stroke_width=0,
-                fill_color=GRAY,
-                fill_opacity=0.2,
-            ).next_to(p1, LEFT, buff=0)
-            p2_res = p1_res.copy().next_to(p2, RIGHT, buff=0)
+#             self.paddings = VGroup(p1, p2)
+#             self.add(self.paddings)
+#             self.padded = True
+#             self._h = self._w
+#             return AnimationGroup(
+#                 Transform(p1, p1_res),
+#                 Transform(p2, p2_res),
+#             )
+#         else:
+#             self.natural_pad = False
+#             t_width, t_height = (height - width) / 2, height
+#             p1 = Rectangle(
+#                 width=0,
+#                 height=t_height,
+#                 stroke_width=0,
+#                 fill_color=GRAY,  # FIXME, using exact 114,114,114
+#             ).next_to(self.annotation, LEFT, buff=0)
+#             p2 = p1.copy().next_to(self.annotation, RIGHT, buff=0)
+#             p1_res = Rectangle(
+#                 width=t_width,
+#                 height=t_height,
+#                 stroke_width=0,
+#                 fill_color=GRAY,
+#                 fill_opacity=0.2,
+#             ).next_to(p1, LEFT, buff=0)
+#             p2_res = p1_res.copy().next_to(p2, RIGHT, buff=0)
 
-            self.paddings = VGroup(p1, p2)
-            self.add(self.paddings)
-            self.padded = True
-            self._w = self._h
-            return AnimationGroup(
-                Transform(p1, p1_res),
-                Transform(p2, p2_res),
-            )
+#             self.paddings = VGroup(p1, p2)
+#             self.add(self.paddings)
+#             self.padded = True
+#             self._w = self._h
+#             return AnimationGroup(
+#                 Transform(p1, p1_res),
+#                 Transform(p2, p2_res),
+#             )
 
 class Demo(Scene):
     def construct(self):
