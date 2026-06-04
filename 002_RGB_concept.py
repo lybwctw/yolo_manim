@@ -272,6 +272,8 @@ class MainScene(Scene):
                 g_tracker.animate.set_value(g),
                 b_tracker.animate.set_value(b),
                 res_color.animate.set_color(_color),
+                lag_ratio=0.0,
+                run_time=wt,
             ))
             # res_text = new_text
             self.wait(wt)
@@ -365,6 +367,10 @@ class MainScene(Scene):
         # ************************************************************
         self.play(AnimationGroup(
             FadeOut(bg_color),
-            Unwrite(new_text),
+            Unwrite(
+                new_text,
+                lag_ratio=0.0,
+            ),
+            run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
