@@ -1,28 +1,12 @@
-"""Usage
------
-Example inside a scene outside ``utils/``::
-
-    from utils.image_pad import ImagePad
-    from utils.show_shape import ShowShape, HideShape
-
-    ipad = ImagePad(path='../assets/images/sample_640x360.jpg', padded=False)
-    self.add(ipad)
-    self.play(ipad.show_natural_paddings())
-    self.play(ipad.hide_paddings(width_nominal=640, height_nominal=360))
-    self.play(ShowShape(ipad))
-    self.play(HideShape(ipad))
-"""
-
 import sys
 sys.path.append('..')
 
 from manim import *
-
 from utils.image_raw import ImageRaw
 from utils.show_shape import *
 from utils.constants import *
 
-class ImagePad(Mobject, ShowShapeMixin):
+class ImagePad(Mobject):
     def __init__(
         self,
         image_raw: ImageRaw = None,         # from ImageRaw
@@ -31,11 +15,6 @@ class ImagePad(Mobject, ShowShapeMixin):
         height_nominal: int | None = None,  # nominal height
         padded: bool = False,               # padded or not
     ):
-        """
-        Example
-        -------
-        ipad = ImagePad(padded=True)
-        """
         super().__init__()
 
         if image_raw:
@@ -74,8 +53,8 @@ class ImagePad(Mobject, ShowShapeMixin):
     def set_opacity(self, alpha):
         """
         Override set_opacity because there are
-                   different interfaces when setting opacity
-                   for ImageMobject and VMobject.
+            different interfaces when setting opacity
+            for ImageMobject and VMobject.
 
 
         Example
@@ -329,23 +308,9 @@ class ImagePad(Mobject, ShowShapeMixin):
 
 class Demo(Scene):
     def construct(self) -> None:
-        path = '../assets/images/sample_640_360.jpg'
-        ipad = ImagePad(
-            path=path,
-            padded=False,
-        )
-
-        self.add(ipad)
+        image_pad = ImagePad(padded=True)
+        self.add(image_pad)
         self.wait()
 
-        self.play(ipad.show_natural_paddings())
-        self.wait()
-
-        self.play(ipad.hide_paddings(
-            width_nominal=640,
-            height_nominal=360,
-        ))
-        self.wait()
-
-        self.play(ipad.show_passing_flash())
+        self.play(image_pad.animate.set_opacity(0.1))
         self.wait()

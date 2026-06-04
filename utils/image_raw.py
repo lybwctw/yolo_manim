@@ -1,4 +1,3 @@
-# FIXME: as backup, remove this
 import sys
 sys.path.append('..')
 
@@ -7,24 +6,24 @@ from utils.show_shape import ShowShape, HideShape
 from utils.constants import *
 
 class ImageRaw(Mobject):
+    """
+    Example
+    -------
+    from manim import *
+    from utils.image_raw import ImageRaw
+
+    class Demo(Scene):
+        def construct(self):
+            img = ImageRaw()
+            self.add(img)
+            self.wait()
+    """
     def __init__(
         self,
         path: str = PATH_IMAGE_640,
         width_nominal: int | None = None,
         height_nominal: int | None = None,
     ):
-        """
-        Example
-        -------
-        from manim import *
-        from utils.image_raw import ImageRaw
-
-        class Demo(Scene):
-            def construct(self):
-                img = ImageRaw()
-                self.add(img)
-                self.wait()
-        """
         super().__init__()
         self.path = path
 

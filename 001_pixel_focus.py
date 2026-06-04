@@ -1,43 +1,37 @@
 from manim import *
 from utils.constants import *
-from utils.image_pad import ImageRaw, ImageRepad
-from utils.tile_comment import TileComment
+from utils.image_raw import ImageRaw
+from utils.image_pad import ImagePad
 from utils.arrow_comment import ArrowComment
-from utils.yolo_annotation import ImageAnnotation
-from utils.general import save_everything, load_everything, load_central_cells
-from utils.color_cell import ColorCell
+from utils.yolo_annotation import YoloAnnotation
+from utils.general import import_mobs, export_mobs
+from utils.color_cell import load_central_cells
 
-
+wt = SHORT_DURATION
 class MainScene(MovingCameraScene):
     def construct(self) -> None:
+        # ************************************************************
+        self.next_section(
+            'init from previous',
+            skip_animations=False,
+        )
+        # ************************************************************
         (
-            image_raw, tile_input,
-            annotation_final, tile_output,
-            ac_a1, ac_z9,
-            ac_game,
-        ) = load_everything(S000_EVERYTHING)
+            sin_raw,
+        ) = import_mobs('000')
+        self.add(sin_raw)
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'starting image',
+            'zoom in',
             skip_animations=False,
         )
         # ************************************************************
-        # self.add(image_raw)
-        # self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'zoom',
-            skip_animations=False,
-        )
-        # ************************************************************
-        _image_raw = image_raw.image.copy()
-        _image_raw.set_resampling_algorithm(RESAMPLING_ALGORITHMS["nearest"])
-        self.add(_image_raw)
-        self.wait()
-        self.play(_image_raw.animate.scale_to_fit_height(360/2))
-        self.wait()
+        self.play(sin_raw.animate(
+            run_time=wt,
+        ).scale_to_fit_height(360/2))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -45,27 +39,31 @@ class MainScene(MovingCameraScene):
             skip_animations=False,
         )
         # ************************************************************
+        # FIXME: to do with 360/2
         cells = load_central_cells(
-            PATH_IMAGE_640,
+            PATH_IMAGE_640,                 
             rows=16,
             cols=30,
             target_height=config.frame_height,
         )
         cells.shuffle()
 
-        self.play(Write(cells))
-        self.remove(_image_raw)
+        self.play(Write(
+            cells,
+            run_time=wt,
+        ))
+        self.remove(sin_raw)
 
-        # maybe floating effect of pixels?
+        # TODO: floating effect of pixels?
 
         # ************************************************************
         self.next_section(
-            'save for next scene, extension and focus back',
+            'save mobs, used by ???',
             skip_animations=False,
         )
         # ************************************************************
-        everything = Group(
-            _image_raw,
+        mobs = Group(
+            sin_raw,
             cells,
         )
-        save_everything(S001_EVERYTHING, everything)
+        export_mobs(__file__, mobs)

@@ -1,19 +1,9 @@
-"""Usage
------
-Example inside a scene outside ``utils/``::
-
-    from utils.slider import Slider
-
-    r = ValueTracker(0)
-    g = ValueTracker(0)
-    b = ValueTracker(0)
-    sliders = VGroup(Slider(r, 'R', color=RED), Slider(g, 'G', color=GREEN), Slider(b, 'B', color=BLUE))
-    sliders.arrange(DOWN, buff=0.6).to_edge(LEFT)
-    self.add(sliders)
-    self.play(r.animate.set_value(255), g.animate.set_value(128), b.animate.set_value(64))
-"""
-
 from manim import *
+
+DEFAULT_TEXT_CONFIG = {
+    'font_size': 24,
+    'font': "JetBrains Mono",
+}
 
 class Slider(VGroup):
     def __init__(
@@ -40,16 +30,14 @@ class Slider(VGroup):
 
         self.label = Text(
             label,
-            font_size=24,
-            font="JetBrains Mono",
+            **DEFAULT_TEXT_CONFIG,
         )
         self.label.next_to(self.line, LEFT)
 
         self.value_text = always_redraw(
             lambda: Text(
                 f"{round(self.tracker.get_value())}",
-                font_size=24,
-                font="JetBrains Mono",
+                **DEFAULT_TEXT_CONFIG,
             ).next_to(self.line, RIGHT)
         )
 
@@ -64,7 +52,7 @@ class Slider(VGroup):
 
         self.add(self.line, self.handle, self.label, self.value_text)
 
-class RGBSliderAnimation(Scene):
+class Demo(Scene):
     def construct(self):
         r = ValueTracker(0)
         g = ValueTracker(0)

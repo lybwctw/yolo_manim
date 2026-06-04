@@ -1,126 +1,131 @@
 from manim import *
 from utils.constants import *
-from utils.image_pad import ImageRaw, ImageRepad
-from utils.tile_comment import TileComment
+from utils.image_raw import ImageRaw
+from utils.image_pad import ImagePad
 from utils.arrow_comment import ArrowComment
-from utils.yolo_annotation import ImageAnnotation
-from utils.general import save_everything, load_everything, scale_manager_target
+from utils.yolo_annotation import YoloAnnotation
+from utils.general import import_mobs, export_mobs
 
+TEXT_EN_CONFIG = {
+    'font': 'JetBrains Mono',
+    'font_size': 32,
+    'color': WHITE,
+}
+TEXT_CN_CONFIG = {
+}
+
+wt = SHORT_DURATION
 class MainScene(Scene):
     def construct(self) -> None:
-        image_raw = ImageRaw(PATH_IMAGE_640)
-        tile_input = TileComment('一堆数字')
-        annotation_final = ImageAnnotation(
-            image=PATH_IMAGE_640,
-            label=PATH_LABEL_640,
-            name_map=KK_NAME_MAP,
-            color_map=KK_COLOR_MAP,
-        ).scale_to_fit_width(image_raw.width)
-        tile_output = TileComment('一堆数字')
-
-        ac_a1 = ArrowComment(True, DOWN, '?')
-        ac_z9 = ArrowComment(True, DOWN, '?')
-        ac_game = ArrowComment(False, RIGHT, '?')
-
-        everything = Group(
-            image_raw, tile_input,
-            annotation_final, tile_output,
-            ac_a1, ac_z9,
-            ac_game,
-        )
         # ************************************************************
         self.next_section(
-            'overlapped image_raw and annotation_final',
+            'start with image and annotation',
             skip_animations=False,
         )
         # ************************************************************
-        image_raw.center()
-        annotation_final.center()
-        ac_game.center()
+        sin_raw = ImageRaw(
+            path=PATH_IMAGE_640,        # fake 960
+            width_nominal=960,
+            height_nominal=540,
+        ).scale(1.5)
+        annotation_bg = sin_raw.copy().fade(0.7)
+        annotation = YoloAnnotation(
+            background=annotation_bg,
+            annotation=PATH_LABEL,
+        )
+        sout_final = Group(annotation_bg, annotation)
+        tin_raw = Text(
+            text='numbers',
+            **TEXT_EN_CONFIG,
+        ).shift(DOWN*10)
+        tout_final = Text(
+            text='numbers',
+            **TEXT_EN_CONFIG,
+        ).shift(DOWN*10)
+        
+        ac_a1 = ArrowComment(False, DOWN).shift(LEFT*10).scale(0.6)
+        ac_z9 = ArrowComment(False, UP).shift(RIGHT*10).scale(0.6)
+        ac_game = ArrowComment(False, RIGHT).set_opacity(0.0)
 
-        manager = Group(
-            *[image_raw, ac_game, annotation_final],
-        ).center()
-
-        self.add(manager)
-        self.wait()
+        self.add(ac_game, annotation_bg, sin_raw)
+        self.wait(wt)
+        self.play(Write(
+            annotation,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'split image_raw and annotation_final',
+            'split input and output',
             skip_animations=False,
         )
         # ************************************************************
-        manager = Group(
-            *[image_raw, ac_game, annotation_final],
+        mobs = Group(
+            sin_raw, ac_game, sout_final,
         )
-        manager.generate_target()
-        scale_manager_target(
-            manager,
-            everything,
-            scale=0.6,
-        )
-        manager.target.arrange_in_grid(
-            rows=1,
-            cols=3,
+        mobs.generate_target()
+        mobs.target.arrange(
+            direction=RIGHT,
             # buff=1.0,
-        ).center()
-        self.play(MoveToTarget(manager))
+        ).scale(0.6)
+        mobs.target[1].set_opacity(1.0)
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+        ))
         self.wait()
-
+        
         # ************************************************************
         self.next_section(
             'introduce tile_input and tile_output',
             skip_animations=False,
         )
         # ************************************************************
-        ac_a1.move_to(image_raw)
-        ac_z9.move_to(annotation_final)
-        tile_input.move_to(image_raw)
-        tile_output.move_to(annotation_final)
-        manager = Group(
-            *[tile_input, ac_game, tile_output],
-            *[ac_a1, VMobject(), ac_z9],
-            *[image_raw, VMobject(), annotation_final],
+        mobs = Group(
+            sin_raw, Mobject(), sout_final,
+            ac_a1,   Mobject(), ac_z9,
+            tin_raw, ac_game,  tout_final,
         )
-        manager.generate_target()
-        manager.target.arrange_in_grid(
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
             rows=3,
             cols=3,
-            flow_order='ru',
             # buff=1.0,
         ).center()
-        self.play(MoveToTarget(manager))
-        # make annotation background transparent
-        self.play(annotation_final.image.animate.set_opacity(0.3))
-        self.wait()
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'focus on image_raw, save scale factor',
+            'focus on image_raw',
             skip_animations=False,
         )
         # ************************************************************
-        manager = Group(
-            *[image_raw, VMobject(), annotation_final],
-            *[ac_a1, VMobject(), ac_z9],
-            *[tile_input, ac_game, tile_output],
-        )
-        manager.generate_target()
-        manager.target.arrange_in_grid(
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
             rows=3,
             cols=3,
             buff=10.0,
         )
-        manager.target.shift(-manager.target[0].get_center())
-        manager.target[0].scale(2.0)
-        self.play(MoveToTarget(manager))
-        self.wait()
+        mobs.target.shift(-mobs.target[0].get_center())
+        mobs.target[0].scale(2.0)
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'save for next scene, explain RGB color space',
+            'save mobs, used by 001',
             skip_animations=False,
         )
         # ************************************************************
-        save_everything(S000_EVERYTHING, everything)
+        mobs = Group(
+            sin_raw,
+        )
+        export_mobs(__file__, mobs)

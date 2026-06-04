@@ -1,8 +1,25 @@
 from manim import *
 from utils.slider import Slider
+from utils.constants import *
 
+N_SAMPLES_S1 = 3    # n + 3 in total
+N_SAMPLES_S2 = 3
+N_SAMPLES_S3 = 3
+
+DEFAULT_TEXT_CONFIG = {
+    'font_size': 24,
+    'font': "JetBrains Mono",
+}
+
+wt = SHORT_DURATION
 class MainScene(Scene):
     def construct(self) -> None:
+        # ************************************************************
+        self.next_section(
+            'init mobs',
+            skip_animations=False,
+        )
+        # ************************************************************
         r_tracker = ValueTracker(value=255)
         g_tracker = ValueTracker(value=255)
         b_tracker = ValueTracker(value=255)
@@ -123,23 +140,22 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        self.play(
-            AnimationGroup(
-                Write(sliders, lag_ratio=0),
-                # Write(palette, lag_ratio=0.3),
-                Succession(
-                    FadeIn(
-                        palette, run_time=0.3,
-                    ),
-                    AnimationGroup(
-                        circle_r.animate.shift(DOWN * 3 ** .5 / 2),
-                        circle_g.animate.shift(RIGHT / 2),
-                        circle_b.animate.shift(LEFT / 2),
-                    ),
-                )
-            )
-        )
-        self.wait()
+        self.play(AnimationGroup(
+            Write(sliders, lag_ratio=0),
+            Succession(
+                FadeIn(
+                    palette, run_time=0.3,
+                ),
+                AnimationGroup(
+                    circle_r.animate.shift(DOWN * 3 ** .5 / 2),
+                    circle_g.animate.shift(RIGHT / 2),
+                    circle_b.animate.shift(LEFT / 2),
+                ),
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -148,57 +164,66 @@ class MainScene(Scene):
         )
         # ************************************************************
         # TODO, show (0,0,0) and those common ones before random
-        for _ in range(3):
-            r, g, b = [np.random.randint(0,256) for _ in range(3)]
-            self.play(
-                AnimationGroup(
-                    r_tracker.animate.set_value(r),
-                    g_tracker.animate.set_value(g),
-                    b_tracker.animate.set_value(b),
-                )
-            )
-            self.wait(0.3)
-        self.wait()
+        random_colors = [
+            (np.random.randint(0,256) for _ in range(3))
+                for _ in range(N_SAMPLES_S1)
+        ]
+        random_colors = [[0, 0, 0], [128, 128, 128]] +\
+                        random_colors +\
+                        [[255,255,255]]
+        
+        for colors in random_colors:
+            # r, g, b = [np.random.randint(0,256) for _ in range(3)]
+            r, g, b = colors
+            self.play(AnimationGroup(
+                r_tracker.animate.set_value(r),
+                g_tracker.animate.set_value(g),
+                b_tracker.animate.set_value(b),
+                lag_ratio=0.0,
+                run_time=wt,
+            ))
+            self.wait(wt)
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'combine digit and color',
+            'combine numbers and color',
             skip_animations=False,
         )
         # ************************************************************
         # FIXME, problem when copy from sliders
+        # orig_text = VGroup(
+        #     slider.value_text.copy().clear_updaters()
+        #     for slider in sliders
+        # )
         orig_text = VGroup(
             Text(
                 f'{int(r_tracker.get_value())}',
-                font_size=24,
-                font="JetBrains Mono",
+                **DEFAULT_TEXT_CONFIG,
             ).move_to(sliders[0].value_text),
             Text(
                 f'{int(g_tracker.get_value())}',
-                font_size=24,
-                font="JetBrains Mono",
+                **DEFAULT_TEXT_CONFIG,
             ).move_to(sliders[1].value_text),
             Text(
                 f'{int(b_tracker.get_value())}',
-                font_size=24,
-                font="JetBrains Mono",
+                **DEFAULT_TEXT_CONFIG,
             ).move_to(sliders[2].value_text),
         )
         orig_color = rgb.copy()
 
         self.add(orig_text, orig_color)
+        self.wait()
 
         _text = (f'({int(r_tracker.get_value())},'
                  f'{int(g_tracker.get_value())},'
                  f'{int(b_tracker.get_value())})')
         res_text = Text(
             _text,
-            font_size=24,
-            font='JetBrains Mono',
+            **DEFAULT_TEXT_CONFIG,
         )
         res_color = orig_color.copy().center().shift(DOWN*.3)
         res_text.next_to(res_color, UP)
-
 
         self.play(AnimationGroup(
             TransformMatchingShapes(
@@ -211,12 +236,14 @@ class MainScene(Scene):
             ),
             sliders.animate.shift(LEFT*1.5),
             palette.animate.shift(RIGHT*1.5),
+            lag_ratio=0.0,
+            run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'random color several times',
+            'loop again',
             skip_animations=False,
         )
         # ************************************************************
@@ -225,14 +252,20 @@ class MainScene(Scene):
                 (f'({int(r_tracker.get_value())},'
                  f'{int(g_tracker.get_value())},'
                  f'{int(b_tracker.get_value())})'),
-                font_size=24,
-                font='JetBrains Mono',
+                 **DEFAULT_TEXT_CONFIG,
             ).next_to(res_color, UP)
         )
         self.add(new_text)
         self.remove(res_text)
-        for _ in range(5):
-            r, g, b = [np.random.randint(0,256) for _ in range(3)]
+
+        random_colors = [
+            (np.random.randint(0,256) for _ in range(3))
+                for _ in range(N_SAMPLES_S2)
+        ]
+        random_colors = [[0, 0, 0], [128, 128, 128]] + random_colors
+        
+        for colors in random_colors:
+            r, g, b = colors
             _color = rgb_to_color((r, g, b))
             self.play(AnimationGroup(
                 r_tracker.animate.set_value(r),
@@ -241,38 +274,41 @@ class MainScene(Scene):
                 res_color.animate.set_color(_color),
             ))
             # res_text = new_text
-            self.wait(0.5)
+            self.wait(wt)
 
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'color background with central digits',
+            'color background with central numbers',
             skip_animations=False,
         )
         # ************************************************************
         new_text.clear_updaters().set_z_index(1)
         bg_color = Rectangle(
-                width=config.frame_width,
-                height=config.frame_height,
-                color=rgb_to_color((
-                    int(r_tracker.get_value()),
-                    int(g_tracker.get_value()),
-                    int(b_tracker.get_value()),
-                )),
+            width=config.frame_width,
+            height=config.frame_height,
+            color=rgb_to_color((
+                int(r_tracker.get_value()),
+                int(g_tracker.get_value()),
+                int(b_tracker.get_value()),
+            )),
             fill_opacity=1.0,
-            ).center()
+        ).center()
 
-        self.play(
+        self.play(AnimationGroup(
             Transform(res_color, bg_color),
             new_text.animate.center(),
             sliders.animate.shift(LEFT*10),
             palette.animate.shift(RIGHT*10),
-        )
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'switching random color',
+            'loop again',
             skip_animations=False,
         )
         # ************************************************************
@@ -302,20 +338,28 @@ class MainScene(Scene):
         )
         self.add(bg_color, new_text)
 
-        for _ in range(3):
-            r, g, b = [np.random.randint(0,256) for _ in range(3)]
+        random_colors = [
+            (np.random.randint(0,256) for _ in range(3))
+                for _ in range(N_SAMPLES_S2)
+        ]
+        random_colors = [[0, 0, 0], [128, 128, 128]] +\
+                        random_colors +\
+                        [0, 0, 0]
+        for colors in random_colors:
+            r, g, b = colors
             self.play(AnimationGroup(
                 r_tracker.animate.set_value(r),
                 g_tracker.animate.set_value(g),
                 b_tracker.animate.set_value(b),
+                lag_ratio=0.0,
+                run_time=wt,
             ))
-            self.wait(0.5)
-
-        self.wait()
+            self.wait(wt)
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'fadeout everything for the next scene',
+            'fadeout everything',
             skip_animations=False,
         )
         # ************************************************************

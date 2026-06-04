@@ -1,24 +1,9 @@
-"""Usage
------
-Example inside a scene outside ``utils/``::
-
-    from utils.arrow_comment import ArrowComment
-
-    a1 = ArrowComment(double=True, direction=DOWN)
-    self.play(Write(a1))
-"""
-
 import sys
 sys.path.append('..')
 
 from manim import *
-from manim.typing import MultiMappingFunction, Point3DLike, Vector3DLike
 
-DOUBLE_AC_CONFIG = {
-    'color': GRAY,
-}
-
-SINGLE_AC_CONFIG = {
+DEFAULT_AC_CONFIG = {
     'color': WHITE,
 }
 
@@ -27,33 +12,36 @@ class ArrowComment(VMobject):
         self,
         double: bool = False,                   # double arrow or not
         direction: np.ndarray = RIGHT,          # direction of arrow
-        comment: str = '',                     # pop out comment
+        comment: str = '',                      # not used for now
+        arrow_config: dict = {},                # override default config
     ):
         """
         Example
         -------
-        arrow_comment = ArrowComment()
+        from manim import *
+        class Demo(Scene):
+            def construct(self):
+                a1 = ArrowComment()
+                self.play(Write(a1))
+                self.wait()
         """
         super().__init__()
         self.comment = comment      # not implemented yet
 
-        if double:
-            self.arrow = DoubleArrow(
-                start=-direction,
-                end=direction,
-                **DOUBLE_AC_CONFIG,
-            )
-        else:
-            self.arrow = Arrow(
-                start=-direction,
-                end=direction,
-                **SINGLE_AC_CONFIG,
-            )
+        mtype = DoubleArrow if double else Arrow
+
+        arrow_config = {**DEFAULT_AC_CONFIG, **arrow_config}
+
+        self.arrow = mtype(
+            start=-direction,
+            end=direction,
+            **arrow_config,
+        )
 
         self.add(self.arrow)
 
 class Demo(Scene):
     def construct(self):
-        a1 = ArrowComment(double=True, direction=DOWN)
+        a1 = ArrowComment()
         self.play(Write(a1))
         self.wait()
