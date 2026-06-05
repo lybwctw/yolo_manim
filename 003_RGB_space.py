@@ -2,7 +2,6 @@ from manim import *
 from utils.colorcube import ColorCube
 import itertools
 
-# TODO, emphasize beams?
 class MainScene(ThreeDScene):
     def construct(self) -> None:
         self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
