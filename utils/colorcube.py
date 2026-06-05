@@ -21,45 +21,16 @@ DEFAULT_CUBE_CONFIG = {
     # 'stroke_opacity': 0.0,
 }
 
-def _normalize_idx(idx):
-    if not isinstance(idx, tuple):
-        idx = (idx,)
-    return idx
-def _expand_ellipsis(idx, ndim):
-    if Ellipsis not in idx:
-        return idx
-
-    pos = idx.index(Ellipsis)
-    missing = ndim - (len(idx) - 1)
-    return (
-        idx[:pos]
-        + (slice(None),) * missing
-        + idx[pos + 1 :]
-    )
-def _fill_missing_dims(idx, ndim):
-    return idx + (slice(None),) * (ndim - len(idx))
-def _indices_from_part(part, size):
-    # np.int64 for ijk from np.argwhere(...)
-    if isinstance(part, (int, np.int64)):
-        return [part]
-    if isinstance(part, slice):
-        start, stop, step = part.indices(size)
-        return list(range(start, stop, step))
-    raise TypeError(f"Invalid index: {part}")
+SHOW_OPACITY = 0.6
+HIDE_OPACITY = 0.0
 
 class ColorCube(VMobject):
     def __init__(
         self,
-        axis,
-        shape=5,
-        size=0.5,
-        cube_config=None,
+        axis,                   # reference 3d axes
+        shape: int = 5,         # number of cubes each direction
+        cube_config: dict = {}, # mainly side_length
     ):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        """
         super().__init__()
         self.axis = axis
         self.shape = (shape,shape,shape)
@@ -67,112 +38,103 @@ class ColorCube(VMobject):
         step = 256//(shape-1)
         values = [n*step for n in range(shape)]
         values[-1] = 255
-        self.values = values
-        self.indices = self._build_indices()
-        self.current_hl = np.full(self.shape, True, dtype=bool)
-        self.size = size
-        self.cube_uopacity = 0.03
+        self.values = [v/255 for v in values]
 
-        # setup config
-        self.cube_config = {
+        # track current highlight cubes
+        self.hl_state = np.full(self.shape, True, dtype=bool)
+
+        cube_config = {
             **DEFAULT_CUBE_CONFIG,
             **cube_config,
-            **{'side_length': self.size},
-        } if cube_config else {**DEFAULT_CUBE_CONFIG}
-
-        # init indices->cubes, indices->cards
-        self.cubes = {
-            idx: Cube(**self.cube_config)
-            for idx in itertools.product(
-                range(self.shape[0]),
-                range(self.shape[1]),
-                range(self.shape[2]),
-            )
         }
 
-        z_index_m = self._compute_z_index_m()
-        for idx in self.cubes:
-            self.cubes[idx].set_z_index(z_index_m[idx])
-        for idx in self.cubes:
-            i, j, k = idx
-            r, g, b = self.values[i], self.values[j], self.values[k]
-            color = rgb_to_color([r/255,g/255,b/255])
-            self.cubes[idx].set_fill(color=color)
-            self.cubes[idx].move_to(
-                self.axis.c2p(r/255,g/255,b/255)
-            )
-
-        self.mobs_cube = VGroup(*self.cubes.values())
-        self.obs = self.cubes
-        self.mobs = self.mobs_cube
-
+        objs = []
+        for i in range(shape):
+            r_ch = []
+            for j in range(shape):
+                g_ch = []
+                for k in range(shape):
+                    color = rgb_to_color([
+                        self.values[i],
+                        self.values[j],
+                        self.values[k],
+                    ])
+                    cfg = {**cube_config, 'fill_color': color}
+                    cube = Cube(**cfg)
+                    pos = self.axis.c2p(
+                        self.values[i],
+                        self.values[j],
+                        self.values[k],
+                    )
+                    z_idx = k+1       # base on blue channel index
+                    cube.move_to(pos).set_z_index(z_idx)
+                    g_ch.append(cube)
+                r_ch.append(g_ch)
+            objs.append(r_ch)
+        self.objs = objs
+        self.mobs = VGroup(
+            *[cube for r_ch in self.objs for g_ch in r_ch for cube in g_ch]
+        )
         self.add(self.mobs)
 
-    def _build_indices(self, shape=None):
+    def __getitem__(
+        self,
+        idx,
+    ) -> VMobject:
         """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes._build_indices()
+        Indexing utils.
+        Prerequisites:
+            ndim, dimensions of data
+            shape, shape of data
+            objs, list of list of vmobject
         """
-        if shape is None:
-            shape = self.shape
-        i, j, k = shape
-        z_range = np.arange(i)
-        y_range = np.arange(j)
-        x_range = np.arange(k)
-        zz, yy, xx = np.meshgrid(
-            z_range, y_range, x_range,
-            indexing='ij',
-        )
-        indices = np.stack([xx, yy, zz], axis=-1)
-        return indices
+        # normalize idx
+        if not isinstance(idx, tuple):
+            idx = (idx,)
 
-    def _compute_z_index_m(self, shape=None):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes._compute_z_index_m()
-        """
-        if shape is None:
-            shape = self.shape
-        i, j, k = shape
-        z_index = np.arange(i)[::-1]
-        z_index_m = z_index[:,None,None] * \
-            np.ones((1,j,k),dtype=np.int32)
-        return z_index_m
+        # expand ellipsis
+        if Ellipsis in idx:
+            pos = idx.index(Ellipsis)
+            missing = self.ndim - (len(idx) - 1)
+            idx = (
+                idx[:pos]
+                + (slice(None),) * missing
+                + idx[pos + 1 :]
+            )
 
-    def __getitem__(self, idx):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes[0, 0, 0]
-        """
-        idx = _normalize_idx(idx)
-        idx = _expand_ellipsis(idx, self.ndim)
-        idx = _fill_missing_dims(idx, self.ndim)
+        # fill missing dims
+        idx = idx + (slice(None),) * (self.ndim - len(idx))
+
         if len(idx) != self.ndim:
             raise IndexError("Invalid index dimension")
-        resolved = [
-            _indices_from_part(part, size)
-            for part, size in zip(idx, self.shape)
-        ]
+
+        resolved = []
+        for part, size in zip(idx, self.shape):
+            if isinstance(part, (int, np.int64)):
+                data = [part]
+            elif isinstance(part, slice):
+                start, stop, step = part.indices(size)
+                data = list(range(start, stop, step))
+            else:
+                raise TypeError(f"Invalid index: {part}")
+            resolved.append(data)
+
         keys = list(itertools.product(*resolved))
+
         if not keys:
             return VGroup()
+
+        # FIXME, ugly design for list of list
+        def nested_get(obj, idx_tuple):
+            for i in idx_tuple:
+                obj = obj[i]
+            return obj
+
         if len(keys) == 1:
-            return self.obs[keys[0]]
-        return VGroup(*(self.obs[k] for k in keys))
+            return nested_get(self.objs, keys[0])
+        return VGroup(*(nested_get(self.objs, k) for k in keys))
 
     def get_beams(self, direction=OUT):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes.get_beams()
-        """
         direction = direction.astype(np.int32)
         n = self.shape[0]   # colorcube always use the same c,h,w
         if direction[0] != 0:
@@ -193,12 +155,6 @@ class ColorCube(VMobject):
         return vgs
 
     def get_layers(self, direction=OUT):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes.get_layers()
-        """
         direction = direction.astype(np.int32)
         n = self.shape[0]
         if direction[0] != 0:
@@ -316,38 +272,30 @@ class ColorCube(VMobject):
         anims = self.highlight((n, 0, 0), (n+1, h, w))
         return anims
 
-    # FIXME, add after create()???
     def create(
-            self,
-            type='layer',
-            direction=OUT,
-            anim=Write,
-            run_time=2,
+        self,
+        type: str = 'layer',
+        direction: np.ndarray = OUT,
+        **aargs,
     ):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        self.play(cubes.create())
-        """
         if type == 'layer':
             layers = self.get_layers(direction=direction)
             anims = Succession(
                 *(AnimationGroup(
-                    *(anim(cube) for cube in layer),
+                    *(Write(cube) for cube in layer),
                 ) for layer in layers),
-                run_time=run_time,
-                rate_func=smooth,
+                **aargs,
             )
             return anims
         elif type == 'beam':
             beams = self.get_beams(direction=direction)
             anims = AnimationGroup(
-                Succession(
-                    *(anim(cube) for cube in beam),
+                *(Succession(
+                    *(Write(cube) for cube in beam),
                     run_time=random.random()+1,
                     rate_func=smooth,
-                ) for beam in beams
+                ) for beam in beams),
+                **aargs,
             )
             return anims
 

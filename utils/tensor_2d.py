@@ -713,15 +713,10 @@ class Tensor2D(VMobject):
     ) -> VMobject:
         """
         Indexing utils.
-                   Prerequisites:
-                        ndims, dimensions of data
-                        shape, shape of data
-                        objs, list of list of vmobject
-
-        Example
-        -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
-        result = tensor[0, :]
+        Prerequisites:
+            ndims, dimensions of data
+            shape, shape of data
+            objs, list of list of vmobject
         """
         # normalize idx
         if not isinstance(idx, tuple):
