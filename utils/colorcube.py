@@ -161,11 +161,11 @@ class ColorCube(VMobject):
             vgs = VGroup(self[i,:,:] for i in range(n))
             vgs = vgs[::direction[0]]
         elif direction[1] != 0:
-            vgs = VGroup(self[:,:,i] for i in range(n))
+            vgs = VGroup(self[:,i,:] for i in range(n))
             vgs = vgs[::direction[1]]
         elif direction[2] != 0:
-            vgs = VGroup(self[:,i,:] for i in range(n))
-            vgs = vgs[::-direction[2]]
+            vgs = VGroup(self[:,:,i] for i in range(n))
+            vgs = vgs[::direction[2]]
         return vgs
 
     def _get_mask(self, start, end, mask):
