@@ -3,21 +3,41 @@ from utils.colorcube import ColorCube, SHOW_OPACITY, HIDE_OPACITY
 from utils.constants import *
 import itertools
 
+N_CUBES = 7
+
+KEY_IDXS = [
+    (0, 0, 0),
+    (N_CUBES-1, 0, 0),
+    (0, N_CUBES-1, 0),
+    (0, 0, N_CUBES-1),
+    (N_CUBES-1, N_CUBES-1, 0),
+    (N_CUBES-1, 0, N_CUBES-1),
+    (0, N_CUBES-1, N_CUBES-1),
+    (N_CUBES-1, N_CUBES-1, N_CUBES-1),
+    ((N_CUBES-1)//2, (N_CUBES-1)//2, (N_CUBES-1)//2),
+]
+KEY_LABELS = [
+    '(0,0,0)',
+    '(255,0,0)',
+    '(0,255,0)',
+    '(0,0,255)',
+    '(255,255,0)',
+    '(255,0,255)',
+    '(0,255,255)',
+    '(255,255,255)',
+    '(128,128,128)',
+]
+
 wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'create 3d axes with RGB labels',
+            'init all mobs',
             skip_animations=False,
         )
         # ************************************************************
-        self.set_camera_orientation(
-            phi=60*DEGREES,
-            theta=-45*DEGREES,
-            focal_distance=20,
-        )
-        # self.begin_ambient_camera_rotation(rate=0.1)
+        # setup 3d axes and labels
         axes = ThreeDAxes(
             x_range=[0, 1.2],
             y_range=[0, 1.2],
@@ -34,6 +54,40 @@ class MainScene(ThreeDScene):
         axes_labels[0].set_color(PURE_RED).next_to(axes.axes[0], RIGHT)
         axes_labels[1].set_color(PURE_GREEN).next_to(axes.axes[1], UP)
         axes_labels[2].set_color(PURE_BLUE).next_to(axes.axes[2], OUT)
+        
+        # setup cubes
+        cubes = ColorCube(
+            axis=axes,
+            shape=N_CUBES,
+            cube_config={
+                'side_length': 0.20,
+            },
+        )
+
+        # setup labels for key cubes
+        label_mobs = VGroup(
+            Text(
+                text=label,
+                font='JetBrains Mono',
+                font_size=12,
+            ).next_to(cubes[idx], OUT*1.0)
+             for idx, label in zip(KEY_IDXS, KEY_LABELS)
+        ).set_z_index(999)
+        # self.add_fixed_orientation_mobjects(
+        #     *label_mobs,
+        # )
+
+        # ************************************************************
+        self.next_section(
+            'create 3d axes with RGB labels',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.set_camera_orientation(
+            phi=60*DEGREES,
+            theta=-60*DEGREES,
+            focal_distance=20,
+        )
         self.play(Create(
             axes,
             run_time=wt,
@@ -43,6 +97,7 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         self.wait(wt)
+        self.bring_to_back(axes, axes_labels)
 
         # ************************************************************
         self.next_section(
@@ -50,13 +105,6 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        cubes = ColorCube(
-            axis=axes,
-            shape=9,
-            cube_config={
-                'side_length': 0.20,
-            },
-        )
         self.play(cubes.create(
             type='beam',
             direction=UP,
@@ -234,21 +282,38 @@ class MainScene(ThreeDScene):
             'key colors for practitioner',
             skip_animations=False,
         )
+        # FIXME: flicker effect for black cube
         # ************************************************************
+        key_mask = np.full(cubes.shape, False, dtype=bool)
+        for idx in KEY_IDXS:
+            key_mask[idx] = True
 
-        # # kpoints = np.full(cubes.shape, False, dtype=bool)
-        # # kpoints[0,0,0] = True
-        # # idxs = list(itertools.product([0,cubes.shape[0]-1],repeat=3))
-        # # for idx in idxs:
-        # #     kpoints[idx] = True
-        # # _mid = cubes.shape[0]//2
-        # # kpoints[_mid,_mid,_mid] = True
-        # # self.play(cubes.highlight(mask=kpoints))
-        # # self.wait(3)
-        # # self.play(cubes.highlight())
+        # highlight key cubes
+        self.play(AnimationGroup(
+            cubes.highlight(mask=key_mask),
+            axes.animate.set_opacity(0.2),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # self.play(cubes.uncreate(type='beam', direction=DOWN))
-        # # self.play(Unwrite(axes), Unwrite(axes_labels))
-        # # self.wait()
+        # show labels for key cubes
+        self.camera.add_fixed_orientation_mobjects(
+            *label_mobs,
+        )
+        self.play(Write(
+            label_mobs,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # self.stop_ambient_camera_rotation()
+        # changing perspective and talk..
+        self.begin_ambient_camera_rotation(
+            rate=0.1,
+            about='theta',
+        )
+        self.wait(1.0)
+        self.stop_ambient_camera_rotation(
+            about='theta',
+        )
+        self.wait(wt)

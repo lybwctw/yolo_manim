@@ -168,109 +168,111 @@ class ColorCube(VMobject):
             vgs = vgs[::direction[2]]
         return vgs
 
-    def _get_mask(self, start, end, mask):
-        """
-            get boolean mask
-            filled with True by default
+    # def _get_mask(self, start, end, mask):
+    #     """
+    #         get boolean mask
+    #         filled with True by default
 
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes._get_mask(start=0, end=0, mask=0)
+    #     Example
+    #     -------
+    #     cubes = ColorCube(axis=ThreeDAxes())
+    #     result = cubes._get_mask(start=0, end=0, mask=0)
+    #     """
+    #     if mask is not None:
+    #         return mask
+    #     if start is None or end is None:
+    #         mask = np.full_like(self.current_hl, True, dtype=bool)
+    #     else:
+    #         i1, j1, k1 = start
+    #         i2, j2, k2 = end
+    #         mask = np.full_like(self.current_hl, False, dtype=bool)
+    #         mask[i1:i2, j1:j2, k1:k2] = True
+    #     return mask
+
+    # def _highlight(self, start=None, end=None, mask=None):
+    #     """
+    #     Example
+    #     -------
+    #     cubes = ColorCube(axis=ThreeDAxes())
+    #     result = cubes._highlight()
+    #     """
+    #     start_mask = self.current_hl
+    #     target_mask = self._get_mask(start, end, mask)
+    #     _unhighlight_mask = start_mask & ~target_mask
+    #     _highlight_mask = target_mask & ~start_mask
+
+    #     uopacity = self.cube_uopacity
+
+    #     for i, j, k in np.argwhere(_unhighlight_mask):
+    #         self[i, j, k].save_state()
+    #         self[i, j, k].set_opacity(opacity=uopacity)
+    #     for i, j, k in np.argwhere(_highlight_mask):
+    #         self[i, j, k].restore()
+    #     self.current_hl = target_mask
+
+    #     return self
+
+    def highlight(
+        self,
+        mask=None,
+        **aargs,
+    ) -> AnimationGroup:
         """
-        if mask is not None:
-            return mask
-        if start is None or end is None:
-            mask = np.full_like(self.current_hl, True, dtype=bool)
+        Highlight cubes according to mask.
+        All by default.
+        """
+        start_mask = self.hl_state
+        if mask is None:
+            target_mask = np.full(self.shape, True, dtype=np.bool)
         else:
-            i1, j1, k1 = start
-            i2, j2, k2 = end
-            mask = np.full_like(self.current_hl, False, dtype=bool)
-            mask[i1:i2, j1:j2, k1:k2] = True
-        return mask
+            target_mask = mask
+        show_mask = target_mask & ~start_mask
+        hide_mask = ~target_mask & start_mask
 
-    def _highlight(self, start=None, end=None, mask=None):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes._highlight()
-        """
-        start_mask = self.current_hl
-        target_mask = self._get_mask(start, end, mask)
-        _unhighlight_mask = start_mask & ~target_mask
-        _highlight_mask = target_mask & ~start_mask
+        show_anims = [
+            ApplyMethod(self[i,j,k].set_opacity, SHOW_OPACITY)
+                for i,j,k in np.argwhere(show_mask)
+        ]
+        hide_anims = [
+            ApplyMethod(self[i,j,k].set_opacity, HIDE_OPACITY)
+                for i,j,k in np.argwhere(hide_mask)
+        ]
+        anims = [*show_anims, *hide_anims]
+        if anims:
+            return AnimationGroup(
+                *anims,
+                **aargs,
+            )
+        else:
+            return Wait(0.5)
 
-        uopacity = self.cube_uopacity
+    # def _highlight_channel(self, n):
+    #     """
+    #     Example
+    #     -------
+    #     cubes = ColorCube(axis=ThreeDAxes())
+    #     result = cubes._highlight_channel(n=0)
+    #     """
+    #     c, h, w = self.shape
+    #     self._highlight((n, 0, 0), (n+1, h, w))
+    #     return self
 
-        for i, j, k in np.argwhere(_unhighlight_mask):
-            self[i, j, k].save_state()
-            self[i, j, k].set_opacity(opacity=uopacity)
-        for i, j, k in np.argwhere(_highlight_mask):
-            self[i, j, k].restore()
-        self.current_hl = target_mask
+    # def highlight_channel(self, n):
+    #     """
+    #         self.play(Succession(
+    #             *(mcubes.highlight_channel(n) for n in range(mcubes.shape[0])),
+    #             run_time=3,
+    #             rate_func=ease_in_quart,
+    #         ))
 
-        return self
-
-    def highlight(self, start=None, end=None, mask=None):
-        """
-            # highlight from last channel back to all
-            self.play(Succession(
-                *(mcubes.highlight((n,0,0),mcubes.shape) for n in range(mcubes.shape[0]-2,-1,-1)),
-                run_time=1,
-                rate_func=ease_in_quart,
-            ))
-
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        self.play(cubes.highlight())
-        """
-        start_mask = self.current_hl
-        target_mask = self._get_mask(start, end, mask)
-        _unhighlight_mask = start_mask & ~target_mask
-        _highlight_mask = target_mask & ~start_mask
-
-        uopacity = self.cube_uopacity
-
-        anims = []
-        for i, j, k in np.argwhere(_unhighlight_mask):
-            self[i, j, k].save_state()
-            anims.append(self[i, j, k].animate.set_opacity(opacity=uopacity))
-        for i, j, k in np.argwhere(_highlight_mask):
-            anims.append(self[i, j, k].animate.restore())
-        self.current_hl = target_mask
-        return AnimationGroup(
-            *anims
-        )
-
-    def _highlight_channel(self, n):
-        """
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        result = cubes._highlight_channel(n=0)
-        """
-        c, h, w = self.shape
-        self._highlight((n, 0, 0), (n+1, h, w))
-        return self
-
-    def highlight_channel(self, n):
-        """
-            self.play(Succession(
-                *(mcubes.highlight_channel(n) for n in range(mcubes.shape[0])),
-                run_time=3,
-                rate_func=ease_in_quart,
-            ))
-
-        Example
-        -------
-        cubes = ColorCube(axis=ThreeDAxes())
-        self.play(cubes.highlight_channel(n=0))
-        """
-        c, h, w = self.shape
-        anims = self.highlight((n, 0, 0), (n+1, h, w))
-        return anims
+    #     Example
+    #     -------
+    #     cubes = ColorCube(axis=ThreeDAxes())
+    #     self.play(cubes.highlight_channel(n=0))
+    #     """
+    #     c, h, w = self.shape
+    #     anims = self.highlight((n, 0, 0), (n+1, h, w))
+    #     return anims
 
     def create(
         self,
