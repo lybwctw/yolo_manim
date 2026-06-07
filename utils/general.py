@@ -13,26 +13,48 @@ from utils.color_cell import ColorCell
 from utils.line_matrix import LineMatrix
 from utils.constants import DIR_PICKLE
 
-def export_mobs(path_source, mobs):
+def export_mobs(path_source, mobs, suffix=''):
     """Dump manim mobs according to given path.
+    
+    Args:
+        path_source: Source file path to extract base name
+        mobs: Manim objects to pickle
+        suffix: Optional suffix to append (e.g., 'a', 'b', 'c')
     """
-    name_target = os.path.basename(path_source).split('.')[0] + '.pkl'
+    base_name = os.path.basename(path_source).split('.')[0]
+    # Split base_name into leading digits and rest (e.g., '001_pixel_focus' -> '001', '_pixel_focus')
+    i = 0
+    while i < len(base_name) and base_name[i].isdigit():
+        i += 1
+    digits = base_name[:i]
+    rest = base_name[i:]
+    
+    if suffix:
+        name_target = digits + suffix + rest + '.pkl'
+    else:
+        name_target = base_name + '.pkl'
     path_target = os.path.join(DIR_PICKLE, name_target)
     os.makedirs(DIR_PICKLE, exist_ok=True)  # make sure pickle dir exists
     with open(path_target, 'wb') as f:
         pickle.dump(mobs, f)
 
-def import_mobs(hint):
+def import_mobs(hint, suffix=''):
     """Find pickle files starts with hint and load the first one.
+    
+    Args:
+        hint: Starting pattern to match file name (e.g., '001', '002')
+        suffix: Optional suffix to match (e.g., 'a', 'b', 'c')
     """
     path = None
+    target_prefix = hint + suffix
     for name in os.listdir(DIR_PICKLE):
-        if name.startswith(hint):
+        if name.startswith(target_prefix):
             path = os.path.join(DIR_PICKLE, name)
             break
     if path is None:
+        search_term = f"'{hint}{suffix}'" if suffix else f"'{hint}'"
         raise FileNotFoundError(
-            f"No pickle file found with hint '{hint}' in {DIR_PICKLE}"
+            f"No pickle file found with hint {search_term} in {DIR_PICKLE}"
             )
 
     with open(path, 'rb') as f:

@@ -4,7 +4,7 @@ from utils.image_raw import ImageRaw
 from utils.image_pad import ImagePad
 from utils.arrow_comment import ArrowComment
 from utils.yolo_annotation import YoloAnnotation
-from utils.general import import_mobs, export_mobs
+from utils.general import export_mobs
 
 TEXT_EN_CONFIG = {
     'font': 'JetBrains Mono',
@@ -27,7 +27,7 @@ class MainScene(Scene):
             path=PATH_IMAGE_640,        # fake 960
             width_nominal=960,
             height_nominal=540,
-        ).scale(1.5)
+        ).scale(1.5)                    # half of frame height
         annotation_bg = sin_raw.copy().fade(0.7)
         annotation = YoloAnnotation(
             background=annotation_bg,
@@ -105,6 +105,8 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+        mobs.save_state()
+
         mobs.generate_target()
         mobs.target.arrange_in_grid(
             rows=3,
@@ -112,20 +114,16 @@ class MainScene(Scene):
             buff=10.0,
         )
         mobs.target.shift(-mobs.target[0].get_center())
-        mobs.target[0].scale(2.0)
+        mobs.target[0].scale_to_fit_height(J000_IMAGE_HEIGHT)
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'save mobs, used by 001',
-            skip_animations=False,
-        )
-        # ************************************************************
+        export_mobs(__file__, mobs, 'a')     # NOTE: used by 005
+
         mobs = Group(
             sin_raw,
         )
-        export_mobs(__file__, mobs)
+        export_mobs(__file__, mobs, 'b')     # NOTE: used by 001

@@ -55,13 +55,11 @@ class ColorCell(VMobject):
         self.rect = rect
         self.add(self.rect)
 
-    def write_digit(self, target='r'):
-        """
-        Example
-        -------
-        cell = ColorCell(1, 2, 3)
-        result = cell.write_digit()
-        """
+    def write_digit(
+        self,
+        target='r',
+        **aargs,
+    ) -> Animation:
         if target=='r':
             digit = self.r
             zidx = 6
@@ -85,7 +83,14 @@ class ColorCell(VMobject):
 
         anims = AnimationGroup(
             Write(text),
-            self.rect.animate.set_fill(color=BLACK, opacity=0.8),
+            self.rect.animate.set_fill(
+                color=BLACK,
+                opacity=0.8,
+            ).set_stroke(
+                color=WHITE,
+                opacity=1.0,
+            ),
+            **aargs,
         )
         return anims
     def unwrite_digit(self, target):

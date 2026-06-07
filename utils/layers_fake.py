@@ -26,7 +26,7 @@ RECT_CONFIG = {
     'stroke_color': WHITE,
 }
 
-class LayersFake(VMobject, ShowShapeMixin):
+class LayersFake(VMobject):
     def __init__(
         self,
         n: int = 3,                     # layers
@@ -43,7 +43,22 @@ class LayersFake(VMobject, ShowShapeMixin):
         """
         Example
         -------
-        lf = LayersFake(n=3, width=3, height=4)
+        t32_dist = LayersFake(
+            n=4,
+            ref=s32_dist[0],
+            width_nominal=20,
+            height_nominal=20,
+            buff=0.12,
+            expanded=True,
+        )
+        t32_xyxy_2d = LayersFake(
+            n=1,
+            width=0.5,
+            height=2.0,
+            width_nominal=4,
+            height_nominal=400,
+            expanded=True,
+        )
         """
         super().__init__()
 
@@ -59,8 +74,6 @@ class LayersFake(VMobject, ShowShapeMixin):
             width = ref.rects[0].width if isinstance(ref, LayersFake) else ref.width
         if height is None:
             height = ref.rects[0].height if isinstance(ref, LayersFake) else ref.height
-        # width = width or ref.width
-        # height = height or ref.height
 
         cfg = {**RECT_CONFIG, **rect_config}
         rects = VGroup(
@@ -77,11 +90,12 @@ class LayersFake(VMobject, ShowShapeMixin):
 
         self.add(self.rects)
 
-        # auto center?
+        # FIXME: auto center?
         self.center()
 
     def expand(
         self,
+        **aargs,
     ) -> Animation:
         """
         Example
@@ -101,7 +115,10 @@ class LayersFake(VMobject, ShowShapeMixin):
 
         self.expanded = True
 
-        return MoveToTarget(self.rects)
+        return MoveToTarget(
+            self.rects,
+            **aargs,
+        )
     
     def scale_layers(
         self,

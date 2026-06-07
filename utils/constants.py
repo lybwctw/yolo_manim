@@ -49,6 +49,10 @@ SHORT_DURATION = 0.5
 MEDIUM_DURATION = 1.0
 LONG_DURATION = 3.0
 
+# joint constants between scenes
+J000_IMAGE_HEIGHT = 4.0
+J005_ANNO_HEIGHT = 4.0
+
 # explainer related
 MINI_DOT_CONFIG = {
     'side_length': 0.002,

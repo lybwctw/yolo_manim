@@ -18,7 +18,7 @@ class MainScene(MovingCameraScene):
         # ************************************************************
         (
             sin_raw,
-        ) = import_mobs('000')
+        ) = import_mobs('000', 'b')
         self.add(sin_raw)
         self.wait(wt)
 
@@ -58,7 +58,7 @@ class MainScene(MovingCameraScene):
 
         # ************************************************************
         self.next_section(
-            'save mobs, used by ???',
+            'save mobs, used by 004',
             skip_animations=False,
         )
         # ************************************************************
@@ -66,4 +66,4 @@ class MainScene(MovingCameraScene):
             sin_raw,
             cells,
         )
-        export_mobs(__file__, mobs)
+        export_mobs(__file__, mobs)     # NOTE: used by 004

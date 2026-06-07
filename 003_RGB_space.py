@@ -1,7 +1,6 @@
 from manim import *
 from utils.colorcube import ColorCube, SHOW_OPACITY, HIDE_OPACITY
 from utils.constants import *
-import itertools
 
 N_CUBES = 7
 
@@ -312,7 +311,8 @@ class MainScene(ThreeDScene):
             rate=0.1,
             about='theta',
         )
-        self.wait(1.0)
+        self.wait(1.0)      # TODO: proper duration
+        # TODO: rotate R/G/B labels?
         self.stop_ambient_camera_rotation(
             about='theta',
         )
