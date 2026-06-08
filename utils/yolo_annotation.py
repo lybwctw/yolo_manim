@@ -157,9 +157,6 @@ class YoloAnnotation(VMobject):
             _center = _origin + _width*cx*RIGHT + _height*cy*DOWN
             _offset = _center - sano.box.get_center()
             sano.shift(_offset)
-            # sano.shift(
-            #     bg_get_point(self.background,cx,cy) - anno.bbox.get_center()
-            # )
             mobs.add(sano)
         self.mobs = mobs
 

@@ -136,4 +136,7 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        export_mobs(__file__, mobs)
+        mobs = Group(
+            sout_final,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by 006
