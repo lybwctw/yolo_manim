@@ -4,6 +4,7 @@ from manim import *
 from utils.constants import *
 from utils.general import import_mobs, export_mobs
 from utils.layers_fake import LayersFake
+from utils.comment import Comment
 
 # # constants
 # CLASSES = ['kunkun', 'coke', 'pepsi']
@@ -66,9 +67,7 @@ from utils.layers_fake import LayersFake
 #     paths.set_color(YELLOW).set_stroke(width=2)
 #     return paths
 
-def coord_to_text(x, y):
-    return '(' + str(x) + ',' + str(y) + ')'
-
+# coord system
 TEXT_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 20,
@@ -79,13 +78,75 @@ DOT_CONFIG = {
     'radius': 0.05,
 }
 
+# class mapping table
+TABLE_MAP_CONFIG = {'font_size': 18, 'color': GRAY}
+
+# result data table
+TABLE_RES_HEAD_CONFIG = {'font_size': 18, 'color': GRAY}
+TABLE_RES_ROW_CONFIG = {'font_size': 18, 'color': WHITE}
+TABLE_RES_HEAD_FORMATTER = '{:<6s} {:<6s} {:<6s} {:<6s} {:<6s}'
+TABLE_RES_HEAD_VALUES_XYXY = ['class', 'x1', 'y1', 'x2', 'y2']
+TABLE_RES_HEAD_VALUES_XYWH = ['class', 'cx', 'cy', 'w', 'h']
+TABLE_RES_ROW_FORMATTER_NORM = '{:<6d} {:<6.2f} {:<6.2f} {:<6.2f} {:<6.2f}'
+TABLE_RES_ROW_FORMATTER_ABS = '{:<6d} {:<6d} {:<6d} {:<6d} {:<6d}'
+
+# path
+PATH_STROKE_CONFIG = {
+    'width': 3,
+    'color': PURE_YELLOW,
+    'opacity': 1.0,
+}
+
+def coord_to_text(x, y):
+    return '(' + str(x) + ',' + str(y) + ')'
+
+def create_data_table(
+    head_values,
+    row_formatter,
+    row_values,
+) -> VGroup:
+    return VGroup(
+        Comment(
+            formatter=TABLE_RES_HEAD_FORMATTER,
+            values=head_values,
+            **TABLE_RES_HEAD_CONFIG,
+        ),
+        *(Comment(
+            formatter=row_formatter,
+            values=row_value,
+            **TABLE_RES_ROW_CONFIG,
+        ) for row_value in row_values),
+    ).arrange(
+        DOWN,
+        buff=0.2,
+        aligned_edge=LEFT,
+    )
+
+def create_paths_to_axes(
+    point,
+    axes,
+    stroke_config: dict = {},
+):
+    x, y = axes.p2c(point)
+    base_x = axes.c2p(x, 0)
+    base_y = axes.c2p(0, y)
+    origin = axes.c2p(0, 0)
+    stroke_config = {**PATH_STROKE_CONFIG, **stroke_config}
+    path_x = VMobject().set_points_as_corners([
+        point, base_x, origin,
+    ]).set_stroke(**stroke_config)
+    path_y = VMobject().set_points_as_corners([
+        point, base_y, origin,
+    ]).set_stroke(**stroke_config)
+    return path_x, path_y
+
 wt = SHORT_DURATION
 class MainScene(Scene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
             'init mobs from previous',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         (
@@ -145,9 +206,41 @@ class MainScene(Scene):
         ).next_to(annotation.get_corner(DR), DR)
         key_coords = VGroup(coord_ul, coord_ur, coord_dl, coord_dr)
 
-        # TODO: class info assets
-        #.....
+        # class info assets
+        class_mapping = VGroup(
+            Comment(
+                formatter='{:<6s}->{}',
+                values=[name, idx],
+                colors=[KK_COLORS[idx], WHITE],
+                **TABLE_MAP_CONFIG,
+            ) for idx, name in enumerate(KK_NAMES)
+        ).arrange(
+            DOWN,
+            buff=0.3,
+            aligned_edge=LEFT,
+        ).to_corner(UR, buff=0.5)
 
+        # result table assets
+        table_cxyxy_abs = create_data_table(
+            head_values=TABLE_RES_HEAD_VALUES_XYXY,
+            row_formatter=TABLE_RES_ROW_FORMATTER_ABS,
+            row_values=annotation[1].cxyxy_abs,
+        ).shift(RIGHT*20)
+        table_cxywh_abs = create_data_table(
+            head_values=TABLE_RES_HEAD_VALUES_XYWH,
+            row_formatter=TABLE_RES_ROW_FORMATTER_ABS,
+            row_values=annotation[1].cxywh_abs,
+        )
+        table_cxyxy_norm = create_data_table(
+            head_values=TABLE_RES_HEAD_VALUES_XYXY,
+            row_formatter=TABLE_RES_ROW_FORMATTER_NORM,
+            row_values=annotation[1].cxyxy_norm,
+        )
+        table_cxywh_norm = create_data_table(
+            head_values=TABLE_RES_HEAD_VALUES_XYWH,
+            row_formatter=TABLE_RES_ROW_FORMATTER_NORM,
+            row_values=annotation[1].cxywh_norm,
+        )
         # show background + annotation
         self.add(annotation)
         self.wait()
@@ -155,7 +248,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'two aspects: position info and class info',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         labels = annotation[1].get_labels()
@@ -187,7 +280,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'position first, coord system for annotation',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # temp assets
@@ -250,7 +343,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'key dots and coords',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # remove shape texts
@@ -269,7 +362,6 @@ class MainScene(Scene):
             run_time=wt,
         ))
         self.wait(wt)
-
 
         # introduce key coords
         self.play(AnimationGroup(
@@ -292,15 +384,189 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'prepare annotation table assets',
+            'on class info: mapping table',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # focus on labels
+        self.play(AnimationGroup(
+            labels.animate.restore(),
+            boxes.animate.fade(0.8),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # introduce class mapping table
+        self.play(Create(
+            class_mapping,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # restore boxes
+        self.play(boxes.animate(
+            run_time=wt,
+        ).restore())
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'loop on digitalization: cxyxy_abs',
             skip_animations=False,
         )
         # ************************************************************
-        # introduce class mapping table
-        cmap = create_class_mapping(CLASSES).scale(0.3)
-        cmap.to_corner(UR, buff=0.5).shift(RIGHT*0.1+DOWN*0.3)
-        self.play(Create(cmap))
-        self.wait()
+        # shift in grayed cxyxy_abs table
+        mobs = Group(
+            annotation, table_cxyxy_abs,
+        )
+        mobs.generate_target()
+        mobs.target[0].scale(0.8)
+        mobs.target.arrange(
+            RIGHT,
+            buff=0.8,
+        )
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # loop through each sano
+        n_sanos = len(annotation[1].mobs)
+        sanos_source = annotation[1].mobs.save_state()
+        result_source = table_cxyxy_abs.save_state()
+        mapping_source = class_mapping.save_state()
+        for idx in range(n_sanos):
+            # prepare target assets
+            sano = sanos_source[idx]
+            sanos_target = sanos_source.saved_state.copy()
+            result_target = result_source.saved_state.copy()
+            mapping_target = mapping_source.saved_state.copy()
+            for i in range(n_sanos):
+                if i != idx:
+                    sanos_target[i].fade(0.8)
+                    result_target[i+1].fade(0.8)    # skip head
+            for i in range(len(mapping_target)):
+                if i != annotation[1].cls[idx]:
+                    mapping_target[i].fade(0.8)
+            path_x1y1_x, path_x1y1_y = create_paths_to_axes(
+                point=sano.get_box_corner(UL),
+                axes=axes,
+                stroke_config={},
+            )
+            path_x2y2_x, path_x2y2_y = create_paths_to_axes(
+                point=sano.get_box_corner(DR),
+                axes=axes,
+                stroke_config={},
+            )
+            shape_x1y1_x = Text(
+                text='{:d}'.format(annotation[1].cxyxy_abs[idx][1]),
+                **TEXT_CONFIG,
+            ).next_to(path_x1y1_x, UP, buff=0.2)
+            shape_x1y1_y = Text(
+                text='{:d}'.format(annotation[1].cxyxy_abs[idx][2]),
+                **TEXT_CONFIG,
+            ).next_to(path_x1y1_y, LEFT, buff=0.2)
+            shape_x2y2_x = Text(
+                text='{:d}'.format(annotation[1].cxyxy_abs[idx][3]),
+                **TEXT_CONFIG,
+            ).next_to(path_x2y2_x, UP, buff=0.2)
+            shape_x2y2_y = Text(
+                text='{:d}'.format(annotation[1].cxyxy_abs[idx][4]),
+                **TEXT_CONFIG,
+            ).next_to(path_x2y2_y, LEFT, buff=0.2)
+
+            # focus on current sano and current result
+            self.play(AnimationGroup(
+                Transform(
+                    sanos_source,
+                    sanos_target,
+                ),
+                Transform(
+                    result_source,
+                    result_target,
+                ),
+                run_time=wt,
+            ))
+            self.wait(wt)
+
+            # focus on line in mapping table
+            self.play(Transform(
+                mapping_source,
+                mapping_target,
+                run_time=wt,
+            ))
+            self.wait(wt)
+
+            # show x1 y1 in coord system
+            self.play(AnimationGroup(
+                AnimationGroup(
+                    ShowPassingFlash(path_x1y1_x, time_width=3.0),
+                    Write(shape_x1y1_x),
+                    lag_ratio=0.5,
+                ),
+                AnimationGroup(
+                    ShowPassingFlash(path_x1y1_y, time_width=3.0),
+                    Write(shape_x1y1_y),
+                    lag_ratio=0.5,
+                ),
+                lag_ratio=0.0,
+                run_time=wt,
+            ))
+            self.wait(wt)
+            self.play(AnimationGroup(
+                Unwrite(shape_x1y1_x),
+                Unwrite(shape_x1y1_y),
+                lag_ratio=0.0,
+                run_time=wt,
+            ))
+            self.wait(wt)
+
+            # show x2 y2 in coord system
+            self.play(AnimationGroup(
+                AnimationGroup(
+                    ShowPassingFlash(path_x2y2_x, time_width=3.0),
+                    Write(shape_x2y2_x),
+                    lag_ratio=0.5,
+                ),
+                AnimationGroup(
+                    ShowPassingFlash(path_x2y2_y, time_width=3.0),
+                    Write(shape_x2y2_y),
+                    lag_ratio=0.5,
+                ),
+                lag_ratio=0.0,
+                run_time=wt,
+            ))
+            self.wait(wt)
+            self.play(AnimationGroup(
+                Unwrite(shape_x2y2_x),
+                Unwrite(shape_x2y2_y),
+                lag_ratio=0.0,
+                run_time=wt,
+            ))
+            self.wait(wt)
+
+        # table_cxywh_abs.align_to(table_cxywh_norm, UL)
+        # self.play(ReplacementTransform(
+        #     table_cxywh_norm,
+        #     table_cxywh_abs,
+        #     run_time=wt,
+        # ))
+
+        # table_cxyxy_norm.align_to(table_cxywh_abs, UL)
+        # self.play(ReplacementTransform(
+        #     table_cxywh_abs,
+        #     table_cxyxy_norm,
+        #     run_time=wt,
+        # ))
+
+        # table_cxyxy_abs.align_to(table_cxyxy_norm, UL)
+        # self.play(ReplacementTransform(
+        #     table_cxyxy_norm,
+        #     table_cxyxy_abs,
+        #     run_time=wt,
+        # ))
+        # self.wait()
 
         # # # introduce faded annotation table
         # # cls, xywh_norm = annotation.cls, annotation.xywh
@@ -334,7 +600,7 @@ class MainScene(Scene):
         # # # ************************************************************
         # # self.next_section(
         # #     'xyxy way of annotation, pixel based',
-        # #     skip_animations=False,
+        # #     skip_animations=True,
         # # )
         # # # ************************************************************
         # # # introduce transparent xyxy table
@@ -453,7 +719,7 @@ class MainScene(Scene):
         # # # ************************************************************
         # # self.next_section(
         # #     'transform xyxy into normed version',
-        # #     skip_animations=False,
+        # #     skip_animations=True,
         # # )
         # # # ************************************************************
         # # # show shapes of annotation
@@ -491,7 +757,7 @@ class MainScene(Scene):
         # # # ************************************************************
         # # self.next_section(
         # #     'xywh way of annotation, pixel based',
-        # #     skip_animations=False,
+        # #     skip_animations=True,
         # # )
         # # # ************************************************************
         # # # introduce transparent xywh table
@@ -611,7 +877,7 @@ class MainScene(Scene):
         # # # ************************************************************
         # # self.next_section(
         # #     'transform xywh into normed version',
-        # #     skip_animations=False,
+        # #     skip_animations=True,
         # # )
         # # # ************************************************************
         # # # show shapes of annotation
@@ -648,7 +914,7 @@ class MainScene(Scene):
         # # # ************************************************************
         # # self.next_section(
         # #     'prepare for next scene, extension and focus back',
-        # #     skip_animations=False,
+        # #     skip_animations=True,
         # # )
         # # # ************************************************************
         # # # self.play(Unwrite(cmap, lag_ratio=0, run_time=0.3, ))

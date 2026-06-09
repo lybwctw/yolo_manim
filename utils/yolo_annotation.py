@@ -32,6 +32,10 @@ DEFAULT_BOX_CONFIG = {
     'fill_opacity': 0.0,
 }
 
+DEFAULT_DOT_CONFIG = {
+
+}
+
 class SingleAnnotation(VMobject):
     """
     Example
@@ -46,9 +50,9 @@ class SingleAnnotation(VMobject):
     def __init__(
         self,
         text: str = 'None',
-        label_txt_config: dict | None = None,
-        label_bg_config: dict | None = None,
-        box_config: dict | None = None,
+        label_txt_config: dict = {},
+        label_bg_config: dict = {},
+        box_config: dict = {},
     ):
         super().__init__()
         self.text = text
@@ -72,7 +76,14 @@ class SingleAnnotation(VMobject):
         self.box = box
         self.label = label
         self.add(self.box, self.label)
-
+    
+    def get_box_corner(
+        self,
+        direction: np.ndarray = UL,
+    ) -> Dot:
+        """Used for demo from annotation to numbers.
+        """
+        return self.box.get_corner(direction=direction)
 
 class YoloAnnotation(VMobject):
     """
@@ -96,9 +107,9 @@ class YoloAnnotation(VMobject):
         self,
         background: ImageRaw | ImagePad | None = None,
         annotation: str | np.ndarray = PATH_LABEL,
-        label_txt_config: dict | None = None,
-        label_bg_config: dict | None = None,
-        box_config: dict | None = None,
+        label_txt_config: dict = {},
+        label_bg_config: dict = {},
+        box_config: dict = {},
         name_map: dict = KK_NAME_MAP,
         color_map: dict = KK_COLOR_MAP,
     ):
@@ -162,6 +173,88 @@ class YoloAnnotation(VMobject):
 
         # self.add(self.background)
         self.add(self.mobs)
+    
+    @property
+    def width_nominal(
+        self,
+    ) -> float:
+        return self.background.width_nominal
+
+    @property
+    def height_nominal(
+        self,
+    ) -> float:
+        return self.background.height_nominal
+    
+    @property
+    def cls(
+        self,
+    ) -> list:
+        return self.data[:, 0].astype(int).tolist()
+
+    @property
+    def cxywh_norm(
+        self,
+    ) -> list:
+        return [
+            [int(cls), float(cx), float(cy), float(w), float(h)]
+            for cls, cx, cy, w, h in self.data
+        ]
+    
+    @property
+    def cxywh_abs(
+        self,
+    ) -> list:
+        return [
+            [
+                int(cls),
+                int(cx * self.width_nominal),
+                int(cy * self.height_nominal),
+                int(w * self.width_nominal),
+                int(h * self.height_nominal),
+            ] for cls, cx, cy, w, h in self.data
+        ]
+    
+    @property
+    def cxyxy_norm(
+        self,
+    ) -> list:
+        return [
+            [
+                int(cls),
+                float(cx - w/2),
+                float(cy - h/2),
+                float(cx + w/2),
+                float(cy + h/2),
+            ] for cls, cx, cy, w, h in self.data
+        ]
+    
+    @property
+    def cxyxy_abs(
+        self,
+    ) -> list:
+        return [
+            [
+                int(cls),
+                int((cx - w/2) * self.width_nominal),
+                int((cy - h/2) * self.height_nominal),
+                int((cx + w/2) * self.width_nominal),
+                int((cy + h/2) * self.height_nominal),
+            ] for cls, cx, cy, w, h in self.data
+        ]
+
+    # def get_cxyxy(
+    #     self,
+    # ) -> list:
+    #     """Convert self.data into a list of cxyxy.
+    #     """
+    #     res = []
+    #     for line in self.data:
+    #         cls, x1, y1, x2, y2 = line
+    #         cls = int(cls)
+    #         x1, y1, x2, y2 = float(x1), float(y1), float(x2), float(y2)
+    #         res.append([cls, x1, y1, x2, y2])
+    #     return res
     
     def get_labels(
         self,

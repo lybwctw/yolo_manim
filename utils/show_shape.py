@@ -52,9 +52,9 @@ class ShowShape(AnimationGroup):
     def __init__(
         self,
         mob: Any = None,
-        path_config: dict | None = None,     # color, width, opacity
-        text_config: dict | None = None,     # font_size, font, buff, color
-        aargs: dict | None = None,           # lag_ratio, run_time
+        path_config: dict = {},     # color, width, opacity
+        text_config: dict = {},     # font_size, font, buff, color
+        aargs: dict = {},           # lag_ratio, run_time
     ):
         path_config = {**DEFAULT_SHAPE_PATH_CONFIG, **path_config}
         text_config = {**DEFAULT_SHAPE_TEXT_CONFIG, **(text_config or {})}
@@ -107,7 +107,7 @@ class HideShape(AnimationGroup):
     def __init__(
         self,
         mob: Any = None,
-        aargs: dict | None = None,           # lag_ratio, run_time
+        aargs: dict = {},           # lag_ratio, run_time
     ):
         texts = getattr(mob, "shape_texts", VGroup())
         mob.remove(texts)

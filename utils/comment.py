@@ -8,7 +8,10 @@ DEFAULT_TEXT_CONFIG = {
     "font_size": 32,
 }
 
-class Computation(VGroup):
+# TODO: replace comptuation with text
+class Comment(VGroup):
+    """Comment text with colored fields.
+    """
     def __init__(
         self,
         formatter: str,
@@ -45,12 +48,12 @@ class Computation(VGroup):
                 index = int(field_name)
             else:
                 raise ValueError(
-                    f'Unsupported field name in Computation formatter: {field_name}'
+                    f'Unsupported field name in text formatter: {field_name}'
                 )
 
             if index >= len(values):
                 raise ValueError(
-                    'Formatter expects more values than provided for Computation.'
+                    'Formatter expects more values than provided for text.'
                 )
 
             value = values[index]
@@ -63,7 +66,7 @@ class Computation(VGroup):
                     value = ascii(value)
                 else:
                     raise ValueError(
-                        f'Unsupported conversion in Computation formatter: {conversion}'
+                        f'Unsupported conversion in text formatter: {conversion}'
                     )
 
             field_text = fmt.format_field(value, format_spec)
@@ -75,19 +78,32 @@ class Computation(VGroup):
                 )
             rendered += field_text
 
-        self.computation = MarkupText(rendered, **text_config)
-        self.add(self.computation)
+        self.text = MarkupText(rendered, **text_config)
+        self.add(self.text)
 
 
 class Demo(Scene):
     def construct(self):
-        comp = Computation(
-            formatter='{}+{}={}',
-            values=[3, 4, 7],
-            colors=[BLUE, PURE_GREEN, YELLOW],
+        # comp = Comment(
+        #     formatter='{}+{}={}',
+        #     values=[3, 4, 7],
+        #     colors=[BLUE, PURE_GREEN, YELLOW],
+        #     font_size=36,
+        #     color=GRAY,
+        # )
+
+        # self.play(Create(comp))
+        # self.wait()
+        class_mapping = Comment(
+            formatter=(
+                '{:<6s}->0\n'
+                '{:<6s}->1\n'
+                '{:<6s}->2\n'
+            ),
+            values=['kunkun', 'coke', 'pepsi'],
+            colors=[GREEN, RED, BLUE],
             font_size=36,
             color=GRAY,
         )
-
-        self.play(Create(comp))
+        self.play(Create(class_mapping))
         self.wait()
