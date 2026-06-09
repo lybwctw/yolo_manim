@@ -41,8 +41,8 @@ class Explainer(VGroup):
         prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
         sf_nominal: int = 32,                       # 8|16|32
         sf_pcell: float = 1.0,                      # < 1.0 if mini
-        dot_config: dict = {},                      # default dot config
-        rect_config: dict = {},                     # default rect config
+        dot_config: dict | None = None,                      # default dot config
+        rect_config: dict | None = None,                     # default rect config
     ):
         """
         Example
@@ -157,7 +157,7 @@ class Explainer(VGroup):
         self.grid = self.create_grid()
         self.add(self.grid)
 
-        return Write(self.grid, **aargs)
+        return Write(self.grid, **(aargs or {}))
 
     def hide_grid(
         self,
@@ -173,7 +173,7 @@ class Explainer(VGroup):
         self.play(explainer.hide_grid())
         """
         self.remove(self.grid)
-        return Unwrite(self.grid, **aargs)
+        return Unwrite(self.grid, **(aargs or {}))
 
     def create_anchor_points(
         self,
@@ -219,13 +219,13 @@ class Explainer(VGroup):
         """
         self.anchor_points = self.create_anchor_points()
         self.add(self.anchor_points)
-        return Write(self.anchor_points,**aargs)
+        return Write(self.anchor_points,**(aargs or {}))
 
     def to_rects(
         self,
-        rect_config: dict = {}, # rect config
-        aargs: dict = {},       # to_rect args
-        gargs: dict = {},       # group args
+        rect_config: dict | None = None, # rect config
+        aargs: dict | None = None,       # to_rect args
+        gargs: dict | None = None,       # group args
     ) -> Animation:
         """
         Capture target for all anchor points.
@@ -248,9 +248,9 @@ class Explainer(VGroup):
 
     def to_dots(
         self,
-        dot_config: dict = {},  # dot config
-        aargs: dict = {},       # animation args
-        gargs: dict = {},       # group args
+        dot_config: dict | None = None,  # dot config
+        aargs: dict | None = None,       # animation args
+        gargs: dict | None = None,       # group args
     ) -> Animation:
         """
         Back to dot for all anchor points.
@@ -273,10 +273,10 @@ class Explainer(VGroup):
     
     def show_pcells(
         self,
-        label_config: dict = {},
-        box_config: dict = {},
-        aargs: dict = {},
-        gargs: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         anim = AnimationGroup(
             *(ap.show_pcells(
@@ -290,10 +290,10 @@ class Explainer(VGroup):
 
     def show_arrows(
         self,
-        arrow_config: dict={},
-        aargs: dict = {},
-        gargs: dict = {},
-        ggargs: dict = {},
+        arrow_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
+        ggargs: dict | None = None,
     ) -> Animation:
         """
         Show arrows for all anchor points.
@@ -317,8 +317,8 @@ class Explainer(VGroup):
 
     def hide_arrows(
         self,
-        aargs: dict = {},
-        gargs: dict = {},
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """
         Hide Arrows for all anchor points.
@@ -340,10 +340,10 @@ class Explainer(VGroup):
 
     def show_pbars(
         self,
-        pbar_config: dict = {},
-        aargs: dict = {},
-        gargs: dict = {},
-        ggargs: dict = {},
+        pbar_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
+        ggargs: dict | None = None,
     ) -> Animation:
         """
         Show pbars for each anchor points.
@@ -367,10 +367,10 @@ class Explainer(VGroup):
 
     def sync_pbars(
         self,
-        pbar_config: dict = {},
-        aargs: dict = {},
-        gargs: dict = {},
-        ggargs: dict = {},
+        pbar_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
+        ggargs: dict | None = None,
     ) -> Animation:
         """
         Sync pbars into current prob for all anchor points.
@@ -395,9 +395,9 @@ class Explainer(VGroup):
 
     def hide_pbars(
         self,
-        aargs: dict = {},
-        gargs: dict = {},
-        ggargs: dict = {},
+        aargs: dict | None = None,
+        gargs: dict | None = None,
+        ggargs: dict | None = None,
     ) -> Animation:
         """
         Hide pbars for all anchor points.
@@ -421,10 +421,10 @@ class Explainer(VGroup):
     def show_multi_labels(
         self,
         include_text: bool = True,  # show conf text or not
-        label_config: dict = {},    # font size 12 by default
-        box_config: dict = {},
-        aargs: dict = {},
-        gargs: dict = {},
+        label_config: dict | None = None,    # font size 12 by default
+        box_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """
         Show multi-labels for all anchor points.
@@ -451,14 +451,14 @@ class Explainer(VGroup):
 
     def show_rect_mlabels(
         self,
-        rect_config: dict = {},
+        rect_config: dict | None = None,
         include_text: bool = True,      # show conf score or not
-        label_config: dict = {},
-        box_config: dict = {},
-        rargs: dict = {},       # to_rect animation args
-        largs: dict = {},       # show_multi_labels animation args
-        gargs: dict = {},       # ap.show_rect_mlabels group args
-        ggargs: dict = {},      # group of ap.show_rect_mlabels group args
+        label_config: dict | None = None,
+        box_config: dict | None = None,
+        rargs: dict | None = None,       # to_rect animation args
+        largs: dict | None = None,       # show_multi_labels animation args
+        gargs: dict | None = None,       # ap.show_rect_mlabels group args
+        ggargs: dict | None = None,      # group of ap.show_rect_mlabels group args
     ) -> Animation:
         """
         FIXME: display issue.
@@ -923,7 +923,7 @@ class Explainer(VGroup):
         self.play(explainer.hide_anchor_points())
         """
         self.remove(self.anchor_points)
-        return Unwrite(self.anchor_points,**aargs)
+        return Unwrite(self.anchor_points,**(aargs or {}))
 
     def random_ap(
         self,
@@ -991,9 +991,9 @@ class Explainer(VGroup):
     #     self,
     #     idx: int = 0,                   # index of anchor point
     #     direction: np.ndarray = UL,     # corner direction of ap's rect, UL/DR
-    #     pargs: dict = {},               # path animation args
-    #     targs: dict = {},               # text animation args
-    #     gargs: dict = {},               # group animation args
+    #     pargs: dict | None = None,               # path animation args
+    #     targs: dict | None = None,               # text animation args
+    #     gargs: dict | None = None,               # group animation args
     # ) -> Animation:
     #     """Animation illustrating x,y -> point
     #         TODO, config separation
@@ -1040,23 +1040,23 @@ class Explainer(VGroup):
     #         AnimationGroup(
     #             ShowPassingFlash(px, **pargs,),
     #             Write(tx, **targs),
-    #             **gargs,
+    #             **(gargs or {}),
     #         ),
     #         AnimationGroup(
     #             ShowPassingFlash(py, **pargs,),
     #             Write(ty, **targs),
-    #             **gargs,
+    #             **(gargs or {}),
     #         ),
     #     )
     #     return anim
 
     # def hide_xy_txts(
     #     self,
-    #     **aargs,
+    #     **(aargs or {}),
     # ) -> Animation:
     #     mobs = self.tmp_txts
     #     self.tmp_txts = None
-    #     return Unwrite(mobs, **aargs)
+    #     return Unwrite(mobs, **(aargs or {}))
 
     # def create_distance_tensor(
     #     self,
@@ -1250,8 +1250,8 @@ class Explainer(VGroup):
         shape: tuple = (4, 4),
         sf_nominal: int | None = None,
         sf_pcell: float | None = 1.0,   # <1.0 for mini ones
-        dot_config: dict = {},                      # default dot config
-        rect_config: dict = {},                     # default rect config
+        dot_config: dict | None = None,                      # default dot config
+        rect_config: dict | None = None,                     # default rect config
     ) -> Explainer:
         """
         Create random explainer.
@@ -1285,8 +1285,8 @@ class Explainer(VGroup):
         background,
         version: int = 32,      # 8 | 16 | 32 | 64 | 160
         sf_nominal: int | None = None,
-        dot_config: dict = {},                      # default dot config
-        rect_config: dict = {},                     # default rect config
+        dot_config: dict | None = None,                      # default dot config
+        rect_config: dict | None = None,                     # default rect config
     ) -> Explainer:
         """
         Example

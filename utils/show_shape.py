@@ -52,17 +52,17 @@ class ShowShape(AnimationGroup):
     def __init__(
         self,
         mob: Any = None,
-        path_config: dict = {},     # color, width, opacity
-        text_config: dict = {},     # font_size, font, buff, color
-        aargs: dict = {},           # lag_ratio, run_time
+        path_config: dict | None = None,     # color, width, opacity
+        text_config: dict | None = None,     # font_size, font, buff, color
+        aargs: dict | None = None,           # lag_ratio, run_time
     ):
         path_config = {**DEFAULT_SHAPE_PATH_CONFIG, **path_config}
-        text_config = {**DEFAULT_SHAPE_TEXT_CONFIG, **text_config}
-        aargs = {**DEFAULT_SHOW_AARGS, **aargs}
+        text_config = {**DEFAULT_SHAPE_TEXT_CONFIG, **(text_config or {})}
+        aargs = {**DEFAULT_SHOW_AARGS, **(aargs or {})}
 
         # NOTE: mob class SHOULD implement these methods
         path = mob.get_shape_path(**path_config)
-        texts = mob.get_shape_text(**text_config)
+        texts = mob.get_shape_text(**(text_config or {}))
 
         mob.shape_texts = texts      # as child of mob
         mob.add(mob.shape_texts)
@@ -107,12 +107,12 @@ class HideShape(AnimationGroup):
     def __init__(
         self,
         mob: Any = None,
-        aargs: dict = {},           # lag_ratio, run_time
+        aargs: dict | None = None,           # lag_ratio, run_time
     ):
         texts = getattr(mob, "shape_texts", VGroup())
         mob.remove(texts)
 
-        aargs = {**DEFAULT_HIDE_AARGS, **aargs}
+        aargs = {**DEFAULT_HIDE_AARGS, **(aargs or {})}
         super().__init__(
             *(Unwrite(t) for t in texts),
             **aargs,

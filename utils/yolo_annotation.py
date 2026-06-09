@@ -46,16 +46,16 @@ class SingleAnnotation(VMobject):
     def __init__(
         self,
         text: str = 'None',
-        label_txt_config: dict = {},
-        label_bg_config: dict = {},
-        box_config: dict = {},
+        label_txt_config: dict | None = None,
+        label_bg_config: dict | None = None,
+        box_config: dict | None = None,
     ):
         super().__init__()
         self.text = text
 
         label_txt_config = {**DEFAULT_LABEL_TXT_CONFIG, **label_txt_config}
         label_bg_config = {**DEFAULT_LABEL_BG_CONFIG, **label_bg_config}
-        box_config = {**DEFAULT_BOX_CONFIG, **box_config}
+        box_config = {**DEFAULT_BOX_CONFIG, **(box_config or {})}
 
         box = Rectangle(
             **box_config,
@@ -96,9 +96,9 @@ class YoloAnnotation(VMobject):
         self,
         background: ImageRaw | ImagePad | None = None,
         annotation: str | np.ndarray = PATH_LABEL,
-        label_txt_config: dict = {},
-        label_bg_config: dict = {},
-        box_config: dict = {},
+        label_txt_config: dict | None = None,
+        label_bg_config: dict | None = None,
+        box_config: dict | None = None,
         name_map: dict = KK_NAME_MAP,
         color_map: dict = KK_COLOR_MAP,
     ):
@@ -162,6 +162,20 @@ class YoloAnnotation(VMobject):
 
         # self.add(self.background)
         self.add(self.mobs)
+    
+    def get_labels(
+        self,
+    ) -> VGroup:
+        return VGroup(
+            sano.label for sano in self.mobs
+        )
+    
+    def get_boxes(
+        self,
+    ) -> VGroup:
+        return VGroup(
+            sano.box for sano in self.mobs
+        )
 
 #     @property
 #     def xywh_abs(self):

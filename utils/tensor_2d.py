@@ -61,7 +61,7 @@ class Tensor2D(VMobject):
         data: np.ndarray,
         formatters: list | None = None,
         col_ratios: list | None = None,
-        decimal_config: dict = {},
+        decimal_config: dict | None = None,
         cell_width: float | None = None,
         cell_height: float | None = None,
         objs: list | None = None,
@@ -816,7 +816,7 @@ class Tensor2D(VMobject):
     def from_list(
         cls,
         data_list: list,
-        decimal_config: dict = {},          # auto or override
+        decimal_config: dict | None = None,          # auto or override
         cell_width: float | None = None,    # auto or override
         cell_height: float | None = None,   # auto or override
     ):
@@ -877,7 +877,7 @@ class Tensor2D(VMobject):
     def from_ref(
         cls,
         ref: Explainer,
-        decimal_config: dict = {},          # auto or override
+        decimal_config: dict | None = None,          # auto or override
         cell_width: float | None = None,    # auto or override
         cell_height: float | None = None,   # auto or override
     ):

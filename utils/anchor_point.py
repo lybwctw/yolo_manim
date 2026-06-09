@@ -124,8 +124,8 @@ class ProbCell(VMobject):
         self,
         include_text: bool = True,
         prob: float = 0.00,
-        label_config: dict = {},
-        box_config: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
     ):
         """
         Use the same interface as native Label class.
@@ -170,8 +170,8 @@ class AnchorLabel(VMobject):
         self,
         include_text: bool = True,      # include conf text or not
         text: str = 'None',             # conf text content
-        label_config: dict = {},        # text config
-        box_config: dict = {},          # background config
+        label_config: dict | None = None,        # text config
+        box_config: dict | None = None,          # background config
     ):
         """
         Use the same interface as native Label class.
@@ -183,10 +183,10 @@ class AnchorLabel(VMobject):
         super().__init__()
         self.include_text = include_text
         self.text = text if include_text else None
-        self.label_config = {**LABEL_CONFIG, **label_config} if include_text else {}
+        self.label_config = {**LABEL_CONFIG, **(label_config or {})} if include_text else {}
         self.box_config = {**(
             BOX_BG_CONFIG if include_text else BOX_RAW_CONFIG
-            ), **box_config}
+            ), **(box_config or {})}
 
         if include_text:
             mob_text = Text(
@@ -227,8 +227,8 @@ class AnchorPoint(VMobject):
         sf_nominal: int = 32,                               # nominal distance / unit distance
         sf_screen: int = 0.5,                               # screen distance / unit distance
         sf_pcell: float = 1.0,                              # pcell size / unit distance
-        dot_config: dict = {},                              # default dot config
-        rect_config: dict = {},                             # default rect config
+        dot_config: dict | None = None,                              # default dot config
+        rect_config: dict | None = None,                             # default rect config
     ):
         """
         Example
@@ -246,8 +246,8 @@ class AnchorPoint(VMobject):
         self.sf_nominal = sf_nominal
         self.sf_pcell = sf_pcell
 
-        dot_config = {**DOT_CONFIG, **dot_config}
-        rect_config = {**RECT_CONFIG, **rect_config}
+        dot_config = {**DOT_CONFIG, **(dot_config or {})}
+        rect_config = {**RECT_CONFIG, **(rect_config or {})}
 
         dot = Square(
             stroke_opacity=0.0,
@@ -278,7 +278,7 @@ class AnchorPoint(VMobject):
 
     def to_rect(
         self,
-        rect_config: dict = {}, # target rect config
+        rect_config: dict | None = None, # target rect config
         **aargs,
     ) -> Animation:
         """
@@ -289,8 +289,8 @@ class AnchorPoint(VMobject):
         ap = AnchorPoint(reg=np.random.rand(4, 16))
         self.play(ap.to_rect())
         """
-        rect_config = {'stroke_opacity': 1.0, **rect_config}
-        target = self.rect.copy().set_style(**rect_config)
+        rect_config = {'stroke_opacity': 1.0, **(rect_config or {})}
+        target = self.rect.copy().set_style(**(rect_config or {}))
         return Transform(
             self.mob,
             target,
@@ -299,7 +299,7 @@ class AnchorPoint(VMobject):
 
     def to_dot(
         self,
-        dot_config: dict = {}, # target dot config
+        dot_config: dict | None = None, # target dot config
         **aargs,
     ) -> Animation:
         """
@@ -310,8 +310,8 @@ class AnchorPoint(VMobject):
         ap = AnchorPoint(reg=np.random.rand(4, 16))
         self.play(ap.to_dot())
         """
-        dot_config = {'stroke_opacity': 1.0, **dot_config}
-        target = self.dot.copy().set_style(**dot_config)
+        dot_config = {'stroke_opacity': 1.0, **(dot_config or {})}
+        target = self.dot.copy().set_style(**(dot_config or {}))
         return Transform(
             self.mob,
             target,
@@ -321,8 +321,8 @@ class AnchorPoint(VMobject):
     def create_pcells_direction(
         self,
         direction: str = 'left',
-        label_config: dict = {},
-        box_config: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
     ) -> VGroup:
         """
         Create probcells in one specific direction.
@@ -356,8 +356,8 @@ class AnchorPoint(VMobject):
     def show_pcells_direction(
         self,
         direction: str = 'left',
-        label_config: dict = {},
-        box_config: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
         **aargs,
     ) -> Animation:
         """
@@ -386,8 +386,8 @@ class AnchorPoint(VMobject):
 
     def create_pcells(
         self,
-        label_config: dict = {},
-        box_config: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
     ) -> VGroup:
         """
         Create probcells in four directions.
@@ -419,8 +419,8 @@ class AnchorPoint(VMobject):
 
     def show_pcells(
         self,
-        label_config: dict = {},
-        box_config: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
         **aargs,
     ) -> Animation:
         """
@@ -444,8 +444,8 @@ class AnchorPoint(VMobject):
 
     def create_pcells_arranged(
         self,
-        label_config: dict = {},
-        box_config: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
         buff: float = 0.1,
     ) -> VGroup:
         """
@@ -468,8 +468,8 @@ class AnchorPoint(VMobject):
 
     def show_pcells_arranged(
         self,
-        label_config: dict = {},
-        box_config: dict = {},
+        label_config: dict | None = None,
+        box_config: dict | None = None,
         buff: float = 0.1,
         **aargs,
     ) -> Animation:
@@ -601,7 +601,7 @@ class AnchorPoint(VMobject):
         self.play(ap.hide_pcells())
         """
         self.remove(self.pcells)
-        return Unwrite(self.pcells, **aargs)
+        return Unwrite(self.pcells, **(aargs or {}))
 
     def arrange_pcells(
         self,
@@ -632,7 +632,7 @@ class AnchorPoint(VMobject):
     def create_arrow_direction(
         self,
         direction: str = 'left',
-        arrow_config: dict = {},
+        arrow_config: dict | None = None,
     ) -> Arrow:
         """
         Create arrow in specific direction.
@@ -642,7 +642,7 @@ class AnchorPoint(VMobject):
         ap = AnchorPoint(reg=np.random.rand(4, 16))
         result = ap.create_arrow_direction()
         """
-        cfg = {**ARROW_CONFIG, **arrow_config}
+        cfg = {**ARROW_CONFIG, **(arrow_config or {})}
         arrow = Arrow(
             start=self.dot.get_center(),
             end=self.node_map[direction],
@@ -654,7 +654,7 @@ class AnchorPoint(VMobject):
     def show_arrow_direction(
         self,
         direction: str = 'left',
-        arrow_config: dict = {},
+        arrow_config: dict | None = None,
         **aargs,
     ) -> Animation:
         """
@@ -682,7 +682,7 @@ class AnchorPoint(VMobject):
 
     def create_arrows(
         self,
-        arrow_config: dict={},
+        arrow_config: dict | None = None,
     ) -> VGroup:
         """
         Create arrows based on dot and rect.
@@ -692,7 +692,7 @@ class AnchorPoint(VMobject):
         ap = AnchorPoint(reg=np.random.rand(4, 16))
         result = ap.create_arrows()
         """
-        cfg = {**ARROW_CONFIG, **arrow_config}
+        cfg = {**ARROW_CONFIG, **(arrow_config or {})}
         arrows = VGroup(
             *(Arrow(
                 start=self.dot.get_center(),
@@ -705,9 +705,9 @@ class AnchorPoint(VMobject):
 
     def show_arrows(
         self,
-        arrow_config: dict={},
-        aargs: dict = {},
-        gargs: dict = {},
+        arrow_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """
         Show arrows in all four directions.
@@ -732,7 +732,7 @@ class AnchorPoint(VMobject):
             ) for arrow in self.arrows),
             **gargs,
         )
-        # return Write(self.arrows, **aargs)
+        # return Write(self.arrows, **(aargs or {}))
 
     def hide_arrows(
         self,
@@ -747,7 +747,7 @@ class AnchorPoint(VMobject):
         self.play(ap.hide_arrows())
         """
         self.remove(self.arrows)
-        return Unwrite(self.arrows, **aargs)
+        return Unwrite(self.arrows, **(aargs or {}))
 
     def create_dist(
         self,
@@ -791,7 +791,7 @@ class AnchorPoint(VMobject):
         )
         self._align_ts_to_arrows(self.ts_dist)
         self.add(self.ts_dist)
-        return Write(self.ts_dist, **aargs)
+        return Write(self.ts_dist, **(aargs or {}))
 
     def hide_dist(
         self,
@@ -805,7 +805,7 @@ class AnchorPoint(VMobject):
         self.play(ap.hide_dist())
         """
         self.remove(self.ts_dist)
-        return Unwrite(self.ts_dist, **aargs)
+        return Unwrite(self.ts_dist, **(aargs or {}))
 
     def create_dist_nominal(
         self,
@@ -854,7 +854,7 @@ class AnchorPoint(VMobject):
         )
         self._align_ts_to_arrows(self.ts_dist_nominal)
         self.add(self.ts_dist_nominal)
-        return Write(self.ts_dist_nominal, **aargs)
+        return Write(self.ts_dist_nominal, **(aargs or {}))
 
     def hide_dist_nominal(
         self,
@@ -868,7 +868,7 @@ class AnchorPoint(VMobject):
         self.play(ap.hide_dist_nominal())
         """
         self.remove(self.ts_dist_nominal)
-        return Unwrite(self.ts_dist_nominal, **aargs)
+        return Unwrite(self.ts_dist_nominal, **(aargs or {}))
 
     def create_divide(
         self,
@@ -913,12 +913,12 @@ class AnchorPoint(VMobject):
         divide = self.create_divide()
         for dist, div in zip(self.ts_dist_nominal, divide):
             dist.add(div)
-        return Write(divide, **aargs)
+        return Write(divide, **(aargs or {}))
 
     def nominal_to_rela(
         self,
-        aargs: dict = {},       # ReplacementTransform args
-        gargs: dict = {},       # AnimationGroup args
+        aargs: dict | None = None,       # ReplacementTransform args
+        gargs: dict | None = None,       # AnimationGroup args
     ) -> Animation:
         """
         Convert ts_dist_nominal with divide into ts_dist.
@@ -935,7 +935,7 @@ class AnchorPoint(VMobject):
         self._align_ts_to_arrows(self.ts_dist)
         self.add(self.ts_dist)
         return AnimationGroup(
-            *(ReplacementTransform(dist_nominal, dist_rela, **aargs)
+            *(ReplacementTransform(dist_nominal, dist_rela, **(aargs or {}))
             for dist_nominal, dist_rela in zip(self.ts_dist_nominal, self.ts_dist)),
             **gargs,
         )
@@ -1037,7 +1037,7 @@ class AnchorPoint(VMobject):
     def create_DFL_computations(
         self,
         buff: float = 0.3,
-        text_config: dict = {},
+        text_config: dict | None = None,
     ) -> VGroup:
         """
         Create 4 computations from distribution to distance.
@@ -1085,7 +1085,7 @@ class AnchorPoint(VMobject):
     def create_decode_computations(
         self,
         buff: float = 0.3,              # up-down buff between computations
-        text_config: dict = {},         # for computation
+        text_config: dict | None = None,         # for computation
     ) -> VGroup:
         """
         Create 4 computations from distance to position,
@@ -1132,7 +1132,7 @@ class AnchorPoint(VMobject):
 
     def create_pbars(
         self,
-        pbar_config: dict={},
+        pbar_config: dict | None = None,
     ) -> VGroup:
         """
         Realtime pbars based on given prob.
@@ -1147,7 +1147,7 @@ class AnchorPoint(VMobject):
         pbar_offset = self.sf_screen*(1-PBAR_SPACE_RATIO)/2
         pbar_gap = pbar_space * PBAR_GAP_RATIO
         pbar_width = pbar_space * (1-(n_probs-1)*PBAR_GAP_RATIO) / n_probs
-        cfg = {**PBAR_CONFIG, **pbar_config}
+        cfg = {**PBAR_CONFIG, **(pbar_config or {})}
         pbars = VGroup(
             Rectangle(
                 width=pbar_width,
@@ -1163,9 +1163,9 @@ class AnchorPoint(VMobject):
 
     def show_pbars(
         self,
-        pbar_config: dict = {},
-        aargs: dict = {},
-        gargs: dict = {},
+        pbar_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """
         Grow pbars from baseline.
@@ -1184,16 +1184,16 @@ class AnchorPoint(VMobject):
         self.pbars = pbars_start
         self.add(self.pbars)
         return AnimationGroup(
-            *(Transform(p0, p1, **aargs)
+            *(Transform(p0, p1, **(aargs or {}))
             for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
 
     def sync_pbars(
         self,
-        pbar_config: dict = {},
-        aargs: dict = {},
-        gargs: dict = {},
+        pbar_config: dict | None = None,
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """
         Sync pbars into current prob.
@@ -1207,15 +1207,15 @@ class AnchorPoint(VMobject):
             pbar_config=pbar_config,
         )     # current prob
         return AnimationGroup(
-            *(Transform(p0, p1, **aargs)
+            *(Transform(p0, p1, **(aargs or {}))
             for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
 
     def hide_pbars(
         self,
-        aargs: dict = {},
-        gargs: dict = {},
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """
         Shrink pbars into baseline.
@@ -1230,7 +1230,7 @@ class AnchorPoint(VMobject):
             bar.stretch_to_fit_height(0)
         self.remove(self.pbars)
         return AnimationGroup(
-            *(Transform(p0, p1, **aargs)
+            *(Transform(p0, p1, **(aargs or {}))
             for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
@@ -1238,8 +1238,8 @@ class AnchorPoint(VMobject):
     def create_multi_labels(
         self,
         include_text: bool = True,      # include conf text or not
-        label_config: dict = {},        # font size 12 by default
-        box_config: dict = {},
+        label_config: dict | None = None,        # font size 12 by default
+        box_config: dict | None = None,
     ) -> VGroup:
         """
         Create multi labels, not positioned.
@@ -1255,7 +1255,7 @@ class AnchorPoint(VMobject):
                 include_text=include_text,
                 text='{:.2f}'.format(prob),
                 label_config=label_config,
-                box_config={**box_config, 'color': color},  # TODO: Label's interface
+                box_config={**(box_config or {}), 'color': color},  # TODO: Label's interface
             ) for prob, color in zip(self.prob, LABEL_COLORS)
         ).arrange(RIGHT, buff=0.0)
         return labels
@@ -1263,8 +1263,8 @@ class AnchorPoint(VMobject):
     def show_multi_labels(
         self,
         include_text: bool = True,      # show conf text or not
-        label_config: dict = {},        # font size 12 by default
-        box_config: dict = {},
+        label_config: dict | None = None,        # font size 12 by default
+        box_config: dict | None = None,
         **aargs,
     ) -> Animation:
         """
@@ -1287,17 +1287,17 @@ class AnchorPoint(VMobject):
         self.labels = labels
         self.add(self.labels)
 
-        return Write(self.labels, **aargs)
+        return Write(self.labels, **(aargs or {}))
 
     def show_rect_mlabels(
         self,
-        rect_config: dict = {},
+        rect_config: dict | None = None,
         include_text: bool = True,      # show conf score or not
-        label_config: dict = {},        # font size 12 by default
-        box_config: dict = {},
-        rargs: dict = {},       # to_rect animation args
-        largs: dict = {},       # show_multi_labels animation args
-        gargs: dict = {},       # group args
+        label_config: dict | None = None,        # font size 12 by default
+        box_config: dict | None = None,
+        rargs: dict | None = None,       # to_rect animation args
+        largs: dict | None = None,       # show_multi_labels animation args
+        gargs: dict | None = None,       # group args
     ) -> Animation:
         """
         Show rect and multi labels at a time.
@@ -1326,8 +1326,8 @@ class AnchorPoint(VMobject):
     def apply_max_select(
         self,
         max_idx: int = 0,       # the max index to keep
-        aargs: dict = {},       # animation args
-        gargs: dict = {},       # group args
+        aargs: dict | None = None,       # animation args
+        gargs: dict | None = None,       # group args
     ) -> Animation:
         """
         Select max conf label and append cls label.
@@ -1351,20 +1351,20 @@ class AnchorPoint(VMobject):
             width=2,
         )   # NOTE, visual adjustment for max label
         anims = [
-            Transform(max_label, max_target, **aargs),
+            Transform(max_label, max_target, **(aargs or {})),
         ]
         labels_to_remove = []
         for i in range(len(self.labels)):
             if i != max_idx:
-                anims.append(FadeOut(self.labels[i], **aargs))  # or Unwrite?
+                anims.append(FadeOut(self.labels[i], **(aargs or {})))  # or Unwrite?
                 labels_to_remove.append(self.labels[i])
 
         self.rect.set_stroke(color=PBAR_COLORS[max_idx])
-        anims.append(self.mob.animate(**aargs).set_stroke(color=PBAR_COLORS[max_idx]))
+        anims.append(self.mob.animate(**(aargs or {})).set_stroke(color=PBAR_COLORS[max_idx]))
 
         self.labels.remove(*labels_to_remove)
 
-        return AnimationGroup(*anims, **gargs)
+        return AnimationGroup(*anims, **(gargs or {}))
 
     def use_color(
         self,
@@ -1428,7 +1428,7 @@ class AnchorPoint(VMobject):
 
     def do_clip(
         self,
-        **aargs,        # for both labels and rect
+        **aargs,
     ) -> Animation:
         """
         Make rect clipping.
@@ -1460,9 +1460,9 @@ class AnchorPoint(VMobject):
         #     anims.append(AnimationGroup(
         #         self.to_rect(
         #             rect_config={},
-        #             **aargs,
+        #             **(aargs or {}),
         #         ),
-        #         self.labels.animate(**aargs).move_to(
+        #         self.labels.animate(**(aargs or {})).move_to(
         #             self.rect.get_corner(UL),
         #             aligned_edge=DL,
         #         ),

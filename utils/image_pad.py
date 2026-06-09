@@ -273,8 +273,8 @@ class ImagePad(Mobject):
         updown: bool = True,    # user is responsible for providing correct updown
         width_nominal: int | None = None,       # manual nominal update
         height_nominal: int | None = None,      # manual nominal update
-        aargs: dict = {},       # transform args
-        gargs: dict = {},       # group args
+        aargs: dict | None = None,       # transform args
+        gargs: dict | None = None,       # group args
     ) -> Animation:
         """
         Example
@@ -302,7 +302,7 @@ class ImagePad(Mobject):
             self.height_nominal = height_nominal
 
         return AnimationGroup(
-            *(Transform(p1, p2, **aargs) for p1, p2 in zip(paddings_start, paddings_end)),
+            *(Transform(p1, p2, **(aargs or {})) for p1, p2 in zip(paddings_start, paddings_end)),
             **gargs,
         )
 

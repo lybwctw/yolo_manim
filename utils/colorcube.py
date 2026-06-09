@@ -29,7 +29,7 @@ class ColorCube(VMobject):
         self,
         axis,                   # reference 3d axes
         shape: int = 5,         # number of cubes each direction
-        cube_config: dict = {}, # mainly side_length
+        cube_config: dict | None = None, # mainly side_length
     ):
         super().__init__()
         self.axis = axis
@@ -59,7 +59,7 @@ class ColorCube(VMobject):
                         self.values[j],
                         self.values[k],
                     ])
-                    cfg = {**cube_config, 'fill_color': color}
+                    cfg = {**(cube_config or {}), 'fill_color': color}
                     cube = Cube(**cfg)
                     pos = self.axis.c2p(
                         self.values[i],

@@ -31,8 +31,8 @@ class Tensor2D(VMobject):
         mobs: list | None = None,       # create anew or out-of-the-box
         formatters: list | None = None, # create anew or out-of-the-box
         col_ratios: list | None = None, # create anew or out-of-the-box
-        decimal_config: dict = {},
-        arrange_config: dict = {},
+        decimal_config: dict | None = None,
+        arrange_config: dict | None = None,
     ):
         """Most complicated and general way of init.
         """
@@ -225,8 +225,8 @@ class Tensor2D(VMobject):
 
     def apply_whole_take_max(
         self,
-        aargs: dict = {},
-        gargs: dict = {},
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """For all rows.
            xyxyccc -> xyxyc
@@ -234,7 +234,7 @@ class Tensor2D(VMobject):
         anims = AnimationGroup(
             *(self.apply_row_take_max(
                 i,
-                **aargs
+                **(aargs or {})
             ) for i in range(self.shape[0])),
             **gargs,
         )
@@ -296,8 +296,8 @@ class Tensor2D(VMobject):
 
     def apply_whole_append_cls(
         self,
-        aargs: dict = {},
-        gargs: dict = {},
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """For all rows.
         xyxyc -> xyxycC
@@ -348,15 +348,15 @@ class Tensor2D(VMobject):
     def apply_whole_filter_conf(
         self,
         conf: float = 0.5,
-        aargs: dict = {},
-        gargs: dict = {},
+        aargs: dict | None = None,
+        gargs: dict | None = None,
     ) -> Animation:
         """For all rows.
            Keep or remove.
         """
         anims = AnimationGroup(
             *(self.apply_row_filter_conf(
-                i, conf=conf, **aargs,
+                i, conf=conf, **(aargs or {}),
             ) for i in range(self.shape[0])),
             **gargs,
         )
@@ -414,7 +414,7 @@ class Tensor2D(VMobject):
                     **aargs,
                 ),
                 Wait(gap),
-                Uncreate(row, **aargs),
+                Uncreate(row, **(aargs or {})),
             )
         return anim
     
@@ -445,7 +445,7 @@ class Tensor2D(VMobject):
         del self.orig_left
 
         anim = MoveToTarget(
-            rows, **aargs,
+            rows, **(aargs or {}),
         )
 
         return anim
@@ -499,7 +499,7 @@ class Tensor2D(VMobject):
         # mobs.target.align_to(orig_top, UP)
         # self.mobs = mobs        # update mobs with sorted version
 
-        # anim = MoveToTarget(self, **aargs)
+        # anim = MoveToTarget(self, **(aargs or {}))
         # return anim
     
     def split_into_classes(
@@ -552,7 +552,7 @@ class Tensor2D(VMobject):
             ghost_mobs[k] = VGroup(mob for row in ghost_mobs[k] for mob in row)
         self.ghost_mobs = ghost_mobs
         
-        anim = MoveToTarget(mobs, **aargs)
+        anim = MoveToTarget(mobs, **(aargs or {}))
         return anim
         
         # # color setup for test

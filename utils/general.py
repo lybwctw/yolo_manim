@@ -76,9 +76,9 @@ def scale_manager_target(manager, everything, scale):
 def tensor_to_line_matrix(
     tensor: VGroup | None = None,       # vgroup of ints
     lmatrix: LineMatrix | None = None,  # line matrix object
-    targs: dict = {},                   # Transform args
-    gargs: dict = {},                   # inner AnimationGroup args
-    ggargs: dict = {},                  # outter AnimationGroup args
+    targs: dict | None = None,                   # Transform args
+    gargs: dict | None = None,                   # inner AnimationGroup args
+    ggargs: dict | None = None,                  # outter AnimationGroup args
 ):
     """From a tensor matrix into line matrix (mini version).
     """

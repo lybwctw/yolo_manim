@@ -22,8 +22,8 @@ class ProbBars(VGroup):
         point: np.ndarray = ORIGIN,         # center of baseline
         space_length: float = 2.0,          # side length of square space
         bar_gap: float = 0.1,               # bar gap as space length ratio
-        probs: list | tuple | np.ndarray = [0.3,0.9,0.7],    # assume in the range (0,1)
-        color_map: list = COLOR_MAP,        # color for each bar
+        probs: list | tuple | np.ndarray | None = None,    # assume in the range (0,1)
+        color_map: list | None = None,        # color for each bar
     ):
         """
         Example
@@ -75,7 +75,7 @@ class ProbBars(VGroup):
     # @override_animation(Create)
     # def create(
     #     self,
-    #     **aargs,
+    #     **(aargs or {}),
     # ) -> Animation:
     #     _bars = self.bars.copy()
     #     for _bar in _bars:
@@ -83,7 +83,7 @@ class ProbBars(VGroup):
     #     return AnimationGroup(
     #         *(ReplacementTransform(_bar, bar)
     #           for _bar, bar in zip(_bars, self.bars)),
-    #         **aargs,
+    #         **(aargs or {}),
     #     )
 
 class Demo(Scene):

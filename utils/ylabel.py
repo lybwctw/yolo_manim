@@ -27,8 +27,8 @@ class YLabel(VMobject):
     def __init__(
         self,
         text: str = 'None',
-        label_txt_config: dict = {},
-        label_bg_config: dict = {},
+        label_txt_config: dict | None = None,
+        label_bg_config: dict | None = None,
     ):
         super().__init__()
         self.text = text
