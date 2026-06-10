@@ -32,10 +32,6 @@ DEFAULT_BOX_CONFIG = {
     'fill_opacity': 0.0,
 }
 
-DEFAULT_DOT_CONFIG = {
-
-}
-
 class SingleAnnotation(VMobject):
     """
     Example
