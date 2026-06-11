@@ -529,7 +529,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxyxy_abs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # shift in cxyxy_abs
@@ -565,7 +565,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxywh_abs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # transform from cxyxy_abs into cxywh_abs
@@ -594,7 +594,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxyxy_norm',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # transform from cxywh_abs into cxyxy_norm
@@ -623,7 +623,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxywh_norm',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # transform from cxyxy_norm into cxywh_norm
@@ -648,6 +648,36 @@ class MainScene(Scene):
             wt=wt,
         )
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'loop through video frames',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # remove axes and table head
+        self.play(AnimationGroup(
+            Unwrite(axes),
+            Unwrite(table_cxywh_norm[0]),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # FIXME: align raw table into background
+        table_cxywh_norm.remove(table_cxywh_norm[0])
+        self.play(table_cxywh_norm.animate(
+            run_time=wt,
+        ).set_y(annotation[0].get_y()))
+        self.wait(wt)
+
+        # TODO: loop through frames
+
+        # ************************************************************
+        self.next_section(
+            'from numbers into fake tensor',
+            skip_animations=False,
+        )
+        # ************************************************************
 
         # # ************************************************************
         # self.next_section(
