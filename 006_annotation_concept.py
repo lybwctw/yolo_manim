@@ -5,6 +5,7 @@ from utils.general import import_mobs, export_mobs
 from utils.layers_fake import LayersFake
 from utils.comment import Comment
 from utils.yolo_annotation import YoloAnnotation, SingleAnnotation
+from utils.layers_fake import LayersFake
 
 from utils.constants import *
 
@@ -358,6 +359,18 @@ class MainScene(Scene):
             row_formatter=TABLE_RES_ROW_FORMATTER_NORM,
             row_values=annotation[1].cxywh_norm,
         )
+
+        # result tensor
+        tout_final = LayersFake(
+            n=1,
+            width=1.5,
+            height=2.5,
+            width_nominal=5,
+            height_nominal='n',
+            buff=0.12,      # useless
+            expanded=True,
+        )
+
         # show background + annotation
         self.add(annotation)
         self.wait()
@@ -655,12 +668,14 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        # remove axes and table head
+        # remove axes, map table, head of result table
         self.play(AnimationGroup(
             Unwrite(axes),
             Unwrite(table_cxywh_norm[0]),
+            Unwrite(table_mapping),
             run_time=wt,
         ))
+        annotation.remove(axes)     # NOTE: geometry center issue
         self.wait(wt)
 
         # FIXME: align raw table into background
@@ -678,19 +693,15 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+        tout_final.move_to(table_cxywh_norm)
+        self.play(ReplacementTransform(
+            table_cxywh_norm,
+            tout_final,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'prepare for next scene, extension and focus back',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # self.play(Unwrite(cmap, lag_ratio=0, run_time=0.3, ))
-        # # self.play(Unwrite(table_xywh, lag_ratio=0, run_time=0.3, ))
-        # # self.wait()
-        # everything = Group(
-        #     annotation,
-        #     cmap,
-        #     table_xywh,
-        # )
-        # save_everything(S006_EVERYTHING, everything)
+        mobs = Group(
+            annotation, tout_final
+        )
+        export_mobs(__file__, mobs)

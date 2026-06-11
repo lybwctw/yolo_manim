@@ -201,6 +201,7 @@ class ImagePad(Mobject):
         paddings: tuple = (1,1),
         width_nominal: int | None = None,       # manual nominal update
         height_nominal: int | None = None,      # manual nominal update
+        **aargs,
     ):
         """
         Example
@@ -235,11 +236,12 @@ class ImagePad(Mobject):
 
         return AnimationGroup(
             *(Transform(p1, p2) for p1, p2 in zip(paddings_start, paddings_end)),
-            lag_ratio=0,
+            **aargs,
         )
 
     def show_natural_paddings(
         self,
+        **aargs,
     ):
         """
         Example
@@ -257,6 +259,7 @@ class ImagePad(Mobject):
                     (self.image.width-self.image.height)/2,
                 ),
                 height_nominal=self.width_nominal,
+                **aargs,
             )
         else:
             return self.show_paddings(
@@ -266,6 +269,7 @@ class ImagePad(Mobject):
                     (self.image.height-self.image.width)/2,
                 ),
                 width_nominal=self.height_nominal,
+                **aargs,
             )
 
     def hide_paddings(

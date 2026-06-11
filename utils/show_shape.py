@@ -57,12 +57,12 @@ class ShowShape(AnimationGroup):
         aargs: dict = {},           # lag_ratio, run_time
     ):
         path_config = {**DEFAULT_SHAPE_PATH_CONFIG, **path_config}
-        text_config = {**DEFAULT_SHAPE_TEXT_CONFIG, **(text_config or {})}
+        text_config = {**DEFAULT_SHAPE_TEXT_CONFIG, **text_config}
         aargs = {**DEFAULT_SHOW_AARGS, **(aargs or {})}
 
         # NOTE: mob class SHOULD implement these methods
         path = mob.get_shape_path(**path_config)
-        texts = mob.get_shape_text(**(text_config or {}))
+        texts = mob.get_shape_text(**text_config)
 
         mob.shape_texts = texts      # as child of mob
         mob.add(mob.shape_texts)

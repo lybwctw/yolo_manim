@@ -1,154 +1,144 @@
 from manim import *
 
 from utils.constants import *
-from utils.general import load_everything, save_everything, scale_manager_target
+from utils.general import import_mobs, export_mobs
 from utils.arrow_comment import ArrowComment
-from utils.yolo_annotation import ImageAnnotation
+from utils.yolo_annotation import YoloAnnotation
+from utils.layers_fake import LayersFake
+from utils.show_shape import ShowShape, HideShape
 
+wt = SHORT_DURATION
 class MainScene(Scene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'init',
+            'init partially from previous',
             skip_animations=False,
         )
         # ************************************************************
+        # input series
+        mobs = import_mobs('008')
         (
-            image_raw, image_repad, image_norm,
-            lf_image_raw, lf_image_repad, lf_image_norm,
-        ) = load_everything(S009_EVERYTHING)
+            sin_raw, sin_resize, sin_pad, sin_norm,
+            tin_raw, tin_resize, tin_pad, tin_norm,
+        ) = mobs
 
-        (
-            _, annotation_final,
-            _, _,
-            _, _, lf_output_final,
-        ) = load_everything(S007_EVERYTHING)
-
-        manager = Group(
-            *[image_raw, image_repad, image_norm],
-            *[lf_image_raw, lf_image_repad, lf_image_norm],
+        # output series
+        annotation_bg = sin_raw.copy().fade(0.7)
+        annotation = YoloAnnotation(
+            background=annotation_bg,
+            annotation=PATH_LABEL,
         )
-        self.add(manager)
-        self.wait()
+        sout_final = Group(annotation_bg, annotation).move_to(RIGHT*10)
+        tout_final = LayersFake(
+            n=1,
+            width=0.6,
+            height=1.0,
+            width_nominal=5,
+            height_nominal='n',
+            # buff=0.12,      # useless
+            expanded=True,
+        ).shift(RIGHT*10)
 
-        ac_ab = ArrowComment(False, RIGHT, '?').shift(UP*20)
-        ac_bc = ArrowComment(False, RIGHT, '?').shift(UP*20)
-        ac_a1 = ArrowComment(True, DOWN, '?').shift(LEFT*20)
-        ac_b2 = ArrowComment(True, DOWN, '?').shift(LEFT*20)
-        ac_c3 = ArrowComment(True, DOWN, '?').shift(LEFT*20)
-        ac_12 = ArrowComment(False, RIGHT, '?').shift(DOWN*20)
-        ac_23 = ArrowComment(False, RIGHT, '?').shift(DOWN*20)
-        ac_game = ArrowComment(False, RIGHT, '?').shift(DOWN*20)
-        ac_z9 = ArrowComment(True, DOWN, '?').shift(RIGHT*20)   # FIXME, unknown highlight
+        # not added, for reference
+        ac_ref_right = ArrowComment(False, RIGHT).scale(0.4)
+        ac_ref_down = ArrowComment(True, DOWN).scale(0.4)
+        ac_ab, ac_bc, ac_cd = (
+            ac_ref_right.copy().move_to(UP*20),
+            ac_ref_right.copy().move_to(UP*20),
+            ac_ref_right.copy().move_to(UP*20),
+        )
+        ac_12, ac_23, ac_34 = (
+            ac_ref_right.copy().move_to(DOWN*20),
+            ac_ref_right.copy().move_to(DOWN*20),
+            ac_ref_right.copy().move_to(DOWN*20),
+        )
+        ac_game = ac_ref_right.copy().move_to(DOWN*20).set_color(PURE_RED)
+        ac_a1, ac_b2, ac_c3, ac_d4, ac_z9 = (
+            ac_ref_down.copy().move_to(LEFT*20),
+            ac_ref_down.copy().move_to(LEFT*20),
+            ac_ref_down.copy().move_to(LEFT*20),
+            ac_ref_down.copy().move_to(LEFT*20),
+            ac_ref_down.copy().move_to(RIGHT*20),
+        )
 
         ac_all = VGroup(
-            ac_ab, ac_bc,
-            ac_a1, ac_b2, ac_c3,  ac_z9,
-            ac_12, ac_23, ac_game,
-        ).scale(0.5)
-
-        everything = Group(
-            *ac_all,
-            image_raw, image_repad, image_norm, annotation_final,
-            lf_image_raw, lf_image_repad, lf_image_norm, lf_output_final,
+            ac_ab, ac_bc, ac_cd,
+            ac_a1, ac_b2, ac_c3, ac_d4, ac_z9,
+            ac_12, ac_23, ac_34, ac_game,
         )
+
+        self.add(mobs)
+        self.wait()
 
         # ************************************************************
         self.next_section(
-            'back to input side big map',
+            'back to big map, including arrows',
             skip_animations=False,
         )
         # ************************************************************
-        manager = Group(
-            *[image_raw, ac_ab, image_repad, ac_bc, image_norm],
-            *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3],
-            *[lf_image_raw, ac_12, lf_image_repad, ac_23, lf_image_norm],
+        mobs = Group(
+            sin_raw, ac_ab,     sin_resize, ac_bc,     sin_pad, ac_cd,     sin_norm, Mobject(), sout_final,
+            ac_a1,   Mobject(), ac_b2,      Mobject(), ac_c3,   Mobject(), ac_d4,    Mobject(), ac_z9,
+            tin_raw, ac_12,     tin_resize, ac_23,     tin_pad, ac_34,     tin_norm, ac_game,   tout_final,
         )
-        manager.generate_target()
-        scale_manager_target(
-            manager,
-            everything,
-            scale=0.9,
-        )
-        manager.target.arrange_in_grid(
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
             rows=3,
-            cols=5,
-            # buff=1.0,
-        ).center()
-        # remove internal digits to make the big map clean
-        manager.target[12].remove(manager.target[12].fake_internal)
-        manager.target[14].remove(manager.target[14].fake_internal)
-
-        self.play(MoveToTarget(manager))
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'back to complete big map',
-            skip_animations=False,
-        )
-        # ************************************************************
-        manager = Group(
-            *[image_raw, ac_ab, image_repad, ac_bc, image_norm, VMobject(), annotation_final],
-            *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3, VMobject(), ac_z9],
-            *[lf_image_raw, ac_12, lf_image_repad, ac_23, lf_image_norm, ac_game, lf_output_final],
-        )
-        manager.generate_target()
-        scale_manager_target(
-            manager,
-            everything,
-            scale=0.8,
-        )
-        manager.target.arrange_in_grid(
-            rows=3,
-            cols=7,
-            # buff=1.0,
-        ).center()
-        manager.target[19].shift(RIGHT*.5)  # adjust ac_game
-        self.play(MoveToTarget(manager))
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'show all shapes',
-            skip_animations=False,
-        )
-        # ************************************************************
-        self.play(AnimationGroup(
-            ac_all.animate.set_opacity(0.1),    # FIXME, differentiate ud and lr arrows
-            image_raw.show_passing_flash(),
-            image_repad.show_passing_flash(),
-            image_norm.show_passing_flash(),
-            annotation_final.show_passing_flash(),
-            lf_image_raw.show_passing_flash(),
-            lf_image_repad.show_passing_flash(),
-            lf_image_norm.show_passing_flash(),
-            lf_output_final.show_passing_flash(),
+            cols=9,
+            # buff=0.1,
+        ).scale(0.8)
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
         ))
-        self.wait()
-        self.play(AnimationGroup(
-            ac_all.animate.set_opacity(1.0),  # FIXME, differentiate ud and lr arrows
-            image_raw.unwrite_shape_texts(),
-            image_repad.unwrite_shape_texts(),
-            image_norm.unwrite_shape_texts(),
-            annotation_final.unwrite_shape_texts(),
-            lf_image_raw.unwrite_shape_texts(),
-            lf_image_repad.unwrite_shape_texts(),
-            lf_image_norm.unwrite_shape_texts(),
-            lf_output_final.unwrite_shape_texts(),
-        ))
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'save for next scene',
+            'show shapes of all tensor',
             skip_animations=False,
         )
         # ************************************************************
-        # starting everything or ending everything?
-        everything = Group(
-            *[image_raw, ac_ab, image_repad, ac_bc, image_norm, annotation_final],
-            *[ac_a1, ac_b2, ac_c3, ac_z9],
-            *[lf_image_raw, ac_12, lf_image_repad, ac_23, lf_image_norm, ac_game, lf_output_final],
+        # fade arrows
+        ac_all.save_state()
+        self.play(ac_all.animate(
+            rum_time=wt,
+        ).fade(0.8))        # TODO: make 0.8 one of fade constants
+
+        # show shapes
+        self.play(AnimationGroup(
+            *(ShowShape(mob, text_config=SMALL_SHAPE_TEXT_CONFIG)
+             for mob in (
+                sin_raw, sin_resize, sin_pad, sin_norm,
+                tin_raw, tin_resize, tin_pad, tin_norm, tout_final,
+             )),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # hide shapes
+        self.play(AnimationGroup(
+            *(HideShape(mob) for mob in (
+                sin_raw, sin_resize, sin_pad, sin_norm,
+                tin_raw, tin_resize, tin_pad, tin_norm, tout_final,
+             )),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # restore arrows
+        self.play(ac_all.animate(
+            run_time=wt,
+        ).restore())
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'simplify preprocess steps',
+            skip_animations=False,
         )
-        save_everything(S010_EVERYTHING, everything)
+        # ************************************************************
+        # TODO...

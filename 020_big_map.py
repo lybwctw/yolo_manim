@@ -562,6 +562,7 @@ class MainScene(Scene):
         aci_a = aco_a.copy().move_to(LEFT*10)
         aci_1 = aco_a.copy().move_to(LEFT*10)
         sin_raw = s32_back[0].copy().set_opacity(1.0).move_to(LEFT*10)
+        # FIXME: use name "sin_norm" (sin_raw -> sin_resize -> sin_pad -> sin_norm)
         sin_pad = s32_merged_2d[0].copy().set_opacity(1.0).move_to(LEFT*10)
         tin_raw = LayersFake(
             n=3,

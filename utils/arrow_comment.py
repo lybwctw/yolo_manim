@@ -13,7 +13,7 @@ class ArrowComment(VMobject):
         double: bool = False,                   # double arrow or not
         direction: np.ndarray = RIGHT,          # direction of arrow
         comment: str = '',                      # not used for now
-        arrow_config: dict | None = None,                # override default config
+        arrow_config: dict = {},                # override default config
     ):
         """
         Example
@@ -30,7 +30,7 @@ class ArrowComment(VMobject):
 
         mtype = DoubleArrow if double else Arrow
 
-        arrow_config = {**DEFAULT_AC_CONFIG, **(arrow_config or {})}
+        arrow_config = {**DEFAULT_AC_CONFIG, **arrow_config}
 
         self.arrow = mtype(
             start=-direction,
