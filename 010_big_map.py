@@ -13,7 +13,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init partially from previous',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # input series
@@ -74,7 +74,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'back to big map, including arrows',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mobs = Group(
@@ -97,7 +97,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'show shapes of all tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # fade arrows
@@ -141,4 +141,41 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        # TODO...
+        mobs_up = Group(ac_ab, sin_resize, ac_bc, sin_pad, ac_cd)
+        mobs_mid = VGroup(ac_b2, ac_c3)
+        mobs_down = Group(ac_12, tin_resize, ac_23, tin_pad, ac_34)
+
+        aci_a = ac_ab.copy().move_to(UP*10)
+        aci_1 = ac_12.copy().move_to(DOWN*10)
+
+        mobs = Group(
+            sin_raw, aci_a,     sin_norm, Mobject(), sout_final,
+            ac_a1,   Mobject(), ac_d4,    Mobject(), ac_z9,
+            tin_raw, aci_1,     tin_norm, ac_game,   tout_final,
+        )
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
+            rows=3,
+            cols=5,
+            # buff=0.3,
+        ).center().scale(1.3)
+
+        # tweak position of new arrows
+        aci_a.align_to(mobs.target[1], LEFT)
+        aci_1.align_to(mobs.target[11], LEFT)
+
+        # replace multiple preprocess steps with one
+        self.play(AnimationGroup(
+            MoveToTarget(
+                mobs,
+                run_time=wt,
+            ),
+            mobs_up.animate.shift(UP*10),
+            mobs_down.animate.shift(DOWN*10),
+            Unwrite(mobs_mid),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        export_mobs(__file__, mobs)         # NOTE: used by 011

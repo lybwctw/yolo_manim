@@ -28,7 +28,7 @@ class MainScene(Scene):
             width_nominal=960,
             height_nominal=540,
         ).scale(1.5)                    # half of frame height
-        annotation_bg = sin_raw.copy().fade(0.7)
+        annotation_bg = sin_raw.copy().fade(0.7)        # TODO: make this a constant
         annotation = YoloAnnotation(
             background=annotation_bg,
             annotation=PATH_LABEL,
