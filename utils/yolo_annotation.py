@@ -10,6 +10,8 @@ from utils.image_pad import ImagePad
 from utils.ylabel import YLabel
 from utils.constants import *
 
+import random
+
 DEFAULT_LABEL_TXT_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 12,
@@ -80,6 +82,36 @@ class SingleAnnotation(VMobject):
         """Used for demo from annotation to numbers.
         """
         return self.box.get_corner(direction=direction)
+
+def random_sano_copy(
+    sano,
+    background,
+    range_w: list | None = None,
+    range_h: list | None = None,
+) -> SingleAnnotation:
+    """Util function to make a copy of provided reference
+       random position in background, random width and height in range
+       keep identical label.
+    """
+    result = sano.copy()
+    box, label = result.box, result.label
+    box.stretch_to_fit_width(random.uniform(*range_w))
+    box.stretch_to_fit_height(random.uniform(*range_h))
+
+    left = background.get_corner(LEFT)[0]
+    right = background.get_corner(RIGHT)[0]
+    up = background.get_corner(UP)[1]
+    down = background.get_corner(DOWN)[1]
+    cx = random.uniform(left, right)
+    cy = random.uniform(down, up)
+
+    box.move_to([cx, cy, 0])
+    label.move_to(
+        box.get_corner(UL),
+        aligned_edge=DL,
+    )
+
+    return result
 
 class YoloAnnotation(VMobject):
     """

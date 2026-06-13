@@ -148,5 +148,4 @@ class MainScene(Scene):
         # ************************************************************
         # TODO... loop
 
-        # TODO: start with correct answer
-        # build raw outputs based including answers
+        export_mobs(__file__, mobs)         # NOTE: used by 012
