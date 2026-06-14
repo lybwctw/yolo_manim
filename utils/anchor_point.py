@@ -4,7 +4,7 @@ sys.path.append('..')
 
 from manim import *
 from typing import Self
-from utils.computation import Computation
+from utils.comment import Comment
 from utils.constants import KK_COLORS
 
 
@@ -224,11 +224,12 @@ class AnchorPoint(VMobject):
         xyxy: np.ndarray | list | tuple = (10,20,30,40),    # x1, y1, x2, y2
         prob: np.ndarray | list | tuple = (.5,.5,.5),       # c1, c2, c3
         index: np.ndarray | list | tuple = (0, 0),          # index in explainer
+        shape: tuple = (5, 5),                              # shape of parent explainer grid
         sf_nominal: int = 32,                               # nominal distance / unit distance
         sf_screen: int = 0.5,                               # screen distance / unit distance
         sf_pcell: float = 1.0,                              # pcell size / unit distance
-        dot_config: dict | None = None,                              # default dot config
-        rect_config: dict | None = None,                             # default rect config
+        dot_config: dict = {},                              # default dot config
+        rect_config: dict = {},                             # default rect config
     ):
         """
         Example
@@ -243,11 +244,12 @@ class AnchorPoint(VMobject):
         self.xyxy = np.array(xyxy)
         self.prob = np.array(prob)
         self.index = np.array(index)
+        self.shape = shape
         self.sf_nominal = sf_nominal
         self.sf_pcell = sf_pcell
 
-        dot_config = {**DOT_CONFIG, **(dot_config or {})}
-        rect_config = {**RECT_CONFIG, **(rect_config or {})}
+        dot_config = {**DOT_CONFIG, **dot_config}
+        rect_config = {**RECT_CONFIG, **rect_config}
 
         dot = Square(
             stroke_opacity=0.0,
@@ -278,19 +280,13 @@ class AnchorPoint(VMobject):
 
     def to_rect(
         self,
-        rect_config: dict | None = None, # target rect config
+        rect_config: dict = {}, # override default
         **aargs,
     ) -> Animation:
-        """
-        Apply config only once.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.to_rect())
-        """
-        rect_config = {'stroke_opacity': 1.0, **(rect_config or {})}
-        target = self.rect.copy().set_style(**(rect_config or {}))
+        rect_config = {'stroke_opacity': 1.0, **rect_config}
+        target = self.rect.copy().set_style(
+            **rect_config,
+        )
         return Transform(
             self.mob,
             target,
@@ -299,19 +295,13 @@ class AnchorPoint(VMobject):
 
     def to_dot(
         self,
-        dot_config: dict | None = None, # target dot config
+        dot_config: dict = {}, # override default
         **aargs,
     ) -> Animation:
-        """
-        Apply config only once.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.to_dot())
-        """
-        dot_config = {'stroke_opacity': 1.0, **(dot_config or {})}
-        target = self.dot.copy().set_style(**(dot_config or {}))
+        dot_config = {'stroke_opacity': 1.0, **dot_config}
+        target = self.dot.copy().set_style(
+            **dot_config,
+        )
         return Transform(
             self.mob,
             target,
@@ -1518,6 +1508,29 @@ class AnchorPoint(VMobject):
                 buff=TEXT_DIRECTION_BUFF,
             )
         return self
+    
+    def inside_box(
+        self,
+        box: Rectangle,
+    ) -> bool:
+        """Check if anchor point (dot) is inside rectangle.
+        """
+        point = self.dot.get_center()
+        left   = box.get_left()[0]
+        right  = box.get_right()[0]
+        bottom = box.get_bottom()[1]
+        top    = box.get_top()[1]
+        inside = (
+            left <= point[0] <= right and
+            bottom <= point[1] <= top
+        )
+        return inside
+    
+    @property
+    def index_flatten(
+        self,
+    ) -> int:
+        return self.index[0]*self.shape[1] + self.index[1]
 
     @property
     def dir_to_idx(self) -> dict:

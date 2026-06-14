@@ -5,35 +5,9 @@ from utils.general import import_mobs, export_mobs
 from utils.arrow_comment import ArrowComment
 from utils.yolo_annotation import YoloAnnotation, random_sano_copy
 from utils.repad_background import RepadBackground
+from utils.show_shape import ShowShape, HideShape
 
 import random
-
-def random_rectangles_in_region(
-    n,
-    top_left,
-    bottom_right,
-    min_size=0.1,
-    max_size=0.8,
-):
-    x_min, y_max, _ = top_left
-    x_max, y_min, _ = bottom_right
-
-    rects = VGroup()
-
-    for _ in range(n):
-        w = np.random.uniform(min_size, max_size)
-        h = np.random.uniform(min_size, max_size)
-
-        # sample center so rectangle stays inside
-        cx = np.random.uniform(x_min + w/2, x_max - w/2)
-        cy = np.random.uniform(y_min + h/2, y_max - h/2)
-
-        rect = Rectangle(width=w, height=h, stroke_width=1.)
-        rect.move_to([cx, cy, 0])
-
-        rects.add(rect)
-
-    return rects
 
 wt = SHORT_DURATION
 class MainScene(Scene):
@@ -57,6 +31,12 @@ class MainScene(Scene):
         aci_8 = aci_9.copy().move_to(UP*5)
         act_8 = act_9.copy().move_to(DOWN*5)
         acm_7 = acm_8.copy().move_to(RIGHT*5)
+
+        ac_all = VGroup(
+            aci_1, aci_8, aci_9,
+            acm_1, acm_2, acm_7, acm_8, acm_9,
+            act_1, act_game, act_8, act_9,
+        )
 
         self.add(mobs)
         self.wait()
@@ -129,41 +109,98 @@ class MainScene(Scene):
                 tout_direct.height*0.7,
             ),
         ))
+        tout_direct.height_nominal = '?' # unknown direct number
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'focus on background_tmp',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # manager = Group(
-        #     *[image_raw, ac_ab, image_repad, ac_bc, image_norm, VMobject(), background_tmp, annotation_repad, ac_yz,
-        #       annotation_final],
-        #     *[ac_a1, VMobject(), ac_b2, VMobject(), ac_c3, VMobject(), VMobject(), ac_y8, VMobject(), ac_z9],
-        #     *[lf_image_raw, ac_12, lf_image_repad, ac_23, lf_image_norm, ac_game, lf_output_tmp, lf_output_repad, ac_89,
-        #       lf_output_final],
-        # )
-        # manager.generate_target()
-        # manager.target.arrange_in_grid(
-        #     rows=3,
-        #     cols=10,
-        #     buff=10,
-        # )
-        # manager.target.shift(-manager.target[6].get_center())
-        # manager.target[6].scale(6.0)
-        # self.play(MoveToTarget(manager))
-        # self.play(Unwrite(rects_tmp, lag_ratio=0))
-        # background_tmp.remove(rects_tmp)
-        # self.wait()
+        # ************************************************************
+        self.next_section(
+            'append random conf for all ylabels',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # append conf for labels in direct output
+        confs_new = [f'{random.random():.2f}' for _ in range(len(sanos_new))]
+        confs_ref = [f'{random.random():.2f}' for _ in range(len(sanos_ref))]
+        sanos_pp = sout_pp[1].mobs
+        sanos_final = sout_final[1].mobs
+        self.play(AnimationGroup(
+            *(sano.label.update_text(
+                text=sano.label.text + ' ' + conf,
+            ) for sano, conf in zip(sanos_new, confs_new)),
+            *(sano.label.update_text(
+                text=sano.label.text + ' ' + conf,
+            ) for sano, conf in zip(sanos_ref, confs_ref)),
+            lag_ratio=0.1,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'save for next scene',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # everything = Group(
-        #     background_tmp,
-        # )
-        # save_everything(S012_EVERYTHING, everything)
+        # append conf for labels in pp output and final output
+        self.play(AnimationGroup(
+            *(sano.label.update_text(
+                text=sano.label.text + ' ' + conf,
+            ) for sano, conf in zip(sanos_pp, confs_ref)),
+            *(sano.label.update_text(
+                text=sano.label.text + ' ' + conf,
+            ) for sano, conf in zip(sanos_final, confs_ref)),
+            lag_ratio=0.1,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # make output tensors wider
+        self.play(AnimationGroup(
+            tout_direct.animate.stretch_to_fit_width(
+                tout_direct.width+0.1,
+            ),
+            tout_pp.animate.stretch_to_fit_width(
+                tout_pp.width+0.1,
+            ),
+            tout_final.animate.stretch_to_fit_width(
+                tout_final.width+0.1,
+            ),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        tout_direct.width_nominal = 6
+        tout_pp.width_nominal = 6
+        tout_final.width_nominal = 6
+        self.wait(wt)
+
+        # show shapes for all tensors again
+        ac_all.save_state()
+        self.play(ac_all.animate(
+            lag_ratio=0.5,
+            run_time=wt,
+        ).fade(0.8))
+        self.wait(wt)
+        self.play(AnimationGroup(
+            ShowShape(tin_raw, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(tin_norm, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(tout_direct, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(tout_pp, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(tout_final, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # hide shapes
+        self.play(AnimationGroup(
+            HideShape(tin_raw),
+            HideShape(tin_norm),
+            HideShape(tout_direct),
+            HideShape(tout_pp),
+            HideShape(tout_final),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+        # NOTE: ignoring arrows is better
+        # self.play(ac_all.animate(
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ).restore())
+        # self.wait(wt)
+
+        # NOTE: mobs not used by following scenes

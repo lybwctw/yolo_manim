@@ -41,8 +41,8 @@ class Explainer(VGroup):
         prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
         sf_nominal: int = 32,                       # 8|16|32
         sf_pcell: float = 1.0,                      # < 1.0 if mini
-        dot_config: dict | None = None,                      # default dot config
-        rect_config: dict | None = None,                     # default rect config
+        dot_config: dict = {},                      # default dot config
+        rect_config: dict = {},                     # default rect config
     ):
         """
         Example
@@ -195,6 +195,7 @@ class Explainer(VGroup):
                 xyxy=self.xyxy_3d[i,j],
                 prob=self.prob_3d[i,j],
                 index=self.indices_3d[i,j],
+                shape=self.shape,
                 sf_nominal=self.sf_nominal,
                 sf_screen=self.sf_screen,
                 sf_pcell=self.sf_pcell,
@@ -215,17 +216,16 @@ class Explainer(VGroup):
         -------
         explainer = Explainer.from_random(background=Square())
         self.play(explainer.show_anchor_points())
-        self.play(explainer.show_anchor_points())
         """
         self.anchor_points = self.create_anchor_points()
         self.add(self.anchor_points)
-        return Write(self.anchor_points,**(aargs or {}))
+        return Write(self.anchor_points,**aargs)
 
     def to_rects(
         self,
-        rect_config: dict | None = None, # rect config
-        aargs: dict | None = None,       # to_rect args
-        gargs: dict | None = None,       # group args
+        rect_config: dict = {}, # rect config
+        aargs: dict = {},       # to_rect args
+        gargs: dict = {},       # group args
     ) -> Animation:
         """
         Capture target for all anchor points.
@@ -248,9 +248,9 @@ class Explainer(VGroup):
 
     def to_dots(
         self,
-        dot_config: dict | None = None,  # dot config
-        aargs: dict | None = None,       # animation args
-        gargs: dict | None = None,       # group args
+        dot_config: dict = {},  # dot config
+        aargs: dict = {},       # animation args
+        gargs: dict = {},       # group args
     ) -> Animation:
         """
         Back to dot for all anchor points.
@@ -945,36 +945,19 @@ class Explainer(VGroup):
         ])
         return sap, others
 
-    # def collect_in_out_aps(
-    #     self,
-    #     annotation: VGroup | None,      # VGroup of SingleAnnotation
-    # ) -> tuple:
-    #     """FIXME, collect aps inside/outside a group of SingleAnnotation.
-    #     """
-    #     def _inside(point, anno):
-    #         x, y, _ = point
-    #         return (
-    #             anno.bbox.get_left()[0] <= x <= anno.bbox.get_right()[0]
-    #             and anno.bbox.get_bottom()[1] <= y <= anno.bbox.get_top()[1]
-    #         )
-    #     in_aps = VGroup()
-    #     out_aps = VGroup()
-    #     for ap in self.anchor_points:
-    #         if any(_inside(ap.get_center(), anno) for anno in annotation):
-    #             in_aps.add(ap)
-    #         else:
-    #             out_aps.add(ap)
-    #     return in_aps, out_aps
-
-    # def collect_focus_ap(
-    #     self,
-    #     idx: int = 0,                   # sample anchor point index
-    # ) -> tuple:
-    #     """Collect sample ap and others as VGroup.
-    #     """
-    #     sample_ap = self.anchor_points[idx]
-    #     others = VGroup(*(ap for i, ap in enumerate(self.anchor_points) if i!=idx))
-    #     return sample_ap, others
+    def collect_aps(
+        self,
+        func,
+    ) -> tuple:
+        """Collect aps fulfill given condition.
+        """
+        aps1, aps2 = VGroup(), VGroup()
+        for ap in self.anchor_points:
+            if func(ap):
+                aps1.add(ap)
+            else:
+                aps2.add(ap)
+        return aps1, aps2
 
     # def collect_nth_result(
     #     self,
@@ -1250,8 +1233,8 @@ class Explainer(VGroup):
         shape: tuple = (4, 4),
         sf_nominal: int | None = None,
         sf_pcell: float | None = 1.0,   # <1.0 for mini ones
-        dot_config: dict | None = None,                      # default dot config
-        rect_config: dict | None = None,                     # default rect config
+        dot_config: dict = {},                      # default dot config
+        rect_config: dict = {},                     # default rect config
     ) -> Explainer:
         """
         Create random explainer.
@@ -1285,8 +1268,8 @@ class Explainer(VGroup):
         background,
         version: int = 32,      # 8 | 16 | 32 | 64 | 160
         sf_nominal: int | None = None,
-        dot_config: dict | None = None,                      # default dot config
-        rect_config: dict | None = None,                     # default rect config
+        dot_config: dict = {},                      # default dot config
+        rect_config: dict = {},                     # default rect config
     ) -> Explainer:
         """
         Example
