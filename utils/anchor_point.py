@@ -310,14 +310,17 @@ class AnchorPoint(VMobject):
     # ---------------- pcells related -------------------
     def create_pcells(
         self,
-        sf_pcell: float = 1.0,      # <1.0 for mini version of pcells
-        box_config: dict = {},
+        direction: str | None = None,   # all or specific direction
+        sf_pcell: float = 1.0,      # pcell size ratio, <1.0 for mini explainer
+        box_config: dict = {},      # config for pcells
         arranged: bool = False,     # arrange in IN direction or not
         buff: float = 0.1,          # arrange buff
     ) -> VGroup:
-        # TODO: pcells as a dict {'left' -> .., 'right' -> ..}
-        pcells = VGroup()
-        for direction, dist in zip(DIRECTION_SERIES, self.distrib):
+        pcells = {}
+        directions = [direction] if direction else DIRECTION_SERIES
+        for idx, direction in enumerate(directions):
+            dist = self.distrib[idx]
+            series = VGroup()
             for i, p in enumerate(dist):
                 pcell = PCell(
                     prob=float(p),
@@ -332,9 +335,10 @@ class AnchorPoint(VMobject):
                 ).move_to(self.dot).shift(
                     DIRECTION_MAP[direction] * i * self.sf_screen * sf_pcell
                 )
-                pcells.add(pcell)
+                series.add(pcell)
+            pcells[direction] = series
         
-        if arranged:
+        if (direction is None) and arranged:
             pcells.arrange(
                 direction=IN,
                 buff=buff,
@@ -344,23 +348,35 @@ class AnchorPoint(VMobject):
 
     def show_pcells(
         self,
+        direction: str | None = None,   # all or specific direction
         sf_pcell: float = 1.0,
         box_config: dict = {},
         arranged: bool = False,     # arrange in IN direction or not
         buff: float = 0.1,          # arrange buff
         **aargs,
     ) -> Animation:
-        self.pcells = self.create_pcells(
+        pcells = self.create_pcells(
+            direction=direction,
             sf_pcell=sf_pcell,
             box_config=box_config,
             arranged=arranged,
             buff=buff,
         )
-        self.add(self.pcells)
+        if hasattr(self, 'pcells'):
+            self.pcells.update(pcells)
+        else:
+            self.pcells = pcells
+
+        mobs = VGroup(pc for pcs in pcells.values() for pc in pcs)
+
+        self.add(*mobs)
+
         return Create(
-            self.pcells,
+            mobs,
             **aargs,
         )
+
+        # NOTE: HERE TO GO....
 
     def show_pcells_text(
         self,
@@ -1345,7 +1361,7 @@ class AnchorPoint(VMobject):
         self,
     ) -> int:
         return self.index[0]*self.shape[1] + self.index[1]
-
+    
     @property
     def dir_to_idx(self) -> dict:
         """
@@ -1455,7 +1471,12 @@ class Demo(ThreeDScene):
         self.play(ap.to_rect())
         self.wait()
 
-        self.play(ap.show_pcells())
+        # self.play(ap.show_pcells())
+        # self.wait()
+
+        for direction in DIRECTION_SERIES:
+            self.play(ap.show_pcells(direction=direction))
+            self.wait()
         self.wait()
 
 
