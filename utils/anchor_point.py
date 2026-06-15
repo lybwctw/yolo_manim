@@ -23,6 +23,7 @@ RECT_CONFIG = {
 }
 
 TEXT_CONFIG = {
+    'font_size': 24,
     'font': 'JetBrains Mono',
     # 'font_size': 15,
 }
@@ -49,10 +50,6 @@ COLOR_MAP = {
 }
 
 # ------------- arrow related --------------
-ARROW_COLOR_MAP = COLOR_MAP
-
-TEXT_COLOR_MAP = COLOR_MAP
-
 TEXT_DIRECTION_MAP = {
     'left':  UP,
     'up':    RIGHT,
@@ -63,22 +60,29 @@ TEXT_DIRECTION_BUFF = 0.1
 
 ARROW_CONFIG = {
     'stroke_width': 3,
-    'tip_length': 0.15,
+    'tip_length': 0.10,
     'buff': 0.0,
     'max_stroke_width_to_length_ratio': 15,         # FIXME: 5 by default
-    'max_tip_length_to_length_ratio': 0.25,          # FIXME: 0.25 by default
+    'max_tip_length_to_length_ratio': 0.85,          # FIXME: 0.25 by default
 }
 
+ARROW_TEXT_CONFIG = {
+    'font': 'JetBrains Mono',
+    'font_size': 12,
+}
+
+ARROW_DIVIDE_COLOR = GRAY
+ARROW_DIVIDE_BUFF = 0.03
 
 # ------------- pbar related --------------
-PBAR_SPACE_RATIO = 0.5          # pbar space : unit space
+PBAR_SPACE_RATIO = 0.8          # pbar space : unit space
 PBAR_GAP_RATIO = 0.1            # pbar gap : pbar space
 PBAR_COLORS = KK_COLORS
 PBAR_CONFIG = {
     'stroke_width': 0,
     'fill_opacity': 1.0,
 }
-CLASS_COLORS = PBAR_COLORS
+# CLASS_COLORS = PBAR_COLORS
 
 # ------------- label related --------------
 LABEL_COLORS = PBAR_COLORS
@@ -321,7 +325,10 @@ class AnchorPoint(VMobject):
         """
         pcells = {}
         directions = [direction] if direction else DIRECTION_SERIES
-        for idx, direction in enumerate(directions):
+        box_config = {**PCELL_BOX_CONFIG, **box_config}
+
+        for direction in directions:
+            idx = DIRECTION_SERIES.index(direction)
             dist = self.distrib[idx]
             series = VGroup()
             for i, p in enumerate(dist):
@@ -341,9 +348,9 @@ class AnchorPoint(VMobject):
                 series.add(pcell)
             pcells[direction] = series
         
-        # arranged is valid only if direction not specified
-        if (direction is None) and arranged:
-            pcells.arrange(
+        if arranged:
+            mobs = VGroup(pc for pcs in pcells.values() for pc in pcs)
+            mobs.arrange(
                 direction=IN,
                 buff=self.sf_screen * PCELL_DEPTH_BUFF_RATIO,
             ).move_to(self.dot)
@@ -391,6 +398,7 @@ class AnchorPoint(VMobject):
         """
         assert hasattr(self, 'pcells'), 'pcells not exist yet'
         pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
+        text_config = {**TEXT_CONFIG, **text_config}
 
         return AnimationGroup(
             *(pc.show_text(
@@ -426,7 +434,7 @@ class AnchorPoint(VMobject):
         assert hasattr(self, 'pcells'), 'pcells not exist yet'
         pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
 
-        self.remove(pcells)
+        self.remove(*pcells)
         del self.pcells
         return Unwrite(pcells, **aargs)
 
@@ -452,312 +460,266 @@ class AnchorPoint(VMobject):
         )
 
     # ---------------- arrows related -------------------
-    # def create_arrow_direction(
-    #     self,
-    #     direction: str = 'left',
-    #     arrow_config: dict | None = None,
-    # ) -> Arrow:
-    #     """
-    #     Create arrow in specific direction.
-
-    #     Example
-    #     -------
-    #     ap = AnchorPoint(reg=np.random.rand(4, 16))
-    #     result = ap.create_arrow_direction()
-    #     """
-    #     cfg = {**ARROW_CONFIG, **(arrow_config or {})}
-    #     arrow = Arrow(
-    #         start=self.dot.get_center(),
-    #         end=self.node_map[direction],
-    #         color=ARROW_COLOR_MAP[direction],
-    #         **cfg,
-    #     )
-    #     return arrow
-
-    # def show_arrow_direction(
-    #     self,
-    #     direction: str = 'left',
-    #     arrow_config: dict | None = None,
-    #     **aargs,
-    # ) -> Animation:
-    #     """
-    #     Show arrow in specific direction.
-
-
-    #     Example
-    #     -------
-    #     ap = AnchorPoint(reg=np.random.rand(4, 16))
-    #     self.play(ap.show_arrow_direction())
-    #     """
-    #     arrow = self.create_arrow_direction(
-    #         direction=direction,
-    #         arrow_config=arrow_config,
-    #     )
-    #     if hasattr(self, 'arrows'):
-    #         self.arrows.add(arrow)
-    #     else:
-    #         self.arrows = VGroup(arrow)
-    #         self.add(self.arrows)
-    #     return GrowArrow(
-    #         arrow,
-    #         **aargs,
-    #     )
-
     def create_arrows(
         self,
         direction: str | None = None,       # all or specific direction
-        arrow_config: dict | None = None,
-    ) -> VGroup:
+        arrow_config: dict = {},
+    ) -> dict:
         """Create arrows based on direction specified.
         """
-        pcells = {}
-        cfg = {**ARROW_CONFIG, **(arrow_config or {})}
-        arrows = VGroup(
-            *(Arrow(
+        arrows = {}
+        directions = [direction] if direction else DIRECTION_SERIES
+        arrow_config = {**ARROW_CONFIG, **arrow_config}
+
+        for direction in directions:
+            idx = DIRECTION_SERIES.index(direction)
+            offset = self.offsets[idx] * DIRECTION_MAP[direction]
+            arrow = Arrow(
                 start=self.dot.get_center(),
-                end=self.node_map[direction],
-                color=ARROW_COLOR_MAP[direction],
-                **cfg,
-            ) for direction in DIRECTION_SERIES),
-        )
+                end=self.dot.get_center() + offset * self.sf_screen,
+                color=COLOR_MAP[direction],
+                **arrow_config,
+            )
+
+            # store useful info in arrow
+            arrow.offset_rela = '{:.2f}'.format(
+                self.offsets[idx]
+            )
+            arrow.offset_abs = '{:d}'.format(
+                int(self.offsets[idx] * self.sf_nominal)
+            )
+            arrow.color = COLOR_MAP[direction]
+
+            arrows[direction] = arrow
+        
         return arrows
 
     def show_arrows(
         self,
-        arrow_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
+        direction: str | None = None,   # all or specific direction
+        arrow_config: dict = {},
+        **aargs,
     ) -> Animation:
+        """Show arrows based on direction specified.
         """
-        Show arrows in all four directions.
-
-                NOTE: rate_func for arrow is inside aargs.
-
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        """
-        # rfunc = aargs.pop('rate_func', rate_functions.smooth)
-        self.arrows = self.create_arrows(
+        arrows = self.create_arrows(
+            direction=direction,
             arrow_config=arrow_config,
         )
-        self.add(self.arrows)
+        if hasattr(self, 'arrows'):
+            self.arrows.update(arrows)
+        else:
+            self.arrows = arrows
+        
+        mobs = VGroup(arrow for arrow in arrows.values())
+
+        self.add(*mobs)
+
         return AnimationGroup(
             *(GrowArrow(
                 arrow,
-                **aargs,
-            ) for arrow in self.arrows),
-            **gargs,
+            ) for arrow in mobs),
+            **aargs,
         )
-        # return Write(self.arrows, **(aargs or {}))
 
     def hide_arrows(
         self,
         **aargs,
     ) -> Animation:
+        """Hide all arrows currently available.
         """
-        TODO, shrink version?
+        assert hasattr(self, 'arrows'), 'arrows not exist yet'
+        arrows = VGroup(arrow for arrow in self.arrows.values())
 
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.hide_arrows())
-        """
-        self.remove(self.arrows)
-        return Unwrite(self.arrows, **(aargs or {}))
+        self.remove(*arrows)
+        del self.arrows
+        return Unwrite(arrows, **aargs)
 
-    def create_dist(
+    def create_arrows_offset_rela(
         self,
-        font_size: int = 15,            # specify font size manually
-    ) -> VGroup :
-        """
-        Create distance Texts, not aligned.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        result = ap.create_dist()
-        """
-        ts = VGroup(
-            *(Text(
-                '{:.2f}'.format(self.dist[i]),
-                color=TEXT_COLOR_MAP[direction],
-                font_size=font_size,
-                **TEXT_CONFIG,
-            ) for i, direction in enumerate(DIRECTION_SERIES))
-        )
-        return ts
-
-    def show_dist(
-        self,
-        font_size: int = 15,            # specifiy font manually
-        **aargs,
-    ) -> Animation:
-        """
-        Show distance Texts, aligned to arrows.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        self.play(ap.show_dist())
-        """
-        self.ts_dist = self.create_dist(
-            font_size=font_size,
-        )
-        self._align_ts_to_arrows(self.ts_dist)
-        self.add(self.ts_dist)
-        return Write(self.ts_dist, **(aargs or {}))
-
-    def hide_dist(
-        self,
-        **aargs,
-    ) -> Animation:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        self.play(ap.hide_dist())
-        """
-        self.remove(self.ts_dist)
-        return Unwrite(self.ts_dist, **(aargs or {}))
-
-    def create_dist_nominal(
-        self,
-        font_size: int = 15,
-    ) -> VGroup :
-        """
-        Create nominal distance Texts, not aligned.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        result = ap.create_dist_nominal()
-        """
-        ts = VGroup(
-            *(Text(
-                # str(int(self.dist[i]*self.sf_nominal)), # TODO, why the fuck this failed?
-                '{:.0f}'.format(self.dist[i]*self.sf_nominal),
-                color=TEXT_COLOR_MAP[direction],
-                font_size=font_size,
-                **TEXT_CONFIG,
-            # ).next_to(
-            #     self.arrows[i],
-            #     TEXT_DIRECTION_MAP[direction],
-            #     buff=TEXT_DIRECTION_BUFF,
-            ) for i, direction in enumerate(DIRECTION_SERIES))
-        )
-        return ts
-
-    def show_dist_nominal(
-        self,
-        font_size: int = 15,
-        **aargs,
-    ) -> Animation:
-        """
-        Show nominal distance Texts, aligned to arrows.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        self.play(ap.show_dist_nominal())
-        """
-        self.ts_dist_nominal = self.create_dist_nominal(
-            font_size=font_size,
-        )
-        self._align_ts_to_arrows(self.ts_dist_nominal)
-        self.add(self.ts_dist_nominal)
-        return Write(self.ts_dist_nominal, **(aargs or {}))
-
-    def hide_dist_nominal(
-        self,
-        **aargs,
-    ) -> Animation:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        self.play(ap.hide_dist_nominal())
-        """
-        self.remove(self.ts_dist_nominal)
-        return Unwrite(self.ts_dist_nominal, **(aargs or {}))
-
-    def create_divide(
-        self,
-        font_size: int = 15,
+        text_config: dict = {},
     ) -> VGroup:
+        """Create relative offsets next to current arrows.
         """
-        Create '/sf_nominal' for each dist_nominal.
+        text_config = {**ARROW_TEXT_CONFIG, **text_config}
 
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        result = ap.create_divide()
-        """
-        divide = VGroup(*(
+        mobs = VGroup(
             Text(
-                '/' + str(self.sf_nominal),
-                color=TEXT_COLOR_MAP[direction],
-                font_size=font_size,
-                **TEXT_CONFIG,
+                text=arrow.offset_rela,
+                **{'color': arrow.color, **text_config},    # use member color by default
             ).next_to(
-                self.ts_dist_nominal[i],
-                RIGHT,
-                buff=0.05,
-            ) for i, direction in enumerate(DIRECTION_SERIES)
-        ))
-        return divide
+                arrow,
+                TEXT_DIRECTION_MAP[direction],
+                buff= TEXT_DIRECTION_BUFF,
+            ) for direction, arrow in self.arrows.items()
+        )
+        return mobs
 
-    def show_divide(
+    def show_arrows_offset_rela(
         self,
-        **aargs,
+        text_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
+        """Show relative offset in all arrows currently avaiable.
         """
-        Append '/sf_nominal' into each dist_nominal.
+        assert hasattr(self, 'arrows'), 'arrows not exist yet'
+        texts = self.create_arrows_offset_rela(
+            text_config=text_config,
+        )
 
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        self.play(ap.show_divide())
-        """
-        divide = self.create_divide()
-        for dist, div in zip(self.ts_dist_nominal, divide):
-            dist.add(div)
-        return Write(divide, **(aargs or {}))
-
-    def nominal_to_rela(
-        self,
-        aargs: dict | None = None,       # ReplacementTransform args
-        gargs: dict | None = None,       # AnimationGroup args
-    ) -> Animation:
-        """
-        Convert ts_dist_nominal with divide into ts_dist.
-
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrows())
-        self.play(ap.nominal_to_rela())
-        """
-        self.remove(self.ts_dist_nominal)
-        self.ts_dist = self.create_dist()
-        self._align_ts_to_arrows(self.ts_dist)
-        self.add(self.ts_dist)
+        for arrow, text in zip(self.arrows.values(), texts):
+            arrow.mob_rela = text
+        
         return AnimationGroup(
-            *(ReplacementTransform(dist_nominal, dist_rela, **(aargs or {}))
-            for dist_nominal, dist_rela in zip(self.ts_dist_nominal, self.ts_dist)),
+            *(Write(text, **aargs) for text in texts),
             **gargs,
         )
+    
+    def hide_arrows_offset_rela(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Hide relative offset in all arrows currently avaiable.
+        """
+        assert hasattr(self, 'arrows'), 'arrows not exist yet'
+        texts = VGroup(arrow.mob_rela for arrow in self.arrows.values())
+        for arrow in self.arrows.values():
+            del arrow.mob_rela
+        return AnimationGroup(
+            *(Unwrite(text, **aargs) for text in texts),
+            **gargs,
+        )
+    
+    def create_arrows_offset_abs(
+        self,
+        text_config: dict = {},
+    ) -> VGroup:
+        """Create absolute offsets next to current arrows.
+        """
+        text_config = {**ARROW_TEXT_CONFIG, **text_config}
+
+        mobs = VGroup(
+            Text(
+                text=arrow.offset_abs,
+                **{'color': arrow.color, **text_config},    # use member color by default
+            ).next_to(
+                arrow,
+                TEXT_DIRECTION_MAP[direction],
+                buff=TEXT_DIRECTION_BUFF,
+            ) for direction, arrow in self.arrows.items()
+        )
+        return mobs
+    
+    def show_arrows_offset_abs(
+        self,
+        text_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Show absolute offset in all arrows currently avaiable.
+        """
+        assert hasattr(self, 'arrows'), 'arrows not exist yet'
+        texts = self.create_arrows_offset_abs(
+            text_config=text_config,
+        )
+
+        for arrow, text in zip(self.arrows.values(), texts):
+            arrow.mob_abs = text
+        
+        return AnimationGroup(
+            *(Write(text, **aargs) for text in texts),
+            **gargs,
+        )
+
+    def hide_arrows_offset_abs(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Hide absolute offset in all arrows currently avaiable.
+        """
+        assert hasattr(self, 'arrows'), 'arrows not exist yet'
+        texts = VGroup(arrow.mob_abs for arrow in self.arrows.values())
+        for arrow in self.arrows.values():
+            del arrow.mob_abs
+        return AnimationGroup(
+            *(Unwrite(text, **aargs) for text in texts),
+            **gargs,
+        )
+
+    def create_arrows_divide(
+        self,
+        text_config: dict = {},
+    ) -> VGroup:
+        """Create '/sf_nominal' next to mob_abs for current arrows.
+        """
+        text_config = {**ARROW_TEXT_CONFIG, **text_config}
+
+        mobs = VGroup(
+            Text(
+                text= '/' + '{:d}'.format(self.sf_nominal),
+                **{'color': ARROW_DIVIDE_COLOR, **text_config}
+            ).next_to(
+                arrow.mob_abs,
+                RIGHT,
+                buff=ARROW_DIVIDE_BUFF,
+            # ).align_to(
+            #     arrow.mob_abs,
+            #     DOWN,
+            ) for arrow in self.arrows.values()
+        )
+        return mobs
+
+    def show_arrows_divide(
+        self,
+        text_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Show '/sf_nominal' next to mob_abs for current arrows.
+        """
+        assert hasattr(self, 'arrows'), 'arrows not exist yet'
+        divs = self.create_arrows_divide(
+            text_config=text_config,
+        )
+
+        for arrow, div in zip(self.arrows.values(), divs):
+            arrow.mob_abs.add(div)
+        
+        return AnimationGroup(
+            *(Write(div, **aargs) for div in divs),
+            **gargs,
+        )
+    
+    def arrows_abs_to_rela(
+        self,
+        text_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Convert mob_abs in each arrow into mob_rela.
+        """
+        assert hasattr(self, 'arrows'), 'arrows not exist yet'
+        mobs_rela = self.create_arrows_offset_rela(
+            text_config=text_config,
+        )
+
+        anims = []
+        for arrow, mob in zip(self.arrows.values(), mobs_rela):
+            arrow.mob_rela = mob
+            anims.append(ReplacementTransform(
+                arrow.mob_abs,
+                arrow.mob_rela,
+                **aargs,
+            ))
+            del arrow.mob_abs
+        return AnimationGroup(
+            *anims,
+            **gargs,
+        )
+
 
     # def create_xyxy(
     #     self,
@@ -869,7 +831,7 @@ class AnchorPoint(VMobject):
         result = ap.create_DFL_computations()
         """
         cws = [ # color wrappers
-            f'<span foreground="{TEXT_COLOR_MAP[d]}">{{:.2f}}</span>'
+            f'<span foreground="{COLOR_MAP[d]}">{{:.2f}}</span>'
               for d in DIRECTION_SERIES
             ]
         formatters = [
@@ -922,7 +884,7 @@ class AnchorPoint(VMobject):
         formatters = [
             (
                 f'({{:>2d}}+0.5{self.dir_to_sign[direction]}'
-                f'<span foreground="{TEXT_COLOR_MAP[direction]}">{{:.2f}}</span>)'
+                f'<span foreground="{COLOR_MAP[direction]}">{{:.2f}}</span>)'
                 f'*{self.sf_nominal} = <span foreground="white">{{:<3d}}</span>'
             ) for direction in DIRECTION_SERIES
         ]
@@ -948,51 +910,39 @@ class AnchorPoint(VMobject):
 
         return computations
 
-
+    # ---------------- pbars related -------------------
     def create_pbars(
         self,
-        pbar_config: dict | None = None,
+        pbar_config: dict = {},
     ) -> VGroup:
-        """
-        Realtime pbars based on given prob.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap.create_pbars()
+        """Create pbars.
         """
         n_probs = len(self.prob)
         pbar_space = self.sf_screen * PBAR_SPACE_RATIO
-        pbar_offset = self.sf_screen*(1-PBAR_SPACE_RATIO)/2
         pbar_gap = pbar_space * PBAR_GAP_RATIO
         pbar_width = pbar_space * (1-(n_probs-1)*PBAR_GAP_RATIO) / n_probs
-        cfg = {**PBAR_CONFIG, **(pbar_config or {})}
+        cfg = {**PBAR_CONFIG, **pbar_config}
+
         pbars = VGroup(
             Rectangle(
                 width=pbar_width,
                 height=pbar_space*p,
                 fill_color=PBAR_COLORS[i],
                 **cfg,
-            ).align_to(self.ref, LEFT)\
-             .shift((pbar_offset+pbar_width*i+pbar_gap*i)*RIGHT)\
-             .set_y(self.ref.get_y())
-            for i, p in enumerate(self.prob)
+            ).move_to(
+                self.dot.get_center()
+            ) for i, p in enumerate(self.prob)
         )
+        pbars.arrange(RIGHT, buff=pbar_gap)
         return pbars
 
     def show_pbars(
         self,
-        pbar_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
+        pbar_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
-        """
-        Grow pbars from baseline.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_pbars())
+        """Show pbars.
         """
         pbars_end = self.create_pbars(
             pbar_config=pbar_config,
@@ -1003,54 +953,50 @@ class AnchorPoint(VMobject):
         self.pbars = pbars_start
         self.add(self.pbars)
         return AnimationGroup(
-            *(Transform(p0, p1, **(aargs or {}))
-            for p0, p1 in zip(self.pbars, pbars_end)),
+            *(Transform(p0, p1, **aargs)
+              for p0, p1 in zip(self.pbars, pbars_end)),
             **gargs,
         )
 
-    def sync_pbars(
-        self,
-        pbar_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
-    ) -> Animation:
-        """
-        Sync pbars into current prob.
+    # def sync_pbars(
+    #     self,
+    #     pbar_config: dict | None = None,
+    #     aargs: dict | None = None,
+    #     gargs: dict | None = None,
+    # ) -> Animation:
+    #     """
+    #     Sync pbars into current prob.
 
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.sync_pbars())
-        """
-        pbars_end = self.create_pbars(
-            pbar_config=pbar_config,
-        )     # current prob
-        return AnimationGroup(
-            *(Transform(p0, p1, **(aargs or {}))
-            for p0, p1 in zip(self.pbars, pbars_end)),
-            **gargs,
-        )
+    #     Example
+    #     -------
+    #     ap = AnchorPoint(reg=np.random.rand(4, 16))
+    #     self.play(ap.sync_pbars())
+    #     """
+    #     pbars_end = self.create_pbars(
+    #         pbar_config=pbar_config,
+    #     )     # current prob
+    #     return AnimationGroup(
+    #         *(Transform(p0, p1, **(aargs or {}))
+    #         for p0, p1 in zip(self.pbars, pbars_end)),
+    #         **gargs,
+    #     )
 
     def hide_pbars(
         self,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
+        """Hide pbars.
         """
-        Shrink pbars into baseline.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.hide_pbars())
-        """
+        pbars_start = self.pbars
         pbars_end = self.pbars.copy()
         for bar in pbars_end:
             bar.stretch_to_fit_height(0)
         self.remove(self.pbars)
+        del self.pbars
         return AnimationGroup(
-            *(Transform(p0, p1, **(aargs or {}))
-            for p0, p1 in zip(self.pbars, pbars_end)),
+            *(Transform(p0, p1, **aargs)
+            for p0, p1 in zip(pbars_start, pbars_end)),
             **gargs,
         )
 
@@ -1399,64 +1345,13 @@ class AnchorPoint(VMobject):
             'down':  '+',
         }
 
-    @property
-    def node_left(self) -> np.ndarray:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        value = ap.node_left
-        """
-        return np.array([self.rect.get_left()[0], self.dot.get_center()[1], 0])
-
-    @property
-    def node_up(self) -> np.ndarray:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        value = ap.node_up
-        """
-        return np.array([self.dot.get_center()[0], self.rect.get_top()[1], 0])
-
-    @property
-    def node_right(self) -> np.ndarray:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        value = ap.node_right
-        """
-        return np.array([self.rect.get_right()[0], self.dot.get_center()[1], 0])
-
-    @property
-    def node_down(self) -> np.ndarray:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        value = ap.node_down
-        """
-        return np.array([self.dot.get_center()[0], self.rect.get_bottom()[1], 0])
-
-    @property
-    def node_map(self) -> dict:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        value = ap.node_map
-        """
-        return {
-            'left':  self.node_left,
-            'up':    self.node_up,
-            'right': self.node_right,
-            'down':  self.node_down,
-        }
-
-
-class Demo(ThreeDScene):
+class Demo(Scene):
     def construct(self):
+        # self.set_camera_orientation(
+        #     phi=60*DEGREES,
+        #     theta=-75*DEGREES,
+        # )
+
         distrib = np.random.rand(8, 8)
         distrib /= distrib.sum(axis=1, keepdims=True)
         ap = AnchorPoint(
@@ -1464,38 +1359,48 @@ class Demo(ThreeDScene):
             distrib=distrib,
             offsets=(1.3,2.8,3.3,2.5),
             xyxy=(10,20,30,40),
-            prob=(0.5,0.5,0.5),
+            prob=(0.1,0.5,0.9),
             index=(0,1),
             shape=(8,8),
             sf_nominal=32,
-            sf_screen=0.2,
+            sf_screen=0.5,
             dot_config={},
             rect_config={},
         )
         self.play(Create(ap, run_time=0.3))
         self.wait()
 
-        # self.play(ap.to_rect())
+        self.play(ap.to_rect())
+        self.wait()
+
+        self.play(ap.show_pbars())
+        self.wait()
+
+        self.play(ap.hide_pbars())
+        self.wait()
+
+        # self.play(ap.animate.scale(2.0))
         # self.wait()
 
-        # pcells related
-        self.play(ap.show_pcells())
-        self.wait(0.5)
-
-        # self.play(ap.show_pcells_text())
+        # self.play(ap.show_pcells(
+        #     arranged=False,
+        # ))
         # self.wait(0.5)
 
-        # self.play(ap.hide_pcells_text())
+        # self.play(ap.show_arrows())
+        # self.wait()
+
+        # self.play(ap.show_arrows_offset_abs())
+        # self.wait()
+
+        # self.play(ap.show_arrows_divide())
+        # self.wait()
+
+        # # self.play(ap.hide_arrows_offset_abs())
+        # # self.wait()
+
+        # self.play(ap.arrows_abs_to_rela())
+        # self.wait()
+
+        # self.play(ap.hide_arrows_offset_rela())
         # self.wait(0.5)
-
-        # self.play(ap.hide_pcells())
-        # self.wait(0.5)
-
-        self.move_camera(
-            phi=60*DEGREES,
-            theta=-75*DEGREES,
-        )
-        self.wait()
-
-        self.play(ap.arrange_pcells())
-        self.wait()

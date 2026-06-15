@@ -185,6 +185,7 @@ class Explainer(VGroup):
         self.play(explainer.show_anchor_points())
         result = explainer.create_anchor_points()
         """
+        # FIXME......
         anchor_points = VGroup(*[
             AnchorPoint(
                 point=self.background.get_corner(UL)+
