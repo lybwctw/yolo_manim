@@ -36,33 +36,26 @@ class Explainer(VGroup):
     def __init__(
         self,
         background: ImageRaw | ImagePad | None = None,
-        reg_3d: np.ndarray = np.ones((4,4,64)),     # (h, w, 64)
-        dist_3d: np.ndarray = np.ones((4,4,4)),     # (h, w, 4)
-        prob_3d: np.ndarray = np.ones((4,4,3)),     # (h, w, 3)
-        sf_nominal: int = 32,                       # 8|16|32
-        sf_pcell: float = 1.0,                      # < 1.0 if mini
-        dot_config: dict = {},                      # default dot config
-        rect_config: dict = {},                     # default rect config
+        distrib_3d: np.ndarray = np.ones((4,4,64)),     # (h, w, 64)
+        offsets_3d: np.ndarray = np.ones((4,4,4)),      # (h, w, 4)
+        prob_3d: np.ndarray = np.ones((4,4,3)),         # (h, w, 3)
+        sf_nominal: int = 32,                           # 8|16|32
+        dot_config: dict = {},                          # default dot config
+        rect_config: dict = {},                         # default rect config
     ):
-        """
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        """
         super().__init__()
         self.background = background
         self.sf_nominal = sf_nominal
-        self.sf_pcell = sf_pcell
         self.dot_config = dot_config
         self.rect_config = rect_config
 
-        assert reg_3d.shape[:2] == dist_3d.shape[:2] == prob_3d.shape[:2]
+        assert distrib_3d.shape[:2] == offsets_3d.shape[:2] == prob_3d.shape[:2]
 
-        h, w = dist_3d.shape[:2]
+        h, w = distrib_3d.shape[:2]
 
-        reg_2d = reg_3d.reshape(h*w, -1)        # (h*w, 64)
-        dist_2d = dist_3d.reshape(h*w, -1)      # (h*w, 4)
-        prob_2d = prob_3d.reshape(h*w, -1)      # (h*w, 3)
+        distrib_2d = distrib_3d.reshape(h*w, -1)        # (h*w, 64)
+        offsets_2d = offsets_3d.reshape(h*w, -1)        # (h*w, 4)
+        prob_2d = prob_3d.reshape(h*w, -1)              # (h*w, 3)
 
         ys, xs = np.meshgrid(
             np.arange(h),
@@ -81,50 +74,40 @@ class Explainer(VGroup):
         xs_2d = xs.reshape(-1)
         ys_2d = ys.reshape(-1)
 
-        # dist_2d = dist_3d.reshape(-1, 4)
-        # prob_2d = prob_3d.reshape(-1, 3)
-
-        x1 = xs_2d - dist_2d[:, 0]
-        y1 = ys_2d - dist_2d[:, 1]
-        x2 = xs_2d + dist_2d[:, 2]
-        y2 = ys_2d + dist_2d[:, 3]
+        x1 = xs_2d - offsets_2d[:, 0]
+        y1 = ys_2d - offsets_2d[:, 1]
+        x2 = xs_2d + offsets_2d[:, 2]
+        y2 = ys_2d + offsets_2d[:, 3]
 
         xyxy_2d = np.stack([x1, y1, x2, y2], axis=-1)
         xyxy_3d = xyxy_2d.reshape(h, w, 4)
 
         xyxycls_2d = np.concat([xyxy_2d, prob_2d], axis=-1)
-        # xyxycls_3d = xyxycls_2d.reshape(h, w, 4+3)
         xyxycls_3d = xyxycls_2d.reshape(h, w, -1)
 
-        # init core members
+        # core members
         self.shape = (h, w)
         self.indices_3d = indices_3d        # (h,w, 2)
-        self.indices_2d = indices_2d        # (h*w, 2), TODO: update?
+        self.indices_2d = indices_2d        # (h*w, 2)
         self.center_3d = center_3d          # (h,w, 2)
-        self.center_2d = center_2d          # (h*w, 2), TODO: update?
-        self.reg_3d = reg_3d                # (h,w, 64)
-        self.reg_2d = reg_2d                # (h*w, 64)
-        self.dist_3d = dist_3d              # (h,w, 4)
-        self.dist_2d = dist_2d              # (h*w, 4), TODO: update?
+        self.center_2d = center_2d          # (h*w, 2)
+        self.distrib_3d = distrib_3d        # (h,w, 64)
+        self.distrib_2d = distrib_2d        # (h*w, 64)
+        self.offsets_3d = offsets_3d        # (h,w, 4)
+        self.offsets_2d = offsets_2d        # (h*w, 4)
         self.xyxy_3d = xyxy_3d              # (h,w, 4)
-        self.xyxy_2d = xyxy_2d              # (h*w, 4), TODO: update?
+        self.xyxy_2d = xyxy_2d              # (h*w, 4)
         self.prob_3d = prob_3d              # (h,w, 3)
-        self.prob_2d = prob_2d              # (h*w, 3), TODO: update?
+        self.prob_2d = prob_2d              # (h*w, 3)
         self.xyxycls_3d = xyxycls_3d        # (h,w, 7)
-        self.xyxycls_2d = xyxycls_2d        # (h*w, 7), TODO: update?
-        self.data = xyxycls_2d.copy()       # (h*w, 7), for manipulation
+        self.xyxycls_2d = xyxycls_2d        # (h*w, 7)
+        self.data = xyxycls_2d.copy()       # (h*w, 7), changing
 
-        # FIXME, more elegant way?
-        self.tmp_txts = None
-
+    # ---------------- grid lines related -------------------
     def create_grid(
         self,
     ) -> VMobject:
-        """
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        result = explainer.create_grid()
+        """Create grid lines.
         """
         grid = Rectangle(
             width=self.background.width,
@@ -145,19 +128,12 @@ class Explainer(VGroup):
         self,
         **aargs,
     ) -> Animation:
-        """
-        Show the stride grid over the background.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_grid())
+        """Show grid lines.
         """
         self.grid = self.create_grid()
         self.add(self.grid)
 
-        return Write(self.grid, **(aargs or {}))
+        return Write(self.grid, **aargs)
 
     def hide_grid(
         self,
@@ -175,31 +151,25 @@ class Explainer(VGroup):
         self.remove(self.grid)
         return Unwrite(self.grid, **(aargs or {}))
 
+    # ---------------- anchor points related -------------------
     def create_anchor_points(
         self,
     ) -> VGroup:
+        """Create anchor points.
         """
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        result = explainer.create_anchor_points()
-        """
-        # FIXME......
         anchor_points = VGroup(*[
             AnchorPoint(
                 point=self.background.get_corner(UL)+
                     self.center_3d[i,j][0]*DOWN*self.sf_screen+
                     self.center_3d[i,j][1]*RIGHT*self.sf_screen,
-                reg=self.reg_3d[i,j].reshape(4,-1),
-                dist=self.dist_3d[i,j],
+                distrib=self.distrib_3d[i,j].reshape(4,-1),
+                offsets=self.offsets_3d[i,j],
                 xyxy=self.xyxy_3d[i,j],
                 prob=self.prob_3d[i,j],
                 index=self.indices_3d[i,j],
                 shape=self.shape,
                 sf_nominal=self.sf_nominal,
                 sf_screen=self.sf_screen,
-                sf_pcell=self.sf_pcell,
                 dot_config=self.dot_config,
                 rect_config=self.rect_config,
             ) for i in range(self.shape[0])
@@ -212,11 +182,7 @@ class Explainer(VGroup):
         self,
         **aargs,
     ) -> Animation:
-        """
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
+        """Create anchor points.
         """
         self.anchor_points = self.create_anchor_points()
         self.add(self.anchor_points)
@@ -228,15 +194,7 @@ class Explainer(VGroup):
         aargs: dict = {},       # to_rect args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """
-        Capture target for all anchor points.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.to_rects())
+        """Capture target for all anchor points.
         """
         anims = AnimationGroup(
             *(ap.to_rect(
@@ -253,15 +211,7 @@ class Explainer(VGroup):
         aargs: dict = {},       # animation args
         gargs: dict = {},       # group args
     ) -> Animation:
-        """
-        Back to dot for all anchor points.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.to_dots())
+        """Back to dot for all anchor points.
         """
         anims = AnimationGroup(
             *(ap.to_dot(
@@ -598,6 +548,7 @@ class Explainer(VGroup):
         )
         scene.wait(1.0*run_time_ratio)
 
+    # ---------------- postprocess related -------------------
     def apply_conf_filter(
         self,
         scene: Scene,
@@ -1272,31 +1223,26 @@ class Explainer(VGroup):
         dot_config: dict = {},                      # default dot config
         rect_config: dict = {},                     # default rect config
     ) -> Explainer:
-        """
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        result = Explainer.from_file(background=Square())
+        """Create explainer from existing file.
         """
         dir_array = SF_TO_DIR[version]
 
-        path_reg = os.path.join(dir_array, 'box_softmax.npy')
-        path_dist = os.path.join(dir_array, 'box_dist.npy')
+        path_distrib = os.path.join(dir_array, 'box_softmax.npy')
+        path_offsets = os.path.join(dir_array, 'box_dist.npy')
         path_prob = os.path.join(dir_array, 'cls_sigmoid.npy')
 
-        reg_3d = np.load(path_reg)
-        dist_3d = np.load(path_dist)
+        distrib_3d = np.load(path_distrib)
+        offsets_3d = np.load(path_offsets)
         prob_3d = np.load(path_prob)
 
-        sf_nominal = sf_nominal or (640//dist_3d.shape[0])
+        sf_nominal = sf_nominal or (640//offsets_3d.shape[0])
 
         explainer = Explainer(
             background=background,
-            reg_3d=reg_3d,
-            dist_3d=dist_3d,
+            distrib_3d=distrib_3d,
+            offsets_3d=offsets_3d,
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
-            sf_pcell=1.0,   # non-mini default
             dot_config=dot_config,
             rect_config=rect_config,
         )
@@ -1309,6 +1255,7 @@ class Explainer(VGroup):
     ) -> Explainer:
         """Combine multiple explainers into one, for comparison.
         """
+        # FIXME, not tested.
         # use the first as reference
         res = explainers[1]
         res.background = background

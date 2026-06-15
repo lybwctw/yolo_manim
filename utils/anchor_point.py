@@ -1000,6 +1000,7 @@ class AnchorPoint(VMobject):
             **gargs,
         )
 
+    # ---------------- labels related -------------------
     def create_multi_labels(
         self,
         include_text: bool = True,      # include conf text or not

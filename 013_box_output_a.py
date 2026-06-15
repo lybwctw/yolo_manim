@@ -38,7 +38,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and explainer anew',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -80,7 +80,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'anchor points capture thinking',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show grid then anchor points
@@ -120,7 +120,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'inside anchor points capture',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show true annotation
@@ -224,8 +224,8 @@ class MainScene(Scene):
         # from distance to position, thinking
         self.play(ap_sample.show_arrows(
             arrow_config={},
-            aargs={},
-            gargs={'lag_ratio': 0.5, 'run_time': wt},
+            lag_ratio=0.5,
+            run_time=wt,
         ))
         self.wait(wt)
         self.play(ap_sample.to_rect(
@@ -241,7 +241,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'sample, from absolute distance to relative distance',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # from distance to position, details
@@ -264,7 +264,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'sample, detailed computation from distance to position',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # make room for equations
@@ -319,7 +319,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'loop, from distance to position',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # TODO, more natural way of looping
@@ -375,7 +375,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'global, generate distance tensor',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # sync distance generation
@@ -396,7 +396,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'global, generate xyxy tensor',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # scale and make room in the right
@@ -437,7 +437,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'reshape xyxy tensor to 2d',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # make room for reshaped xyxy tensor
@@ -466,7 +466,7 @@ class MainScene(Scene):
         # self.next_section(
         #     'simplify tensor_dist/tensor_xyxy/tensor_xyxy_2d' \
         #     'into lf_output_32_dist/lf_output_32_xyxy/lf_output_32_xyxy_2d',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # create lf_output_32_dist
@@ -508,7 +508,7 @@ class MainScene(Scene):
         # self.next_section(
         #     'simplify explainer_dist and explainer_xyxy ' \
         #     'into 4x4 mini version',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # # clean explainer_dist and explainer_xyxy
@@ -578,14 +578,14 @@ class MainScene(Scene):
         # # # ************************************************************
         # # self.next_section(
         # #     'generate explainer_xyxy_2d from explainer_xyxy',
-        # #     skip_animations=True,
+        # #     skip_animations=False,
         # # )
         # # # ************************************************************
 
         # # ************************************************************
         # self.next_section(
         #     'save for next scene which go back to big map',
-        #     skip_animations=True,
+        #     skip_animations=False,
         # )
         # # ************************************************************
         # everything = Group(
