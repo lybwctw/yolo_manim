@@ -104,7 +104,7 @@ BOX_RAW_CONFIG = {
 # ------------- pcell related --------------
 PCELL_TEXT_CONFIG = {
     'num_decimal_places': 2,
-    'font_size': 54,
+    'font_size': 24,
     'color': WHITE,
 }
 PCELL_BOX_CONFIG = {
@@ -113,6 +113,8 @@ PCELL_BOX_CONFIG = {
 }
 PCELL_STROKE_OPACITY_E = 0.5
 PCELL_FILL_OPACITY_E = 0.7
+
+PCELL_DEPTH_BUFF_RATIO = 1.0
 
 class PCell(VMobject):
     def __init__(
@@ -149,7 +151,7 @@ class PCell(VMobject):
         mob_text = DecimalNumber(
             self.prob,
             **text_config,
-        )
+        ).move_to(self.mob_box)
 
         self.mob_text = mob_text
         self.add(self.mob_text)
@@ -314,8 +316,9 @@ class AnchorPoint(VMobject):
         sf_pcell: float = 1.0,      # pcell size ratio, <1.0 for mini explainer
         box_config: dict = {},      # config for pcells
         arranged: bool = False,     # arrange in IN direction or not
-        buff: float = 0.1,          # arrange buff
-    ) -> VGroup:
+    ) -> dict:
+        """Create pcells based on direction specified.
+        """
         pcells = {}
         directions = [direction] if direction else DIRECTION_SERIES
         for idx, direction in enumerate(directions):
@@ -338,10 +341,11 @@ class AnchorPoint(VMobject):
                 series.add(pcell)
             pcells[direction] = series
         
+        # arranged is valid only if direction not specified
         if (direction is None) and arranged:
             pcells.arrange(
                 direction=IN,
-                buff=buff,
+                buff=self.sf_screen * PCELL_DEPTH_BUFF_RATIO,
             ).move_to(self.dot)
 
         return pcells
@@ -352,15 +356,16 @@ class AnchorPoint(VMobject):
         sf_pcell: float = 1.0,
         box_config: dict = {},
         arranged: bool = False,     # arrange in IN direction or not
-        buff: float = 0.1,          # arrange buff
         **aargs,
     ) -> Animation:
+        """Show pcells based on direction specified.
+           Append to dict member named pcells.
+        """
         pcells = self.create_pcells(
             direction=direction,
             sf_pcell=sf_pcell,
             box_config=box_config,
             arranged=arranged,
-            buff=buff,
         )
         if hasattr(self, 'pcells'):
             self.pcells.update(pcells)
@@ -376,21 +381,22 @@ class AnchorPoint(VMobject):
             **aargs,
         )
 
-        # NOTE: HERE TO GO....
-
     def show_pcells_text(
         self,
         text_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
+        """Show text in all pcells currently available.
+        """
         assert hasattr(self, 'pcells'), 'pcells not exist yet'
+        pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
 
         return AnimationGroup(
             *(pc.show_text(
                 text_config=text_config,
                 **aargs,
-            ) for pc in self.pcells),
+            ) for pc in pcells),
             **gargs,
         )
 
@@ -399,12 +405,15 @@ class AnchorPoint(VMobject):
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
+        """Hide text in all pcells currently available.
+        """
         assert hasattr(self, 'pcells'), 'pcells not exist yet'
+        pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
 
         return AnimationGroup(
             *(pc.hide_text(
                 **aargs,
-            ) for pc in self.pcells),
+            ) for pc in pcells),
             **gargs,
         )
 
@@ -412,8 +421,14 @@ class AnchorPoint(VMobject):
         self,
         **aargs,
     ) -> Animation:
-        self.remove(self.pcells)
-        return Unwrite(self.pcells, **aargs)
+        """Hide all pcells currently available.
+        """
+        assert hasattr(self, 'pcells'), 'pcells not exist yet'
+        pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
+
+        self.remove(pcells)
+        del self.pcells
+        return Unwrite(pcells, **aargs)
 
     def arrange_pcells(
         self,
@@ -421,89 +436,81 @@ class AnchorPoint(VMobject):
     ) -> Animation:
         """
         Stack existing pcells along the depth axis.
-
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_pcells())
-        self.play(ap.arrange_pcells())
         """
-        self.pcells.generate_target()
+        assert hasattr(self, 'pcells'), 'pcells not exist yet'
+        pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
 
-        # TODO
-        self.pcells.target.arrange(
+        pcells.generate_target()
+
+        pcells.target.arrange(
             direction=IN,
-            buff=0.1,
+            buff=self.sf_screen * PCELL_DEPTH_BUFF_RATIO,
         ).move_to(self.dot)
         return MoveToTarget(
-            self.pcells,
+            pcells,
             **aargs,
         )
 
-    def create_arrow_direction(
-        self,
-        direction: str = 'left',
-        arrow_config: dict | None = None,
-    ) -> Arrow:
-        """
-        Create arrow in specific direction.
+    # ---------------- arrows related -------------------
+    # def create_arrow_direction(
+    #     self,
+    #     direction: str = 'left',
+    #     arrow_config: dict | None = None,
+    # ) -> Arrow:
+    #     """
+    #     Create arrow in specific direction.
 
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap.create_arrow_direction()
-        """
-        cfg = {**ARROW_CONFIG, **(arrow_config or {})}
-        arrow = Arrow(
-            start=self.dot.get_center(),
-            end=self.node_map[direction],
-            color=ARROW_COLOR_MAP[direction],
-            **cfg,
-        )
-        return arrow
+    #     Example
+    #     -------
+    #     ap = AnchorPoint(reg=np.random.rand(4, 16))
+    #     result = ap.create_arrow_direction()
+    #     """
+    #     cfg = {**ARROW_CONFIG, **(arrow_config or {})}
+    #     arrow = Arrow(
+    #         start=self.dot.get_center(),
+    #         end=self.node_map[direction],
+    #         color=ARROW_COLOR_MAP[direction],
+    #         **cfg,
+    #     )
+    #     return arrow
 
-    def show_arrow_direction(
-        self,
-        direction: str = 'left',
-        arrow_config: dict | None = None,
-        **aargs,
-    ) -> Animation:
-        """
-        Show arrow in specific direction.
+    # def show_arrow_direction(
+    #     self,
+    #     direction: str = 'left',
+    #     arrow_config: dict | None = None,
+    #     **aargs,
+    # ) -> Animation:
+    #     """
+    #     Show arrow in specific direction.
 
 
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_arrow_direction())
-        """
-        arrow = self.create_arrow_direction(
-            direction=direction,
-            arrow_config=arrow_config,
-        )
-        if hasattr(self, 'arrows'):
-            self.arrows.add(arrow)
-        else:
-            self.arrows = VGroup(arrow)
-            self.add(self.arrows)
-        return GrowArrow(
-            arrow,
-            **aargs,
-        )
+    #     Example
+    #     -------
+    #     ap = AnchorPoint(reg=np.random.rand(4, 16))
+    #     self.play(ap.show_arrow_direction())
+    #     """
+    #     arrow = self.create_arrow_direction(
+    #         direction=direction,
+    #         arrow_config=arrow_config,
+    #     )
+    #     if hasattr(self, 'arrows'):
+    #         self.arrows.add(arrow)
+    #     else:
+    #         self.arrows = VGroup(arrow)
+    #         self.add(self.arrows)
+    #     return GrowArrow(
+    #         arrow,
+    #         **aargs,
+    #     )
 
     def create_arrows(
         self,
+        direction: str | None = None,       # all or specific direction
         arrow_config: dict | None = None,
     ) -> VGroup:
+        """Create arrows based on direction specified.
         """
-        Create arrows based on dot and rect.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap.create_arrows()
-        """
+        pcells = {}
         cfg = {**ARROW_CONFIG, **(arrow_config or {})}
         arrows = VGroup(
             *(Arrow(
@@ -1450,7 +1457,7 @@ class AnchorPoint(VMobject):
 
 class Demo(ThreeDScene):
     def construct(self):
-        distrib = np.random.rand(4, 4)
+        distrib = np.random.rand(8, 8)
         distrib /= distrib.sum(axis=1, keepdims=True)
         ap = AnchorPoint(
             point=ORIGIN,
@@ -1459,40 +1466,36 @@ class Demo(ThreeDScene):
             xyxy=(10,20,30,40),
             prob=(0.5,0.5,0.5),
             index=(0,1),
-            shape=(4,4),
+            shape=(8,8),
             sf_nominal=32,
-            sf_screen=0.5,
+            sf_screen=0.2,
             dot_config={},
             rect_config={},
         )
         self.play(Create(ap, run_time=0.3))
         self.wait()
 
-        self.play(ap.to_rect())
-        self.wait()
-
-        # self.play(ap.show_pcells())
+        # self.play(ap.to_rect())
         # self.wait()
 
-        for direction in DIRECTION_SERIES:
-            self.play(ap.show_pcells(direction=direction))
-            self.wait()
+        # pcells related
+        self.play(ap.show_pcells())
+        self.wait(0.5)
+
+        # self.play(ap.show_pcells_text())
+        # self.wait(0.5)
+
+        # self.play(ap.hide_pcells_text())
+        # self.wait(0.5)
+
+        # self.play(ap.hide_pcells())
+        # self.wait(0.5)
+
+        self.move_camera(
+            phi=60*DEGREES,
+            theta=-75*DEGREES,
+        )
         self.wait()
 
-
-        # self.play(ap.to_dot())
-        # self.wait()
-
-        # self.play(ap.show_pcells(
-        #     label_config={
-        #         'font_size': 5,
-        #     },
-        #     box_config={},
-        #     run_time=0.5,
-        # ))
-        # self.wait(0.5)
-
-        # self.play(ap.show_pcells_text(
-        #     run_time=0.5,
-        # ))
-        # self.wait(0.5)
+        self.play(ap.arrange_pcells())
+        self.wait()
