@@ -105,6 +105,26 @@ BOX_RAW_CONFIG = {
     'fill_opacity': 1.0,    # native rectangle interface
 }
 
+# ------------- coords related --------------
+COORDS_PATH_CONFIG = {
+    'color': PURE_YELLOW,
+    'width': 3,
+    'opacity': 1.0,
+}
+COORDS_TEXT_CONFIG = {
+    'font_size': 15,
+    'font': 'JetBrains Mono',
+    'color': WHITE,
+}
+COORDS_TEXT_BUFF = 0.2
+
+# ------------- computation related --------------
+COMPUTATION_TEXT_CONFIG = {
+    "font": "JetBrains Mono",
+    "font_size": 32,
+    'color': GRAY,
+}
+
 # ------------- pcell related --------------
 PCELL_TEXT_CONFIG = {
     'num_decimal_places': 2,
@@ -570,6 +590,7 @@ class AnchorPoint(VMobject):
 
         for arrow, text in zip(self.arrows.values(), texts):
             arrow.mob_rela = text
+            self.add(arrow.mob_rela)    # NOTE: child of anchor point instead of arrow
         
         return AnimationGroup(
             *(Write(text, **aargs) for text in texts),
@@ -586,7 +607,9 @@ class AnchorPoint(VMobject):
         assert hasattr(self, 'arrows'), 'arrows not exist yet'
         texts = VGroup(arrow.mob_rela for arrow in self.arrows.values())
         for arrow in self.arrows.values():
+            self.remove(arrow.mob_rela)
             del arrow.mob_rela
+
         return AnimationGroup(
             *(Unwrite(text, **aargs) for text in texts),
             **gargs,
@@ -627,6 +650,7 @@ class AnchorPoint(VMobject):
 
         for arrow, text in zip(self.arrows.values(), texts):
             arrow.mob_abs = text
+            self.add(arrow.mob_abs) # child of ap instead of arrow
         
         return AnimationGroup(
             *(Write(text, **aargs) for text in texts),
@@ -643,6 +667,7 @@ class AnchorPoint(VMobject):
         assert hasattr(self, 'arrows'), 'arrows not exist yet'
         texts = VGroup(arrow.mob_abs for arrow in self.arrows.values())
         for arrow in self.arrows.values():
+            self.remove(arrow.mob_abs) # remove mob from children
             del arrow.mob_abs
         return AnimationGroup(
             *(Unwrite(text, **aargs) for text in texts),
@@ -707,13 +732,14 @@ class AnchorPoint(VMobject):
         )
 
         anims = []
-        for arrow, mob in zip(self.arrows.values(), mobs_rela):
-            arrow.mob_rela = mob
+        for arrow, mob_rela in zip(self.arrows.values(), mobs_rela):
+            arrow.mob_rela = mob_rela
             anims.append(ReplacementTransform(
                 arrow.mob_abs,
-                arrow.mob_rela,
+                mob_rela,
                 **aargs,
             ))
+            self.remove(arrow.mob_abs)
             del arrow.mob_abs
         return AnimationGroup(
             *anims,
@@ -814,6 +840,71 @@ class AnchorPoint(VMobject):
     #     """Override the default center with dot center.
     #     """
     #     return self.dot.get_center()
+
+    # ---------------- computations related -------------------
+    def create_computation_abs_to_position(
+        self,
+        buff=1.0,
+        text_config: dict = {},
+    ) -> Comment:
+        text_config = {**COMPUTATION_TEXT_CONFIG, **text_config}
+
+        comments = VGroup()
+        for idx, direction in enumerate(DIRECTION_SERIES):
+            formatter = (
+                f'{self.index[1-idx%2]+0.5:>4.1f} * {self.sf_nominal:>3d} '
+                f'{self.dir_to_sign[direction]} {{:>3d}} '
+                f'= {{:>3d}}'
+            )
+            values = [
+                int(self.offsets[idx].item() * self.sf_nominal),
+                int(self.xyxy[idx].item() * self.sf_nominal),
+            ]
+            comment = Comment(
+                formatter=formatter,
+                values=values,
+                colors=[COLOR_MAP[direction], WHITE],
+                **text_config,
+            )
+            comments.add(comment)
+        comments.arrange(
+            DOWN,
+            buff=buff,
+            aligned_edge=RIGHT,     # FIXME: or LFET?
+        ).center()      # always centered at creation
+        return comments
+
+    def create_computation_rela_to_position(
+        self,
+        buff=1.0,
+        text_config: dict = {},
+    ) -> Comment:
+        text_config = {**COMPUTATION_TEXT_CONFIG, **text_config}
+
+        comments = VGroup()
+        for idx, direction in enumerate(DIRECTION_SERIES):
+            formatter = (
+                f'{self.index[1-idx%2]+0.5:>4.1f} * {self.sf_nominal:>3d} '
+                f'{self.dir_to_sign[direction]} {{:>5.2f}} * {self.sf_nominal:>3d} '
+                f'= {{:>3d}}'
+            )
+            values = [
+                float(self.offsets[idx].item()),
+                int(self.xyxy[idx].item() * self.sf_nominal),
+            ]
+            comment = Comment(
+                formatter=formatter,
+                values=values,
+                colors=[COLOR_MAP[direction], WHITE],
+                **text_config,
+            )
+            comments.add(comment)
+        comments.arrange(
+            DOWN,
+            buff=buff,
+            aligned_edge=RIGHT,     # FIXME: or LFET?
+        ).center()      # always centered at creation
+        return comments
 
     def create_DFL_computations(
         self,
@@ -1285,6 +1376,105 @@ class AnchorPoint(VMobject):
             )
         return self
     
+    # ---------------- coords related -------------------
+    def show_coords(
+        self,
+        position: np.ndarray,       # position to show coords
+        origin: np.ndarray,         # reference origin point
+        v1: float,                  # value for first path
+        v2: float,                  # value for second path
+        num_decimal_places: int = 0,# number of decimal places
+        reversed=False,             # reverse path points or not
+        path_config: dict = {},     # path config
+        text_config: dict = {},     # text config
+        **aargs,                    # animation args
+    ) -> Animation:
+        """Show coords from specific point to reference origin.
+        """
+        if np.array_equal(position, ORIGIN):
+            point = self.dot.get_center()
+        else:
+            point = self.rect.get_corner(position)
+        point_x, point_y, _ = point
+        origin_x, origin_y, _ = origin
+        path_config = {**COORDS_PATH_CONFIG, **path_config}
+        text_config = {**COORDS_TEXT_CONFIG, **text_config}
+
+        # init two paths
+        path1 = VMobject().set_points_as_corners([
+            point,
+            np.array([point_x, origin_y, 0]),
+            origin,
+        ]).set_stroke(**path_config)
+        path2 = VMobject().set_points_as_corners([
+            point,
+            np.array([origin_x, point_y, 0]),
+            origin,
+        ]).set_stroke(**path_config)
+
+        if reversed:
+            path1.reverse_direction()
+            path2.reverse_direction()
+
+        # init two texts
+        text1 = Text(
+            text=f'{{:.{num_decimal_places}f}}'.format(float(v1)),
+            **text_config,
+        ).next_to(
+            path1,
+            UP,
+            buff=COORDS_TEXT_BUFF,
+        ).align_to(
+            path1,
+            RIGHT,
+        )
+        text2 = Text(
+            text=f'{{:.{num_decimal_places}f}}'.format(float(v2)),
+            **text_config,
+        ).next_to(
+            path2,
+            LEFT,
+            buff=COORDS_TEXT_BUFF,
+        ).align_to(
+            path2,
+            DOWN,
+        )
+
+        # coord texts can be accumulated
+        if hasattr(self, 'coords'):
+            self.coords.add(text1, text2)
+        else:
+            self.coords = VGroup(text1, text2)
+            self.add(self.coords)       # make coords child of anchor point
+
+        return AnimationGroup(
+            AnimationGroup(
+                ShowPassingFlash(path1, time_width=3.0),
+                Write(text1),
+            ),
+            AnimationGroup(
+                ShowPassingFlash(path2, time_width=3.0),
+                Write(text2),
+            ),
+            **aargs,
+        )
+    
+    def hide_coords(
+        self,
+        **aargs,
+    ) -> Animation:
+        """Hide all existing coord texts.
+        """
+        assert hasattr(self, 'coords'), 'coords not exist yet'
+
+        coords = self.coords
+        del self.coords
+        return AnimationGroup(
+            *(Unwrite(coord) for coord in coords),
+            **aargs,
+        )
+
+    # ---------------- utils related -------------------
     def inside_box(
         self,
         box: Rectangle,

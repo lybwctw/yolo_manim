@@ -12,6 +12,7 @@ from utils.layers_fake import LayersFake
 
 import random
 
+# ---------------- anchor point related -------------------
 AP_DOT_CONFIG_FOCUS = {
     'stroke_color': PURE_YELLOW,
     'stroke_opacity': 1.0,
@@ -29,8 +30,12 @@ AP_RECT_CONFIG_OTHERS = {
     'stroke_opacity': 0.3,
     'stroke_width': 1.0,
 }
-
 SAMPLE_IDX = 189
+
+# ---------------- computation related -------------------
+COMPUTATION_FONT_SIZE = 20
+COMPUTATION_LINE_BUFF = 0.5
+COMPUTATION_BASE_COLOR = GRAY
 
 wt = SHORT_DURATION
 class MainScene(Scene):
@@ -38,7 +43,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and explainer anew',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -80,7 +85,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'anchor points capture thinking',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show grid then anchor points
@@ -117,91 +122,91 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
+        # # ************************************************************
+        # self.next_section(
+        #     'inside anchor points capture',
+        #     skip_animations=True,
+        # )
+        # # ************************************************************
+        # # show true annotation
+        # self.play(Write(
+        #     annotation,
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # hide labels for now
+        # self.play(AnimationGroup(
+        #     *(label.animate.set_opacity(opacity=0)
+        #         for label in annotation.get_labels()),
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # collect inside/outside anchor points
+        # aps_in, aps_out = explainer.collect_aps(
+        #     func=lambda ap: any(ap.inside_box(box) for box in annotation.get_boxes()),
+        # )
+
+        # # focus on important anchor points
+        # self.play(AnimationGroup(
+        #     AnimationGroup(
+        #         *(ap.mob.animate.set_style(
+        #             **AP_DOT_CONFIG_FOCUS,
+        #         ) for ap in aps_in),
+        #         lag_ratio=0,
+        #         run_time=wt,
+        #     ),
+        #     AnimationGroup(
+        #         *(ap.mob.animate.set_style(
+        #             **AP_DOT_CONFIG_OTHERS,
+        #         ) for ap in aps_out),
+        #         lag_ratio=0,
+        #         run_time=wt,
+        #     ),
+        # ))
+        # self.wait(wt)
+
+        # # important anchor points capture
+        # self.play(AnimationGroup(
+        #     *(ap.to_rect(rect_config=AP_RECT_CONFIG_FOCUS,
+        #     ) for ap in aps_in),
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # other anchor points capture
+        # self.play(AnimationGroup(
+        #     *(ap.to_rect(rect_config=AP_RECT_CONFIG_OTHERS,
+        #     ) for ap in aps_out),
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # restore all anchor points
+        # self.play(explainer.to_dots(
+        #     dot_config={},
+        #     aargs={},
+        #     gargs={'lag_ratio': 0.0, 'run_time': wt},
+        # ))
+        # self.wait(wt)
+
+        # # remove annotation
+        # self.play(Unwrite(
+        #     annotation,
+        #     lag_ratio=0.0,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
         # ************************************************************
         self.next_section(
-            'inside anchor points capture',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # show true annotation
-        self.play(Write(
-            annotation,
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # hide labels for now
-        self.play(AnimationGroup(
-            *(label.animate.set_opacity(opacity=0)
-                for label in annotation.get_labels()),
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # collect inside/outside anchor points
-        aps_in, aps_out = explainer.collect_aps(
-            func=lambda ap: any(ap.inside_box(box) for box in annotation.get_boxes()),
-        )
-
-        # focus on important anchor points
-        self.play(AnimationGroup(
-            AnimationGroup(
-                *(ap.mob.animate.set_style(
-                    **AP_DOT_CONFIG_FOCUS,
-                ) for ap in aps_in),
-                lag_ratio=0,
-                run_time=wt,
-            ),
-            AnimationGroup(
-                *(ap.mob.animate.set_style(
-                    **AP_DOT_CONFIG_OTHERS,
-                ) for ap in aps_out),
-                lag_ratio=0,
-                run_time=wt,
-            ),
-        ))
-        self.wait(wt)
-
-        # important anchor points capture
-        self.play(AnimationGroup(
-            *(ap.to_rect(rect_config=AP_RECT_CONFIG_FOCUS,
-            ) for ap in aps_in),
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # other anchor points capture
-        self.play(AnimationGroup(
-            *(ap.to_rect(rect_config=AP_RECT_CONFIG_OTHERS,
-            ) for ap in aps_out),
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # restore all anchor points
-        self.play(explainer.to_dots(
-            dot_config={},
-            aargs={},
-            gargs={'lag_ratio': 0.0, 'run_time': wt},
-        ))
-        self.wait(wt)
-
-        # remove annotation
-        self.play(Unwrite(
-            annotation,
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # ************************************************************
-        self.next_section(
-            'sample, from distance to position thinking',
-            skip_animations=False,
+            'sample, xyxy output',
+            skip_animations=True,
         )
         # ************************************************************
         # focus on sample anchor point
@@ -210,9 +215,9 @@ class MainScene(Scene):
         )
         ap_sample = aps_sample[0]
         self.play(AnimationGroup(
-            ap_sample.mob.animate.set_style(
-                **AP_DOT_CONFIG_FOCUS,
-            ),
+            # ap_sample.mob.animate.set_style(
+            #     **AP_DOT_CONFIG_FOCUS,
+            # ),
             *(ap.mob.animate.set_style(
                 **AP_DOT_CONFIG_OTHERS,
             ) for ap in aps_others),
@@ -220,28 +225,191 @@ class MainScene(Scene):
             run_time=wt,
         ))
         self.wait(wt)
-        
-        # from distance to position, thinking
+
+        # capture
+        self.play(ap_sample.to_rect(
+            rect_config={},
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show (x1, y1)
+        self.play(ap_sample.show_coords(
+            position=UL,
+            origin=background.get_corner(UL),
+            v1=ap_sample.xyxy[0].item() * ap_sample.sf_nominal,
+            v2=ap_sample.xyxy[1].item() * ap_sample.sf_nominal,
+            num_decimal_places=0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show (x2, y2)
+        self.play(ap_sample.show_coords(
+            position=DR,
+            origin=background.get_corner(UL),
+            v1=ap_sample.xyxy[2].item() * ap_sample.sf_nominal,
+            v2=ap_sample.xyxy[3].item() * ap_sample.sf_nominal,
+            num_decimal_places=0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # clean up
+        self.play(ap_sample.hide_coords(
+            run_time=wt,
+        ))
+        self.play(ap_sample.to_dot(
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'sample, offset output',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # show arrows
         self.play(ap_sample.show_arrows(
             arrow_config={},
             lag_ratio=0.5,
             run_time=wt,
         ))
         self.wait(wt)
+
+        # show absolute offset for arrows
+        self.play(ap_sample.show_arrows_offset_abs(
+            text_config={},
+            aargs={},
+            gargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # show anchor point coords (+0.5 version)
+        self.play(ap_sample.show_coords(
+            position=ORIGIN,
+            origin=background.get_corner(UL),
+            v1=ap_sample.index[0] + 0.5,
+            v2=ap_sample.index[1] + 0.5,
+            num_decimal_places=1,
+            text_config={'color': GRAY},
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # make room in the right
+        self.play(system.animate(
+            run_time=wt,
+        ).shift(LEFT * 2.5))
+        self.wait(wt)
+
+        # show computation from absolute offset to position
+        cps_abs = ap_sample.create_computation_abs_to_position(
+            buff=COMPUTATION_LINE_BUFF,
+            text_config={
+                'font_size': COMPUTATION_FONT_SIZE,
+                'color': COMPUTATION_BASE_COLOR,
+            },
+        ).shift(RIGHT*3.5)
+        self.play(Succession(
+            *(Create(cp) for cp in cps_abs),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # hide anchor point coords (+0.5 version)
+        self.play(ap_sample.hide_coords(
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show (x1, y1) (x2, y2) again, reversed path
+        self.play(ap_sample.show_coords(
+            position=UL,
+            origin=background.get_corner(UL),
+            v1=ap_sample.xyxy[0].item() * ap_sample.sf_nominal,
+            v2=ap_sample.xyxy[1].item() * ap_sample.sf_nominal,
+            num_decimal_places=0,
+            reversed=True,
+            run_time=wt,
+        ))
+        self.play(ap_sample.show_coords(
+            position=DR,
+            origin=background.get_corner(UL),
+            v1=ap_sample.xyxy[2].item() * ap_sample.sf_nominal,
+            v2=ap_sample.xyxy[3].item() * ap_sample.sf_nominal,
+            num_decimal_places=0,
+            reversed=True,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show capture rect again
         self.play(ap_sample.to_rect(
             rect_config={},
             run_time=wt,
         ))
         self.wait(wt)
-        # self.play(ap_sample.to_dot(
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+
+        # hide xyxy coords
+        self.play(AnimationGroup(
+            ap_sample.hide_coords(
+                run_time=wt,
+            ),
+            ap_sample.to_dot(
+                run_time=wt,
+            ),
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'sample, normed offset output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # show divides for arrow offsets
+        self.play(ap_sample.show_arrows_divide(
+            text_config={},
+            aargs={},
+            gargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # convert absolute offsets into relative offset
+        self.play(ap_sample.arrows_abs_to_rela(
+            text_config={},
+            aargs={},
+            gargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # show computation from relative offset to position
+        cps_rela = ap_sample.create_computation_rela_to_position(
+            buff=COMPUTATION_LINE_BUFF,
+            text_config={
+                'font_size': COMPUTATION_FONT_SIZE,
+                'color': COMPUTATION_BASE_COLOR,
+            },
+        ).shift(RIGHT*3.5)  # variable constant?
+        self.play(Succession(
+            *(TransformMatchingShapes(cp1, cp2) for cp1, cp2 in zip(cps_abs, cps_rela)),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # rect capture again
+        self.play(ap_sample.to_rect(
+            rect_config={},
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # # ************************************************************
         # self.next_section(
         #     'sample, from absolute distance to relative distance',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # from distance to position, details
@@ -264,7 +432,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'sample, detailed computation from distance to position',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # make room for equations
@@ -319,7 +487,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'loop, from distance to position',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # TODO, more natural way of looping
@@ -375,7 +543,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'global, generate distance tensor',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # sync distance generation
@@ -396,7 +564,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'global, generate xyxy tensor',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # scale and make room in the right
@@ -437,7 +605,7 @@ class MainScene(Scene):
         # # ************************************************************
         # self.next_section(
         #     'reshape xyxy tensor to 2d',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # make room for reshaped xyxy tensor
@@ -466,7 +634,7 @@ class MainScene(Scene):
         # self.next_section(
         #     'simplify tensor_dist/tensor_xyxy/tensor_xyxy_2d' \
         #     'into lf_output_32_dist/lf_output_32_xyxy/lf_output_32_xyxy_2d',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # create lf_output_32_dist
@@ -508,7 +676,7 @@ class MainScene(Scene):
         # self.next_section(
         #     'simplify explainer_dist and explainer_xyxy ' \
         #     'into 4x4 mini version',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # # clean explainer_dist and explainer_xyxy
@@ -578,14 +746,14 @@ class MainScene(Scene):
         # # # ************************************************************
         # # self.next_section(
         # #     'generate explainer_xyxy_2d from explainer_xyxy',
-        # #     skip_animations=False,
+        # #     skip_animations=True,
         # # )
         # # # ************************************************************
 
         # # ************************************************************
         # self.next_section(
         #     'save for next scene which go back to big map',
-        #     skip_animations=False,
+        #     skip_animations=True,
         # )
         # # ************************************************************
         # everything = Group(

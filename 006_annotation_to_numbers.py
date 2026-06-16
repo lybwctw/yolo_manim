@@ -270,7 +270,6 @@ class MainScene(Scene):
         w_n = annotation[0].width_nominal
         h_n = annotation[0].height_nominal
         sanos = annotation[1].mobs
-        n_sanos = len(sanos)
 
         # position info assets
         axes = Axes(
