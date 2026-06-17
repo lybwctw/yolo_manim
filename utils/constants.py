@@ -53,6 +53,29 @@ LONG_DURATION = 3.0
 J000_IMAGE_HEIGHT = 4.0
 J005_ANNO_HEIGHT = 4.0
 
+# anchor point related
+DIRECTION_SERIES = [
+    'left',
+    'up',
+    'right',
+    'down',
+]
+
+DIRECTION_MAP = {
+    'left': LEFT,
+    'up': UP,
+    'right': RIGHT,
+    'down': DOWN,
+}
+
+COLOR_MAP = {
+    'left':  PURE_RED,
+    'up':    PURE_GREEN,
+    'right': PURE_BLUE,
+    'down':  PURE_MAGENTA,
+}
+
+
 # explainer related
 MINI_DOT_CONFIG = {
     'side_length': 0.002,

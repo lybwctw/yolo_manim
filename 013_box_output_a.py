@@ -30,7 +30,33 @@ AP_RECT_CONFIG_OTHERS = {
     'stroke_opacity': 0.3,
     'stroke_width': 1.0,
 }
+
+# ---------------- explainer related -------------------
 SAMPLE_IDX = 189
+N_LOOP_SAMPLES = 3
+
+ARROW_CONFIG = {
+    'stroke_width': 1,
+    'tip_length': 0.03,
+    'buff': 0.0,
+    'max_stroke_width_to_length_ratio': 15,         # FIXME: 5 by default
+    'max_tip_length_to_length_ratio': 0.85,          # FIXME: 0.25 by default
+}
+
+# ---------------- tensor related -------------------
+TENSOR_OFFSET_CONFIG = {
+    'side_length': 0.15,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'fill_opacity': 0.7,
+}
+TENSOR_XYXY_CONFIG = {
+    'side_length': 0.15,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'fill_opacity': 0.7,
+}
+TENSOR_BUFF_RATIO = 0.5
 
 # ---------------- computation related -------------------
 COMPUTATION_FONT_SIZE = 20
@@ -210,14 +236,10 @@ class MainScene(Scene):
         )
         # ************************************************************
         # focus on sample anchor point
-        aps_sample, aps_others = explainer.collect_aps(
+        ap_sample, aps_others = explainer.collect_ap(
             func=lambda ap: ap.index_flatten == SAMPLE_IDX,
         )
-        ap_sample = aps_sample[0]
         self.play(AnimationGroup(
-            # ap_sample.mob.animate.set_style(
-            #     **AP_DOT_CONFIG_FOCUS,
-            # ),
             *(ap.mob.animate.set_style(
                 **AP_DOT_CONFIG_OTHERS,
             ) for ap in aps_others),
@@ -366,7 +388,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, normed offset output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show divides for arrow offsets
@@ -393,8 +415,17 @@ class MainScene(Scene):
                 'color': COMPUTATION_BASE_COLOR,
             },
         ).shift(RIGHT*3.5)  # variable constant?
-        self.play(Succession(
-            *(TransformMatchingShapes(cp1, cp2) for cp1, cp2 in zip(cps_abs, cps_rela)),
+
+        # FIXME: cool but failed
+        # self.play(Succession(
+        #     *(TransformMatchingShapes(cp1, cp2) for cp1, cp2 in zip(cps_abs, cps_rela)),
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+        self.play(Transform(
+            cps_abs,
+            cps_rela,
+            lag_ratio=0.5,
             run_time=wt,
         ))
         self.wait(wt)
@@ -406,146 +437,142 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'sample, from absolute distance to relative distance',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # from distance to position, details
-        # self.play(sample_ap.show_distance_abs(lag_ratio=0.1, run_time=SHORT_DURATION))
-        # self.wait(SHORT_DURATION)
-        # self.play(AnimationGroup(
-        #     sample_ap.arrows.animate(run_time=SHORT_DURATION).set_opacity(0.3),
-        #     sample_ap.show_divide(run_time=SHORT_DURATION),
-        # ))
-        # self.wait(SHORT_DURATION)
-        # self.play(AnimationGroup(
-        #     sample_ap.arrows.animate(run_time=SHORT_DURATION).set_opacity(1.0),
-        #     sample_ap.abs_to_rela(
-        #         aargs={'run_time':0.3,},
-        #         gargs={'lag_ratio':0.1, 'run_time':SHORT_DURATION,},
-        #     ),
-        # ))
-        # self.wait(SHORT_DURATION)
+        # clean up offsets, arrows, rects
+        self.play(ap_sample.hide_arrows_offset_rela(
+            aargs={},
+            gargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.play(ap_sample.hide_arrows(
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.play(ap_sample.to_dot(
+            dot_config={},
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'sample, detailed computation from distance to position',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # make room for equations
-        # self.play(explainer_dist_bg.animate(run_time=SHORT_DURATION).shift(LEFT*2).scale(0.9))
-        # self.wait(SHORT_DURATION)
+        # ************************************************************
+        self.next_section(
+            'OPTIONAL: loop through several samples',
+            skip_animations=True,
+        )
+        # ************************************************************
+        sample_idxs = random.sample(
+            range(explainer.shape[0] * explainer.shape[1]),
+            k=N_LOOP_SAMPLES,
+        )
 
-        # # create equations for sample
-        # sample_eq = sample_ap.create_decode_equations(
-        #     buff=0.3,
-        # ).shift(RIGHT*3)
-        # self.play(Create(sample_eq))
-        # self.wait(SHORT_DURATION)
+        for sample_idx in sample_idxs:
+            ap_sample, aps_others = explainer.collect_ap(
+                func=lambda ap: ap.index_flatten == sample_idx,
+            )
 
-        # # show point from x1y1
-        # self.play(explainer_dist.show_point_from_xy(
-        #     sample_idx,
-        #     direction=UL,
-        #     pargs={'run_time':SHORT_DURATION, 'time_width':2},
-        #     targs={},
-        #     gargs={'lag_ratio':SHORT_DURATION,},
-        # ))
-        # self.wait(SHORT_DURATION)
-        # self.play(explainer_dist.hide_xy_txts(run_time=SHORT_DURATION))
+            # highlight sample anchor point
+            self.play(AnimationGroup(
+                ap_sample.to_dot(),
+                *(ap.mob.animate.set_style(
+                    **AP_DOT_CONFIG_OTHERS,
+                ) for ap in aps_others),
+                lag_ratio=0.0,
+                run_time=wt,
+            ))
 
-        # # show point from x2y2
-        # self.play(explainer_dist.show_point_from_xy(
-        #     sample_idx,
-        #     direction=DR,
-        #     pargs={'run_time':1, 'time_width':2},
-        #     targs={},
-        #     gargs={'lag_ratio':SHORT_DURATION,},
-        # ))
-        # self.wait(SHORT_DURATION)
-        # self.play(explainer_dist.hide_xy_txts(run_time=SHORT_DURATION))
-        # self.wait(SHORT_DURATION)
+            # show arrows
+            self.play(ap_sample.show_arrows(
+                arrow_config={},
+                lag_ratio=0.5,
+                run_time=wt,
+            ))
 
-        # # to rect
-        # self.play(AnimationGroup(
-        #     sample_ap.hide_distance(run_time=SHORT_DURATION, lag_ratio=0),
-        #     sample_ap.to_rect(run_time=SHORT_DURATION),
-        # ))
-        # self.wait(SHORT_DURATION)
+            # update computations, based on abs (NOT rela)
+            cps_new = ap_sample.create_computation_rela_to_position(
+                buff=COMPUTATION_LINE_BUFF,
+                text_config={
+                    'font_size': COMPUTATION_FONT_SIZE,
+                    'color': COMPUTATION_BASE_COLOR,
+                },
+            ).align_to(cps_abs, RIGHT)
+            # self.play(Succession(
+            #     *(TransformMatchingShapes(cp1, cp2) for cp1, cp2 in zip(cps_abs, cps_new)),
+            #     run_time=wt,
+            # ))
+            self.play(Transform(
+                cps_abs,
+                cps_new,
+                lag_ratio=0.5,
+                run_time=wt,
+            ))
 
-        # # clean
-        # self.play(AnimationGroup(
-        #     sample_ap.hide_arrows(run_time=SHORT_DURATION),
-        #     sample_ap.to_dot(run_time=SHORT_DURATION),
-        #     Uncreate(sample_eq, run_time=SHORT_DURATION),
-        # ))
-        # self.wait(SHORT_DURATION)
+            # show captures
+            self.play(ap_sample.to_rect(
+                rect_config={},
+                run_time=wt,
+            ))
 
-        # # ************************************************************
-        # self.next_section(
-        #     'loop, from distance to position',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # TODO, more natural way of looping
-        # k=1         # TODO, proper loop number
-        # idxs = random.sample(
-        #     range(data_dist.shape[0]*data_dist.shape[1]),
-        #     k=k,
-        # )
-        # for idx in idxs:
-        #     # highlight one target point
-        #     sample_ap, other_aps = explainer_dist.collect_focus_ap(idx)
-        #     self.play(AnimationGroup(
-        #         sample_ap.animate(run_time=SHORT_DURATION).set_pattern(opacity=1.0),
-        #         AnimationGroup(
-        #             *(ap.animate.set_pattern(opacity=0.3) for ap in other_aps),
-        #             lag_ratio=0, run_time=SHORT_DURATION,
-        #         )
-        #     ))
-        #     self.wait(SHORT_DURATION)
+            # clean arrows, rects
+            self.play(ap_sample.hide_arrows(
+                lag_ratio=0.5,
+                run_time=wt,
+            ))
+            self.play(ap_sample.to_dot(
+                dot_config={},
+                run_time=wt,
+            ))
 
-        #     # show arrows
-        #     self.play(sample_ap.show_arrows(lag_ratio=0.0, run_time=SHORT_DURATION))
-        #     self.wait(SHORT_DURATION)
+        self.wait(wt)
 
-        #     # show equations
-        #     sample_eq = sample_ap.create_decode_equations(
-        #         buff=0.3,
-        #     ).shift(RIGHT*3)
-        #     self.play(Create(sample_eq, run_time=SHORT_DURATION))
-        #     self.wait(SHORT_DURATION)
+        # fade sample ap, remove computations
+        self.play(ap_sample.mob.animate(
+            run_time=wt,
+        ).set_style(**AP_DOT_CONFIG_OTHERS))
+        self.play(Unwrite(
+            cps_abs,
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        #     # to rect
-        #     self.play(sample_ap.to_rect(run_time=SHORT_DURATION))
-        #     self.wait(SHORT_DURATION)
+        # ************************************************************
+        self.next_section(
+            'offset: explainer to tensor mapping',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # scale and shift system
+        self.play(system.animate(
+            run_time=wt,
+        ).scale(0.5).shift(UP*2))
+        self.wait(wt)
 
-        #     # restore
-        #     self.play(AnimationGroup(
-        #         sample_ap.hide_arrows(run_time=SHORT_DURATION),
-        #         sample_ap.to_dot(run_time=SHORT_DURATION),
-        #         Uncreate(sample_eq, run_time=SHORT_DURATION),
-        #     ))
-        #     self.wait(SHORT_DURATION)
-        
-        # # make all aps opacity 1.0
-        # self.play(AnimationGroup(
-        #     *(ap.animate.set_pattern(opacity=1.0)
-        #     for ap in explainer_dist.anchor_points),
-        #     lag_ratio=0.0,
-        #     run_time=SHORT_DURATION,
-        # ))
-        # self.wait(SHORT_DURATION)
+        # create arrows and related tensor
+        tensor_offset = explainer.create_tensor_offset(
+            cell_config=TENSOR_OFFSET_CONFIG,
+            buff_ratio=TENSOR_BUFF_RATIO,
+        )
+        tensor_offset.shift(DOWN*4)
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                ap.show_arrows(
+                    arrow_config=ARROW_CONFIG,
+                ),
+                Write(series),
+            ) for ap, series in zip(
+                explainer.anchor_points,
+                tensor_offset,
+            )),
+            lag_ratio=0.5,
+            run_time=0.5,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'global, generate distance tensor',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
+        # ************************************************************
+        self.next_section(
+            'xyxy: explainer to tensor mapping',
+            skip_animations=False,
+        )
+        # ************************************************************
+
         # # sync distance generation
         # self.play(explainer_dist_bg.animate(run_time=SHORT_DURATION).scale(0.8).shift(LEFT*.5))
         # self.wait(SHORT_DURATION)

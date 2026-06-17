@@ -10,7 +10,6 @@ from utils.yolo_annotation import SingleAnnotation
 from utils.line_matrix import LineMatrix
 from utils.general import tensor_to_line_matrix, compute_iou
 from utils.general import sf2dir
-# from utils.tensor_2d import Tensor2D
 from utils.constants import *
 
 import random
@@ -28,6 +27,12 @@ SF_TO_DIR = {
     32: os.path.join(DIR_NUMPY, '032_20x20'),
     64: os.path.join(DIR_NUMPY, '064_10x10'),
     160: os.path.join(DIR_NUMPY, '160_04x04'),
+}
+
+DEFAULT_TENSOR_CELL_CONFIG = {
+    'side_length': 0.1,
+    'stroke_width': 0.0,
+    'fill_opacity': 0.8,
 }
 
 class Explainer(VGroup):
@@ -221,7 +226,40 @@ class Explainer(VGroup):
             **gargs,
         )
         return anims
+
+    def show_arrows(
+        self,
+        arrow_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Show arrows for all anchor points.
+        """
+        anim = AnimationGroup(
+            *(ap.show_arrows(
+                arrow_config=arrow_config,
+                **aargs,
+            ) for ap in self.anchor_points),
+            **gargs,
+        )
+        return anim
+
+    def hide_arrows(
+        self,
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """Hide Arrows for all anchor points.
+        """
+        anim = AnimationGroup(
+            *(ap.hide_arrows(
+                **aargs,
+            ) for ap in self.anchor_points),
+            **gargs,
+        )
+        return anim
     
+    # NOTE: not verified starting from here...
     def show_pcells(
         self,
         label_config: dict | None = None,
@@ -239,55 +277,6 @@ class Explainer(VGroup):
         )
         return anim
 
-    def show_arrows(
-        self,
-        arrow_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
-        ggargs: dict | None = None,
-    ) -> Animation:
-        """
-        Show arrows for all anchor points.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.show_arrows())
-        """
-        anim = AnimationGroup(
-            *(ap.show_arrows(
-                arrow_config=arrow_config,
-                aargs=aargs,
-                gargs=gargs,
-            ) for ap in self.anchor_points),
-            **ggargs,
-        )
-        return anim
-
-    def hide_arrows(
-        self,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
-    ) -> Animation:
-        """
-        Hide Arrows for all anchor points.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.hide_arrows())
-        """
-        anim = AnimationGroup(
-            *(ap.hide_arrows(
-                **aargs,
-            ) for ap in self.anchor_points),
-            **gargs,
-        )
-        return anim
 
     def show_pbars(
         self,
@@ -910,6 +899,15 @@ class Explainer(VGroup):
             else:
                 aps2.add(ap)
         return aps1, aps2
+    
+    def collect_ap(
+        self,
+        func,
+    ) -> tuple:
+        """Helper function to collect a single ap.
+        """
+        aps1, aps2 = self.collect_aps(func)
+        return aps1[0], aps2
 
     # def collect_nth_result(
     #     self,
@@ -1087,6 +1085,7 @@ class Explainer(VGroup):
         ))
         self.data = self.data[idxs_remain]
 
+
     def xyxyccc(
         self,
     ) -> Tensor2D:
@@ -1109,6 +1108,56 @@ class Explainer(VGroup):
                 'color': WHITE,
             },
         )
+
+    # ---------------- tensor related -------------------
+    def create_tensor_offset(
+        self,
+        cell_config: dict = {},
+        buff_ratio: float = 0.5,
+    ) -> VGroup:
+        """Create a vg of vg of squares representing offsets.
+        """
+        cell_config = {**DEFAULT_TENSOR_CELL_CONFIG, **cell_config}
+        side_length = cell_config['side_length']
+
+        tensor = VGroup()
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                ap = self.anchor_points[i*self.shape[1] + j]
+                stack = VGroup(Square(
+                    stroke_color=COLOR_MAP[direction],
+                    fill_color=BLACK,
+                    # color=COLOR_MAP[direction],
+                    **cell_config,
+                ).set_z_index(4-idx) for idx, direction in enumerate(DIRECTION_SERIES))
+                stack.arrange(UR, buff=-side_length*buff_ratio)
+                stack.move_to(ap.dot)
+                tensor.add(stack)
+        return tensor
+
+    def create_tensor_xyxy(
+        self,
+        cell_config: dict = {},
+        buff_ratio: float = 0.5,
+    ) -> VGroup:
+        """Create a vg of vg of squares representing offsets.
+        """
+        cell_config = {**DEFAULT_TENSOR_CELL_CONFIG, **cell_config}
+        side_length = cell_config['side_length']
+
+        tensor = VGroup()
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                ap = self.anchor_points[i*self.shape[1] + j]
+                stack = VGroup(Square(
+                    stroke_color=WHITE,
+                    fill_color=BLACK,
+                    **cell_config,
+                ).set_z_index(4-idx) for idx, direction in enumerate(DIRECTION_SERIES))
+                stack.arrange(UR, buff=-side_length*buff_ratio)
+                stack.move_to(ap.dot)
+                tensor.add(stack)
+        return tensor
 
     @property
     def sf_screen(self) -> float:
@@ -1174,8 +1223,8 @@ class Explainer(VGroup):
         for prob, ap in zip(self.prob_2d, self.anchor_points):
             ap.prob = prob
 
-    # TODO, setters and sync animations for other members
 
+    # ---------------- fast init related -------------------
     @staticmethod
     def from_random(
         background,

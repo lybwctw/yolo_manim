@@ -5,8 +5,7 @@ sys.path.append('..')
 from manim import *
 from typing import Self
 from utils.comment import Comment
-from utils.constants import KK_COLORS
-
+from utils.constants import *
 
 # ------------- general --------------
 DOT_CONFIG = {
@@ -26,27 +25,6 @@ TEXT_CONFIG = {
     'font_size': 24,
     'font': 'JetBrains Mono',
     # 'font_size': 15,
-}
-
-DIRECTION_SERIES = [
-    'left',
-    'up',
-    'right',
-    'down',
-]
-
-DIRECTION_MAP = {
-    'left': LEFT,
-    'up': UP,
-    'right': RIGHT,
-    'down': DOWN,
-}
-
-COLOR_MAP = {
-    'left':  PURE_RED,
-    'up':    PURE_GREEN,
-    'right': PURE_BLUE,
-    'down':  PURE_MAGENTA,
 }
 
 # ------------- arrow related --------------
@@ -323,6 +301,8 @@ class AnchorPoint(VMobject):
         dot_config: dict = {}, # override default
         **aargs,
     ) -> Animation:
+        """Can be used as restore animation.
+        """
         dot_config = {'stroke_opacity': 1.0, **dot_config}
         target = self.dot.copy().set_style(
             **dot_config,
@@ -852,7 +832,7 @@ class AnchorPoint(VMobject):
         comments = VGroup()
         for idx, direction in enumerate(DIRECTION_SERIES):
             formatter = (
-                f'{self.index[1-idx%2]+0.5:>4.1f} * {self.sf_nominal:>3d} '
+                f'{self.index[1-idx%2]+0.5:>4.1f} * {self.sf_nominal:>2d} '
                 f'{self.dir_to_sign[direction]} {{:>3d}} '
                 f'= {{:>3d}}'
             )
@@ -884,8 +864,8 @@ class AnchorPoint(VMobject):
         comments = VGroup()
         for idx, direction in enumerate(DIRECTION_SERIES):
             formatter = (
-                f'{self.index[1-idx%2]+0.5:>4.1f} * {self.sf_nominal:>3d} '
-                f'{self.dir_to_sign[direction]} {{:>5.2f}} * {self.sf_nominal:>3d} '
+                f'{self.index[1-idx%2]+0.5:>4.1f} * {self.sf_nominal:>2d} '
+                f'{self.dir_to_sign[direction]} {{:>5.2f}} * {self.sf_nominal:>2d} '
                 f'= {{:>3d}}'
             )
             values = [
