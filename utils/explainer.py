@@ -30,9 +30,16 @@ SF_TO_DIR = {
 }
 
 DEFAULT_TENSOR_CELL_CONFIG = {
-    'side_length': 0.1,
-    'stroke_width': 0.0,
-    'fill_opacity': 0.8,
+    'side_length': 0.15,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'fill_opacity': 0.7,
+}
+DEFAULT_TENSOR_LINE_CONFIG = {
+    'line_width': 0.3,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'stroke_color': WHITE,
 }
 
 class Explainer(VGroup):
@@ -856,15 +863,10 @@ class Explainer(VGroup):
         self,
         **aargs,
     ) -> Animation:
-        """
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.hide_anchor_points())
+        """Hide anchor points.
         """
         self.remove(self.anchor_points)
-        return Unwrite(self.anchor_points,**(aargs or {}))
+        return Unwrite(self.anchor_points,**aargs)
 
     def random_ap(
         self,
@@ -1115,7 +1117,8 @@ class Explainer(VGroup):
         cell_config: dict = {},
         buff_ratio: float = 0.5,
     ) -> VGroup:
-        """Create a vg of vg of squares representing offsets.
+        """Create a vg of vg of squares representing 3d offsets.
+           aligned to anchor points.
         """
         cell_config = {**DEFAULT_TENSOR_CELL_CONFIG, **cell_config}
         side_length = cell_config['side_length']
@@ -1140,7 +1143,8 @@ class Explainer(VGroup):
         cell_config: dict = {},
         buff_ratio: float = 0.5,
     ) -> VGroup:
-        """Create a vg of vg of squares representing offsets.
+        """Create a vg of vg of squares representing 3d xyxy.
+           aligned to anchor points.
         """
         cell_config = {**DEFAULT_TENSOR_CELL_CONFIG, **cell_config}
         side_length = cell_config['side_length']
@@ -1157,6 +1161,31 @@ class Explainer(VGroup):
                 stack.arrange(UR, buff=-side_length*buff_ratio)
                 stack.move_to(ap.dot)
                 tensor.add(stack)
+        return tensor
+    
+    def create_tensor_xyxy_2d(
+        self,
+        line_config: dict = {},
+        w_buff_ratio: float = 0.1,
+        h_buff_ratio: float = 0.1,
+    ) -> VGroup:
+        """Create a vg of vg of lines representing 2d xyxy.
+           centered, not aligned to anchor points.
+        """
+        line_config = {**DEFAULT_TENSOR_LINE_CONFIG, **line_config}
+        line_width = line_config.pop('line_width')
+
+        tensor = VGroup()
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                row = VGroup(Line(
+                    start=ORIGIN,
+                    end=RIGHT*line_width,
+                    **line_config,
+                ) for _ in range(4))
+                row.arrange(RIGHT, buff=w_buff_ratio)
+                tensor.add(row)
+        tensor.arrange(DOWN, buff=h_buff_ratio).center()
         return tensor
 
     @property
@@ -1228,38 +1257,31 @@ class Explainer(VGroup):
     @staticmethod
     def from_random(
         background,
-        reg_max: int = 4,
-        dist_range: tuple = (0, 3),
-        prob_range: tuple = (0, 1),
         shape: tuple = (4, 4),
+        n_distrib: int = 4,
+        offsets_range: tuple = (0, 3),
+        prob_range: tuple = (0, 1),
         sf_nominal: int | None = None,
-        sf_pcell: float | None = 1.0,   # <1.0 for mini ones
         dot_config: dict = {},                      # default dot config
         rect_config: dict = {},                     # default rect config
     ) -> Explainer:
+        """Create explainer from random data.
         """
-        Create random explainer.
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        result = Explainer.from_random(background=Square())
-        """
-        reg = np.random.rand(*shape, 4, reg_max)
+        reg = np.random.rand(*shape, 4, n_distrib)
         reg /= reg.sum(axis=-1, keepdims=True)
-        reg_3d = reg.reshape(*shape, 4 * reg_max)
-        dist_3d = np.random.uniform(dist_range[0], dist_range[1], shape+(4,))
+
+        distrib_3d = reg.reshape(*shape, 4 * n_distrib)
+        offsets_3d = np.random.uniform(offsets_range[0], offsets_range[1], shape+(4,))
         prob_3d = np.random.uniform(prob_range[0], prob_range[1], shape+(3,))
 
         sf_nominal = sf_nominal or (640 // shape[0])
 
         return Explainer(
             background=background,
-            reg_3d=reg_3d,
-            dist_3d=dist_3d,
+            distrib_3d=distrib_3d,
+            offsets_3d=offsets_3d,
             prob_3d=prob_3d,
             sf_nominal=sf_nominal,
-            sf_pcell=sf_pcell,
             dot_config=dot_config,
             rect_config=rect_config,
         )

@@ -7,7 +7,7 @@ from utils.image_pad import ImagePad
 from utils.constants import *
 from utils.line_matrix import LineMatrix
 from utils.anchor_point import AnchorPoint
-from utils.general import tensor_to_line_matrix, import_mobs, export_mobs
+from utils.general import import_mobs, export_mobs
 from utils.layers_fake import LayersFake
 
 import random
@@ -31,18 +31,30 @@ AP_RECT_CONFIG_OTHERS = {
     'stroke_width': 1.0,
 }
 
+AP_RECT_CONFIG_THIN = {
+    'stroke_color': WHITE,
+    'stroke_opacity': 0.3,
+    'stroke_width': 1.0,
+}
+
 # ---------------- explainer related -------------------
 SAMPLE_IDX = 189
 N_LOOP_SAMPLES = 3
 
-ARROW_CONFIG = {
+ARROW_CONFIG_20x20 = {
     'stroke_width': 1,
     'tip_length': 0.03,
     'buff': 0.0,
     'max_stroke_width_to_length_ratio': 15,         # FIXME: 5 by default
     'max_tip_length_to_length_ratio': 0.85,          # FIXME: 0.25 by default
 }
-
+ARROW_CONFIG_4x4 = {
+    'stroke_width': 3,
+    'tip_length': 0.2,
+    'buff': 0.0,
+    'max_stroke_width_to_length_ratio': 15,         # FIXME: 5 by default
+    'max_tip_length_to_length_ratio': 0.85,          # FIXME: 0.25 by default
+}
 # ---------------- tensor related -------------------
 TENSOR_OFFSET_CONFIG = {
     'side_length': 0.15,
@@ -55,6 +67,12 @@ TENSOR_XYXY_CONFIG = {
     'stroke_width': 2.0,
     'stroke_opacity': 1.0,
     'fill_opacity': 0.7,
+}
+TENSOR_XYXY_2D_CONFIG = {
+    'line_width': 0.3,
+    'stroke_width': 1.0,
+    'stroke_opacity': 1.0,
+    'stroke_color': WHITE,
 }
 TENSOR_BUFF_RATIO = 0.5
 
@@ -137,7 +155,7 @@ class MainScene(Scene):
             aargs={},
             gargs={
                 'lag_ratio':0,
-                'run_time':SHORT_DURATION,
+                'run_time':wt,
             },
         ))
         self.wait(wt)
@@ -535,18 +553,38 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'offset: explainer to tensor mapping',
-            skip_animations=False,
+            'explainer: two initial explainers',
+            skip_animations=True,
         )
         # ************************************************************
-        # scale and shift system
+        # scale and shift explainer
         self.play(system.animate(
             run_time=wt,
         ).scale(0.5).shift(UP*2))
         self.wait(wt)
 
-        # create arrows and related tensor
-        tensor_offset = explainer.create_tensor_offset(
+        # renaming
+        system_offset = system
+        system_xyxy = system_offset.copy()
+        background_offset = system_offset[0]
+        explainer_offset = system_offset[1]
+        background_xyxy = system_xyxy[0]
+        explainer_xyxy = system_xyxy[1]
+
+        # create a explainer copy representing position
+        self.play(system_xyxy.animate(
+            run_time=wt,
+        ).shift(RIGHT*5))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'offset: explainer to tensor',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # synced creation: arrows + tensors
+        tensor_offset = explainer_offset.create_tensor_offset(
             cell_config=TENSOR_OFFSET_CONFIG,
             buff_ratio=TENSOR_BUFF_RATIO,
         )
@@ -554,11 +592,11 @@ class MainScene(Scene):
         self.play(AnimationGroup(
             *(AnimationGroup(
                 ap.show_arrows(
-                    arrow_config=ARROW_CONFIG,
+                    arrow_config=ARROW_CONFIG_20x20,
                 ),
                 Write(series),
             ) for ap, series in zip(
-                explainer.anchor_points,
+                explainer_offset.anchor_points,
                 tensor_offset,
             )),
             lag_ratio=0.5,
@@ -568,226 +606,251 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'xyxy: explainer to tensor mapping',
+            'xyxy: explainer to tensor',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # synced creation: rects + tensors
+        tensor_xyxy = explainer_xyxy.create_tensor_xyxy(
+            cell_config=TENSOR_XYXY_CONFIG,
+            buff_ratio=TENSOR_BUFF_RATIO,
+        )
+        tensor_xyxy.shift(DOWN*4)
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                ap.to_rect(
+                    rect_config=AP_RECT_CONFIG_THIN,
+                ),
+                Write(series),
+            ) for ap, series in zip(
+                explainer_xyxy.anchor_points,
+                tensor_xyxy,
+            )),
+            lag_ratio=0.5,
+            run_time=0.5,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'reshape xyxy tensor to 2d version',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # make room for reshaped xyxy tensor
+        self.play(AnimationGroup(
+            system_offset.animate.shift(LEFT*1),
+            tensor_offset.animate.shift(LEFT*1),
+            system_xyxy.animate.shift(LEFT*2),
+            tensor_xyxy.animate.shift(LEFT*2),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # create 2d version xyxy tensor
+        tensor_xyxy_2d_target = explainer_xyxy.create_tensor_xyxy_2d(
+            line_config=TENSOR_XYXY_2D_CONFIG,
+            w_buff_ratio=0.1,               # buff between rows
+            h_buff_ratio=0.017,             # buff between cols
+        ).move_to(RIGHT*4.5)
+
+        # transform xyxy into 2d version
+        tensor_xyxy_2d = tensor_xyxy.copy()
+        self.play(AnimationGroup(
+            *(Transform(stack, row) for stack, row in zip(
+                tensor_xyxy_2d, tensor_xyxy_2d_target
+            )),
+            lag_ratio=0.5,
+            run_time=wt,                    # NOTE: make this long
+            rate_func=rate_functions.ease_in_circ,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'simplify tensor_offset/tensor_xyxy/tensor_xyxy_2d' \
+            'into t32_offset/t32_xyxy/t32_xyxy_2d',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # replace tensor_offset with t32_offset
+        t32_offset = LayersFake(
+            n=4,
+            ref=VGroup(tensor_offset[0][0], tensor_offset[-1][0]),
+            expanded=True,
+            buff=0.075,         # based on tensor_offset's buff
+            width_nominal=20,
+            height_nominal=20,
+            depth_nominal=4,
+            rect_config={},
+        ).move_to(tensor_offset)
+        self.play(AnimationGroup(
+            Unwrite(tensor_offset),
+            Write(t32_offset),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        # self.play(ReplacementTransform(
+        #     tensor_offset,
+        #     t32_offset,
+        #     run_time=wt,
+        # ))
+        self.wait(wt)
+
+        # replace tensor_xyxy with t32_xyxy
+        t32_xyxy = LayersFake(
+            n=4,
+            ref=VGroup(tensor_xyxy[0][0], tensor_xyxy[-1][0]),
+            expanded=True,
+            buff=0.075,         # based on tensor_offset's buff
+            width_nominal=20,
+            height_nominal=20,
+            depth_nominal=4,
+            rect_config={},
+        ).move_to(tensor_xyxy)
+        self.play(AnimationGroup(
+            Unwrite(tensor_xyxy),
+            Write(t32_xyxy),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        # self.play(ReplacementTransform(
+        #     tensor_xyxy,
+        #     t32_xyxy,
+        #     run_time=wt,
+        # ))
+        self.wait(wt)
+
+        # replace tensor_xyxy_2d with t32_xyxy_2d
+        t32_xyxy_2d = LayersFake(
+            n=1,
+            width=1.0,
+            height=3.0,
+            expanded=True,
+            # buff=0.075,
+            width_nominal=4,
+            height_nominal=400,
+            depth_nominal=1,
+            rect_config={},
+        ).set_x(
+            tensor_xyxy_2d.get_x(),
+        ).set_y(
+            t32_xyxy.get_y(),
+        )
+        # self.play(AnimationGroup(
+        #     Unwrite(tensor_xyxy_2d),
+        #     Write(t32_xyxy_2d),
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+        self.play(ReplacementTransform(
+            tensor_xyxy_2d,
+            t32_xyxy_2d,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'simplify system_offset and system_xyxy ' \
+            'into s32_offset and s32_xyxy' \
+            '4x4 mini version',
             skip_animations=False,
         )
         # ************************************************************
-
-        # # sync distance generation
-        # self.play(explainer_dist_bg.animate(run_time=SHORT_DURATION).scale(0.8).shift(LEFT*.5))
-        # self.wait(SHORT_DURATION)
-
-        # tensor_dist = explainer_dist.create_distance_tensor(font_size=8)
-        # tensor_dist.center().shift(RIGHT*3)
-        # self.play(AnimationGroup(
-        #     explainer_dist.show_arrows(
-        #         arrow_config={'stroke_width':1, 'tip_length':0.03,},
-        #         gargs={'run_time':SHORT_DURATION, 'lag_ratio':0.02},
-        #     ),
-        #     Write(tensor_dist, run_time=SHORT_DURATION, lag_ratio=0.02),
-        # ))  # TODO, 3 seconds looks good
-        # self.wait(SHORT_DURATION)
-
-        # # ************************************************************
-        # self.next_section(
-        #     'global, generate xyxy tensor',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # scale and make room in the right
-        # manager = Group(explainer_dist_bg, tensor_dist)
-        # manager.generate_target()
-        # manager.target.scale(0.7).arrange(DOWN,buff=0.5).shift(LEFT*3)
-        # manager.target[1].align_to(manager.target[0][0].background, LEFT)
-        # self.play(MoveToTarget(manager, run_time=SHORT_DURATION))
-        # self.wait(SHORT_DURATION)
-
-        # # make copy of distance
-        # explainer_xyxy_bg = explainer_dist_bg.copy()
-        # self.add(explainer_xyxy_bg)
-        # self.play(explainer_xyxy_bg.animate(run_time=1.0).shift(RIGHT*5.5))
-        # self.wait(SHORT_DURATION)
-
-        # explainer_xyxy = explainer_xyxy_bg[0]
-
-        # # sync position generation
-        # tensor_xyxy = explainer_xyxy.create_xyxy_tensor(font_size=6)
-        # tensor_xyxy.align_to(tensor_dist, UP)
-        # self.play(AnimationGroup(
-        #     explainer_xyxy.to_rects(
-        #         rect_config={'width':0.5,},
-        #         aargs={},
-        #         gargs={'lag_ratio':0.01, 'run_time': SHORT_DURATION},
-        #     ),
-        #     explainer_xyxy.hide_arrows(
-        #         aargs={},
-        #         gargs={'lag_ratio':0.01, 'run_time': SHORT_DURATION},
-        #     ),
-        #     Write(tensor_xyxy, run_time=SHORT_DURATION, lag_ratio=0.01),
-        # ))  # TODO, 3 seconds looks good
-        # self.wait(SHORT_DURATION)
-
-        # # # TODO, generate comment labels for layers of tensors
-
-        # # ************************************************************
-        # self.next_section(
-        #     'reshape xyxy tensor to 2d',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # make room for reshaped xyxy tensor
-        # self.play(AnimationGroup(
-        #     explainer_dist_bg.animate(run_time=SHORT_DURATION).shift(LEFT*1),
-        #     tensor_dist.animate(run_time=SHORT_DURATION).shift(LEFT*1),
-        #     explainer_xyxy_bg.animate(run_time=SHORT_DURATION).shift(LEFT*2),
-        #     tensor_xyxy.animate(run_time=SHORT_DURATION).shift(LEFT*2),
-        # ))
-        # self.wait(SHORT_DURATION)
-
-        # # transform xyxy into reshaped 2d version
-        # tensor_xyxy_2d = tensor_xyxy.copy()     # make a copy as target 2d tensor
-        # self.add(tensor_xyxy_2d)
-        # line_matrix = explainer_xyxy.create_line_matrix(n=4).scale(0.07).shift(RIGHT*4.3)
-        # self.play(tensor_to_line_matrix(
-        #     tensor=tensor_xyxy_2d,
-        #     lmatrix=line_matrix,
-        #     targs={},
-        #     gargs={'lag_ratio':0.02, 'run_time':0.1,},
-        #     ggargs={'lag_ratio':0.05, 'run_time':SHORT_DURATION,},
-        # ))
-        # self.wait(SHORT_DURATION)
-
-        # # ************************************************************
-        # self.next_section(
-        #     'simplify tensor_dist/tensor_xyxy/tensor_xyxy_2d' \
-        #     'into lf_output_32_dist/lf_output_32_xyxy/lf_output_32_xyxy_2d',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # create lf_output_32_dist
-        # lf_output_32_dist = LayersFake(
-        #     n=4,
-        #     ref=tensor_dist,
-        #     width_nominal=20,
-        #     height_nominal=20,
-        #     buff=0.05,
-        #     expanded=True,
-        # ).move_to(tensor_dist).scale(0.95)
-
-        # # create lf_output_32_xyxy
-        # lf_output_32_xyxy = lf_output_32_dist.copy()
-        # lf_output_32_xyxy.move_to(tensor_xyxy)
-
-        # # create lf_output_32_xyxy_2d
-        # lf_output_32_xyxy_2d = LayersFake(
-        #     n=1,
-        #     ref=tensor_xyxy_2d,
-        #     width_nominal=4,
-        #     height_nominal=400,
-        #     expanded=True,
-        # ).move_to(tensor_xyxy_2d)
-
-        # # simplify tensor_dist/tensor_xyxy/tensor_xyxy_2d
-        # self.play(AnimationGroup(
-        #     Unwrite(tensor_dist, lag_ratio=0, run_time=1.0),
-        #     Write(lf_output_32_dist, run_time=1.0),
-        #     Unwrite(tensor_xyxy, lag_ratio=0, run_time=1.0),
-        #     Write(lf_output_32_xyxy, run_time=1.0),
-        #     Unwrite(tensor_xyxy_2d, lag_ratio=0, run_time=1.0),
-        #     Write(lf_output_32_xyxy_2d, run_time=1.0),
-        # ))
-        # self.wait(0.3)
-
-
-        # # ************************************************************
-        # self.next_section(
-        #     'simplify explainer_dist and explainer_xyxy ' \
-        #     'into 4x4 mini version',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # clean explainer_dist and explainer_xyxy
-        # self.play(AnimationGroup(
-        #     explainer_dist.hide_arrows(
-        #         aargs={},
-        #         gargs={'lag_ratio':0, 'run_time':0.5},
-        #     ),
-        #     explainer_xyxy.to_dots(
-        #         aargs={},
-        #         gargs={'lag_ratio':0, 'run_time':0.5},
-        #     ),
-        # ))
-        # self.wait(0.3)
-        # self.play(AnimationGroup(
-        #     explainer_dist.hide_anchor_points(
-        #         lag_ratio=0, run_time=0.5,
-        #     ),
-        #     explainer_xyxy.hide_anchor_points(
-        #         lag_ratio=0, run_time=0.5,
-        #     ),
-        # ))
-        # self.wait(0.3)
-        # self.remove(explainer_dist, explainer_xyxy)
+        # clean up system_offset and system_xyxy
+        self.play(AnimationGroup(
+            explainer_offset.hide_arrows(
+                aargs={},
+                gargs={'lag_ratio':0.0},
+            ),
+            explainer_xyxy.to_dots(
+                aargs={},
+                gargs={'lag_ratio':0.0},
+            ),
+            run_time=wt,
+        ))
+        self.play(AnimationGroup(
+            explainer_offset.hide_anchor_points(
+                lag_ratio=0.0,
+            ),
+            explainer_xyxy.hide_anchor_points(
+                lag_ratio=0.0,
+            ),
+            run_time=wt,
+        ))
+        self.wait(wt)
+        self.remove(explainer_offset, explainer_xyxy)
         
-        # # create mini version explainer_dist and explainer_xyxy
-        # # data_cls is not used here
-        # explainer_dist = ExplainerBbox(
-        #     background=background,
-        #     data=np.load(MINI_32_DIST_PATH),
-        #     data_cls=np.load(MINI_32_PROB_PATH),
-        #     sf_nominal=32,
-        # )
-        # explainer_xyxy = ExplainerBbox(
-        #     background=explainer_xyxy_bg[1],
-        #     data=np.load(MINI_32_DIST_PATH),
-        #     data_cls=np.load(MINI_32_PROB_PATH),
-        #     sf_nominal=32,
-        # )
-        # explainer_dist_bg = Group(explainer_dist, background)
-        # explainer_xyxy_bg = Group(explainer_xyxy, explainer_xyxy_bg[1])
+        # create e32_offset+e32_xyxy -> t32_offset+t32_xyxy
+        e32_offset = Explainer.from_file(
+            background=background_offset,
+            version=160,
+            dot_config={},
+            rect_config={},
+        )
+        e32_xyxy = Explainer.from_file(
+            background=background_xyxy,
+            version=160,
+            dot_config={},
+            rect_config={},
+        )
+        s32_offset = Group(background_offset, e32_offset)
+        s32_xyxy = Group(background_xyxy, e32_xyxy)
+        self.add(e32_offset, e32_xyxy)
 
-        # # show content for explainer_dist and explainer_xyxy
-        # self.play(AnimationGroup(
-        #     explainer_dist.show_anchor_points(
-        #         lag_ratio=0, run_time=0.5,
-        #     ),
-        #     explainer_xyxy.show_anchor_points(
-        #         lag_ratio=0, run_time=0.5,
-        #     ),
-        # ))
-        # self.wait(0.5)
-        # self.play(AnimationGroup(
-        #     explainer_dist.show_arrows(
-        #         arrow_config={'stroke_width':2, 'tip_length':0.06,},
-        #         aargs={},
-        #         gargs={'lag_ratio':0, 'run_time':0.5},
-        #     ),
-        #     explainer_xyxy.to_rects(
-        #         rect_config={'width':1,},
-        #         aargs={},
-        #         gargs={'lag_ratio':0, 'run_time':0.5},
-        #     ),
-        # ))
-        # self.wait(0.5)
+        # show anchor points of new explainers
+        self.play(AnimationGroup(
+            e32_offset.show_anchor_points(
+                lag_ratio=0.5,
+            ),
+            e32_xyxy.show_anchor_points(
+                lag_ratio=0.5,
+            ),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show arrows and rects separately
+        self.play(AnimationGroup(
+            e32_offset.show_arrows(
+                arrow_config=ARROW_CONFIG_4x4,
+            ),
+            e32_xyxy.to_rects(
+                rect_config={},
+                aargs={},
+                gargs={
+                    'lag_ratio':0,
+                    'run_time':wt,
+                },
+            ),
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'into big map',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # arrows...
+        mobs = Group(
+            s32_xyxy
+        )
+        # TODO:.....
+
 
         # # # ************************************************************
         # # self.next_section(
-        # #     'generate explainer_xyxy_2d from explainer_xyxy',
+        # #     'save for next scene which go back to big map',
         # #     skip_animations=True,
         # # )
         # # # ************************************************************
-
-        # # ************************************************************
-        # self.next_section(
-        #     'save for next scene which go back to big map',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # everything = Group(
-        #     explainer_dist_bg,
-        #     explainer_xyxy_bg,
-        #     lf_output_32_dist,
-        #     lf_output_32_xyxy,
-        #     lf_output_32_xyxy_2d,
-        # )
-        # save_everything(S013_EVERYTHING, everything)
+        # # everything = Group(
+        # #     explainer_dist_bg,
+        # #     explainer_xyxy_bg,
+        # #     lf_output_32_dist,
+        # #     lf_output_32_xyxy,
+        # #     lf_output_32_xyxy_2d,
+        # # )
+        # # save_everything(S013_EVERYTHING, everything)
