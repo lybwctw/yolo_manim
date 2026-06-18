@@ -57,7 +57,7 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'multiple prob prediction thinking for aps',
+            'multiple prob prediction thinking',
             skip_animations=False,
         )
         # ************************************************************
@@ -97,6 +97,47 @@ class MainScene(Scene):
             ))
         self.wait(wt)
 
+        # ************************************************************
+        self.next_section(
+            'expected inside anchor point pbars',
+            skip_animations=False,
+        )
+        # ************************************************************
+
+        # ************************************************************
+        self.next_section(
+            'sample, pbars numbers',
+            skip_animations=False,
+        )
+        # ************************************************************
+
+        # ************************************************************
+        self.next_section(
+            'OPTIONAL: loop through several samples',
+            skip_animations=False,
+        )
+        # ************************************************************
+
+        # ************************************************************
+        self.next_section(
+            'prob: explainer to tensor',
+            skip_animations=False,
+        )
+        # ************************************************************
+
+        # ************************************************************
+        self.next_section(
+            'prob_2d: explainer to tensor',
+            skip_animations=False,
+        )
+        # ************************************************************
+
+        # ************************************************************
+        self.next_section(
+            'simplify ...',
+            skip_animations=False,
+        )
+        # ************************************************************
         # # start with anchor points
         # self.play(explainer.show_anchor_points(lag_ratio=0))
         # self.wait()

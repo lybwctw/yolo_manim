@@ -168,7 +168,7 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'inside anchor points capture',
+            'expected inside anchor point capture',
             skip_animations=False,
         )
         # ************************************************************
