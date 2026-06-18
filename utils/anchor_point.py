@@ -984,6 +984,7 @@ class AnchorPoint(VMobject):
     # ---------------- pbars related -------------------
     def create_pbars(
         self,
+        random: bool = False,       # use random prob instead of internal
         pbar_config: dict = {},
     ) -> VGroup:
         """Create pbars.
@@ -994,28 +995,32 @@ class AnchorPoint(VMobject):
         pbar_width = pbar_space * (1-(n_probs-1)*PBAR_GAP_RATIO) / n_probs
         cfg = {**PBAR_CONFIG, **pbar_config}
 
+        prob = self.prob if not random else np.random.random(size=n_probs)
         pbars = VGroup(
             Rectangle(
                 width=pbar_width,
                 height=pbar_space*p,
                 fill_color=PBAR_COLORS[i],
                 **cfg,
-            ).move_to(
-                self.dot.get_center()
-            ) for i, p in enumerate(self.prob)
+            ) for i, p in enumerate(prob)
         )
-        pbars.arrange(RIGHT, buff=pbar_gap)
+        # NOTE: arrange then move
+        pbars.arrange(
+            RIGHT,
+            buff=pbar_gap,
+        ).move_to(self.dot)
         return pbars
 
     def show_pbars(
         self,
+        random: bool = False,
         pbar_config: dict = {},
-        aargs: dict = {},
-        gargs: dict = {},
+        **aargs,
     ) -> Animation:
         """Show pbars.
         """
         pbars_end = self.create_pbars(
+            random=random,
             pbar_config=pbar_config,
         )
         pbars_start = pbars_end.copy()
@@ -1024,33 +1029,28 @@ class AnchorPoint(VMobject):
         self.pbars = pbars_start
         self.add(self.pbars)
         return AnimationGroup(
-            *(Transform(p0, p1, **aargs)
+            *(Transform(p0, p1)
               for p0, p1 in zip(self.pbars, pbars_end)),
-            **gargs,
+            **aargs,
         )
 
-    # def sync_pbars(
-    #     self,
-    #     pbar_config: dict | None = None,
-    #     aargs: dict | None = None,
-    #     gargs: dict | None = None,
-    # ) -> Animation:
-    #     """
-    #     Sync pbars into current prob.
-
-    #     Example
-    #     -------
-    #     ap = AnchorPoint(reg=np.random.rand(4, 16))
-    #     self.play(ap.sync_pbars())
-    #     """
-    #     pbars_end = self.create_pbars(
-    #         pbar_config=pbar_config,
-    #     )     # current prob
-    #     return AnimationGroup(
-    #         *(Transform(p0, p1, **(aargs or {}))
-    #         for p0, p1 in zip(self.pbars, pbars_end)),
-    #         **gargs,
-    #     )
+    def sync_pbars(
+        self,
+        random: bool = False,
+        pbar_config: dict = {},
+        **aargs,
+    ) -> Animation:
+        """Sync pbars into current prob or random.
+        """
+        pbars_end = self.create_pbars(
+            random=random,
+            pbar_config=pbar_config,
+        )
+        return AnimationGroup(
+            *(Transform(p0, p1)
+            for p0, p1 in zip(self.pbars, pbars_end)),
+            **aargs,
+        )
 
     def hide_pbars(
         self,

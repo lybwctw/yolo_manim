@@ -284,59 +284,41 @@ class Explainer(VGroup):
         )
         return anim
 
-
     def show_pbars(
         self,
-        pbar_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
-        ggargs: dict | None = None,
+        random: bool = False,
+        pbar_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
-        """
-        Show pbars for each anchor points.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.show_pbars())
+        """Show pbars for all anchor points.
         """
         anim = AnimationGroup(
             *(ap.show_pbars(
+                random=random,
                 pbar_config=pbar_config,
-                aargs=aargs,
-                gargs=gargs,
+                **aargs,
             ) for ap in self.anchor_points),
-            **ggargs,
+            **gargs,
         )
         return anim
 
     def sync_pbars(
         self,
-        pbar_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
-        ggargs: dict | None = None,
+        random: bool = False,
+        pbar_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
-        """
-        Sync pbars into current prob for all anchor points.
-        Used after updating explainer.prob.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.sync_pbars())
+        """Sync pbars to current prob or random.
         """
         anim = AnimationGroup(
             *(ap.sync_pbars(
+                random=random,
                 pbar_config=pbar_config,
-                aargs=aargs,
-                gargs=gargs,
+                **aargs,
             ) for ap in self.anchor_points),
-            **ggargs,
+            **gargs,
         )
         return anim
 

@@ -4,11 +4,11 @@ from utils.explainer import Explainer
 from utils.show_shape import ShowShape, HideShape
 from utils.yolo_annotation import YoloAnnotation
 from utils.image_pad import ImagePad
-from utils.constants import *
-from utils.line_matrix import LineMatrix
-from utils.anchor_point import AnchorPoint
-from utils.general import import_mobs, export_mobs
+from utils.general import export_mobs
 from utils.layers_fake import LayersFake
+from utils.arrow_comment import ArrowComment
+from utils.show_shape import ShowShape, HideShape
+from utils.constants import *
 
 import random
 
@@ -87,7 +87,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and explainer anew',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -129,7 +129,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'anchor points capture thinking',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show grid then anchor points
@@ -166,91 +166,91 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'inside anchor points capture',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # show true annotation
-        # self.play(Write(
-        #     annotation,
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # ************************************************************
+        self.next_section(
+            'inside anchor points capture',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # show true annotation
+        self.play(Write(
+            annotation,
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # hide labels for now
-        # self.play(AnimationGroup(
-        #     *(label.animate.set_opacity(opacity=0)
-        #         for label in annotation.get_labels()),
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # hide labels for now
+        self.play(AnimationGroup(
+            *(label.animate.set_opacity(opacity=0)
+                for label in annotation.get_labels()),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # collect inside/outside anchor points
-        # aps_in, aps_out = explainer.collect_aps(
-        #     func=lambda ap: any(ap.inside_box(box) for box in annotation.get_boxes()),
-        # )
+        # collect inside/outside anchor points
+        aps_in, aps_out = explainer.collect_aps(
+            func=lambda ap: any(ap.inside_box(box) for box in annotation.get_boxes()),
+        )
 
-        # # focus on important anchor points
-        # self.play(AnimationGroup(
-        #     AnimationGroup(
-        #         *(ap.mob.animate.set_style(
-        #             **AP_DOT_CONFIG_FOCUS,
-        #         ) for ap in aps_in),
-        #         lag_ratio=0,
-        #         run_time=wt,
-        #     ),
-        #     AnimationGroup(
-        #         *(ap.mob.animate.set_style(
-        #             **AP_DOT_CONFIG_OTHERS,
-        #         ) for ap in aps_out),
-        #         lag_ratio=0,
-        #         run_time=wt,
-        #     ),
-        # ))
-        # self.wait(wt)
+        # focus on important anchor points
+        self.play(AnimationGroup(
+            AnimationGroup(
+                *(ap.mob.animate.set_style(
+                    **AP_DOT_CONFIG_FOCUS,
+                ) for ap in aps_in),
+                lag_ratio=0,
+                run_time=wt,
+            ),
+            AnimationGroup(
+                *(ap.mob.animate.set_style(
+                    **AP_DOT_CONFIG_OTHERS,
+                ) for ap in aps_out),
+                lag_ratio=0,
+                run_time=wt,
+            ),
+        ))
+        self.wait(wt)
 
-        # # important anchor points capture
-        # self.play(AnimationGroup(
-        #     *(ap.to_rect(rect_config=AP_RECT_CONFIG_FOCUS,
-        #     ) for ap in aps_in),
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # important anchor points capture
+        self.play(AnimationGroup(
+            *(ap.to_rect(rect_config=AP_RECT_CONFIG_FOCUS,
+            ) for ap in aps_in),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # other anchor points capture
-        # self.play(AnimationGroup(
-        #     *(ap.to_rect(rect_config=AP_RECT_CONFIG_OTHERS,
-        #     ) for ap in aps_out),
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # other anchor points capture
+        self.play(AnimationGroup(
+            *(ap.to_rect(rect_config=AP_RECT_CONFIG_OTHERS,
+            ) for ap in aps_out),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # restore all anchor points
-        # self.play(explainer.to_dots(
-        #     dot_config={},
-        #     aargs={},
-        #     gargs={'lag_ratio': 0.0, 'run_time': wt},
-        # ))
-        # self.wait(wt)
+        # restore all anchor points
+        self.play(explainer.to_dots(
+            dot_config={},
+            aargs={},
+            gargs={'lag_ratio': 0.0, 'run_time': wt},
+        ))
+        self.wait(wt)
 
-        # # remove annotation
-        # self.play(Unwrite(
-        #     annotation,
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # remove annotation
+        self.play(Unwrite(
+            annotation,
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'sample, xyxy output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # focus on sample anchor point
@@ -307,7 +307,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, offset output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show arrows
@@ -406,7 +406,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, normed offset output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show divides for arrow offsets
@@ -473,7 +473,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'OPTIONAL: loop through several samples',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         sample_idxs = random.sample(
@@ -554,7 +554,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'explainer: two initial explainers',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # scale and shift explainer
@@ -580,7 +580,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'offset: explainer to tensor',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # synced creation: arrows + tensors
@@ -607,7 +607,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'xyxy: explainer to tensor',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # synced creation: rects + tensors
@@ -634,7 +634,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'reshape xyxy tensor to 2d version',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make room for reshaped xyxy tensor
@@ -670,7 +670,7 @@ class MainScene(Scene):
         self.next_section(
             'simplify tensor_offset/tensor_xyxy/tensor_xyxy_2d' \
             'into t32_offset/t32_xyxy/t32_xyxy_2d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # replace tensor_offset with t32_offset
@@ -833,24 +833,83 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        # arrows...
+        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*10).set_color(PURE_RED)
+        aci_8 = ArrowComment(False, RIGHT).scale(0.8).move_to(UP*5)
+        act_8 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*5)
+        act_9 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*5)
+        acm_7 = ArrowComment(True, DOWN).scale(0.8).move_to(LEFT*10)
+        acm_8 = ArrowComment(True, DOWN).scale(0.8).move_to(RIGHT*10)
+
+        # show big map without s32_xyxy_2d
         mobs = Group(
-            s32_xyxy
+            Mobject(), s32_offset, aci_8,     s32_xyxy, Mobject(), Mobject(),
+            Mobject(), acm_7,      Mobject(), acm_8,    Mobject(), Mobject(),
+            ac_game,   t32_offset, act_8,     t32_xyxy, act_9,     t32_xyxy_2d,
         )
-        # TODO:.....
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
+            rows=3,
+            cols=6,
+            buff=0.5,
+        ).scale(0.5).center()
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+            rate_func=rate_functions.ease_out_back,
+        ))
+        self.wait(wt)
 
+        # introduce s32_xyxy_2d
+        aci_9 = aci_8.copy().move_to(UP*5)
+        acm_9 = acm_8.copy().move_to(RIGHT*5)
+        s32_xyxy_2d = s32_xyxy.copy().move_to(UP*5)
+        mobs = Group(
+            Mobject(), s32_offset, aci_8,     s32_xyxy, aci_9,     s32_xyxy_2d,
+            Mobject(), acm_7,      Mobject(), acm_8,    Mobject(), acm_9,
+            ac_game,   t32_offset, act_8,     t32_xyxy, act_9,     t32_xyxy_2d,
+        )
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
+            rows=3,
+            cols=6,
+            buff=0.5,
+        ).center()
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+            rate_func=rate_functions.ease_out_back,
+        ))
+        self.wait(wt)
 
-        # # # ************************************************************
-        # # self.next_section(
-        # #     'save for next scene which go back to big map',
-        # #     skip_animations=True,
-        # # )
-        # # # ************************************************************
-        # # everything = Group(
-        # #     explainer_dist_bg,
-        # #     explainer_xyxy_bg,
-        # #     lf_output_32_dist,
-        # #     lf_output_32_xyxy,
-        # #     lf_output_32_xyxy_2d,
-        # # )
-        # # save_everything(S013_EVERYTHING, everything)
+        # show shapes for tensors
+        ac_all = VGroup(
+            aci_8, aci_9,
+            acm_7, acm_8, acm_9,
+            ac_game, act_8, act_9,
+        ).save_state()
+        self.play(ac_all.animate(
+            run_time=wt,
+        ).fade(0.8))
+        self.play(AnimationGroup(
+            ShowShape(t32_offset, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
+            ShowShape(t32_xyxy, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
+            ShowShape(t32_xyxy_2d, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # hide shapes for tensors
+        self.play(AnimationGroup(
+            HideShape(t32_offset),
+            HideShape(t32_xyxy),
+            HideShape(t32_xyxy_2d),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.play(ac_all.animate(
+            run_time=wt,
+        ).restore())
+        self.wait(wt)
+
+        export_mobs(__file__, mobs)     # NOTE: used by ???
