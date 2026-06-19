@@ -324,26 +324,16 @@ class Explainer(VGroup):
 
     def hide_pbars(
         self,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
-        ggargs: dict | None = None,
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
-        """
-        Hide pbars for all anchor points.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.hide_pbars())
+        """Hide pbars for all anchor points.
         """
         anim = AnimationGroup(
             *(ap.hide_pbars(
-                aargs=aargs,
-                gargs=gargs,
+                **aargs
             ) for ap in self.anchor_points),
-            **ggargs,
+            **gargs,
         )
         return anim
 

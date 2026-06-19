@@ -7,6 +7,8 @@ from typing import Self
 from utils.comment import Comment
 from utils.constants import *
 
+from random import uniform
+
 # ------------- general --------------
 DOT_CONFIG = {
     'fill_opacity': 0.0,
@@ -53,14 +55,15 @@ ARROW_DIVIDE_COLOR = GRAY
 ARROW_DIVIDE_BUFF = 0.03
 
 # ------------- pbar related --------------
-PBAR_SPACE_RATIO = 0.8          # pbar space : unit space
+PBAR_SPACE_RATIO = 0.6          # pbar space : unit space
 PBAR_GAP_RATIO = 0.1            # pbar gap : pbar space
 PBAR_COLORS = KK_COLORS
 PBAR_CONFIG = {
     'stroke_width': 0,
     'fill_opacity': 1.0,
 }
-# CLASS_COLORS = PBAR_COLORS
+PBAR_NEG_RANGE = (0, 0.3)
+PBAR_POS_RANGE = (0.7, 1.0)
 
 # ------------- label related --------------
 LABEL_COLORS = PBAR_COLORS
@@ -985,6 +988,7 @@ class AnchorPoint(VMobject):
     def create_pbars(
         self,
         random: bool = False,       # use random prob instead of internal
+        target: int | None = None,  # target class index
         pbar_config: dict = {},
     ) -> VGroup:
         """Create pbars.
@@ -995,7 +999,16 @@ class AnchorPoint(VMobject):
         pbar_width = pbar_space * (1-(n_probs-1)*PBAR_GAP_RATIO) / n_probs
         cfg = {**PBAR_CONFIG, **pbar_config}
 
-        prob = self.prob if not random else np.random.random(size=n_probs)
+        # prob = self.prob if not random else np.random.random(size=n_probs)
+        if not random:
+            prob = self.prob
+        else:
+            if target is not None:
+                prob = [uniform(*PBAR_NEG_RANGE) for _ in range(n_probs)]
+                prob[target] = uniform(*PBAR_POS_RANGE)
+            else:
+                prob = np.random.random(size=n_probs)
+
         pbars = VGroup(
             Rectangle(
                 width=pbar_width,
@@ -1014,6 +1027,7 @@ class AnchorPoint(VMobject):
     def show_pbars(
         self,
         random: bool = False,
+        target: int | None = None,  # target class index
         pbar_config: dict = {},
         **aargs,
     ) -> Animation:
@@ -1021,6 +1035,7 @@ class AnchorPoint(VMobject):
         """
         pbars_end = self.create_pbars(
             random=random,
+            target=target,
             pbar_config=pbar_config,
         )
         pbars_start = pbars_end.copy()
@@ -1054,8 +1069,7 @@ class AnchorPoint(VMobject):
 
     def hide_pbars(
         self,
-        aargs: dict = {},
-        gargs: dict = {},
+        **aargs,
     ) -> Animation:
         """Hide pbars.
         """
@@ -1066,9 +1080,9 @@ class AnchorPoint(VMobject):
         self.remove(self.pbars)
         del self.pbars
         return AnimationGroup(
-            *(Transform(p0, p1, **aargs)
+            *(Transform(p0, p1)
             for p0, p1 in zip(pbars_start, pbars_end)),
-            **gargs,
+            **aargs,
         )
 
     # ---------------- labels related -------------------

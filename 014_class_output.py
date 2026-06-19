@@ -4,11 +4,47 @@ from utils.arrow_comment import ArrowComment
 from utils.image_raw import ImageRaw
 from utils.image_pad import ImagePad
 from utils.yolo_annotation import YoloAnnotation
+from utils.anchor_point import AnchorPoint
 from utils.explainer import Explainer
 from utils.general import export_mobs
 from utils.layers_fake import LayersFake
 from utils.show_shape import ShowShape, HideShape
 from utils.constants import *
+
+import random
+
+# ---------------- anchor point related -------------------
+AP_DOT_CONFIG_FOCUS = {
+    'stroke_color': WHITE,
+    'stroke_opacity': 1.0,
+}
+AP_DOT_CONFIG_OTHERS = {
+    'stroke_color': GRAY,
+    'stroke_opacity': 0.5,
+}
+AP_RECT_CONFIG_FOCUS = {
+    'stroke_color': WHITE,
+    'stroke_opacity': 1.0,
+}
+AP_RECT_CONFIG_OTHERS = {
+    'stroke_color': GRAY,
+    'stroke_opacity': 0.3,
+    'stroke_width': 1.0,
+}
+
+# ---------------- util functions -------------------
+def random_target(
+    ap: AnchorPoint,
+    annotation: YoloAnnotation,
+):
+    cands = []
+    for box, cls in zip(annotation.get_boxes(), annotation.cls):
+        if ap.inside_box(box):
+            cands.append(cls)
+    if len(cands) == 0:
+        return None
+    else:
+        return random.choice(cands)
 
 wt = SHORT_DURATION
 class MainScene(Scene):
@@ -16,7 +52,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and and explainer new',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -63,7 +99,7 @@ class MainScene(Scene):
         # ************************************************************
         # show anchor points
         self.play(explainer.show_anchor_points(
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
@@ -71,23 +107,22 @@ class MainScene(Scene):
         # fade anchor points
         self.play(AnimationGroup(
             *(ap.mob.animate.set_style(
-                stroke_opacity=0.3,
+                stroke_opacity=0.0,
             ) for ap in explainer.anchor_points),
             lag_ratio=0.0,
             run_time=wt,
         ))
-        self.wait(wt)
 
         # show pbars based on anchor points
         self.play(explainer.show_pbars(
             random=True,
             pbar_config={},
             aargs={},
-            gargs={'lag_ratio': 0.5, 'run_time': wt},
+            gargs={'lag_ratio': 0.0, 'run_time': wt},
         ))
         self.wait(wt)
 
-        # sync to random multiple times
+        # sync to random pbars multiple times
         for i in range(5):
             self.play(explainer.sync_pbars(
                 random=True,
@@ -103,6 +138,79 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+        # hide pbars, back to anchor points
+        self.play(AnimationGroup(
+            explainer.hide_pbars(
+                aargs={},
+                gargs={'lag_ratio': 0.0},
+            ),
+            AnimationGroup(
+                *(ap.mob.animate.set_style(
+                    stroke_opacity=1.0,
+                ) for ap in explainer.anchor_points),
+                lag_ratio=0.0,
+            ),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show true annotation
+        self.play(Write(
+            annotation,
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # focus on important anchor points
+        aps_in, aps_out = explainer.collect_aps(
+            func=lambda ap: any(ap.inside_box(box) for box in annotation.get_boxes()),
+        )
+        self.play(AnimationGroup(
+            AnimationGroup(
+                *(ap.mob.animate.set_style(
+                    **AP_DOT_CONFIG_FOCUS,
+                ) for ap in aps_in),
+                lag_ratio=0,
+                run_time=wt,
+            ),
+            AnimationGroup(
+                *(ap.mob.animate.set_style(
+                    **AP_DOT_CONFIG_OTHERS,
+                ) for ap in aps_out),
+                lag_ratio=0,
+                run_time=wt,
+            ),
+        ))
+        self.wait(wt)
+
+        # hide labels and fade boxes
+        self.play(AnimationGroup(
+            *(label.animate.set_opacity(opacity=0)
+                for label in annotation.get_labels()),
+            *(box.animate.fade(0.5)
+              for box in annotation.get_boxes()),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # FIXME: show EXPECTED pbars (use real ones?)
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                ap.show_pbars(
+                    random=True,
+                    target=random_target(ap, annotation),
+                    pbar_config={},
+                ),
+                ap.mob.animate.set_style(
+                    stroke_opacity=0.0,
+                )
+            ) for ap in aps_in),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

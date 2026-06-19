@@ -14,7 +14,7 @@ import random
 
 # ---------------- anchor point related -------------------
 AP_DOT_CONFIG_FOCUS = {
-    'stroke_color': PURE_YELLOW,
+    'stroke_color': WHITE,
     'stroke_opacity': 1.0,
 }
 AP_DOT_CONFIG_OTHERS = {
@@ -22,7 +22,7 @@ AP_DOT_CONFIG_OTHERS = {
     'stroke_opacity': 0.5,
 }
 AP_RECT_CONFIG_FOCUS = {
-    'stroke_color': PURE_YELLOW,
+    'stroke_color': WHITE,
     'stroke_opacity': 1.0,
 }
 AP_RECT_CONFIG_OTHERS = {
@@ -189,12 +189,10 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # collect inside/outside anchor points
+        # focus on important anchor points
         aps_in, aps_out = explainer.collect_aps(
             func=lambda ap: any(ap.inside_box(box) for box in annotation.get_boxes()),
         )
-
-        # focus on important anchor points
         self.play(AnimationGroup(
             AnimationGroup(
                 *(ap.mob.animate.set_style(
