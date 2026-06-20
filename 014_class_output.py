@@ -32,6 +32,24 @@ AP_RECT_CONFIG_OTHERS = {
     'stroke_width': 1.0,
 }
 
+# ---------------- explainer related -------------------
+
+# ---------------- tensor related -------------------
+# NOTE: same as 013
+TENSOR_PROB_CONFIG = {
+    'side_length': 0.15,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'fill_opacity': 0.7,
+}
+TENSOR_PROB_2D_CONFIG = {
+    'line_width': 0.3,
+    'stroke_width': 1.0,
+    'stroke_opacity': 1.0,
+    'stroke_color': WHITE,
+}
+TENSOR_BUFF_RATIO = 0.5
+
 # ---------------- util functions -------------------
 def random_target(
     ap: AnchorPoint,
@@ -52,7 +70,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and and explainer new',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -94,7 +112,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'multiple prob prediction thinking',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show anchor points
@@ -212,19 +230,27 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'sample, pbars numbers',
-            skip_animations=False,
-        )
-        # ************************************************************
-
-        # ************************************************************
-        self.next_section(
-            'OPTIONAL: loop through several samples',
-            skip_animations=False,
-        )
-        # ************************************************************
+        # clean up
+        # FIXME: fade anchor points?
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                ap.hide_pbars(),
+                ap.to_dot(),
+            ) for ap in aps_in),
+            Unwrite(
+                annotation,
+                lag_ratio=0.0,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.play(AnimationGroup(
+            *(ap.to_dot()
+              for ap in explainer.anchor_points),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -232,13 +258,57 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+        # scale and shift explainer
+        self.play(system.animate(
+            run_time=wt,
+        ).scale(0.5).shift(UP*2))    # same as box counterpart
+        self.wait(wt)
+
+        # renaming
+        system_prob = system
+        background_prob = system_prob[0]
+        explainer_prob = system_prob[1]
+
+        # synced creation: probs + tensor
+        tensor_prob = explainer_prob.create_tensor_prob(
+            cell_config=TENSOR_PROB_CONFIG,
+            buff_ratio=TENSOR_BUFF_RATIO,
+        )
+        tensor_prob.shift(DOWN*4)
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                ap.show_pbars(
+                    random=True,
+                    pbar_config={},
+                ),
+                ap.mob.animate.set_style(
+                    stroke_opacity=0.0,
+                ),
+                Write(series),
+            ) for ap, series in zip(
+                explainer_prob.anchor_points,
+                tensor_prob,
+            )),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # TODO: show "annotation" on each layer of tensor?
 
         # ************************************************************
         self.next_section(
-            'prob_2d: explainer to tensor',
+            'reshape prob tensor to 2d version',
             skip_animations=False,
         )
         # ************************************************************
+        # make room for reshaped xyxy tensor
+        self.play(AnimationGroup(
+            system_prob.animate.shift(LEFT*1.5),
+            tensor_prob.animate.shift(LEFT*1.5),
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

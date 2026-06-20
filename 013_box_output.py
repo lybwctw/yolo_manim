@@ -56,6 +56,7 @@ ARROW_CONFIG_4x4 = {
     'max_tip_length_to_length_ratio': 0.85,          # FIXME: 0.25 by default
 }
 # ---------------- tensor related -------------------
+# NOTE: same as 014
 TENSOR_OFFSET_CONFIG = {
     'side_length': 0.15,
     'stroke_width': 2.0,
@@ -581,7 +582,7 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        # synced creation: arrows + tensors
+        # synced creation: arrows + tensor
         tensor_offset = explainer_offset.create_tensor_offset(
             cell_config=TENSOR_OFFSET_CONFIG,
             buff_ratio=TENSOR_BUFF_RATIO,

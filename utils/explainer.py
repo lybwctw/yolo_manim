@@ -1102,7 +1102,6 @@ class Explainer(VGroup):
                 stack = VGroup(Square(
                     stroke_color=COLOR_MAP[direction],
                     fill_color=BLACK,
-                    # color=COLOR_MAP[direction],
                     **cell_config,
                 ).set_z_index(4-idx) for idx, direction in enumerate(DIRECTION_SERIES))
                 stack.arrange(UR, buff=-side_length*buff_ratio)
@@ -1130,6 +1129,31 @@ class Explainer(VGroup):
                     fill_color=BLACK,
                     **cell_config,
                 ).set_z_index(4-idx) for idx, direction in enumerate(DIRECTION_SERIES))
+                stack.arrange(UR, buff=-side_length*buff_ratio)
+                stack.move_to(ap.dot)
+                tensor.add(stack)
+        return tensor
+
+    def create_tensor_prob(
+        self,
+        cell_config: dict = {},
+        buff_ratio: float = 0.5,
+    ) -> VGroup:
+        """Create a vg of vg of squares representing 3d prob.
+           aligned to anchor points.
+        """
+        cell_config = {**DEFAULT_TENSOR_CELL_CONFIG, **cell_config}
+        side_length = cell_config['side_length']
+
+        tensor = VGroup()
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                ap = self.anchor_points[i*self.shape[1] + j]
+                stack = VGroup(Square(
+                    stroke_color=color,
+                    fill_color=BLACK,
+                    **cell_config,
+                ).set_z_index(4-idx) for idx, color in enumerate(KK_COLORS))
                 stack.arrange(UR, buff=-side_length*buff_ratio)
                 stack.move_to(ap.dot)
                 tensor.add(stack)
