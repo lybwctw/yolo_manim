@@ -653,7 +653,7 @@ class MainScene(Scene):
             h_buff_ratio=0.017,             # buff between cols
         ).move_to(RIGHT*4.5)
 
-        # transform xyxy into 2d version
+        # transform xyxy into xyxy_2d
         tensor_xyxy_2d = tensor_xyxy.copy()
         self.play(AnimationGroup(
             *(Transform(stack, row) for stack, row in zip(
@@ -781,7 +781,7 @@ class MainScene(Scene):
         self.wait(wt)
         self.remove(explainer_offset, explainer_xyxy)
         
-        # create e32_offset+e32_xyxy -> t32_offset+t32_xyxy
+        # create e32_offset+e32_xyxy -> s32_offset+s32_xyxy
         e32_offset = Explainer.from_file(
             background=background_offset,
             version=160,
@@ -810,7 +810,7 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # show arrows and rects separately
+        # show arrows and rects for new explainers
         self.play(AnimationGroup(
             e32_offset.show_arrows(
                 arrow_config=ARROW_CONFIG_4x4,
@@ -880,7 +880,7 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # show shapes for tensors
+       # show shapes for tensors
         ac_all = VGroup(
             aci_8, aci_9,
             acm_7, acm_8, acm_9,
@@ -911,4 +911,4 @@ class MainScene(Scene):
         ).restore())
         self.wait(wt)
 
-        export_mobs(__file__, mobs)     # NOTE: used by ???
+        export_mobs(__file__, mobs)     # NOTE: used by 015

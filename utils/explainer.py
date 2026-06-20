@@ -1184,6 +1184,32 @@ class Explainer(VGroup):
         tensor.arrange(DOWN, buff=h_buff_ratio).center()
         return tensor
 
+    def create_tensor_prob_2d(
+        self,
+        line_config: dict = {},
+        w_buff_ratio: float = 0.1,
+        h_buff_ratio: float = 0.1,
+    ) -> VGroup:
+        """Create a vg of vg of lines representing 2d prob.
+           centered, not aligned to anchor points.
+        """
+        line_config = {**DEFAULT_TENSOR_LINE_CONFIG, **line_config}
+        line_width = line_config.pop('line_width')
+
+        tensor = VGroup()
+        n_prob = self.prob_2d.shape[-1]
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                row = VGroup(Line(
+                    start=ORIGIN,
+                    end=RIGHT*line_width,
+                    **line_config,
+                ) for _ in range(n_prob))
+                row.arrange(RIGHT, buff=w_buff_ratio)
+                tensor.add(row)
+        tensor.arrange(DOWN, buff=h_buff_ratio).center()
+        return tensor
+
     @property
     def sf_screen(self) -> float:
         """

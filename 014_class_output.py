@@ -153,7 +153,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'expected inside anchor point pbars',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # hide pbars, back to anchor points
@@ -255,7 +255,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prob: explainer to tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # scale and shift explainer
@@ -299,7 +299,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'reshape prob tensor to 2d version',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make room for reshaped xyxy tensor
@@ -310,162 +310,206 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
+        # create 2d version prob tenso
+        tensor_prob_2d_target = explainer_prob.create_tensor_prob_2d(
+            line_config=TENSOR_PROB_2D_CONFIG,
+            w_buff_ratio=0.1,               # buff between rows
+            h_buff_ratio=0.017,             # buff between cols
+        ).move_to(RIGHT*3.0)
+
+        # transform prob into prob_2d
+        tensor_prob_2d = tensor_prob.copy()
+        self.play(AnimationGroup(
+            *(Transform(stack, row) for stack, row in zip(
+                tensor_prob_2d, tensor_prob_2d_target
+            )),
+            lag_ratio=0.5,
+            run_time=wt,                    # NOTE: make this long
+            rate_func=rate_functions.ease_in_circ,
+        ))
+        self.wait(wt)
+
         # ************************************************************
         self.next_section(
-            'simplify ...',
+            'simplify tensor_prob/tensor_prob_2d' \
+            'into t32_prob/t32_prob_2dA',
             skip_animations=False,
         )
         # ************************************************************
-        # # start with anchor points
-        # self.play(explainer.show_anchor_points(lag_ratio=0))
-        # self.wait()
-        # self.play(AnimationGroup(
-        #     *(ap.animate.set_pattern(opacity=0.1)
-        #       for ap in explainer.anchor_points),
-        #       lag_ratio=0,
-        #       run_time=1.0,
-        # ))
-        # self.wait(0.5)
+        # replace tensor_prob with t32_prob
+        t32_prob = LayersFake(
+            n=len(tensor_prob[0]),
+            ref=VGroup(tensor_prob[0][0], tensor_prob[-1][0]),
+            expanded=True,
+            buff=0.075,         # based on tensor_prob's buff
+            width_nominal=20,
+            height_nominal=20,
+            depth_nominal=len(tensor_prob[0]),
+            rect_config={},
+        ).move_to(tensor_prob)
+        self.play(AnimationGroup(
+            Unwrite(tensor_prob),
+            Write(t32_prob),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # generate random pbars
-        # self.play(explainer.show_pbars())
-        # self.wait()
+        # replace tensor_prob_2d with t32_prob_2d
+        t32_prob_2d = LayersFake(
+            n=1,
+            width=0.8,
+            height=3.0,
+            expanded=True,
+            # buff=0.075,
+            width_nominal=3,
+            height_nominal=400,
+            depth_nominal=1,
+            rect_config={},
+        ).set_x(
+            tensor_prob_2d.get_x(),
+        ).set_y(
+            t32_prob.get_y(),
+        )
 
-        # # FIXME! no valid class capture for 20x20 feature map
-        # # from random pbars to ideal pbars
-        # self.play(explainer.to_probs(data_cls))
-        # self.wait()
+        self.play(ReplacementTransform(
+            tensor_prob_2d,
+            t32_prob_2d,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        
-        # # ************************************************************
-        # self.next_section(
-        #     'generate tensor_probs',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # show tensor probs in the right
-        # # TODO, loop through each pbars, rate_functions.there_and_back
-        # self.play(explainer_bg.animate.scale(0.8).shift(LEFT*3))
-        # tensor_probs = explainer.create_probs_tensor().shift(RIGHT*6)
-        # self.wait()
-        # self.play(Write(tensor_probs, lag_ratio=0.02, run_time=2.0))
-        # self.wait()
+        # ************************************************************
+        self.next_section(
+            'simplify system_prob into s32_prob',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # clean up system_prob
+        self.play(explainer_prob.hide_pbars(
+            aargs={},
+            gargs={'lag_ratio': 0.0},
+        ))
+        self.play(explainer.hide_anchor_points(
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+        self.remove(explainer_prob)
 
-        # # scale and rearrange into up-down
-        # manager = Group(explainer_bg, tensor_probs)
-        # manager.generate_target()
-        # manager.target.scale(0.6).arrange(DOWN,buff=0.45).shift(LEFT*2)
-        # manager.target[1].align_to(manager.target[0][0].background, LEFT)   # adjustment
-        # self.play(MoveToTarget(manager, run_time=1.0))
-        # self.wait(0.5)
+        # create e32_prob -> s32_prob
+        e32_prob = Explainer.from_file(
+            background=background_prob,
+            version=160,
+            dot_config={},
+            rect_config={},
+        )
+        s32_prob = Group(background_prob, e32_prob)
+        self.add(e32_prob)
 
-        # #  transform probs into reshaped 2d version
-        # tensor_probs_2d = tensor_probs.copy()
-        # self.add(tensor_probs)  # TODO, fadein animation?
-        # line_matrix = explainer.create_line_matrix(n=3).scale(0.07).shift(RIGHT*3.5)
-        # self.play(tensor_to_line_matrix(
-        #     tensor=tensor_probs_2d,
-        #     lmatrix=line_matrix,
-        #     targs={},
-        #     gargs={'lag_ratio':0.02, 'run_time':0.1,},
-        #     ggargs={'lag_ratio':0.05, 'run_time':2.1,},
-        # ))
-        # self.wait(0.3)
+        # show anchor points of new explainer
+        self.play(e32_prob.show_anchor_points(
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'simplify tensor_probs/tensor_probs_2d' \
-        #     'into lf_output_32_cls/lf_output_32_cls_2d',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # create lf_output_32_cls
-        # lf_output_32_cls = LayersFake(
-        #     n=3,
-        #     ref=tensor_probs,
-        #     width_nominal=20,
-        #     height_nominal=20,
-        #     buff=0.05,
-        #     expanded=True,
-        # ).move_to(tensor_probs).scale(0.95)
+        # show pbars for mini explainer
+        self.play(AnimationGroup(
+            AnimationGroup(
+                *(ap.mob.animate.set_style(
+                    stroke_opacity=0.0,
+                ) for ap in e32_prob.anchor_points),
+            ),
+            e32_prob.show_pbars(
+                random=False,
+                pbar_config={},
+                aargs={},
+                gargs={'lag_ratio': 0.0},
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # create lf_output_32_cls_2d
-        # lf_output_32_cls_2d = LayersFake(
-        #     n=1,
-        #     ref=tensor_probs_2d,
-        #     width_nominal=3,
-        #     height_nominal=400,
-        #     expanded=True,
-        # ).move_to(tensor_probs_2d)
+        # ************************************************************
+        self.next_section(
+            'into big map',
+            skip_animations=False,
+        )
+        # ************************************************************
+        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*10).set_color(PURE_RED)
+        act_9 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*5)
+        acm_8 = ArrowComment(True, DOWN).scale(0.8).move_to(RIGHT*10)
 
-        # # simplify tensor_probs/tensor_probs_2d
-        # self.play(AnimationGroup(
-        #     Unwrite(tensor_probs, lag_ratio=0, run_time=1.0),
-        #     Write(lf_output_32_cls, run_time=1.0),
-        #     Unwrite(tensor_probs_2d, lag_ratio=0, run_time=1.0),
-        #     Write(lf_output_32_cls_2d, run_time=1.0)
-        # ))
-        # self.wait(0.5)
+        # show big map without s32_prob_2d
+        mobs = Group(
+            Mobject(), s32_prob, Mobject(), Mobject(),
+            Mobject(), acm_8,    Mobject(), Mobject(),
+            ac_game,   t32_prob, act_9,     t32_prob_2d,
+        )
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
+            rows=3,
+            cols=4,
+            buff=0.5,
+        ).scale(0.5).center()
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+            rate_func=rate_functions.ease_out_back,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'simplify explainer_dist and explainer_xyxy ' \
-        #     'into 4x4 mini version',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # clean explainer
-        # self.play(explainer.hide_pbars(
-        #     aargs={},
-        #     gargs={},
-        #     ggargs={'lag_ratio':0, 'run_time':1.0},
-        # ))
-        # self.wait(0.5)
-        # self.play(explainer.hide_anchor_points(
-        #     lag_ratio=0, run_time=0.5,
-        # ))
-        # self.wait(0.5)
-        # self.remove(explainer)
+        # introduce s32_prob_2d
+        aci_9 = act_9.copy().move_to(UP*5)
+        acm_9 = acm_8.copy().move_to(RIGHT*5)
+        s32_prob_2d = s32_prob.copy().move_to(UP*5)
+        mobs = Group(
+            Mobject(), s32_prob, aci_9,     s32_prob_2d,
+            Mobject(), acm_8,    Mobject(), acm_9,
+            ac_game,   t32_prob, act_9,     t32_prob_2d,
+        )
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
+            rows=3,
+            cols=4,
+            buff=0.5,
+        ).center()
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+            rate_func=rate_functions.ease_out_back,
+        ))
+        self.wait(wt)
 
-        # # create mini version of explainer
-        # explainer = ExplainerBbox(
-        #     background=background,
-        #     data=np.load(MINI_32_DIST_PATH),
-        #     data_cls=np.load(MINI_32_PROB_PATH),
-        #     sf_nominal=32,
-        # )
-        # explainer_bg = Group(explainer, background)
+        # show shapes for tensors
+        ac_all = VGroup(
+            aci_9,
+            acm_8, acm_9,
+            ac_game, act_9,
+        ).save_state()
+        self.play(ac_all.animate(
+            run_time=wt,
+        ).fade(0.8))
+        self.play(AnimationGroup(
+            ShowShape(t32_prob, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
+            ShowShape(t32_prob_2d, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # dim anchor points, show pbars
-        # self.play(AnimationGroup(
-        #     explainer.show_anchor_points(
-        #         lag_ratio=0, run_time=0.5,
-        #     )
-        # ))
-        # self.wait(0.5)
-        # self.play(AnimationGroup(
-        #     *(ap.animate.set_pattern(opacity=0.1)
-        #       for ap in explainer.anchor_points),
-        #       lag_ratio=0,
-        #       run_time=1.0,
-        # ))
-        
-        # self.play(explainer.show_pbars(
-        #     aargs={},
-        #     gargs={},
-        #     ggargs={},
-        # ))
-        # self.wait(0.5)
+        # hide shapes for tensors
+        self.play(AnimationGroup(
+            HideShape(t32_prob),
+            HideShape(t32_prob_2d),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.play(ac_all.animate(
+            run_time=wt,
+        ).restore())
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'save for next scene which go back to big map',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # everything = Group(
-        #     explainer_bg,
-        #     lf_output_32_cls,
-        #     lf_output_32_cls_2d,
-        # )
-        # save_everything(S015_EVERYTHING, everything)
+        export_mobs(__file__, mobs)     # NOTE: used by 015
