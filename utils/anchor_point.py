@@ -1089,17 +1089,10 @@ class AnchorPoint(VMobject):
     def create_multi_labels(
         self,
         include_text: bool = True,      # include conf text or not
-        label_config: dict | None = None,        # font size 12 by default
-        box_config: dict | None = None,
+        label_config: dict = {},        # font size 12 by default
+        box_config: dict = {},
     ) -> VGroup:
-        """
-        Create multi labels, not positioned.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_multi_labels())
-        result = ap.create_multi_labels()
+        """Create multi labels, not positioned.
         """
         labels = VGroup(
             AnchorLabel(
@@ -1217,6 +1210,7 @@ class AnchorPoint(VMobject):
 
         return AnimationGroup(*anims, **(gargs or {}))
 
+    # ---------------- general related -------------------
     def use_color(
         self,
         color: ManimColor = PURE_YELLOW,

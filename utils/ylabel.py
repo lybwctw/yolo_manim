@@ -6,6 +6,7 @@ LABEL_BG_RATIO_H = 1.3
 class YLabel(VMobject):
     def __init__(
         self,
+        include_text: bool = True,  # not if mini explainer
         text: str = 'None',
         label_txt_config: dict = {},
         label_bg_config: dict = {},
@@ -17,26 +18,33 @@ class YLabel(VMobject):
         self.label_txt_config = label_txt_config
         self.label_bg_config = label_bg_config
 
-        label_txt = Text(
-            text=text,
-            **label_txt_config,
-        )
-
-        # auto width/height if not provided
-        label_bg_config = {
-            'width': label_txt.width * LABEL_BG_RATIO_W,
-            'height': label_txt.height * LABEL_BG_RATIO_H,
-            **label_bg_config,
-        }
+        if include_text:
+            label_txt = Text(
+                text=text,
+                **label_txt_config,
+            )
+            self.label_txt = label_txt
+            # auto width/height if not provided
+            label_bg_config = {
+                'width': label_txt.width * LABEL_BG_RATIO_W,
+                'height': label_txt.height * LABEL_BG_RATIO_H,
+                **label_bg_config,
+            }
+        else:
+            label_bg_config = {
+                **label_bg_config,
+            }
 
         label_bg = Rectangle(
             **label_bg_config,
         )
-
-        self.label_txt = label_txt
         self.label_bg = label_bg
+
         self.add(self.label_bg)
-        self.add(self.label_txt)
+        
+        if include_text:
+            self.add(self.label_txt)
+
     def update_text(
         self,
         text: str = 'new',
