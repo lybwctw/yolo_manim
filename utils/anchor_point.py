@@ -3,10 +3,11 @@ import sys
 sys.path.append('..')
 
 from manim import *
-from typing import Self
 from utils.comment import Comment
+from utils.ylabel import YLabel
 from utils.constants import *
 
+from typing import Self
 from random import uniform
 
 # ------------- general --------------
@@ -66,25 +67,35 @@ PBAR_NEG_RANGE = (0, 0.3)
 PBAR_POS_RANGE = (0.7, 1.0)
 
 # ------------- label related --------------
-LABEL_COLORS = PBAR_COLORS
-LABEL_CONFIG = {
+LABEL_COLORS = KK_COLORS
+LABEL_TXT_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 9,
     'color': WHITE,
 }
+LABEL_BG_CONFIG = {
+    'stroke_width': 0,
+    'stroke_opacity': 0.0,
+    'fill_opacity': 1.0,         # background rectangle interface
+}
+# LABEL_CONFIG = {
+#     'font': 'JetBrains Mono',
+#     'font_size': 9,
+#     'color': WHITE,
+# }
 
-# box for label with text
-BOX_BG_CONFIG = {
-    'stroke_width': 0,
-    'stroke_opacity': 0.0,
-    'opacity': 1.0,         # background rectangle interface
-}
-# box for label without text
-BOX_RAW_CONFIG = {
-    'stroke_width': 0,
-    'stroke_opacity': 0.0,
-    'fill_opacity': 1.0,    # native rectangle interface
-}
+# # box for label with text
+# BOX_BG_CONFIG = {
+#     'stroke_width': 0,
+#     'stroke_opacity': 0.0,
+#     'opacity': 1.0,         # background rectangle interface
+# }
+# # box for label without text
+# BOX_RAW_CONFIG = {
+#     'stroke_width': 0,
+#     'stroke_opacity': 0.0,
+#     'fill_opacity': 1.0,    # native rectangle interface
+# }
 
 # ------------- coords related --------------
 COORDS_PATH_CONFIG = {
@@ -177,55 +188,55 @@ class PCell(VMobject):
             **aargs,
         )
 
-class AnchorLabel(VMobject):
-    def __init__(
-        self,
-        include_text: bool = True,      # include conf text or not
-        text: str = 'None',             # conf text content
-        label_config: dict | None = None,        # text config
-        box_config: dict | None = None,          # background config
-    ):
-        """
-        Use the same interface as native Label class.
+# class AnchorLabel(VMobject):
+#     def __init__(
+#         self,
+#         include_text: bool = True,      # include conf text or not
+#         text: str = 'None',             # conf text content
+#         label_config: dict | None = None,        # text config
+#         box_config: dict | None = None,          # background config
+#     ):
+#         """
+#         Use the same interface as native Label class.
 
-        Example
-        -------
-        label = AnchorLabel(text="0.95")
-        """
-        super().__init__()
-        self.include_text = include_text
-        self.text = text if include_text else None
-        self.label_config = {**LABEL_CONFIG, **(label_config or {})} if include_text else {}
-        self.box_config = {**(
-            BOX_BG_CONFIG if include_text else BOX_RAW_CONFIG
-            ), **(box_config or {})}
+#         Example
+#         -------
+#         label = AnchorLabel(text="0.95")
+#         """
+#         super().__init__()
+#         self.include_text = include_text
+#         self.text = text if include_text else None
+#         self.label_config = {**LABEL_CONFIG, **(label_config or {})} if include_text else {}
+#         self.box_config = {**(
+#             BOX_BG_CONFIG if include_text else BOX_RAW_CONFIG
+#             ), **(box_config or {})}
 
-        if include_text:
-            mob_text = Text(
-                text=self.text,
-                **self.label_config,
-            ).add_background_rectangle(
-                **self.box_config,
-            )
+#         if include_text:
+#             mob_text = Text(
+#                 text=self.text,
+#                 **self.label_config,
+#             ).add_background_rectangle(
+#                 **self.box_config,
+#             )
 
-            # fix background rectangle
-            mob_box = Rectangle(
-                width=mob_text.background_rectangle.width,
-                height=mob_text.background_rectangle.height,
-            ).set_style(
-                **mob_text.background_rectangle.get_style(simple=True),
-            ).move_to(mob_text.background_rectangle)
-            mob_text.remove(mob_text.background_rectangle)
+#             # fix background rectangle
+#             mob_box = Rectangle(
+#                 width=mob_text.background_rectangle.width,
+#                 height=mob_text.background_rectangle.height,
+#             ).set_style(
+#                 **mob_text.background_rectangle.get_style(simple=True),
+#             ).move_to(mob_text.background_rectangle)
+#             mob_text.remove(mob_text.background_rectangle)
 
-            self.mob_text = mob_text
-            self.mob_box = mob_box
-            self.add(self.mob_box, self.mob_text)
-        else:
-            mob_box = Rectangle(
-                **self.box_config,
-            )
-            self.mob_box = mob_box
-            self.add(self.mob_box)
+#             self.mob_text = mob_text
+#             self.mob_box = mob_box
+#             self.add(self.mob_box, self.mob_text)
+#         else:
+#             mob_box = Rectangle(
+#                 **self.box_config,
+#             )
+#             self.mob_box = mob_box
+#             self.add(self.mob_box)
 
 class AnchorPoint(VMobject):
     def __init__(
@@ -1086,44 +1097,44 @@ class AnchorPoint(VMobject):
         )
 
     # ---------------- labels related -------------------
-    def create_multi_labels(
+    def create_labels(
         self,
         include_text: bool = True,      # include conf text or not
-        label_config: dict = {},        # font size 12 by default
-        box_config: dict = {},
+        label_txt_config: dict = {},    # font size 9 by default
+        label_bg_config: dict = {},
     ) -> VGroup:
-        """Create multi labels, not positioned.
+        """Create multiple labels, not positioned.
         """
         labels = VGroup(
-            AnchorLabel(
+            YLabel(
                 include_text=include_text,
                 text='{:.2f}'.format(prob),
-                label_config=label_config,
-                box_config={**(box_config or {}), 'color': color},  # TODO: Label's interface
+                label_txt_config={
+                    **LABEL_TXT_CONFIG,
+                    **label_txt_config,
+                },
+                label_bg_config={
+                    **LABEL_BG_CONFIG,
+                    'color': color,
+                    **label_bg_config,
+                },
             ) for prob, color in zip(self.prob, LABEL_COLORS)
         ).arrange(RIGHT, buff=0.0)
         return labels
 
-    def show_multi_labels(
+    def show_labels(
         self,
         include_text: bool = True,      # show conf text or not
-        label_config: dict | None = None,        # font size 12 by default
-        box_config: dict | None = None,
+        label_txt_config: dict = {},    # font size 9 by default
+        label_bg_config: dict = {},
         **aargs,
     ) -> Animation:
+        """Show multiple labels, aligned to box.
         """
-        Add labels as new member.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_multi_labels())
-        self.play(ap.show_multi_labels())
-        """
-        labels = self.create_multi_labels(
+        labels = self.create_labels(
             include_text=include_text,
-            label_config=label_config,
-            box_config=box_config,
+            label_txt_config=label_txt_config,
+            label_bg_config=label_bg_config,
         ).move_to(
             self.rect.get_corner(UL),
             aligned_edge=DL,
@@ -1131,84 +1142,74 @@ class AnchorPoint(VMobject):
         self.labels = labels
         self.add(self.labels)
 
-        return Write(self.labels, **(aargs or {}))
+        return Write(
+            self.labels,
+            **aargs,
+        )
 
-    def show_rect_mlabels(
+    def show_rect_labels(
         self,
-        rect_config: dict | None = None,
+        rect_config: dict = {},         # box config
         include_text: bool = True,      # show conf score or not
-        label_config: dict | None = None,        # font size 12 by default
-        box_config: dict | None = None,
-        rargs: dict | None = None,       # to_rect animation args
-        largs: dict | None = None,       # show_multi_labels animation args
-        gargs: dict | None = None,       # group args
+        label_txt_config: dict = {},    # font size 9 by default
+        label_bg_config: dict = {},
+        **aargs,
     ) -> Animation:
-        """
-        Show rect and multi labels at a time.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_multi_labels())
-        self.play(ap.show_rect_mlabels())
+        """Show box and multiple labels together.
         """
         anims = AnimationGroup(
             self.to_rect(
                 rect_config=rect_config,
-                **rargs,
             ),
-            self.show_multi_labels(
+            self.show_labels(
                 include_text=include_text,
-                label_config=label_config,
-                box_config=box_config,
-                **largs
+                label_txt_config=label_txt_config,
+                label_bg_config=label_bg_config,
             ),
-            **gargs,
+            **aargs,
         )
         return anims
-
+    
+    # ---------------- postprocess related -------------------
     def apply_max_select(
         self,
-        max_idx: int = 0,       # the max index to keep
-        aargs: dict | None = None,       # animation args
-        gargs: dict | None = None,       # group args
+        max_idx: int = 0,       # max index to keep
+        aargs: dict = {},       # animation args
     ) -> Animation:
+        """Select max conf label (class info implied).
         """
-        Select max conf label and append cls label.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_multi_labels())
-        result = ap.apply_max_select()
-        """
-        # max_idx = np.argmax(self.prob)
         max_label = self.labels[max_idx]
 
-        self.cls = max_idx              # remember max class index
-        self.conf = self.prob[max_idx]  # remember max class conf
+        # self.cls = max_idx              # remember max class index
+        # self.conf = self.prob[max_idx]  # remember max class conf
 
-        max_target = max_label.copy().move_to(self.labels[0], aligned_edge=DL)
-        max_target.mob_box.set_stroke(
-            color=max_target.mob_box.fill_color,
-            opacity=1.0,
-            width=2,
-        )   # NOTE, visual adjustment for max label
-        anims = [
-            Transform(max_label, max_target, **(aargs or {})),
-        ]
-        labels_to_remove = []
+        max_target = max_label.copy().move_to(
+            # self.labels[0],
+            self.rect.get_corner(UL),
+            aligned_edge=DL,
+        )
+        max_target.label_bg.set_stroke(
+            color=max_target.label_bg.fill_color,
+            # opacity=max_target.label_bg.fill_opacity,
+            opacity=0.5,            # FIXME, use reference instead of hardcode
+            width=self.mob.stroke_width,
+        )
+        anims = [Transform(max_label, max_target)]
+        # labels_to_remove = []
         for i in range(len(self.labels)):
             if i != max_idx:
-                anims.append(FadeOut(self.labels[i], **(aargs or {})))  # or Unwrite?
-                labels_to_remove.append(self.labels[i])
+                anims.append(FadeOut(self.labels[i]))
+                # labels_to_remove.append(self.labels[i])
 
-        self.rect.set_stroke(color=PBAR_COLORS[max_idx])
-        anims.append(self.mob.animate(**(aargs or {})).set_stroke(color=PBAR_COLORS[max_idx]))
+        # self.rect.set_stroke(color=PBAR_COLORS[max_idx])
+        anims.append(self.mob.animate.set_stroke(color=LABEL_COLORS[max_idx]))
 
-        self.labels.remove(*labels_to_remove)
+        self.label = max_label
+        self.add(self.label)
+        self.labels.remove(*self.labels)
+        del self.labels
 
-        return AnimationGroup(*anims, **(gargs or {}))
+        return AnimationGroup(*anims, **aargs)
 
     # ---------------- general related -------------------
     def use_color(
@@ -1216,43 +1217,35 @@ class AnchorPoint(VMobject):
         color: ManimColor = PURE_YELLOW,
         font_color: ManimColor = None,
     ) -> Self:
+        """Set color of label and box helper.
         """
-        TODO: better naming?
-                   Setup fill color of labels[0].mob_box and stroke color of mob.
-                   Usually used after save_state, to be restored soon.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_multi_labels())
-        ap.use_color()
-        """
-        # self.labels[0].mob_box.set_fill(color=color, opacity=1.0)
-        # self.labels[0].mob_box.set_stroke(color=color, opacity=1.0)
-        self.labels[0].mob_box.set_color(color=color)
+        self.label.label_bg.set_color(color=color)
         self.mob.set_stroke(color=color)
         if font_color is not None:
-            self.labels[0].mob_text.set_color(color=font_color)
+            self.label.label_txt.set_color(color=font_color)
         return self
 
     def use_fade(
         self,
         darkness: float = 0.5,
     ) -> Self:
+        """Fade label and box helper.
         """
-        NOTE: better naming?
-                   Fade all, hide label_box's stroke for better visual effect.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_multi_labels())
-        ap.use_fade()
-        """
-        self.labels[0].mob_box.fade(darkness=darkness)
-        self.labels[0].mob_box.set_stroke(opacity=0.0)
-        self.labels[0].mob_text.fade(darkness=darkness)
+        self.label.label_bg.fade(darkness=darkness)
+        self.label.label_bg.set_stroke(opacity=0.0)
+        self.label.label_txt.fade(darkness=darkness)
         self.mob.fade(darkness=darkness)
+        return self
+    
+    def use_opacity(
+        self,
+        opacity: float = 1.0,
+    ) -> Self:
+        """Set opacity of label and box helper.
+        """
+        self.label.label_bg.set_stroke(opacity=opacity)
+        self.label.label_bg.set_fill(opacity=opacity)
+        self.mob.set_stroke(opacity=opacity)
         return self
 
     def check_clip(

@@ -6,7 +6,7 @@ LABEL_BG_RATIO_H = 1.3
 class YLabel(VMobject):
     def __init__(
         self,
-        include_text: bool = True,  # not if mini explainer
+        include_text: bool = True,  # False for mini explainer
         text: str = 'None',
         label_txt_config: dict = {},
         label_bg_config: dict = {},

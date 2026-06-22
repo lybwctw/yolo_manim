@@ -10,8 +10,10 @@ from utils.yolo_annotation import SingleAnnotation
 from utils.line_matrix import LineMatrix
 from utils.general import tensor_to_line_matrix, compute_iou
 from utils.general import sf2dir
+# from utils.tensor_2d import Tensor2D
 from utils.constants import *
 
+from typing import Self
 import random
 import numpy as np
 import os
@@ -136,6 +138,7 @@ class Explainer(VGroup):
 
         return grid
 
+    # ---------------- basic utils -------------------
     def show_grid(
         self,
         **aargs,
@@ -163,7 +166,6 @@ class Explainer(VGroup):
         self.remove(self.grid)
         return Unwrite(self.grid, **(aargs or {}))
 
-    # ---------------- anchor points related -------------------
     def create_anchor_points(
         self,
     ) -> VGroup:
@@ -234,6 +236,7 @@ class Explainer(VGroup):
         )
         return anims
 
+    # ---------------- arrows related -------------------
     def show_arrows(
         self,
         arrow_config: dict = {},
@@ -284,6 +287,7 @@ class Explainer(VGroup):
         )
         return anim
 
+    # ---------------- pbars related -------------------
     def show_pbars(
         self,
         random: bool = False,
@@ -337,88 +341,61 @@ class Explainer(VGroup):
         )
         return anim
 
-    def show_multi_labels(
+    # ---------------- labels related -------------------
+    def show_labels(
         self,
-        include_text: bool = True,  # show conf text or not
-        label_config: dict | None = None,    # font size 12 by default
-        box_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
+        include_text: bool = True,      # show conf text or not
+        label_txt_config: dict = {},    # font size 9 by default
+        label_bg_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
+        """Show multiple labels for all anchor points.
         """
-        Show multi-labels for all anchor points.
-                   Assume that rects is ready.
-
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.to_rects())
-        self.play(explainer.show_multi_labels())
-        """
-        anim = AnimationGroup(
-            *(ap.show_multi_labels(
+        anims = AnimationGroup(
+            *(ap.show_labels(
                 include_text=include_text,
-                label_config=label_config,
-                box_config=box_config,
+                label_txt_config=label_txt_config,
+                label_bg_config=label_bg_config,
                 **aargs,
             ) for ap in self.anchor_points),
             **gargs,
         )
-        return anim
+        return anims
 
-    def show_rect_mlabels(
+    def show_rect_labels(
         self,
-        rect_config: dict | None = None,
+        rect_config: dict = {},         # box config
         include_text: bool = True,      # show conf score or not
-        label_config: dict | None = None,
-        box_config: dict | None = None,
-        rargs: dict | None = None,       # to_rect animation args
-        largs: dict | None = None,       # show_multi_labels animation args
-        gargs: dict | None = None,       # ap.show_rect_mlabels group args
-        ggargs: dict | None = None,      # group of ap.show_rect_mlabels group args
+        label_txt_config: dict = {},    # font size 9 by default
+        label_bg_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
+        """Show box and multiple labels for all anchor points.
         """
-        FIXME: display issue.
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.to_rects())
-        self.play(explainer.show_rect_mlabels())
-        """
-        anim = AnimationGroup(
-            *(ap.show_rect_mlabels(
+        anims = AnimationGroup(
+            *(ap.show_rect_labels(
                 rect_config=rect_config,
                 include_text=include_text,
-                label_config=label_config,
-                box_config=box_config,
-                rargs=rargs,
-                largs=largs,
-                gargs=gargs,
+                label_txt_config=label_txt_config,
+                label_bg_config=label_bg_config,
+                **aargs,
             ) for ap in self.anchor_points),
-            **ggargs,
+            **gargs,
         )
-        return anim
+        return anims
 
+    # ---------------- postprocess related -------------------
     def apply_max_select(
         self,
         scene: Scene,
         run_time_ratio: float = 1.0,
     ) -> None:
-        """
-        [Internal animation]
-                   Apply max conf filter.
-                   Keep max label for all anchor points.
-                   cls and conf created here.
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.to_rects())
-        result = explainer.apply_max_select(scene=self)
+        """[Internal animation]
+            Apply max conf filter.
+            Keep max label for all anchor points.
+            cls and conf created here.
         """
         res_data = np.empty((0, 6))     # always 4+2
 
@@ -438,7 +415,6 @@ class Explainer(VGroup):
             *(ap.apply_max_select(
                 max_idx=max_idx,
                 aargs={},
-                gargs={},
             ) for ap, max_idx in zip(self.anchor_points, max_idxs)),
             run_time=1.0*run_time_ratio,
         )
@@ -523,16 +499,8 @@ class Explainer(VGroup):
         conf_thresh: float = 0.25,
         run_time_ratio: float = 1.0,
     ) -> None:
-        """
-        [Internal animation]
-                   Apply conf filter inplace.
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.to_rects())
-        result = explainer.apply_conf_filter(scene=self)
+        """[Internal animation]
+            Apply conf filter inplace.
         """
         res_data = np.empty((0, self.data.shape[1]))
 
@@ -548,24 +516,24 @@ class Explainer(VGroup):
         # update internal data
         self.data = res_data
 
-        # fade and unwrite all low conf aps
+        # remove low-conf aps
         if remove_aps:
             scene.play(AnimationGroup(
-                *(ApplyMethod(ap.use_fade, 0.8)
-                for ap in remove_aps),
-                lag_ratio=0.3,
-                run_time=1.0*run_time_ratio,
-            ))
-            scene.wait(1.0*run_time_ratio)
-            scene.play(AnimationGroup(
-                *(Unwrite(ap) for ap in remove_aps[::-1]),  # reverse for better visual effect
-                lag_ratio=0.3,
+                *(Unwrite(ap) for ap in remove_aps),
+                lag_ratio=0.5,
                 run_time=1.0*run_time_ratio,
             ))
             scene.wait(1.0*run_time_ratio)
 
-            # remove aps from group
             self.anchor_points.remove(*remove_aps)
+        
+        # stress the rest a bit
+        scene.play(AnimationGroup(
+            *(ApplyMethod(ap.use_opacity, 0.8) for ap in self.anchor_points),
+            lag_ratio=0.0,
+            run_time=1.0*run_time_ratio,
+        ))
+        scene.wait(1.0*run_time_ratio)
 
     def apply_sort(
         self,
@@ -613,18 +581,10 @@ class Explainer(VGroup):
         offset: float = 2.0,            # keep space offset
         run_time_ratio: float = 1.0,
     ) -> None:
-        """
-        [Internal animation]
-                   Apply NMS filter for specific class or for all.
-                   Sort aps and append, sort data and append.
-                   TODO: fast mode, filter candidates all at onces.
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.to_rects())
-        result = explainer.apply_nms_filter(scene=self)
+        """[Internal animation]
+            Apply NMS filter for specific class or for all.
+            Sort aps and append, sort data and append.
+            TODO: fast mode, filter candidates all at onces.
         """
         work_idxs, other_idxs = self.take_aps_with_cls(cls)
         if len(work_idxs) == 0:
@@ -648,10 +608,6 @@ class Explainer(VGroup):
                 lag_ratio=0.0,
                 run_time=1.0*run_time_ratio,
             ))
-            # scene.play(other_aps.animate(
-            #     lag_ratio=0.0,      # fade all at once
-            #     run_time=1.0 * run_time_ratio,
-            # ).fade(0.9)) # send to back
             scene.wait(1.0 * run_time_ratio)
 
         # NMS animations
@@ -736,7 +692,7 @@ class Explainer(VGroup):
             ).use_fade(0.8))
             # scene.wait(0.5*run_time_ratio)
 
-            # NOTE: filter cand_idxs using survive_mask
+            # filter cand_idxs using survive_mask
             cand_idxs = [x for x, s in zip(cand_idxs, survive_mask) if s]
 
         # restore opacity and color of all kept aps
@@ -1059,7 +1015,7 @@ class Explainer(VGroup):
         ))
         self.data = self.data[idxs_remain]
 
-
+    # ---------------- Tensor2D related -------------------
     def xyxyccc(
         self,
     ) -> Tensor2D:
