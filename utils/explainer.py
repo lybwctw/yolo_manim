@@ -738,20 +738,6 @@ class Explainer(VGroup):
         """
         pass
 
-    def apply_scale_back(
-        self,
-        scene: Scene,
-    ) -> None:
-        """
-        Apply scale back.
-
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        result = explainer.apply_scale_back(scene=self)
-        """
-        pass
-
     def apply_keep_random(
         self,
         scene: Scene,
@@ -979,22 +965,35 @@ class Explainer(VGroup):
             if self.anchor_points[idx].check_clip(self.background)]
         return idxs
 
-    def apply_clip(
+    def apply_scale_back(
         self,
         scene: Scene,
+        scale_factor: float = 1.5,          # scale up factor
         run_time_ratio: float = 1.0,
     ) -> None:
+        """[Internal Animation]
+           Final trivial postprocess.
+           remove paddings -> scale back -> clip
         """
-        [Internal Animation]
-                   Clip aps crossing border, remove if outside.
+        # remove paddings for background
+        scene.play(self.background.hide_paddings(
+            updown=True,
+            width_nominal=640,
+            height_nominal=360,
+            run_time=1.0*run_time_ratio,
+        ))
+        scene.wait(1.0*run_time_ratio)
 
-        Example
-        -------
-        explainer = Explainer.from_random(background=Square())
-        self.play(explainer.show_anchor_points())
-        self.play(explainer.to_rects())
-        result = explainer.apply_clip(scene=self)
-        """
+        # scale up everything
+        system = Group(self.background, self)
+        scene.play(AnimationGroup(
+            system.animate(
+                run_time=1.0*run_time_ratio,
+            ).scale(scale_factor),
+        ))
+        scene.wait(1.0*run_time_ratio)
+
+        # clip predictions
         idxs_remain = self.check_clip()   # on background by default
         idxs_remove = [idx for idx in range(len(self.anchor_points)) if idx not in idxs_remain]
         aps_remain = [ self.anchor_points[idx] for idx in idxs_remain ]

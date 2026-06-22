@@ -21,16 +21,26 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'start with xyxyccc',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True)
         background.scale(0.9)
 
-        explainer = Explainer.from_file(
+        # explainer = Explainer.from_file(
+        #     background=background,
+        #     version=64,
+        #     sf_nominal=64,
+        # )
+        explainer = Explainer.from_random(
             background=background,
-            version=64,
+            shape=(10,10),
+            n_distrib=4,
+            offsets_range=(0,2),
+            prob_range=(0,1),
             sf_nominal=64,
+            dot_config={},
+            rect_config={},
         )
         system = Group(background, explainer)
 
@@ -75,7 +85,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply take max',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         explainer.apply_max_select(
@@ -87,7 +97,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply conf filter',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         explainer.apply_conf_filter(
@@ -100,7 +110,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply class split',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # nothing for now
@@ -108,7 +118,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'sort each class',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # nothing for now
@@ -178,5 +188,18 @@ class MainScene(ThreeDScene):
             added_anims=[
                 system.animate.shift(OUT*BG_GAP),
             ],
+        )
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'apply scale back steps',
+            skip_animations=False,
+        )
+        # ************************************************************
+        explainer.apply_scale_back(
+            scene=self,
+            scale_factor=1.2,
+            run_time_ratio=1.0,
         )
         self.wait(wt)

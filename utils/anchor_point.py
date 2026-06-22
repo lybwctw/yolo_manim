@@ -1252,14 +1252,8 @@ class AnchorPoint(VMobject):
         self,
         background,
     ) -> bool:
-        """
-        Check if current ap remains after clipping.
-                   Save target intersection by the way.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap.check_clip(background=Square())
+        """Check if current ap remains after clipping.
+            Save target intersection by the way.
         """
         self.clip_target = self._intersect_background(background)
         return self.clip_target is not None
@@ -1284,7 +1278,7 @@ class AnchorPoint(VMobject):
             self.to_rect(
                 rect_config={},
             ),
-            self.labels.animate.move_to(
+            self.label.animate.move_to(
                 self.rect.get_corner(UL),
                 aligned_edge=DL,
             ),
@@ -1311,16 +1305,9 @@ class AnchorPoint(VMobject):
         self,
         background,
     ) -> Rectangle | None:
+        """Compute the intersection between self.rect and background.
         """
-        Compute the intersection between self.rect and background
-                   return a new Rectangle if intersected, None otherwise.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap._intersect_background(background=Square())
-        """
-        r1, r2 = self.rect, background
+        r1, r2 = self.mob, background
         # compute edges of intersection
         x_min = max(r1.get_left()[0], r2.get_left()[0])
         x_max = min(r1.get_right()[0], r2.get_right()[0])

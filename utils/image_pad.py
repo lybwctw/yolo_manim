@@ -203,11 +203,7 @@ class ImagePad(Mobject):
         height_nominal: int | None = None,      # manual nominal update
         **aargs,
     ):
-        """
-        Example
-        -------
-        ipad = ImagePad(padded=True)
-        self.play(ipad.show_paddings())
+        """Show paddings for backgound image.
         """
         # empty animation if already padded
         if self.paddings:
@@ -243,11 +239,7 @@ class ImagePad(Mobject):
         self,
         **aargs,
     ):
-        """
-        Example
-        -------
-        ipad = ImagePad(padded=True)
-        self.play(ipad.show_natural_paddings())
+        """Show natrual paddings for background image.
         """
         if self.width_nominal == self.height_nominal:
             return Wait()
@@ -277,15 +269,9 @@ class ImagePad(Mobject):
         updown: bool = True,    # user is responsible for providing correct updown
         width_nominal: int | None = None,       # manual nominal update
         height_nominal: int | None = None,      # manual nominal update
-        aargs: dict | None = None,       # transform args
-        gargs: dict | None = None,       # group args
+        **aargs,
     ) -> Animation:
-        """
-        Example
-        -------
-        ipad = ImagePad(padded=True)
-        self.play(ipad.show_natural_paddings())
-        self.play(ipad.hide_paddings())
+        """Hide paddings for background image.
         """
         if not self.paddings:
             return Wait()
@@ -306,8 +292,9 @@ class ImagePad(Mobject):
             self.height_nominal = height_nominal
 
         return AnimationGroup(
-            *(Transform(p1, p2, **(aargs or {})) for p1, p2 in zip(paddings_start, paddings_end)),
-            **gargs,
+            *(Transform(p1, p2) 
+              for p1, p2 in zip(paddings_start, paddings_end)),
+            **aargs,
         )
 
 class Demo(Scene):
