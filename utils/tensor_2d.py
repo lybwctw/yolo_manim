@@ -883,7 +883,7 @@ class Tensor2D(VMobject):
     ):
         """
         Build Tensor2D from reference explainer.
-                   Use out-of-the-box data.
+            Use out-of-the-box data.
 
         Example
         -------

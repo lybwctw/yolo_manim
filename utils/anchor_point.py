@@ -1308,18 +1308,30 @@ class AnchorPoint(VMobject):
         """Compute the intersection between self.rect and background.
         """
         r1, r2 = self.mob, background
-        # compute edges of intersection
-        x_min = max(r1.get_left()[0], r2.get_left()[0])
-        x_max = min(r1.get_right()[0], r2.get_right()[0])
-        y_min = max(r1.get_bottom()[1], r2.get_bottom()[1])
-        y_max = min(r1.get_top()[1], r2.get_top()[1])
+
+        a_x1, a_x2 = r1.get_left()[0], r1.get_right()[0]
+        a_y1, a_y2 = r1.get_bottom()[1], r1.get_top()[1]
+        b_x1, b_x2 = r2.get_left()[0], r2.get_right()[0]
+        b_y1, b_y2 = r2.get_bottom()[1], r2.get_top()[1]
+        x_min = max(a_x1, b_x1)
+        x_max = min(a_x2, b_x2)
+        y_min = max(a_y1, b_y1)
+        y_max = min(a_y2, b_y2)
+
+        # # compute edges of intersection
+        # x_min = max(r1.get_left()[0], r2.get_left()[0])
+        # x_max = min(r1.get_right()[0], r2.get_right()[0])
+        # y_min = max(r1.get_bottom()[1], r2.get_bottom()[1])
+        # y_max = min(r1.get_top()[1], r2.get_top()[1])
 
         # check if overlap exist or not
-        if x_min < x_max and y_min < y_max:
+        if a_x1 > b_x1 and a_x2 < b_x2 and a_y1 > b_y1 and a_y2 < b_y2:
+            return self.mob.copy()
+        elif x_min < x_max and y_min < y_max:
             width = x_max - x_min
             height = y_max - y_min
             # The center is the average of the min and max coordinates
-            center = [(x_min + x_max) / 2, (y_min + y_max) / 2, 0]
+            center = [(x_min + x_max) / 2, (y_min + y_max) / 2, self.mob.get_z()]
 
             rect = Rectangle(width=width, height=height).move_to(center)
             return rect.match_style(self.mob)

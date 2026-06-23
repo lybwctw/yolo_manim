@@ -27,21 +27,21 @@ class MainScene(ThreeDScene):
         background = ImagePad(padded=True)
         background.scale(0.9)
 
-        # explainer = Explainer.from_file(
-        #     background=background,
-        #     version=64,
-        #     sf_nominal=64,
-        # )
-        explainer = Explainer.from_random(
+        explainer = Explainer.from_file(
             background=background,
-            shape=(10,10),
-            n_distrib=4,
-            offsets_range=(0,2),
-            prob_range=(0,1),
+            version=64,
             sf_nominal=64,
-            dot_config={},
-            rect_config={},
         )
+        # explainer = Explainer.from_random(
+        #     background=background,
+        #     shape=(10,10),
+        #     n_distrib=4,
+        #     offsets_range=(0,2),
+        #     prob_range=(0,1),
+        #     sf_nominal=64,
+        #     dot_config={},
+        #     rect_config={},
+        # )
         system = Group(background, explainer)
 
         # instroduce background and explainer
@@ -130,7 +130,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # change perspective
-        BG_GAP = 3.0
+        BG_GAP = 2.5
         self.move_camera(
             phi=45*DEGREES,
             theta=-180*DEGREES,
