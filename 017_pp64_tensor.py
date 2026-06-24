@@ -10,7 +10,7 @@ from utils.show_shape import ShowShape, HideShape
 from utils.image_pad import ImagePad
 from utils.tensor_2d import Tensor2D
 
-TENSOR_GAP = 3
+TENSOR_GAP = 3.5
 
 CONF_THRESH = 0.5
 IOU_THRESH = 0.05
@@ -24,7 +24,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start with xyxyccc',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -32,27 +32,21 @@ class MainScene(Scene):
 
         explainer = Explainer.from_file(
             background=background,
-            version=64,
-            sf_nominal=64,
+            version=80,
+            sf_nominal=80,
         )
-        # # FIXME: use background from 017 for better continuity
-        # background = ImagePad(padded=True).scale(1.0).set_opacity(0.2)
-        # # FIXME: use random 10x10 for now
-        # explainer = Explainer.from_file(
-        #     background=background,
-        #     version=64,
-        # )
 
-        # tensor starts with xyxyccc
         tensor_raw = Tensor2D.from_ref(
             ref=explainer,
             decimal_config={
                 'font': 'JetBrains Mono',
-                'font_size': 6,
+                'font_size': 8,
             },
-            cell_width=0.25,
-            cell_height=0.07,
+            cell_width=0.42,
+            cell_height=0.11,
         )
+
+        self.wait()
         self.play(Write(
             tensor_raw,
             lag_ratio=0.5,
@@ -60,80 +54,80 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'apply take max',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # tensor_cmax = tensor_raw.into_take_max(
-        #     scene=self,
-        #     offset=RIGHT*TENSOR_GAP,
-        #     run_time_ratio=FAST_RT,
-        # )
-        # self.wait(FAST_RT)
+        # ************************************************************
+        self.next_section(
+            'apply take max',
+            skip_animations=True,
+        )
+        # ************************************************************
+        tensor_cmax = tensor_raw.into_take_max(
+            scene=self,
+            offset=RIGHT*TENSOR_GAP,
+            run_time_ratio=qt*5,
+        )
+        self.wait(wt)
 
-        # # replace the old with new
-        # self.play(Uncreate(
-        #     tensor_raw,
-        #     run_time=FAST_RT,
-        # ))
-        # self.play(tensor_cmax.animate(
-        #     run_time=FAST_RT,
-        # ).shift(LEFT*TENSOR_GAP))
-        # self.wait(FAST_RT)
+        # replace the old with new
+        self.play(Uncreate(
+            tensor_raw,
+            run_time=wt,
+        ))
+        self.play(tensor_cmax.animate(
+            run_time=wt,
+        ).set_x(0.0))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'apply conf filter',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # tensor_conf = tensor_cmax.into_filter_conf(
-        #     scene=self,
-        #     conf_thresh=CONF_THRESH,
-        #     offset=RIGHT*TENSOR_GAP,
-        #     run_time_ratio=FAST_RT,
-        # )
-        # self.wait(FAST_RT)
+        # ************************************************************
+        self.next_section(
+            'apply conf filter',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tensor_conf = tensor_cmax.into_filter_conf(
+            scene=self,
+            conf_thresh=CONF_THRESH,
+            offset=RIGHT*TENSOR_GAP,
+            run_time_ratio=qt*5,
+        )
+        self.wait(wt)
 
-        # # replace the old with new
-        # self.play(Uncreate(
-        #     tensor_cmax,
-        #     run_time=FAST_RT,
-        # ))
-        # self.play(tensor_conf.animate(
-        #     run_time=FAST_RT,
-        # ).shift(LEFT*TENSOR_GAP).scale(1.5))
-        # self.wait(FAST_RT)
+        # replace the old with new
+        self.play(Uncreate(
+            tensor_cmax,
+            run_time=wt,
+        ))
+        self.play(tensor_conf.animate(
+            run_time=wt,
+        ).set_x(0.0))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'apply class split',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # tensors_split = tensor_conf.into_splitted(
-        #     scene=self,
-        #     offset=RIGHT*TENSOR_GAP,
-        #     buff=0.3,
-        #     run_time_ratio=FAST_RT,
-        # )
-        # self.wait(FAST_RT)
+        # ************************************************************
+        self.next_section(
+            'apply class split',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tensors_split = tensor_conf.into_splitted(
+            scene=self,
+            offset=RIGHT*TENSOR_GAP,
+            buff=0.3,
+            run_time_ratio=qt*5,
+        )
+        self.wait(wt)
 
-        # # TODO: make sure all classes survived?
+        # TODO: make sure all classes survived?
 
-        # # replace the old with multiple news
-        # self.play(Uncreate(
-        #     tensor_conf,
-        #     run_time=FAST_RT,
-        # ))
-        # self.play(AnimationGroup(
-        #     *(t.animate.shift(LEFT*TENSOR_GAP) for t in tensors_split),
-        #     lag_ratio=0.0,
-        #     run_time=FAST_RT,
-        # ))
-        # self.wait(FAST_RT)
+        # replace the old with multiple news
+        self.play(Uncreate(
+            tensor_conf,
+            run_time=wt,
+        ))
+        self.play(AnimationGroup(
+            *(t.animate.set_x(0.0) for t in tensors_split),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # # ************************************************************
         # self.next_section(

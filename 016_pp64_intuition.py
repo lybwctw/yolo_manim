@@ -29,8 +29,8 @@ class MainScene(ThreeDScene):
 
         explainer = Explainer.from_file(
             background=background,
-            version=64,
-            sf_nominal=64,
+            version=80,
+            sf_nominal=80,
         )
         # explainer = Explainer.from_random(
         #     background=background,
@@ -61,12 +61,6 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # self.play(explainer.to_rects(
-        #     rect_config={},
-        #     aargs={},
-        #     gargs={'lag_ratio': 1.0, 'run_time': 10.0},
-        # ))
-        # self.wait(wt)
         self.play(explainer.show_rect_labels(
             rect_config={
                 'stroke_opacity': 0.5,
@@ -203,3 +197,5 @@ class MainScene(ThreeDScene):
             run_time_ratio=1.0,
         )
         self.wait(wt)
+
+        # TODO: insert class name before conf?

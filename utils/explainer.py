@@ -28,6 +28,7 @@ SF_TO_DIR = {
     16: os.path.join(DIR_NUMPY, '016_40x40'),
     32: os.path.join(DIR_NUMPY, '032_20x20'),
     64: os.path.join(DIR_NUMPY, '064_10x10'),
+    80: os.path.join(DIR_NUMPY, '080_08x08'),
     160: os.path.join(DIR_NUMPY, '160_04x04'),
 }
 

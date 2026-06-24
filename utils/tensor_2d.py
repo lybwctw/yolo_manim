@@ -252,17 +252,27 @@ class Tensor2D(VMobject):
         ))
         scene.wait(0.5*run_time_ratio)
 
-        # shift out xyxy
+        # fade in and shift out xyxy copy
+        scene.play(AnimationGroup(
+            *(FadeIn(xyxy) for xyxy in mobs_xyxy_c),
+            lag_ratio=0.0,
+            run_time=0.5*run_time_ratio,
+        ))
         scene.play(AnimationGroup(
             *(xyxy.animate(
                 rate_func=rate_functions.ease_out_back,
             ).shift(offset) for xyxy in mobs_xyxy_c),
-            run_time=1.0*run_time_ratio,
             lag_ratio=0.5,
+            run_time=1.0*run_time_ratio,
         ))
         scene.wait(0.5*run_time_ratio)
 
-        # shift out max conf
+        # fade in and shift out max conf copy
+        scene.play(AnimationGroup(
+            *(FadeIn(mconf) for mconf in mobs_cmax_c),
+            lag_ratio=0.0,
+            run_time=0.5*run_time_ratio,
+        ))
         scene.play(AnimationGroup(
             *(mconf.animate(
                 rate_func=rate_functions.ease_out_back,
@@ -353,7 +363,12 @@ class Tensor2D(VMobject):
         ))
         scene.wait(0.5*run_time_ratio)
 
-        # shift out passed ones
+        # fade in and shift out passed ones
+        scene.play(AnimationGroup(
+            *(FadeIn(mob) for mob in res_mobs),
+            lag_ratio=0.0,
+            run_time=0.5*run_time_ratio,
+        ))
         scene.play(AnimationGroup(
             *(line.animate(
                 rate_func=rate_functions.ease_out_back,
@@ -446,6 +461,7 @@ class Tensor2D(VMobject):
 
         # line by line animation
         for tensor in tensors:
+            # scene.play(FadeIn(tensor, run_time=0.5*run_time_ratio))
             scene.play(AnimationGroup(
                 *(Transform(
                     r1, r2,
