@@ -340,7 +340,6 @@ class Tensor2D(VMobject):
         res_objs = []
         res_mobs = VGroup()
 
-        # containers for animation
         mobs_failed = VGroup()
 
         for data_row, obj_row, mob_row in zip(self.data, self.objs, self.mobs):
@@ -425,6 +424,7 @@ class Tensor2D(VMobject):
         res_data = {}       # idx -> np array of (n, 6)
         res_objs = {}       # idx -> list of list
         res_mobs = {}       # idx -> vg of vg
+        orig_idxs = {}      # idx -> original indices of rows
 
         clss = np.unique(self.data[:, 5])
         for cls in clss:
@@ -432,6 +432,7 @@ class Tensor2D(VMobject):
             res_data[cls] = self.data[idxs].copy()
             res_objs[cls] = [ [obj.copy() for obj in self.objs[i]] for i in idxs ]
             res_mobs[cls] = VGroup( VGroup(*row) for row in res_objs[cls])
+            orig_idxs[cls] = idxs
 
         tensors = []
         for cls in clss:
@@ -460,14 +461,18 @@ class Tensor2D(VMobject):
         targets.set_y(self.get_y())
 
         # line by line animation
-        for tensor in tensors:
-            # scene.play(FadeIn(tensor, run_time=0.5*run_time_ratio))
+        for cls_idx, tensor in enumerate(tensors):
             scene.play(AnimationGroup(
-                *(Transform(
-                    r1, r2,
-                    rate_func=rate_functions.ease_out_back,
+                *(AnimationGroup(
+                    self.rows[idx].animate.fade(0.8),
+                    Transform(
+                        r1,
+                        r2,
+                        # rate_func=rate_functions.ease_out_back,
+                    ),
+                    lag_ratio=0.0,
                     run_time=0.2*run_time_ratio,
-                ) for r1, r2 in zip(tensor.rows, tensor.target.rows)),
+                ) for idx, r1, r2 in zip(orig_idxs[cls_idx], tensor.rows, tensor.target.rows)),
                 lag_ratio=0.5,
             ))
         # scene.play(AnimationGroup(
@@ -530,11 +535,16 @@ class Tensor2D(VMobject):
 
         # line by line animation
         scene.play(AnimationGroup(
-            *(Transform(
-                r1, r2,
-                rate_func=rate_functions.ease_out_back,
-                run_time=0.2*run_time_ratio,
-            ) for r1, r2 in zip(result.rows, result.target.rows)),
+            *(AnimationGroup(
+                self.rows[idx].animate.fade(0.8),
+                Transform(
+                    r1,
+                    r2,
+                    # rate_func=rate_functions.ease_out_back,
+                ),
+                lag_ratio=0.0,
+                run_time=0.6*run_time_ratio,
+            ) for idx, r1, r2 in zip(idxs, result.rows, result.target.rows)),
             lag_ratio=0.5,
         ))
         return result
@@ -586,7 +596,7 @@ class Tensor2D(VMobject):
                 ApplyMethod(
                     k_mobs.shift,
                     RIGHT*offset,
-                    rate_func=rate_functions.ease_out_back,
+                    # rate_func=rate_functions.ease_out_back,
                 ),
                 run_time=0.5*run_time_ratio,
             ))
@@ -610,7 +620,7 @@ class Tensor2D(VMobject):
             mob_iou = DecimalNumber(
                 ious[0],
                 num_decimal_places=2,
-                align_to_dot=True,
+                # align_to_dot=True,        # TODO: update manim source
                 font_size=20,
                 color=PURE_GREEN if survive_mask[0] else PURE_RED,
             ).move_to(mob_line)
@@ -712,6 +722,7 @@ class Tensor2D(VMobject):
             result.arrange_matrix,
             np.array([result.get_x(), self.get_y(), 0]),
             rate_func=rate_functions.ease_out_back,
+            run_time=0.5*run_time_ratio,
         ))
         scene.wait(0.5*run_time_ratio)
 
@@ -722,6 +733,47 @@ class Tensor2D(VMobject):
     # def apply_filter_conf():
     # def apply_sort():
     # def apply_filter_nms():
+
+    def apply_scale_back(
+        self,
+        scene: Scene,
+        offset: int = 140,          # FIXME: y1y2 offset
+        scale_factor: float = 1.5,  # FXIME: xyxy scale factor
+        upper_bound: tuple = (960, 540),    # FIXME: xy upper bounds
+        run_time_ratio: float = 1.0,
+    ) -> None:
+        """
+        [Internal animation]
+            shrink -> scale -> clip
+        Inplace animation is better.
+        """
+        # containers for building new tensor
+        res_data = np.empty((0, 6))
+        res_objs = []
+        res_mobs = VGroup()
+    
+    def update_col(
+        self,
+        index: int,         # column index to update
+        data: np.ndarray,   # columne new data
+        aargs: dict = {},   # animation args
+    ) -> Animation:
+        # update raw data first
+        self.data[:, index] = data
+
+        old_mobs = self[:, index]
+        new_mobs = []
+        for old_mob, x in zip(old_mobs, data):
+            new_mob = Text(
+                '{:>3.0f}'.format(x),       # FIXME
+                **{**self.decimal_config, 'font_size': self.font_size},
+            ).move_to(old_mob).align_to(old_mob, RIGHT)
+            new_mobs.append(new_mob)
+        
+        return AnimationGroup(
+            *(Transform(om, nm) for om, nm in zip(old_mobs, new_mobs)),
+            **aargs,
+        )
 
     def __getitem__(
         self,
@@ -827,6 +879,10 @@ class Tensor2D(VMobject):
         value = tensor.ndim
         """
         return len(self.shape)
+    
+    @property
+    def font_size(self) -> float:
+        return float(self[0,0].font_size)
 
     @classmethod
     def from_list(

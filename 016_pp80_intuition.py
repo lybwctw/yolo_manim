@@ -191,6 +191,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
+        # shrink -> scale -> clip
         explainer.apply_scale_back(
             scene=self,
             scale_factor=1.2,
