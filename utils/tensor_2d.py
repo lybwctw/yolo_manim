@@ -754,9 +754,10 @@ class Tensor2D(VMobject):
     
     def update_col(
         self,
-        index: int,         # column index to update
-        data: np.ndarray,   # columne new data
-        aargs: dict = {},   # animation args
+        index: int,                 # column index to update
+        data: np.ndarray,           # columne new data
+        keep_color: bool = False,    # keep original color or not
+        aargs: dict = {},           # animation args
     ) -> Animation:
         # update raw data first
         self.data[:, index] = data
@@ -766,8 +767,17 @@ class Tensor2D(VMobject):
         for old_mob, x in zip(old_mobs, data):
             new_mob = Text(
                 '{:>3.0f}'.format(x),       # FIXME
-                **{**self.decimal_config, 'font_size': self.font_size},
+                **{
+                    **self.decimal_config,
+                    'font_size': self.font_size,
+                },
             ).move_to(old_mob).align_to(old_mob, RIGHT)
+            if keep_color:
+                if old_mob.get_color() != BLACK:
+                    new_color = old_mob.get_color()
+                else:
+                    new_color = WHITE
+                new_mob.set_color(new_color)
             new_mobs.append(new_mob)
         
         return AnimationGroup(
