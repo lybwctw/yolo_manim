@@ -1198,16 +1198,18 @@ class AnchorPoint(VMobject):
         # labels_to_remove = []
         for i in range(len(self.labels)):
             if i != max_idx:
-                anims.append(FadeOut(self.labels[i]))
+                anims.append(Unwrite(self.labels[i]))
                 # labels_to_remove.append(self.labels[i])
 
         # self.rect.set_stroke(color=PBAR_COLORS[max_idx])
         anims.append(self.mob.animate.set_stroke(color=LABEL_COLORS[max_idx]))
 
+        # FIXME: unclear addition and removal logics
+        labels = self.labels
+        self.remove(*labels)
+        # self.labels = None        # NOTE: keep 'labels' member, or bug happens
+        self.add(max_label)
         self.label = max_label
-        self.add(self.label)
-        self.labels.remove(*self.labels)
-        del self.labels
 
         return AnimationGroup(*anims, **aargs)
 

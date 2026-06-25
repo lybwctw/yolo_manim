@@ -771,6 +771,7 @@ class Explainer(VGroup):
                 run_time=1.0*run_time_ratio,
             ))
             self.anchor_points.remove(*aps_to_remove)
+            self.remove(*aps_to_remove)
 
         self.data = self.data[k_idxs]
 
@@ -1007,6 +1008,7 @@ class Explainer(VGroup):
                 run_time=1.0*run_time_ratio,
             ))
             self.anchor_points.remove(*aps_remove)
+            self.remove(*aps_remove)
 
         scene.play(AnimationGroup(
             *(ap.do_clip() for ap in aps_remain),

@@ -4,7 +4,6 @@ from utils.ylabel import YLabel
 from utils.tensor_2d import Tensor2D
 from utils.constants import *
 
-# FIXME: move to end of 017
 OPERATOR_TXT_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 12,
@@ -35,7 +34,7 @@ FAST_SCALE_FACTOR_R = 1 / FAST_SCALE_FACTOR
 UPPER_BOUNDS = [960, 540, 960, 540]
 
 wt = SHORT_DURATION
-class Demo(Scene):
+class MainScene(Scene):
     def construct(self):
         # ************************************************************
         self.next_section(

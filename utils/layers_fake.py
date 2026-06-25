@@ -120,6 +120,22 @@ class LayersFake(VMobject):
             **aargs,
         )
     
+    def adjust_gap(
+        self,
+        buff: float = 0.1,
+    ) -> None:
+        """NOT animation, helper functions for target:
+            ...
+            tensor.target.adjust_gap(buff=0.1)
+            scene.play(MoveToTarget(tensor))
+        """
+        orig_center = self.get_center()
+        for i, rect in enumerate(self.rects):
+            rect.move_to(self.rects[0]).shift(
+                UR * buff * i,
+            )
+        self.rects.move_to(orig_center)
+    
     def scale_layers(
         self,
         scale_factor: float = 1.0,

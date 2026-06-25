@@ -20,7 +20,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init mobs from 013 and 014',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load 013(box) mobs and 014(cls) mobs
@@ -64,7 +64,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert cls mobs and merge',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # shift in 014 mobs
@@ -116,7 +116,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'merge input and output arrows in tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mat_1 = MultiArrow(
@@ -301,9 +301,9 @@ class MainScene(Scene):
         self.wait(wt)
 
         # generate fake labels for each box in merged
-        self.play(s32_merged_2d[-1].show_multi_labels(
+        self.play(s32_merged_2d[-1].show_labels(
             include_text=False,
-            box_config={
+            label_bg_config={
                 'width': 0.1,
                 'height': 0.05,
                 'fill_opacity': 1.0,
@@ -318,17 +318,13 @@ class MainScene(Scene):
         ))
         self.wait()
 
-        # # ************************************************************
-        # self.next_section(
-        #     "save everything, used by 019",
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # mobs = Group(
-        #     s32_dist, acb_ab, s32_xyxy, acb_bc, s32_xyxy_2d, marrow_out_iview, s32_merged_2d,
-        #     s32_prob, acc_ab, s32_prob_2d,
-        #     marrow_in_tview,
-        #     t32_dist, acb_12, t32_xyxy, acb_23, t32_xyxy_2d, marrow_out_tview, t32_merged_2d,
-        #     t32_prob, acc_12, t32_prob_2d,
-        # )
-        # export_mobs(__file__, mobs)
+        mobs = Group(
+            s32_offset, aci_7,         s32_xyxy,    aci_8, s32_xyxy_2d,
+            s32_prob,   aci_9,         s32_prob_2d,
+            mas_2,      s32_merged_2d,
+            mat_1,
+            t32_offset, act_7,         t32_xyxy,    act_8, t32_xyxy_2d,
+            t32_prob,   act_9,         t32_prob_2d,
+            mat_2,      t32_merged_2d,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by 020

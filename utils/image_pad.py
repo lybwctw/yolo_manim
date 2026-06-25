@@ -284,7 +284,7 @@ class ImagePad(Mobject):
         )
 
         self.paddings = None
-        # self.remove(self.paddings)
+        self.remove(paddings_start)     # NOTE
 
         if width_nominal:
             self.width_nominal = width_nominal
