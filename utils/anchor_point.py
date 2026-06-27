@@ -26,8 +26,7 @@ RECT_CONFIG = {
 
 TEXT_CONFIG = {
     'font_size': 24,
-    'font': 'JetBrains Mono',
-    # 'font_size': 15,
+    # 'font': 'JetBrains Mono',
 }
 
 # ------------- arrow related --------------
@@ -404,6 +403,7 @@ class AnchorPoint(VMobject):
 
     def show_pcells_text(
         self,
+        direction: str | None = None,   # all or specific direction
         text_config: dict = {},
         aargs: dict = {},
         gargs: dict = {},
@@ -411,7 +411,13 @@ class AnchorPoint(VMobject):
         """Show text in all pcells currently available.
         """
         assert hasattr(self, 'pcells'), 'pcells not exist yet'
-        pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
+
+        directions = [direction] if direction else DIRECTION_SERIES
+        pcells = VGroup()
+        for direction in directions:
+            pcs = self.pcells[direction]
+            pcells.add(*pcs)
+        # pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
         text_config = {**TEXT_CONFIG, **text_config}
 
         return AnimationGroup(
@@ -424,13 +430,19 @@ class AnchorPoint(VMobject):
 
     def hide_pcells_text(
         self,
+        direction: str | None = None,
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
         """Hide text in all pcells currently available.
         """
         assert hasattr(self, 'pcells'), 'pcells not exist yet'
-        pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
+        directions = [direction] if direction else DIRECTION_SERIES
+        pcells = VGroup()
+        for direction in directions:
+            pcs = self.pcells[direction]
+            pcells.add(*pcs)
+        # pcells = VGroup(pc for pcs in self.pcells.values() for pc in pcs)
 
         return AnimationGroup(
             *(pc.hide_text(
@@ -903,47 +915,44 @@ class AnchorPoint(VMobject):
     def create_DFL_computations(
         self,
         buff: float = 0.3,
-        text_config: dict | None = None,
+        text_config: dict = {},
     ) -> VGroup:
+        """Create 4 comments from distribution to distance.
+            not positioned.
         """
-        Create 4 computations from distribution to distance.
-                   not positioned.
-                   FIXME: use 16 reg by default.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap.create_DFL_computations()
-        """
-        cws = [ # color wrappers
-            f'<span foreground="{COLOR_MAP[d]}">{{:.2f}}</span>'
-              for d in DIRECTION_SERIES
-            ]
         formatters = [
             (
-                f'  {cw}x 0 + {cw}x 1 + {cw}x 2 + {cw}x 3\n'
-                f'+ {cw}x 4 + {cw}x 5 + {cw}x 6 + {cw}x 7\n'
-                f'+ {cw}x 8 + {cw}x 9 + {cw}x10 + {cw}x11\n'
-                f'+ {cw}x12 + {cw}x13 + {cw}x14 + {cw}x15\n'
-                f'= <span foreground="white">{{:.2f}}</span>'
-            ) for cw in cws
+                '{:.2f}x 0 + {:.2f}x 1 + {:.2f}x 2 + {:.2f}x 3\n'
+                '{:.2f}x 4 + {:.2f}x 5 + {:.2f}x 6 + {:.2f}x 7\n'
+                '{:.2f}x 8 + {:.2f}x 9 + {:.2f}x10 + {:.2f}x11\n'
+                '{:.2f}x12 + {:.2f}x13 + {:.2f}x14 + {:.2f}x15\n'
+                '= {:.2f}'
+            ) for _ in range(4)
         ]
         values = [
             [float(v) for v in row] + [float(d)]
-             for row, d in zip(self.reg, self.dist)
+             for row, d in zip(self.distrib, self.offsets)
         ]
-
+        colors = [
+            [COLOR_MAP[direction]] * 16 + [WHITE]
+             for direction in DIRECTION_SERIES
+        ]
         computations = VGroup(
-            Computation(
+            Comment(
                 formatter=formatter,
                 values=vs,
+                colors=cs,
                 **text_config,
-            ) for formatter, vs in zip(formatters, values)
+            ) for formatter, vs, cs in zip(
+                formatters,
+                values,
+                colors,
+            )
         ).arrange(
             DOWN,
             buff=buff,
             aligned_edge=LEFT,
-        ).center()   # TODO, arrange args
+        ).center()
 
         return computations
 
@@ -1204,10 +1213,10 @@ class AnchorPoint(VMobject):
         # self.rect.set_stroke(color=PBAR_COLORS[max_idx])
         anims.append(self.mob.animate.set_stroke(color=LABEL_COLORS[max_idx]))
 
-        # FIXME: unclear addition and removal logics
-        labels = self.labels
-        self.remove(*labels)
-        # self.labels = None        # NOTE: keep 'labels' member, or bug happens
+        # NOTE: unclear addition and removal logics
+        self.labels.remove(*self.labels)
+        self.remove(self.labels)
+        # self.labels = None        # FIXME: keep 'labels' member
         self.add(max_label)
         self.label = max_label
 
