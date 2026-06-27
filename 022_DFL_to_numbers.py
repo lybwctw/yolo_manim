@@ -49,7 +49,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'show probcells on specific anchor point',
+            'show probcells for sample anchor point',
             skip_animations=False,
         )
         # ************************************************************
@@ -63,61 +63,42 @@ class MainScene(ThreeDScene):
                 lag_ratio=0.0,
             ),
             lag_ratio=0.0,
-            run_time=0.5,
+            run_time=wt,
         )
         self.wait(0.5)
 
-        for direction in DIRECTION_SERIES:
-            self.play(sap.show_pcells_direction(
-                direction=direction,
-                label_config={
-                    'font_size': 10,
-                    'color': WHITE,
-                },
-                box_config={},
-                lag_ratio=0.5,
-                run_time=0.5,
-            ))
-            self.wait(0.2)
-
-        self.wait(0.5)
-
-        # show WHITE stroke before stacking
-        self.play(AnimationGroup(
-            *(pc.mob_box.animate.set_stroke(
-                # color=WHITE,
-                opacity=0.8,
-                width=0.8,
-            ) for pc in sap.pcells),
-            lag_ratio=0.0,
-            run_time=0.5,
+        # show pcells
+        self.play(sap.show_pcells(
+            box_config={},
+            lag_ratio = 0.5,
+            run_time = wt,
         ))
-        self.wait(0.2)
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'stack probcells in 3d',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # self.move_camera(
-        #     phi=75*DEGREES,
-        #     theta=-60*DEGREES,
-        #     run_time=1.0,
-        # )
-        # self.wait(0.5)
+        # ************************************************************
+        self.next_section(
+            'stack probcells in 3d',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.move_camera(
+            phi=75*DEGREES,
+            theta=-60*DEGREES,
+            run_time=1.0,
+        )
+        self.wait(wt)
 
-        # # # FIXME: occlusion issue.
-        # # sap.pcells[:32].set_z_index(3)
-        # # background.set_z_index(2)
-        # # sap.pcells[32:].set_z_index(1)
-        # # self.wait(1.0)
-
-        # self.play(sap.arrange_pcells(
-        #     lag_ratio=0.5,
-        #     run_time=3.0,
-        # ))
+        # # FIXME: occlusion issue.
+        # sap.pcells['left'].set_z_index(3)
+        # background.set_z_index(2)
+        # sap.pcells['down'].set_z_index(1)
         # self.wait(1.0)
+
+        self.play(sap.arrange_pcells(
+            lag_ratio=0.5,
+            run_time=wt*10,
+        ))
+        self.wait(wt)
 
         # # ************************************************************
         # self.next_section(
