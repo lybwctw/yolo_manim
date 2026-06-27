@@ -270,18 +270,22 @@ class Explainer(VGroup):
         )
         return anim
     
-    # NOTE: not verified starting from here...
     def show_pcells(
         self,
-        label_config: dict | None = None,
-        box_config: dict | None = None,
-        aargs: dict | None = None,
-        gargs: dict | None = None,
+        sf_pcell: float = 1.0,
+        box_config: dict = {},
+        aargs: dict = {},
+        gargs: dict = {},
     ) -> Animation:
+        """Show pcells for all anchor points.
+           always show 4 directions and not arranged.
+        """
         anim = AnimationGroup(
             *(ap.show_pcells(
-                label_config=label_config,
+                direction=None,
+                sf_pcell=sf_pcell,
                 box_config=box_config,
+                arranged=False,
                 **aargs,
             ) for ap in self.anchor_points),
             **gargs,

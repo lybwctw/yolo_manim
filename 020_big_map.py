@@ -609,16 +609,6 @@ class MainScene(Scene):
         # FIXME: more gap on output tensor layers
         mobs.target[14].adjust_gap(buff=0.05)
         mobs.target[15].adjust_gap(buff=0.05)
-        # orig_center = mobs.target[14].get_center()
-        # mobs.target[14].rects.arrange(
-        #     UR,
-        #     buff=-mobs.target[14][0].width + 0.09,
-        # ).move_to(orig_center)
-        # orig_center = mobs.target[15].get_center()
-        # mobs.target[15].rects.arrange(
-        #    UR,
-        #     buff=-mobs.target[15][0].width + 0.08,
-        # ).move_to(orig_center)
 
         # back to big map
         self.play(MoveToTarget(

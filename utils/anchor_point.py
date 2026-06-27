@@ -127,7 +127,7 @@ PCELL_BOX_CONFIG = {
     'stroke_opacity': 1.0,
 }
 PCELL_STROKE_OPACITY_E = 0.5
-PCELL_FILL_OPACITY_E = 0.7
+PCELL_FILL_OPACITY_E = 0.9
 
 PCELL_DEPTH_BUFF_RATIO = 0.5
 
@@ -345,14 +345,15 @@ class AnchorPoint(VMobject):
             dist = self.distrib[idx]
             series = VGroup()
             for i, p in enumerate(dist):
+                p = float(np.clip(p, 0, 1))  # clip to 0~1
                 pcell = PCell(
-                    prob=float(p),
+                    prob=p,
                     box_config={
                         'side_length': self.sf_screen*sf_pcell,
                         'stroke_color': COLOR_MAP[direction],
-                        'stroke_opacity': float(p)**PCELL_STROKE_OPACITY_E,
+                        'stroke_opacity': p**PCELL_STROKE_OPACITY_E,
                         'fill_color': COLOR_MAP[direction],
-                        'fill_opacity': float(p)**PCELL_FILL_OPACITY_E,
+                        'fill_opacity': p**PCELL_FILL_OPACITY_E,
                         **box_config,
                     },
                 ).move_to(self.dot).shift(

@@ -228,10 +228,4 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'digital representation of distributions*4',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # export_mobs(__file__, s32)
+        # NOTE: no export, 2D mobs not compatible with 3D scene
