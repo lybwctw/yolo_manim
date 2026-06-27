@@ -47,52 +47,52 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'show probcells on specific anchor point',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # sap, oaps = e32.random_ap(COMPUTE_IDX)
+        # ************************************************************
+        self.next_section(
+            'show probcells on specific anchor point',
+            skip_animations=False,
+        )
+        # ************************************************************
+        sap, oaps = e32.random_ap(COMPUTE_IDX)
 
-        # self.play(
-        #     sap.mob.animate.set_opacity(1.0),
-        #     AnimationGroup(
-        #         *(ap.mob.animate.set_opacity(0.1)
-        #         for ap in oaps),
-        #         lag_ratio=0.0,
-        #     ),
-        #     lag_ratio=0.0,
-        #     run_time=0.5,
-        # )
-        # self.wait(0.5)
+        self.play(
+            sap.mob.animate.set_opacity(1.0),
+            AnimationGroup(
+                *(ap.mob.animate.set_opacity(0.1)
+                for ap in oaps),
+                lag_ratio=0.0,
+            ),
+            lag_ratio=0.0,
+            run_time=0.5,
+        )
+        self.wait(0.5)
 
-        # for direction in DIRECTION_SERIES:
-        #     self.play(sap.show_pcells_direction(
-        #         direction=direction,
-        #         label_config={
-        #             'font_size': 10,
-        #             'color': WHITE,
-        #         },
-        #         box_config={},
-        #         lag_ratio=0.5,
-        #         run_time=0.5,
-        #     ))
-        #     self.wait(0.2)
+        for direction in DIRECTION_SERIES:
+            self.play(sap.show_pcells_direction(
+                direction=direction,
+                label_config={
+                    'font_size': 10,
+                    'color': WHITE,
+                },
+                box_config={},
+                lag_ratio=0.5,
+                run_time=0.5,
+            ))
+            self.wait(0.2)
 
-        # self.wait(0.5)
+        self.wait(0.5)
 
-        # # show WHITE stroke before stacking
-        # self.play(AnimationGroup(
-        #     *(pc.mob_box.animate.set_stroke(
-        #         # color=WHITE,
-        #         opacity=0.8,
-        #         width=0.8,
-        #     ) for pc in sap.pcells),
-        #     lag_ratio=0.0,
-        #     run_time=0.5,
-        # ))
-        # self.wait(0.2)
+        # show WHITE stroke before stacking
+        self.play(AnimationGroup(
+            *(pc.mob_box.animate.set_stroke(
+                # color=WHITE,
+                opacity=0.8,
+                width=0.8,
+            ) for pc in sap.pcells),
+            lag_ratio=0.0,
+            run_time=0.5,
+        ))
+        self.wait(0.2)
 
         # # ************************************************************
         # self.next_section(
