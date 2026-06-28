@@ -355,8 +355,8 @@ class MainScene(Scene):
             run_time=wt,
         ))
 
-        # copy system
-        s32_back = s32_nms.copy() # FIXME: HERE EHRHERERERE
+        # NOTE: update norminal shape of background
+        s32_back = s32_nms.copy()
         self.play(s32_back.animate(
             run_time=wt,
         ).next_to(
@@ -368,6 +368,8 @@ class MainScene(Scene):
         s32_back[-1].apply_scale_back(
             scene=self,
             scale_factor=1.5,
+            width_nominal=960,
+            height_nominal=540,
             run_time_ratio=wt,
         )
         self.wait(wt)
@@ -606,7 +608,7 @@ class MainScene(Scene):
             # buff=0.5,
         ).center().scale(0.95)
 
-        # FIXME: more gap on output tensor layers
+        # TODO: make gaps a series of variables
         mobs.target[14].adjust_gap(buff=0.05)
         mobs.target[15].adjust_gap(buff=0.05)
 
@@ -617,8 +619,6 @@ class MainScene(Scene):
             rate_func=rate_functions.ease_out_back,
         ))
         self.wait()
-
-        # show shape on tensors
 
         # ************************************************************
         self.next_section(

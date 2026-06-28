@@ -252,7 +252,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         tensor_sub = LayersFake(
-            n=8,                       # variable?
+            n=16,                       # variable?
             ref=tensor_64,
             expanded=True,
             buff=0.08,

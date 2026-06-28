@@ -9,6 +9,7 @@ from utils.explainer import Explainer
 from utils.general import import_mobs, export_mobs
 from utils.image_pad import ImagePad
 
+wt = SHORT_DURATION
 class MainScene(Scene):
     def construct(self):
         # ************************************************************

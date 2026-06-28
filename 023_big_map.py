@@ -84,7 +84,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert t32_distrib in tensor view',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # shift mat_1 to make room
@@ -125,8 +125,6 @@ class MainScene(Scene):
 
         # adjust new arrows
         self.play(AnimationGroup(
-            # acb_aa.animate.rotate(180*DEGREES),
-            # acb_11.animate.rotate(180*DEGREES),
             mat_1.output[1].animate.put_start_and_end_on(
                 start=mat_1.output[1].get_start(),
                 end=t32_prob.get_corner(LEFT)+LEFT*0.3,
@@ -138,181 +136,169 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # # NOTE: a copy from 020
-        # self.next_section(
-        #     "highlight decode stage and postprocess stage",
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # s32_mid_decode = Group(
-        #     acb_aa, s32_dist, acb_ab, s32_xyxy, acb_bc, s32_xyxy_2d, marrow_out_iview,
-        #     acc_ab, s32_prob_2d,
-        # )
-        # s32_mid_postprocess = Group(
-        #     ac_a, s32_max, ac_b, s32_conf, ac_c, s32_nms, ac_d,
-        # )
-        # t32_mid_decode = Group(
-        #     acb_11, t32_dist, acb_12, t32_xyxy, acb_23, t32_xyxy_2d, marrow_out_tview,
-        #     acc_12, t32_prob_2d,
-        # )
-        # t32_mid_postprocess = Group(
-        #     ac_1, t32_max, ac_2, t32_conf, ac_3, t32_nms, ac_4,
-        # )
+        # ************************************************************
+        self.next_section(
+            "highlight decode stage and postprocess stage",
+            skip_animations=False,
+        )
+        # ************************************************************
+        s32_mid_decode = Group(
+            aci_6, s32_offset, aci_7, s32_xyxy, aci_8, s32_xyxy_2d, mas_2,
+            aci_9, s32_prob_2d,
+        )
+        s32_mid_postprocess = Group(
+            aci_10, s32_max, aci_11, s32_conf, aci_12, s32_nms, aci_13,
+        )
+        t32_mid_decode = Group(
+            act_6, t32_offset, act_7, t32_xyxy, act_8, t32_xyxy_2d, mat_2,
+            act_9, t32_prob_2d,
+        )
+        t32_mid_postprocess = Group(
+            act_10, t32_max, act_11, t32_conf, act_12, t32_nms, act_13,
+        )
 
-        # self.play(AnimationGroup(
-        #     marrow_in_tview.animate.fade(0.9),
-        #     s32_mid_decode.animate.fade(0.9),
-        #     s32_mid_postprocess.animate.fade(0.9),
-        #     t32_mid_decode.animate.fade(0.9),
-        #     t32_mid_postprocess.animate.fade(0.9),
-        #     run_time=0.5,
-        #     lag_ratio=0.0,
-        # ))
+        self.play(AnimationGroup(
+            *(mob.animate.fade(0.9)
+               for mob in (
+                mat_1, s32_mid_decode, s32_mid_postprocess,
+                t32_mid_decode, t32_mid_postprocess,
+               )),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # # NOTE: a copy from 020
-        # self.next_section(
-        #     'simplify into two steps on raw output',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # aco_a = ArrowComment(False, RIGHT).scale(0.2).shift(UP*10)
-        # aco_b = ArrowComment(False, RIGHT).scale(0.2).shift(UP*10)
-        # ac_game = ArrowComment(False, RIGHT).scale(0.2).shift(LEFT*10)
-        # aco_1 = ArrowComment(False, RIGHT).scale(0.2).shift(DOWN*10)
-        # aco_2 = ArrowComment(False, RIGHT).scale(0.2).shift(DOWN*10)
+        # ************************************************************
+        self.next_section(
+            'simplify into two steps on raw output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # new arrows
+        aci_14 = ArrowComment(False, RIGHT).scale(0.2).move_to(UP*5.0)
+        aci_15 = ArrowComment(False, RIGHT).scale(0.2).move_to(UP*5.0)
+        act_game = ArrowComment(False, RIGHT).scale(0.2).move_to(LEFT*10.0)
+        act_14 = ArrowComment(False, RIGHT).scale(0.2).move_to(DOWN*5.0)
+        act_15 = ArrowComment(False, RIGHT).scale(0.2).move_to(DOWN*5.0)
 
-        # mobs = Group(
-        #     Mobject(), s32_reg, s32_prob, aco_a, s32_merged_2d, aco_b, s32_back,
-        #     ac_game,   t32_reg, t32_prob, aco_1, t32_merged_2d, aco_2, t32_back,
-        # )
+        mobs = Group(
+            Mobject(), s32_distrib, s32_prob, aci_14, s32_merged_2d, aci_15, s32_back,
+            act_game,  t32_distrib, t32_prob, act_14, t32_merged_2d, act_15, t32_back,
+        )
+        mobs.generate_target()
+        mobs.target[4].scale(MERGED_SCALE_FACTOR)   # merged was scaled up
+        mobs.target[6].scale(MERGED_SCALE_FACTOR)   # merged was scaled up
+        mobs.target.arrange_in_grid(
+            rows=2,
+            cols=7,
+            buff=0.3,
+        ).center().scale(1.5)
+        self.play(AnimationGroup(
+            *(FadeOut(mob) for mob in (
+                mat_1,
+                s32_mid_decode, s32_mid_postprocess,
+                t32_mid_decode, t32_mid_postprocess,
+            )),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+            rate_func=rate_functions.ease_out_back,
+        ))
+        self.wait(wt)
 
-        # mobs.generate_target()
-        # mobs.target[4].scale(MERGED_SCALE_FACTOR)   # merged was scaled up
-        # mobs.target[6].scale(MERGED_SCALE_FACTOR)   # merged was scaled up
-        # mobs.target.arrange_in_grid(
-        #     rows=2,
-        #     cols=7,
-        #     buff=0.3,
-        # ).center().scale(1.5)
-        # self.play(AnimationGroup(
-        #     FadeOut(s32_mid_decode),
-        #     FadeOut(s32_mid_postprocess),
-        #     FadeOut(marrow_in_tview),
-        #     FadeOut(t32_mid_decode),
-        #     FadeOut(t32_mid_postprocess),
-        #     run_time=0.5,
-        #     lag_ratio=0.5,
-        # ))
-        # self.play(MoveToTarget(
-        #     mobs,
-        #     run_time=0.5,
-        # ))
-        # self.wait()
+        # ************************************************************
+        self.next_section(
+            'into bigger map: from input to output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        aci_1 = aci_14.copy().move_to(LEFT*10)
+        act_1 = act_14.copy().move_to(LEFT*10)
+        sin_raw = s32_back[0].copy().set_opacity(1.0).move_to(LEFT*10)
+        sin_norm = s32_merged_2d[0].copy().set_opacity(1.0).move_to(LEFT*10)
+        tin_raw = LayersFake(
+            n=3,
+            ref=sin_raw,
+            expanded=True,
+            width_nominal=sin_raw.width_nominal,
+            height_nominal=sin_raw.height_nominal,
+            buff=0.05,              # TODO, natural buff?
+        ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
+        tin_norm = LayersFake(
+            n=3,
+            ref=sin_norm,
+            expanded=True,
+            width_nominal=sin_norm.width_nominal,
+            height_nominal=sin_norm.height_nominal,
+            buff=0.05,              # TODO, natural buff?
+        ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
 
+        mobs = Group(
+            sin_raw, aci_1, sin_norm, Mobject(), s32_distrib, s32_prob, aci_14, s32_merged_2d, aci_15, s32_back,
+            tin_raw, act_1, tin_norm, act_game,  t32_distrib, t32_prob, act_14, t32_merged_2d, act_15, t32_back,
+        )
+        mobs.generate_target()
 
-        # # ************************************************************
-        # # NOTE: a copy from 020
-        # self.next_section(
-        #     'into bigger map: from input to output',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # aci_a = aco_a.copy().move_to(LEFT*10)
-        # aci_1 = aco_a.copy().move_to(LEFT*10)
-        # sin_raw = s32_back[0].copy().set_opacity(1.0).move_to(LEFT*10)
-        # sin_pad = s32_merged_2d[0].copy().set_opacity(1.0).move_to(LEFT*10)
-        # tin_raw = LayersFake(
-        #     n=3,
-        #     ref=sin_raw,
-        #     expanded=True,
-        #     width_nominal=sin_raw.width_nominal,
-        #     height_nominal=sin_raw.height_nominal,
-        #     buff=0.05,              # TODO, natural buff?
-        # ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
-        # tin_pad = LayersFake(
-        #     n=3,
-        #     ref=sin_pad,
-        #     expanded=True,
-        #     width_nominal=sin_pad.width_nominal,
-        #     height_nominal=sin_pad.height_nominal,
-        #     buff=0.05,              # TODO, natural buff?
-        # ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
+        # make output tensors smaller to match input tensors
+        mobs.target[14].scale(0.6)
+        mobs.target[15].scale(0.6)
+        mobs.target[17].scale(0.7)
+        mobs.target[19].scale(0.7)
+        mobs.target.arrange_in_grid(
+            rows=2,
+            cols=10,
+            # buff=0.5,
+        ).center().scale(0.95)
 
-        # mobs = Group(
-        #     sin_raw, aci_a, sin_pad, Mobject(), s32_reg, s32_prob, aco_a, s32_merged_2d, aco_b, s32_back,
-        #     tin_raw, aci_1, tin_pad, ac_game,   t32_reg, t32_prob, aco_1, t32_merged_2d, aco_2, t32_back,
-        # )
-        # mobs.generate_target()
-        # # make output smaller to match input tensors
-        # mobs.target[14].scale(0.6)
-        # mobs.target[15].scale(0.6)
-        # mobs.target[17].scale(0.7)
-        # mobs.target[19].scale(0.7)
-        # mobs.target.arrange_in_grid(
-        #     rows=2,
-        #     cols=10,
-        #     # buff=0.5,
-        # ).center().scale(0.95)
-        # self.play(MoveToTarget(mobs))
-        # self.wait()
+        # TODO: make gaps a series of variables
+        mobs.target[14].adjust_gap(buff=0.05)
+        mobs.target[15].adjust_gap(buff=0.05)
 
-        # # TODO, pop out comments from acs
+        # back to big map
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+            rate_func=rate_functions.ease_out_back,
+        ))
+        self.wait()
 
-        # # ************************************************************
-        # # NOTE: a copy from 020
-        # self.next_section(
-        #     'show shape on simplified output map',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # tensor_mobs = VGroup(
-        #     tin_raw, tin_pad, t32_reg, t32_prob, t32_merged_2d, t32_back,
-        # )
-        # other_mobs = Group(
-        #     *(mob for mob in mobs if mob not in tensor_mobs),
-        # )
+        # ************************************************************
+        self.next_section(
+            'show shape on simplified output map',
+            skip_animations=False,
+        )
+        # ************************************************************
+        ac_all = VGroup(
+            aci_1,           aci_14, aci_15,
+            act_1, act_game, act_14, act_15
+        )
+        tensor_mobs = (
+            tin_raw, tin_norm, t32_distrib, t32_prob, t32_merged_2d, t32_back,
+        )
 
-        # # fade non-tensor mobs
-        # other_mobs.save_state()
-        # self.play(other_mobs.animate(
-        #     run_time=0.5,
-        # ).fade(0.9))
+        # show shapes for tensor mobs
+        ac_all.save_state()
+        self.play(ac_all.animate(
+            run_time=wt,
+        ).fade(0.8))
+        self.play(AnimationGroup(
+            *(ShowShape(mob, text_config=SMALL_SHAPE_TEXT_CONFIG)
+              for mob in tensor_mobs),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait()
 
-        # # show shapes on tensor mobs
-        # self.play(AnimationGroup(
-        #     *(ShowShape(mob, text_config=MINI_SHAPE_TEXT_CONFIG)
-        #       for mob in tensor_mobs),
-        #     lag_ratio=0.5,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # # hide shape
-        # self.play(AnimationGroup(
-        #     *(HideShape(mob)
-        #       for mob in tensor_mobs),
-        #     lag_ratio=0.5,
-        #     run_time=1.0,
-        # ))
-
-        # # fade back non-tensor mobs
-        # self.play(Transform(
-        #     other_mobs,
-        #     other_mobs.saved_state,
-        #     run_time=0.5,
-        # ))
-        # self.wait()
-
-        # # ************************************************************
-        # self.next_section(
-        #     "save everything, used by 025",
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # mobs = Group(
-        #     sin_raw, aci_a, sin_pad,          s32_reg, s32_prob, aco_a, s32_merged_2d, aco_b, s32_back,
-        #     tin_raw, aci_1, tin_pad, ac_game, t32_reg, t32_prob, aco_1, t32_merged_2d, aco_2, t32_back,
-        # )
-        # export_mobs(__file__, mobs)
+        # hide shapes
+        self.play(AnimationGroup(
+            *(HideShape(mob)
+              for mob in tensor_mobs),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.play(ac_all.animate(
+            run_time=wt,
+        ).restore())

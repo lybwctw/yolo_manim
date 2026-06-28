@@ -975,6 +975,8 @@ class Explainer(VGroup):
         self,
         scene: Scene,
         scale_factor: float = 1.5,          # scale up factor
+        width_nominal: int = 960,           # final background nominal width
+        height_nominal: int = 540,           # final background nominal height
         run_time_ratio: float = 1.0,
     ) -> None:
         """[Internal Animation]
@@ -984,8 +986,8 @@ class Explainer(VGroup):
         # remove paddings for background
         scene.play(self.background.hide_paddings(
             updown=True,
-            width_nominal=640,
-            height_nominal=360,
+            # width_nominal=640,
+            # height_nominal=360,
             run_time=1.0*run_time_ratio,
         ))
         scene.wait(1.0*run_time_ratio)
@@ -998,6 +1000,10 @@ class Explainer(VGroup):
             ).scale(scale_factor),
         ))
         scene.wait(1.0*run_time_ratio)
+
+        # update nominal shape of background
+        self.background.width_nominal = width_nominal
+        self.background.height_nominal = height_nominal
 
         # clip predictions
         idxs_remain = self.check_clip()   # on background by default
