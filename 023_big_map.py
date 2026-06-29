@@ -263,7 +263,7 @@ class MainScene(Scene):
             run_time=wt,
             rate_func=rate_functions.ease_out_back,
         ))
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -302,3 +302,9 @@ class MainScene(Scene):
         self.play(ac_all.animate(
             run_time=wt,
         ).restore())
+
+        mobs = Group(
+            sin_raw, aci_1, sin_norm,            s32_distrib, s32_prob, aci_14, s32_merged_2d, aci_15, s32_back,
+            tin_raw, act_1, tin_norm, act_game,  t32_distrib, t32_prob, act_14, t32_merged_2d, act_15, t32_back,
+        )
+        export_mobs(__file__, mobs)         # NOTE: used by 025

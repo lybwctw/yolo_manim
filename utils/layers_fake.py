@@ -38,7 +38,7 @@ class LayersFake(VMobject):
         width_nominal: int = 300,       # nominal width
         height_nominal: int = 200,      # nominal height
         depth_nominal: int | None = None,   # nominal depth, n by default
-        rect_config: dict | None = None,         # rectangle config
+        rect_config: dict = {},         # rectangle config
     ):
         """
         Example
@@ -75,7 +75,7 @@ class LayersFake(VMobject):
         if height is None:
             height = ref.rects[0].height if isinstance(ref, LayersFake) else ref.height
 
-        cfg = {**RECT_CONFIG, **(rect_config or {})}
+        cfg = {**RECT_CONFIG, **rect_config}
         rects = VGroup(
             Rectangle(
                 width=width,

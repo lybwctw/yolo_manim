@@ -88,7 +88,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and explainer anew',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -130,7 +130,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'anchor points capture thinking',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show grid then anchor points
@@ -170,7 +170,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'expected inside anchor point capture',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show true annotation
@@ -249,7 +249,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, xyxy output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # focus on sample anchor point
@@ -306,7 +306,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, offset output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show arrows
@@ -405,7 +405,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, normed offset output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show divides for arrow offsets
@@ -472,7 +472,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'OPTIONAL: loop through several samples',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         sample_idxs = random.sample(
@@ -553,7 +553,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'explainer: two initial explainers',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # scale and shift explainer
@@ -579,7 +579,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'offset: explainer to tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # synced creation: arrows + tensor
@@ -606,7 +606,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'xyxy: explainer to tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # synced creation: rects + tensors
@@ -633,7 +633,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'reshape xyxy tensor to 2d version',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make room for reshaped xyxy tensor
@@ -669,7 +669,7 @@ class MainScene(Scene):
         self.next_section(
             'simplify tensor_offset/tensor_xyxy/tensor_xyxy_2d' \
             'into t32_offset/t32_xyxy/t32_xyxy_2d',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # replace tensor_offset with t32_offset
@@ -786,13 +786,13 @@ class MainScene(Scene):
             background=background_offset,
             version=160,
             dot_config={},
-            rect_config={},
+            rect_config={'stroke_width': 1},        # NOTE: mini stroke width
         )
         e32_xyxy = Explainer.from_file(
             background=background_xyxy,
             version=160,
             dot_config={},
-            rect_config={},
+            rect_config={'stroke_width': 1},        # NOTE: mini stroke width
         )
         s32_offset = Group(background_offset, e32_offset)
         s32_xyxy = Group(background_xyxy, e32_xyxy)
