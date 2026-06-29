@@ -77,24 +77,6 @@ LABEL_BG_CONFIG = {
     'stroke_opacity': 0.0,
     'fill_opacity': 1.0,         # background rectangle interface
 }
-# LABEL_CONFIG = {
-#     'font': 'JetBrains Mono',
-#     'font_size': 9,
-#     'color': WHITE,
-# }
-
-# # box for label with text
-# BOX_BG_CONFIG = {
-#     'stroke_width': 0,
-#     'stroke_opacity': 0.0,
-#     'opacity': 1.0,         # background rectangle interface
-# }
-# # box for label without text
-# BOX_RAW_CONFIG = {
-#     'stroke_width': 0,
-#     'stroke_opacity': 0.0,
-#     'fill_opacity': 1.0,    # native rectangle interface
-# }
 
 # ------------- coords related --------------
 COORDS_PATH_CONFIG = {
@@ -186,56 +168,6 @@ class PCell(VMobject):
             self.mob_text,
             **aargs,
         )
-
-# class AnchorLabel(VMobject):
-#     def __init__(
-#         self,
-#         include_text: bool = True,      # include conf text or not
-#         text: str = 'None',             # conf text content
-#         label_config: dict | None = None,        # text config
-#         box_config: dict | None = None,          # background config
-#     ):
-#         """
-#         Use the same interface as native Label class.
-
-#         Example
-#         -------
-#         label = AnchorLabel(text="0.95")
-#         """
-#         super().__init__()
-#         self.include_text = include_text
-#         self.text = text if include_text else None
-#         self.label_config = {**LABEL_CONFIG, **(label_config or {})} if include_text else {}
-#         self.box_config = {**(
-#             BOX_BG_CONFIG if include_text else BOX_RAW_CONFIG
-#             ), **(box_config or {})}
-
-#         if include_text:
-#             mob_text = Text(
-#                 text=self.text,
-#                 **self.label_config,
-#             ).add_background_rectangle(
-#                 **self.box_config,
-#             )
-
-#             # fix background rectangle
-#             mob_box = Rectangle(
-#                 width=mob_text.background_rectangle.width,
-#                 height=mob_text.background_rectangle.height,
-#             ).set_style(
-#                 **mob_text.background_rectangle.get_style(simple=True),
-#             ).move_to(mob_text.background_rectangle)
-#             mob_text.remove(mob_text.background_rectangle)
-
-#             self.mob_text = mob_text
-#             self.mob_box = mob_box
-#             self.add(self.mob_box, self.mob_text)
-#         else:
-#             mob_box = Rectangle(
-#                 **self.box_config,
-#             )
-#             self.mob_box = mob_box
-#             self.add(self.mob_box)
 
 class AnchorPoint(VMobject):
     def __init__(
@@ -697,9 +629,6 @@ class AnchorPoint(VMobject):
                 arrow.mob_abs,
                 RIGHT,
                 buff=ARROW_DIVIDE_BUFF,
-            # ).align_to(
-            #     arrow.mob_abs,
-            #     DOWN,
             ) for arrow in self.arrows.values()
         )
         return mobs
@@ -752,101 +681,6 @@ class AnchorPoint(VMobject):
             *anims,
             **gargs,
         )
-
-
-    # def create_xyxy(
-    #     self,
-    #     font_size: int = 15,            # specify font size manually
-    # ) -> VGroup:
-    #     """Create xyxy not positioned.
-    #     """
-    #     xyxy = VGroup(
-    #         *(Text(
-    #             '{:>3d}'.format(self.xyxy[i]),
-    #             color=WHITE,            # xyxy is all white
-    #             font_size=font_size,
-    #             **TEXT_CONFIG,
-    #         ) for i in range(4))
-    #     )
-    #     return xyxy
-
-    # def create_probs(
-    #     self,
-    #     font_size: int = 15,
-    # ) -> VGroup:
-    #     """Create cls not positioned.
-    #     """
-    #     probs = VGroup(
-    #         *(Text(
-    #             '{:.2f}'.format(self.probs[i]),
-    #             color=CLASS_COLORS[i],
-    #             font_size=font_size,
-    #             **TEXT_CONFIG,
-    #         ) for i in range(3))
-    #     )
-    #     return probs
-
-    # def create_ordered_distance(
-    #     self,
-    #     font_size: int = 8,             # smaller for tensor
-    # ) -> VGroup:
-    #     """"Create distance ordered from DL to UR.
-    #     """
-    #     dists = self.create_distance(font_size=font_size)
-
-    #     # manual arrange
-    #     for i, dist in enumerate(dists):
-    #         dist.move_to(self.dot)
-    #         dist.set_z_index(4-i)
-    #         dist.set_opacity(opacity=1-i*0.2)
-    #         dist.shift((RIGHT*0.05 + UP*0.06)*i)
-
-    #     dists.move_to(self.dot)
-    #     return dists
-
-    # def create_ordered_xyxy(
-    #         self,
-    #         font_size: int = 8,         # smaller for tensor
-    # ) -> VGroup:
-    #     """Create xyxy ordered from DL to UR.
-    #     """
-    #     xyxy = self.create_xyxy(font_size=font_size)
-
-    #     # manual arrange
-    #     for i, t in enumerate(xyxy):
-    #         t.move_to(self.dot)
-    #         t.set_z_index(4-i)
-    #         t.set_opacity(opacity=1-i*0.2)
-    #         t.shift((RIGHT*0.05 + UP*0.06)*i)
-
-    #     xyxy.move_to(self.dot)
-    #     return xyxy
-
-    # def create_ordered_probs(
-    #     self,
-    #     font_size: int = 8,
-    # ) -> VGroup:
-    #     """Create xyxy ordered from DL to UR.
-    #     """
-    #     probs = self.create_probs(font_size=font_size)
-
-    #     # manual arrange
-    #     for i, t in enumerate(probs):
-    #         t.move_to(self.dot)
-    #         t.set_z_index(4-i)
-    #         t.set_opacity(opacity=1-i*0.2)
-    #         t.shift((RIGHT*0.05 + UP*0.06)*i)
-
-    #     probs.move_to(self.dot)
-    #     return probs
-
-
-    # def get_center(
-    #     self,
-    # ) -> np.ndarray:
-    #     """Override the default center with dot center.
-    #     """
-    #     return self.dot.get_center()
 
     # ---------------- computations related -------------------
     def create_computation_abs_to_position(
@@ -966,16 +800,7 @@ class AnchorPoint(VMobject):
         """
         Create 4 computations from distance to position,
                    not positioned.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap.create_decode_computations()
         """
-        # f'({self.dir_to_idx[direction]:>2d}+0.5{self.dir_to_sign[direction]}'
-        # f'<span foreground="{TEXT_COLOR_MAP[direction]}">{self.offset[i]:.2f}</span>'
-        # f')*{self.sf_nominal} = '
-        # f'<span foreground="white">{self.xyxy[i]:<3d}</span>'
         formatters = [
             (
                 f'({{:>2d}}+0.5{self.dir_to_sign[direction]}'
@@ -1190,9 +1015,6 @@ class AnchorPoint(VMobject):
         """
         max_label = self.labels[max_idx]
 
-        # self.cls = max_idx              # remember max class index
-        # self.conf = self.prob[max_idx]  # remember max class conf
-
         max_target = max_label.copy().move_to(
             # self.labels[0],
             self.rect.get_corner(UL),
@@ -1211,7 +1033,6 @@ class AnchorPoint(VMobject):
                 anims.append(Unwrite(self.labels[i]))
                 # labels_to_remove.append(self.labels[i])
 
-        # self.rect.set_stroke(color=PBAR_COLORS[max_idx])
         anims.append(self.mob.animate.set_stroke(color=LABEL_COLORS[max_idx]))
 
         # NOTE: unclear addition and removal logics
@@ -1274,15 +1095,7 @@ class AnchorPoint(VMobject):
         self,
         **aargs,
     ) -> Animation:
-        """
-        Make rect clipping.
-                   clip_target should be properly setup.
-
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        self.play(ap.show_multi_labels())
-        self.play(ap.do_clip())
+        """Do rect clipping.
         """
         self.remove(self.rect)
         self.rect = self.clip_target    # NOTE: use's responsibility
@@ -1297,21 +1110,6 @@ class AnchorPoint(VMobject):
             **aargs,
         )
         return anims
-        #     anims.append(Unwrite(self)) # TODO, or fade out???
-        # else:
-        #     self.remove(self.rect)
-        #     self.rect = inter_rect
-        #     anims.append(AnimationGroup(
-        #         self.to_rect(
-        #             rect_config={},
-        #             **(aargs or {}),
-        #         ),
-        #         self.labels.animate(**(aargs or {})).move_to(
-        #             self.rect.get_corner(UL),
-        #             aligned_edge=DL,
-        #         ),
-        #     ))
-        # return AnimationGroup(*anims)
 
     def _intersect_background(
         self,
@@ -1330,12 +1128,6 @@ class AnchorPoint(VMobject):
         y_min = max(a_y1, b_y1)
         y_max = min(a_y2, b_y2)
 
-        # # compute edges of intersection
-        # x_min = max(r1.get_left()[0], r2.get_left()[0])
-        # x_max = min(r1.get_right()[0], r2.get_right()[0])
-        # y_min = max(r1.get_bottom()[1], r2.get_bottom()[1])
-        # y_max = min(r1.get_top()[1], r2.get_top()[1])
-
         # check if overlap exist or not
         if a_x1 > b_x1 and a_x2 < b_x2 and a_y1 > b_y1 and a_y2 < b_y2:
             return self.mob.copy()
@@ -1350,24 +1142,6 @@ class AnchorPoint(VMobject):
 
         return None # no intersection
 
-    def _align_ts_to_arrows(
-        self,
-        ts,         # VGroup of 4 Texts
-    ) -> Self:
-        """
-        Example
-        -------
-        ap = AnchorPoint(reg=np.random.rand(4, 16))
-        result = ap._align_ts_to_arrows(ts=VGroup(Text("1"), Text("2"), Text("3"), Text("4")))
-        """
-        for i, direction in enumerate(DIRECTION_SERIES):
-            ts[i].next_to(
-                self.arrows[i],
-                TEXT_DIRECTION_MAP[direction],
-                buff=TEXT_DIRECTION_BUFF,
-            )
-        return self
-    
     # ---------------- coords related -------------------
     def show_coords(
         self,

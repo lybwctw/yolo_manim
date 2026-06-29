@@ -4,7 +4,6 @@ import random
 from enum import Enum
 
 from manim.utils.rate_functions import ease_in_quart
-from typing_extensions import runtime
 
 DEFAULT_CUBE_CONFIG = {
     'side_length': 0.5,
@@ -59,21 +58,6 @@ def _indices_from_part(part, size):
         start, stop, step = part.indices(size)
         return list(range(start, stop, step))
     raise TypeError(f"Invalid index: {part}")
-
-def shift_layers(direction=UR, scale=0.5):
-    """
-        # shift layers in xy directions
-        self.move_camera(phi=0*DEGREES, theta=-90*DEGREES, focal_distance=80)
-        self.play(ApplyFunction(shift_layers(UR), cubes))
-        self.play(ApplyFunction(shift_layers(2*LEFT), cubes))
-        self.play(ApplyFunction(shift_layers(DR), cubes))
-    """
-    def _shift_layers(cubes):
-        for i, layer in enumerate(cubes.get_layers()):
-            layer.shift(direction*i*scale*cubes.size)
-        cubes.center()
-        return cubes
-    return _shift_layers
 
 class Card(VMobject):
     def __init__(

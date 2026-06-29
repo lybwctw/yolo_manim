@@ -330,7 +330,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'result after decode and before postprocess',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make room in the right
@@ -364,7 +364,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply max selection',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # intuition view
@@ -386,7 +386,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply conf, nms, scale back',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # conf filter
@@ -430,7 +430,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor shapes',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # mobs = Group(
@@ -477,60 +477,68 @@ class MainScene(Scene):
             run_time=wt,
         ).restore())
 
-        # # ************************************************************
-        # self.next_section(
-        #     'focus on AI game',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # focus_mobs = Group(
-        #     tin_pad, ac_game,
-        #     t8_reg, t8_prob,
-        #     t16_reg, t16_prob,
-        #     t32_reg, t32_prob,
-        # )
+        # ************************************************************
+        self.next_section(
+            'focus on core game',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # first time focus
+        focus_mobs = Group(
+                            s8_distrib,  s8_prob,
+        sin_norm,           s16_distrib, s16_prob,
+                            s32_distrib, s32_prob,
+                            t8_distrib,  t8_prob,
+        tin_norm, act_game, t16_distrib, t16_prob,
+                            t32_distrib, t32_prob,
+        )
+        left_mobs = Group(
+            sin_raw, aci_1,
+            tin_raw, act_1,
+        )
+        right_mobs = Group(
+            aci_12,  s8_merged_2d,
+            aci_13, s16_merged_2d, aci_15, s_merged_2d, aci_16, s_result,
+            aci_14, s32_merged_2d,
+            act_12,  t8_merged_2d,
+            act_13, t16_merged_2d, act_15, t_merged_2d, act_16, t_result,
+            act_14, t32_merged_2d,
+        )
+        self.play(AnimationGroup(
+            left_mobs.animate.shift(LEFT*10),
+            right_mobs.animate.shift(RIGHT*10),
+            focus_mobs.animate.center(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # other_mobs = Group(*[m for m in mobs if m not in focus_mobs])
-        # self.play(AnimationGroup(
-        #     FadeOut(other_mobs),
-        #     focus_mobs.animate(
-        #         lag_ratio=0.0,
-        #     ).scale(1.5).center(),
-        #     lag_ratio=0.0,
-        #     run_time=1.0,
-        # ))
-        # self.wait(0.5)
+        # second time focus
+        focus_mobs = Group(
+                            t8_distrib,  t8_prob,
+        tin_norm, act_game, t16_distrib, t16_prob,
+                            t32_distrib, t32_prob,
+        )
+        other_mobs = Group(
+                  s8_distrib,  s8_prob,
+        sin_norm, s16_distrib, s16_prob,
+                  s32_distrib, s32_prob,
+        )
+        self.play(AnimationGroup(
+            other_mobs.animate.shift(UP*10),
+            focus_mobs.animate.center().scale(2.0),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'show shapes on AI game',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # ac_game.save_state()
-        # t_mobs = Group(
-        #     tin_pad,
-        #     t8_reg, t8_prob,
-        #     t16_reg, t16_prob,
-        #     t32_reg, t32_prob,
-        # )
-        # self.play(AnimationGroup(
-        #     ac_game.animate.fade(0.8),
-        #     AnimationGroup(
-        #         *(ShowShape(mob, text_config=MINI_SHAPE_TEXT_CONFIG)
-        #           for mob in t_mobs),
-        #         lag_ratio=0.5,
-        #     ),
-        #     run_time=0.5,
-        # ))
-        # self.wait(0.5)
-
-        # self.play(AnimationGroup(
-        #     ac_game.animate.restore(),
-        #     AnimationGroup(
-        #         *(HideShape(mob) for mob in t_mobs),
-        #         lag_ratio=0.5,
-        #     ),
-        #     run_time=0.5,
-        # ))
-        # self.wait(0.5)
+        # show shapes for tensors
+        self.play(AnimationGroup(
+            *(ShowShape(mob, text_config=MEDIUM_SHAPE_TEXT_CONFIG)
+             for mob in (t8_distrib,  t8_prob,
+               tin_norm, t16_distrib, t16_prob,
+                         t32_distrib, t32_prob,)),
+             lag_ratio=0.0,
+             run_time=wt*4,
+        ))
+        self.wait(wt)

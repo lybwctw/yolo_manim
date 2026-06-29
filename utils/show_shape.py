@@ -58,7 +58,7 @@ class ShowShape(AnimationGroup):
     ):
         path_config = {**DEFAULT_SHAPE_PATH_CONFIG, **path_config}
         text_config = {**DEFAULT_SHAPE_TEXT_CONFIG, **text_config}
-        aargs = {**DEFAULT_SHOW_AARGS, **(aargs or {})}
+        aargs = {**DEFAULT_SHOW_AARGS, **aargs}
 
         # NOTE: mob class SHOULD implement these methods
         path = mob.get_shape_path(**path_config)
