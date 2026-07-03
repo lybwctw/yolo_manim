@@ -1030,7 +1030,7 @@ class Explainer(VGroup):
     # ---------------- Tensor2D related -------------------
     def xyxyccc(
         self,
-    ) -> Tensor2D:
+    ) -> Value2D:
         """
         Combined xyxy and cls info, (h*w, 7)
 
@@ -1043,7 +1043,7 @@ class Explainer(VGroup):
             self._compute_xyxy_2d(),
             self._compute_cls_2d(),
         ]
-        return Tensor2D(
+        return Value2D(
             data=data,
             decimal_config={
                 'font_size': 4.3,

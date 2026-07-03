@@ -1,5 +1,5 @@
 from manim import *
-from utils.mcube import MCube, CCMode
+from utils.mtensor import MCube, CCMode
 
 from manim.utils.rate_functions import ease_in_quart
 

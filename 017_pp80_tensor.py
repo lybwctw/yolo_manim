@@ -8,7 +8,7 @@ from utils.arrow_comment import ArrowComment
 from utils.explainer import Explainer
 from utils.show_shape import ShowShape, HideShape
 from utils.image_pad import ImagePad
-from utils.tensor_2d import Tensor2D
+from utils.value_2d import Value2D
 
 TENSOR_GAP = 3.5
 
@@ -36,7 +36,7 @@ class MainScene(Scene):
             sf_nominal=80,
         )
 
-        tensor_raw = Tensor2D.from_ref(
+        tensor_raw = Value2D.from_ref(
             ref=explainer,
             decimal_config={
                 'font': 'JetBrains Mono',
@@ -196,7 +196,7 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        tensor_nms = Tensor2D.from_tensors(
+        tensor_nms = Value2D.from_tensors(
             tensor_list=tensors_nms,
         )
         self.play(ApplyMethod(

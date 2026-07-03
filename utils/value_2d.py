@@ -2,11 +2,11 @@
 -----
 Example inside a scene outside ``utils/``::
 
-    from utils.tensor_2d import Tensor2D
+    from utils.value_2d import Value2D
     from utils.general import random_boxes
     import numpy as np
 
-    tensor_output = Tensor2D.from_list(
+    tensor_output = Value2D.from_list(
         [random_boxes(25), np.random.uniform(0, 1, (25, 3))],
         decimal_config={'font_size': 12},
         cell_width=0.6,
@@ -53,7 +53,7 @@ def create_col_ratios(data: np.ndarray) -> list:
     return col_ratios
 
 
-class Tensor2D(VMobject):
+class Value2D(VMobject):
     """TODO: fade input before animation for better visual effects.
     """
     def __init__(
@@ -61,7 +61,7 @@ class Tensor2D(VMobject):
         data: np.ndarray,
         formatters: list | None = None,
         col_ratios: list | None = None,
-        decimal_config: dict | None = None,
+        decimal_config: dict = {},
         cell_width: float | None = None,
         cell_height: float | None = None,
         objs: list | None = None,
@@ -72,7 +72,7 @@ class Tensor2D(VMobject):
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         """
         super().__init__()
         self.data = data                # raw np data
@@ -104,7 +104,7 @@ class Tensor2D(VMobject):
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         result = tensor.create_objs()
         """
         objs = []
@@ -127,7 +127,7 @@ class Tensor2D(VMobject):
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         result = tensor.create_mobs()
         """
         return VGroup( *(VGroup(*row) for row in self.objs))
@@ -142,7 +142,7 @@ class Tensor2D(VMobject):
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         self.play(tensor.arrange_matrix())
         """
         center_x, center_y, _ = point
@@ -154,7 +154,7 @@ class Tensor2D(VMobject):
                     sum(self.col_ratios[:j+1]) * self.cell_width * RIGHT
                 )
         self.mobs.move_to(np.array([center_x, center_y, 0]))
-        return Self
+        return self
 
     def arrange_as_matrix(
         self,
@@ -164,7 +164,7 @@ class Tensor2D(VMobject):
         """
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         self.play(tensor.arrange_as_matrix())
         """
         center_x = center_x or self.get_x()
@@ -182,14 +182,14 @@ class Tensor2D(VMobject):
         scene: Scene,
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
-    ) -> Tensor2D:
+    ) -> Value2D:
         """
         [Internal animation]
                    Replace the last n-4 cols with max.
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         self.add(tensor)
         result = tensor.into_take_max(scene=self)
         """
@@ -294,8 +294,8 @@ class Tensor2D(VMobject):
         ))
         scene.wait(0.5*run_time_ratio)
 
-        # build Tensor2D
-        result = Tensor2D(
+        # build Value2D
+        result = Value2D(
             data=res_data,
             formatters=self.formatters[:5] + [self.formatters[0]],
             col_ratios=self.col_ratios[:5] + [self.col_ratios[0]*0.6],    # TODO: small ratio for cls
@@ -324,14 +324,14 @@ class Tensor2D(VMobject):
         conf_thresh: float = 0.25,
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
-    ) -> Tensor2D:
+    ) -> Value2D:
         """
         [Internal animation]
                    Filter out rows with small conf score.
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         self.add(tensor)
         result = tensor.into_filter_conf(scene=self)
         """
@@ -377,8 +377,8 @@ class Tensor2D(VMobject):
         ))
         scene.wait(0.5*run_time_ratio)
 
-        # build Tensor2D
-        result = Tensor2D(
+        # build Value2D
+        result = Value2D(
             data=res_data,
             formatters=self.formatters,
             col_ratios=self.col_ratios,
@@ -411,12 +411,12 @@ class Tensor2D(VMobject):
     ) -> list:
         """
         [Internal animation]
-                   Split into multiple Tensor2D based on cls index.
+                   Split into multiple Value2D based on cls index.
                    NOTE: Assume that col [5] is cls index.
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         self.add(tensor)
         result = tensor.into_splitted(scene=self)
         """
@@ -436,7 +436,7 @@ class Tensor2D(VMobject):
 
         tensors = []
         for cls in clss:
-            tensor = Tensor2D(
+            tensor = Value2D(
                 data=res_data[cls],
                 formatters=self.formatters,
                 col_ratios=self.col_ratios,
@@ -492,14 +492,14 @@ class Tensor2D(VMobject):
         reverse: bool = True,
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
-    ) -> Tensor2D:
+    ) -> Value2D:
         """
         [Internal animation]
                    Sort rows according to conf col [4].
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         self.add(tensor)
         result = tensor.into_sort(scene=self)
         """
@@ -515,7 +515,7 @@ class Tensor2D(VMobject):
         res_mobs = VGroup( VGroup(*row) for row in res_objs)
 
         # build result tensor first
-        result = Tensor2D(
+        result = Value2D(
             data=res_data,
             formatters=self.formatters,
             col_ratios=self.col_ratios,
@@ -555,14 +555,14 @@ class Tensor2D(VMobject):
         iou_thresh: float = 0.75,
         offset: np.ndarray = RIGHT,
         run_time_ratio: float = 1.0,
-    ) -> Tensor2D:
+    ) -> Value2D:
         """
         [Internal animation]
                    Apply NMS filter.
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         self.add(tensor)
         result = tensor.into_filter_nms(scene=self)
         """
@@ -704,8 +704,8 @@ class Tensor2D(VMobject):
             # NOTE: filter cand_idxs using survive_mask
             cand_idxs = [x for x, s in zip(cand_idxs, survive_mask) if s]
 
-        # build Tensor2D
-        result = Tensor2D(
+        # build Value2D
+        result = Value2D(
             data=res_data,
             formatters=self.formatters,
             col_ratios=self.col_ratios,
@@ -818,7 +818,7 @@ class Tensor2D(VMobject):
 
         resolved = []
         for part, size in zip(idx, self.shape):
-            if isinstance(part, (int, np.int64)):
+            if isinstance(part, (int, np.integer)):
                 data = [part]
             elif isinstance(part, slice):
                 start, stop, step = part.indices(size)
@@ -847,13 +847,13 @@ class Tensor2D(VMobject):
         self,
         scale_factor: float,
         **kwargs,
-    ) -> Tensor2D:
+    ) -> Value2D:
         """
         Override native scale method.
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         tensor.scale(scale_factor=0.5)
         """
         self.cell_width *= scale_factor
@@ -865,7 +865,7 @@ class Tensor2D(VMobject):
         """
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         value = tensor.rows
         """
         return self.mobs
@@ -875,7 +875,7 @@ class Tensor2D(VMobject):
         """
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         value = tensor.shape
         """
         return self.data.shape
@@ -885,7 +885,7 @@ class Tensor2D(VMobject):
         """
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
         value = tensor.ndim
         """
         return len(self.shape)
@@ -903,12 +903,12 @@ class Tensor2D(VMobject):
         cell_height: float | None = None,   # auto or override
     ):
         """
-        Build Tensor2D from a list of arrays with compatible row counts.
+        Build Value2D from a list of arrays with compatible row counts.
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
-        result = Tensor2D.from_list(data_list=[np.random.uniform(0, 1, (4, 3))])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        result = Value2D.from_list(data_list=[np.random.uniform(0, 1, (4, 3))])
         """
         # create raw data
         data_raw = np.concat(data_list, axis=-1)
@@ -917,7 +917,7 @@ class Tensor2D(VMobject):
         formatters = [d for data in data_list for d in create_formatters(data)]
         col_ratios = [d for data in data_list for d in create_col_ratios(data)]
 
-        return Tensor2D(
+        return Value2D(
             data=data_raw,
             formatters=formatters,
             col_ratios=col_ratios,
@@ -932,19 +932,19 @@ class Tensor2D(VMobject):
         tensor_list: list,
     ):
         """
-        Concat multiple Tensor2D objects with compatible column counts.
+        Concat multiple Value2D objects with compatible column counts.
 
         Example
         -------
-        tensor = Tensor2D.from_list([np.random.uniform(0, 1, (4, 3))])
-        result = Tensor2D.from_tensors(tensor_list=[tensor])
+        tensor = Value2D.from_list([np.random.uniform(0, 1, (4, 3))])
+        result = Value2D.from_tensors(tensor_list=[tensor])
         """
         data_new = np.concat([t.data for t in tensor_list])
         objs_new = [row for t in tensor_list for row in t.objs]
         mobs_new = VGroup(row for t in tensor_list for row in t.mobs)
 
         # TODO: use format members from the first
-        return Tensor2D(
+        return Value2D(
             data=data_new,
             formatters=tensor_list[0].formatters,
             col_ratios=tensor_list[0].col_ratios,
@@ -964,15 +964,15 @@ class Tensor2D(VMobject):
         cell_height: float | None = None,   # auto or override
     ):
         """
-        Build Tensor2D from reference explainer.
+        Build Value2D from reference explainer.
             Use out-of-the-box data.
 
         Example
         -------
         explainer = Explainer.from_random(background=Square())
-        result = Tensor2D.from_ref(ref=explainer)
+        result = Value2D.from_ref(ref=explainer)
         """
-        return Tensor2D.from_list(
+        return Value2D.from_list(
             data_list=[
                 (ref.xyxy_2d * ref.sf_nominal).astype(int),
                 ref.prob_2d,
@@ -987,7 +987,7 @@ class Demo(Scene):
         GAP = 4
 
         # build raw output tensor
-        tensor_output = Tensor2D.from_list(
+        tensor_output = Value2D.from_list(
             [
                 # np.random.randint(0, 640, (25, 4)),
                 random_boxes(25),
@@ -1138,7 +1138,7 @@ class Demo(Scene):
         # self.wait()
 
         # # concat into a single tensor
-        # tensor_nms = Tensor2D.from_tensors(
+        # tensor_nms = Value2D.from_tensors(
         #     [tensor_a_nms, tensor_b_nms, tensor_c_nms],
         # )
         # self.play(ApplyMethod(
@@ -1148,7 +1148,7 @@ class Demo(Scene):
 
 # class Demo2(Scene):
 #     def construct(self):
-#         tensor = Tensor2D.from_list(
+#         tensor = Value2D.from_list(
 #             [
 #                 np.random.randint(0, 640, (10,4)),
 #                 np.random.uniform(0, 1, (10, 3)),
@@ -1175,3 +1175,4 @@ class Demo(Scene):
 #             run_time=0.5,
 #         ))
 #         self.wait()
+

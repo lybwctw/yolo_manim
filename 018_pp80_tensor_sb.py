@@ -1,7 +1,7 @@
 from manim import *
 from utils.general import import_mobs
 from utils.ylabel import YLabel
-from utils.tensor_2d import Tensor2D
+from utils.value_2d import Value2D
 from utils.constants import *
 
 OPERATOR_TXT_CONFIG = {
@@ -454,7 +454,7 @@ class MainScene(Scene):
         self.wait(wt)
 
         # arrange into final tensor
-        tensor_final = Tensor2D(
+        tensor_final = Value2D(
             data=res_data,
             formatters=tensor_nms.formatters,
             col_ratios=tensor_nms.col_ratios,
