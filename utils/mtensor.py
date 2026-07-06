@@ -183,13 +183,35 @@ class MTensor(VMobject):
     
     def switch_mode(
         self,
+        style: str = 'layer',
+        direction: np.ndarray = OUT,
         aargs: dict = {},
         gargs: dict = {},
     ) -> Animation:
-        return AnimationGroup(
-            *(obj.switch_mode(**aargs) for obj in self.mobs),
-            **gargs,
-        )
+        if style == 'layer':
+            layers = self.get_layers(direction=direction)
+            anims = Succession(
+                *(AnimationGroup(
+                    *(cube.switch_mode() for cube in layer),
+                    lag_ratio=0.0,
+                ) for layer in layers),
+                rate_func=smooth,
+                **gargs,
+            )
+            return anims
+        elif style == 'beam':
+            beams = self.get_beams(direction=direction)
+            anims = AnimationGroup(
+                *(AnimationGroup(
+                    *(cube.switch_mode() for cube in beam),
+                    run_time=random.random()+1,
+                    rate_func=smooth,
+                    **aargs,
+                ) for beam in beams),
+                lag_ratio=0.0,
+                **gargs,
+            )
+            return anims
 
     # ----------------------- mob collection utils -----------------------
     def __getitem__(

@@ -70,7 +70,7 @@ class ShowShape(AnimationGroup):
         super().__init__(
             ShowPassingFlash(
                 path,
-                time_width=1.0,
+                time_width=3.0,
             ),
             AnimationGroup(
                 *(Write(t) for t in texts),

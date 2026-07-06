@@ -5,7 +5,9 @@ sys.path.append('..')
 from manim import *
 from utils.mtensor import MTensor
 
-class PT_conv2d(VMobject):
+import numpy as np
+
+class PT_Conv2d(VMobject):
     def __init__(
         self,
         array: np.ndarray,      # 4d np array
@@ -18,6 +20,8 @@ class PT_conv2d(VMobject):
         decimal_config: dict = {},
     ):
         super().__init__()
+        self.array = array
+        self.shape = array.shape
         mobs = VGroup(
             MTensor(
                 array=x,
@@ -52,6 +56,115 @@ class PT_conv2d(VMobject):
             ) for mob in self.mobs),
             **ggargs,
         )
+    
+    def switch_mode(
+        self,
+        style: str = 'layer',
+        direction: np.ndarray = OUT,
+        aargs: dict = {},
+        gargs: dict = {},
+        ggargs: dict = {},
+    ) -> Animation:
+        return AnimationGroup(
+            *(tensor.switch_mode(
+                style=style,
+                direction=direction,
+                aargs=aargs,
+                gargs=gargs,
+            ) for tensor in self.mobs),
+            **ggargs,
+        )
+    
+    def get_shape_path(
+        self,
+        **path_config,
+    ) -> VMobject:
+        path = VMobject().set_z_index(self.shape[0])
+        path.set_points_as_corners([
+            self.mobs[-1].get_corner(DOWN + RIGHT + IN),
+            self.mobs[0].get_corner(DOWN + LEFT + IN),
+            self.mobs[0].get_corner(DOWN + LEFT + OUT),
+            self.mobs[0].get_corner(UP + LEFT + OUT),
+            self.mobs[0].get_corner(UP + RIGHT + OUT),
+        ]).set_stroke(**path_config)
+        return path
+
+    def get_shape_text(
+        self,
+        **text_config,
+    ) -> VGroup:
+        buff = text_config.pop('buff', 0.25)
+
+        texts = VGroup()
+        for i in range(4):
+            text = Text(
+                str(self.shape[i]),
+                **text_config,
+            ).next_to(
+                self.ref_point(i),
+                self.ref_direction(i),
+                buff=self.ref_buff(i, buff),
+            )
+            self.rotate_shape(text, i)
+            texts.add(text)
+        return texts
+    
+    def ref_point(
+        self,
+        index: int,     # 0/1/2/3
+    ) -> Point:
+        if index == 0:
+            p1 = self.mobs[0].get_corner(DL + IN)
+            p2 = self.mobs[-1].get_corner(DR + IN)
+            pm = (p1 + p2) / 2
+        elif index == 1:
+            pm = self.mobs[0].get_corner(DL)
+        elif index == 2:
+            pm = self.mobs[0].get_corner(LEFT + OUT)
+        elif index == 3:
+            pm = self.mobs[0].get_corner(UP + OUT)
+        return pm
+
+    def ref_direction(
+        self,
+        index: int,     # 0/1/2/3
+    ):
+        if index == 0:
+            direction = DOWN
+        elif index == 1:
+            direction = LEFT
+        elif index == 2:
+            direction = OUT + LEFT
+        elif index == 3:
+            direction = OUT + UP
+        return direction
+    
+    def ref_buff(
+        self,
+        index: int,     # 0/1/2/3
+        buff: float,
+    ) -> float:
+        if index == 0:
+            return buff
+        elif index == 1:
+            return buff
+        elif index == 2:
+            return buff*.8
+        elif index == 3:
+            return buff*.8
+
+    def rotate_shape(
+        self,
+        mob,
+        index: int,     # 0/1/2/3
+    ):
+        if index == 1:
+            mob.rotate(90*DEGREES, axis=RIGHT)
+        elif index == 2:
+            mob.rotate(90*DEGREES, axis=RIGHT)
+            # mob.rotate(90*DEGREES, axis=OUT)
+        elif index == 3:
+            mob.rotate(90*DEGREES, axis=RIGHT)
 
 class Demo(ThreeDScene):
     def construct(self):
@@ -63,7 +176,7 @@ class Demo(ThreeDScene):
         #     rate=0.1,
         # )
 
-        pt_conv2d = PT_conv2d(
+        pt_conv2d = PT_Conv2d(
             array=np.random.rand(5, 4, 3, 3),
             size=0.3,
             mode='cube',
