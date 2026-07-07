@@ -2,7 +2,7 @@ from manim import *
 
 from utils.general import import_mobs, export_mobs
 from utils.mtensor import MTensor
-from utils.constant_modules import *
+from utils.constants_3d import *
 from utils.constants import *
 
 wt = SHORT_DURATION
