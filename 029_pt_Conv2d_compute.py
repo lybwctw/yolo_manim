@@ -16,14 +16,14 @@ class MainScene(ThreeDScene):
         # ************************************************************
         mobs = import_mobs('028')
         (
-            card_module, module
+            card_module, t_module
         ) = mobs
 
         self.set_camera_orientation(
             **VIEW_COMPUTE,
         )
         self.add_fixed_in_frame_mobjects(card_module)
-        self.add(module)
+        self.add(t_module)
         self.wait(wt)
 
         # fade module card
@@ -39,5 +39,6 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        tinput = MTensor(
-        )
+        # t_in = MTensor(
+        #     array=np.random.random
+        # )

@@ -107,6 +107,8 @@ class MCube(VMobject):
             **aargs,
         )
 
+# TODO: MTensor 4d -> 3d -> 2d -> 1d
+
 class MTensor(VMobject):
     def __init__(
         self,

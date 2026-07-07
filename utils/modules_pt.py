@@ -7,35 +7,42 @@ from utils.mtensor import MTensor
 
 import numpy as np
 
+
+
 class PT_Conv2d(VMobject):
     def __init__(
         self,
-        array: np.ndarray,      # 4d np array
-        size: float = 0.5,
-        mode: str = 'card',
-        padding: float = 0.1,
-        buff: float = 0.3,
-        cube_config: dict = {},
-        square_config: dict = {},
-        decimal_config: dict = {},
+        module,                         # torch module
+        module_config: dict,            # torch module config
+        mtensor_config: dict,           # manim tensor config
+        weight_direction: np.ndarray,   # weight arrange direction
+        weight_buff: float = 0.3,       # buff between weight tensors
+        bias_buff: float = 0.5,         # buff between weight and bias
     ):
         super().__init__()
-        self.array = array
-        self.shape = array.shape
-        mobs = VGroup(
+        self.module = module
+        self.module_config = module_config
+        self.mtensor_config = mtensor_config
+
+        mobs_weight = VGroup(
             MTensor(
                 array=x,
-                size=size,
-                mode=mode,
-                padding=padding,
-                cube_config=cube_config,
-                square_config=square_config,
-                decimal_config=decimal_config,
-            ) for x in array
-        ).arrange(RIGHT, buff=buff).center()
+                **mtensor_config,
+            ) for x in module.weight.detach().numpy()
+        ).arrange(weight_direction, buff=weight_buff).center()      # center weight
+        self.mobs_weight = mobs_weight
+        self.add(self.mobs_weight)
 
-        self.mobs = mobs
-        self.add(self.mobs)
+        if module_config['bias']:
+            mobs_bias = MTensor(
+                array=module.bias.detach().numpy()[None,None,:],    # make bias 3d
+                **mtensor_config,
+            )
+            # align bias to weight before any computation
+            for b, w in zip(mobs_bias.mobs, mobs_weight):
+                b.next_to(w, DOWN, buff=bias_buff)
+            self.mobs_bias = mobs_bias
+            self.add(self.mobs_bias)
     
     def create(
         self,
@@ -46,16 +53,23 @@ class PT_Conv2d(VMobject):
         gargs: dict = {},
         ggargs: dict = {},
     ) -> AnimationGroup:
-        return AnimationGroup(
+        anims = []
+        anims.append(AnimationGroup(
             *(mob.create(
                 style=style,
                 direction=direction,
                 anim=anim,
                 aargs=aargs,
                 gargs=gargs,
-            ) for mob in self.mobs),
+            ) for mob in self.mobs_weight),
             **ggargs,
-        )
+        ))
+        if self.module_config['bias']:
+            anims.append( AnimationGroup(
+                *(anim(mob, **aargs) for mob in self.mobs_bias.mobs),
+                **ggargs,
+            ))
+        return Succession(*anims)
     
     def switch_mode(
         self,
@@ -65,15 +79,28 @@ class PT_Conv2d(VMobject):
         gargs: dict = {},
         ggargs: dict = {},
     ) -> Animation:
-        return AnimationGroup(
+        anims = []
+        anims.append(AnimationGroup(
             *(tensor.switch_mode(
                 style=style,
                 direction=direction,
                 aargs=aargs,
                 gargs=gargs,
-            ) for tensor in self.mobs),
+            ) for tensor in self.mobs_weight),
             **ggargs,
-        )
+        ))
+
+        if self.module_config['bias']:
+            anims.append(AnimationGroup(
+                *(tensor.switch_mode(
+                    style=style,
+                    direction=direction,
+                    aargs=aargs,
+                    gargs=gargs,
+                ) for tensor in self.mobs_bias),
+                **ggargs,
+            ))
+        return Succession(*anims)
     
     def get_shape_path(
         self,
@@ -165,6 +192,22 @@ class PT_Conv2d(VMobject):
             # mob.rotate(90*DEGREES, axis=OUT)
         elif index == 3:
             mob.rotate(90*DEGREES, axis=RIGHT)
+    
+    @property
+    def weight(self) -> np.ndarray:
+        return self.module.weight.numpy()
+    
+    @property
+    def bias(self) -> np.ndarray:
+        return self.module.bias.numpy()
+
+    @property
+    def weight_shape(self):
+        return self.weight.shape
+
+    @property
+    def bias_shape(self):
+        return self.bias.shape
 
 class Demo(ThreeDScene):
     def construct(self):

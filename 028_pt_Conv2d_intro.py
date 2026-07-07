@@ -6,7 +6,7 @@ from utils.mtensor import MTensor, MCube
 from utils.show_shape import ShowShape, HideShape
 from utils.general import export_mobs
 from utils.constants import *
-from utils.constant_modules import *
+from utils.constants_3d import *
 
 import torch
 
@@ -27,53 +27,24 @@ class MainScene(ThreeDScene):
 
         card = NameCard(
             name='conv2d',
-            params={
-                'in_channels': 6,
-                'out_channels': 5,
-                'kernel_size': 3,
-                'stride': 1,
-                'padding': 1,
-                'bias': False,
-                'dilation': 1,
-                'groups': 1,
-                'padding_mode': 'zeros',
-            },
-            levels={
-                'in_channels': 0,
-                'out_channels': 0,
-                'kernel_size': 0,
-                'stride': 0,
-                'padding': 0,
-                'bias': 0,
-                'dilation': 1,
-                'groups': 1,
-                'padding_mode': 1,
-            },
-        ).to_edge(LEFT).shift(UP*.5).set_z_index(999)
+            params=PT_Conv2d_CONFIG,
+            levels=PT_Conv2d_LEVELS,
+        )
+        align_card(card)
 
         # real conv layer
-        conv = torch.nn.Conv2d(
-            in_channels=6,
-            out_channels=5,
-            kernel_size=3,
-            stride=1,
-            padding=1,
-            bias=False,
-            dilation=1,
-            groups=1,
-            padding_mode='zeros',
+        t_module = torch.nn.Conv2d(
+            **PT_Conv2d_CONFIG,
         )
 
-        module = PT_Conv2d(
-            array=conv.weight,
-            size=SMALL_CUBE_SIZE,
-            mode='cube',
-            padding=0.0,
-            buff=0.3,
-            cube_config={},
-            square_config={},
-            decimal_config={'font_size': SMALL_FONT_SIZE},
-        ).center()
+        m_module = PT_Conv2d(
+            module=t_module,
+            module_config=PT_Conv2d_CONFIG,
+            mtensor_config=MEDIUM_MTENSOR_CONFIG,
+            weight_direction=RIGHT,
+            weight_buff=0.3,
+            bias_buff=0.5,
+        )
 
         # ************************************************************
         self.next_section(
@@ -81,7 +52,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        self.play(module.create(
+        self.play(m_module.create(
             style='beam',
             direction=OUT,
             anim=GrowFromCenter,
@@ -92,7 +63,7 @@ class MainScene(ThreeDScene):
                 'run_time': wt,
             },
         ))
-        self.add(module)
+        self.add(m_module)
         self.wait(wt)
 
         # ************************************************************
@@ -110,7 +81,7 @@ class MainScene(ThreeDScene):
 
         # show shapes on module
         self.play(ShowShape(
-            module,
+            m_module,
             text_config=MEDIUM_SHAPE_TEXT_CONFIG,
             aargs={'run_time': wt},
         ))
