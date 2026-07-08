@@ -110,7 +110,9 @@ class MCube(VMobject):
 class MTensorGeneral(VMobject):
     def __init__(
         self,
-        array: np.ndarray,
+        objs: list | None = None,
+        mobs: VGroup | None = None,
+        array: np.ndarray | None = None,
         mode: str = 'cube',
         size: float = 0.5,
         padding: float = 0.1,
@@ -131,7 +133,8 @@ class MTensorGeneral(VMobject):
 
         self.hl_state = np.full(self.shape, True, dtype=bool)
 
-        objs, mobs = self.create_mobs()
+        if objs is None and mobs is None:
+            objs, mobs = self.create_mobs()
         self.objs = objs
         self.mobs = mobs
         self.add(self.mobs)
@@ -320,6 +323,43 @@ class MTensor_1D(MTensorGeneral):
         mask[d*n+(d-1)//2] = True
         anims = self.highlight(mask=mask, **aargs)
         return anims
+    
+    def highlight_mob_loop(
+        self,
+        direction = RIGHT,
+        **aargs,
+    ):
+        """FIXME
+        Example usage:
+            for mob in tensor.get_mobs():
+                mob.save_state()
+            self.play(tensor.highlight_mob(
+                direction=RIGHT,
+                n=0,
+                run_time=1.0,
+            ))
+            self.wait()
+            self.play(tensor.highlight_mob_loop(
+                direction=RIGHT,
+                run_time=1.0,
+            ))
+            self.play(tensor.highlight_mob_loop(
+                direction=LEFT,
+                run_time=1.0,
+            ))
+            self.wait()
+        """
+        vg1 = self.get_mobs(direction=direction)[:-1]
+        vg2 = self.get_mobs(direction=direction)[1:]
+        return Succession(
+            *(AnimationGroup(
+                ApplyMethod(hide_mob.fade, 0.8),
+                ApplyMethod(show_mob.restore),
+                lag_ratio=0.0,
+            ) for hide_mob, show_mob in zip(vg1, vg2)),
+            rate_func=rate_functions.smooth,
+            **aargs,
+        )
 
 class MTensor_2D(MTensorGeneral):
     """Only layer animations are implemented.
@@ -646,22 +686,162 @@ class MTensor_3D(MTensorGeneral):
             mask[:, ij[0], ij[1]] = True
         anims = self.highlight(mask=mask, **aargs)
         return anims
+    
+class MTensor_4D(MTensorGeneral):
+    def __init__(
+        self,
+        block_direction: np.ndarray = RIGHT,
+        block_gap: float = 0.5,
+        **kwargs,
+    ):
+        self.block_direction = block_direction
+        self.block_gap = block_gap
+        super().__init__(**kwargs)
+    
+    def create_mobs(
+        self,
+    ):
+        objs_4d = []
+        blocks = VGroup()
+        nb, nc, nh, nw = self.array.shape
+        for i, block in enumerate(self.array):
+            objs = [
+                [
+                    [ MCube(
+                            value=float(block[j, k, l]),
+                            size=self.size,
+                            mode=self.mode,
+                            cube_config=self.cube_config,
+                            square_config=self.square_config,
+                            decimal_config=self.decimal_config,
+                        ).shift(RIGHT * l * (self.size + self.padding) +\
+                                DOWN * k * (self.size + self.padding) +\
+                                    IN * j * (self.size + self.padding))
+                        for l in range(nw)
+                    ] for k in range(nh)
+                ] for j in range(nc)
+            ]
+            for j, ch in enumerate(objs):
+                for k, row in enumerate(ch):
+                    for l, cube in enumerate(row):
+                        cube.set_z_index((nc-j)*nh+k)
+            flat_mobs = [mob for ch in objs for row in ch for mob in row]
+            mobs = VGroup(*flat_mobs).center()
+            objs_4d.append(objs)
+            blocks.add(mobs)
+        blocks.arrange(self.block_direction, self.block_gap)
+        mobs_4d = VGroup(mob for block in blocks for mob in block)
+        return objs_4d, mobs_4d
+    
+    def switch_mode(
+        self,
+        style: str = 'layer',
+        direction: np.ndarray = OUT,
+        aargs: dict = {},
+        gargs: dict = {},
+    ) -> Animation:
+        """based on implementation of 3d.
+        """
+        vgs = [
+            MTensor_3D(
+                objs=self.objs[i],
+                mobs=self[i],
+                array=self.array[i],
+                mode=self.mode,
+                size=self.size,
+                padding=self.padding,
+                cube_config=self.cube_config,
+                square_config=self.square_config,
+                decimal_config=self.decimal_config,
+            ) for i in range(self.shape[0])
+        ]
+        anims = AnimationGroup(
+            *(vg.switch_mode(
+                style=style,
+                direction=direction,
+                aargs=aargs,
+            ) for vg in vgs),
+            **gargs,
+        )
+        return anims
 
-class SampleScene(ThreeDScene):
+    def create(
+        self,
+        style='layer',
+        direction=OUT,
+        anim=Create,
+        aargs: dict = {},
+        gargs: dict = {},
+        ggargs: dict = {},
+    ) -> AnimationGroup:
+        """based on implementation of 3d.
+        """
+        vgs = [
+            MTensor_3D(
+                objs=self.objs[i],
+                mobs=self[i],
+                array=self.array[i],
+                mode=self.mode,
+                size=self.size,
+                padding=self.padding,
+                cube_config=self.cube_config,
+                square_config=self.square_config,
+                decimal_config=self.decimal_config,
+            ) for i in range(self.shape[0])
+        ]
+
+        anims = AnimationGroup(
+            *(vg.create(
+                style=style,
+                direction=direction,
+                anim=anim,
+                aargs=aargs,
+                gargs=gargs,
+            ) for vg in vgs),
+            **ggargs,
+        )
+        return anims
+
+    def uncreate(
+        self,
+        style='layer',
+        direction=OUT,
+        anim=Uncreate,
+        aargs: dict = {},
+        gargs: dict = {},
+        ggargs: dict = {},
+    ) -> AnimationGroup:
+        """based on implementation of 3d.
+        """
+        vgs = [
+            MTensor_3D(
+                objs=self.objs[i],
+                mobs=self[i],
+                array=self.array[i],
+                mode=self.mode,
+                size=self.size,
+                padding=self.padding,
+                cube_config=self.cube_config,
+                square_config=self.square_config,
+                decimal_config=self.decimal_config,
+            ) for i in range(self.shape[0])
+        ]
+
+        anims = AnimationGroup(
+            *(vg.uncreate(
+                style=style,
+                direction=direction,
+                anim=anim,
+                aargs=aargs,
+                gargs=gargs,
+            ) for vg in vgs),
+            **ggargs,
+        )
+        return anims
+
+class Demo1D(ThreeDScene):
     def construct(self) -> None:
         self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
-        # tensor = MTensor_3D(
-        #     array=np.random.randn(5,3,3),
-        #     mode='cube',
-        #     size=0.3,
-        #     padding=0.00,
-        # )
-        # tensor = MTensor_2D(
-        #     array=np.random.randn(4,5),
-        #     mode='cube',
-        #     size=0.3,
-        #     padding=0.0,
-        # )
         tensor = MTensor_1D(
             array=np.random.randn(25),
             mode='cube',
@@ -672,21 +852,6 @@ class SampleScene(ThreeDScene):
         # self.add(tensor)
         # self.wait()
 
-        # self.play(tensor.create(
-        #     style='beam',
-        #     direction=OUT,
-        #     anim=GrowFromCenter,
-        #     aargs={'rate_func': rate_functions.ease_out_back},
-        #     gargs={'run_time': 1.0},
-        # ))
-        # self.wait()
-        # self.play(tensor.create(
-        #     direction=RIGHT,
-        #     anim=GrowFromCenter,
-        #     aargs={'rate_func': rate_functions.ease_out_back},
-        #     gargs={'run_time': 1.0},
-        # ))
-        # self.wait()
         self.play(tensor.create(
             direction=RIGHT,
             anim=GrowFromCenter,
@@ -695,77 +860,26 @@ class SampleScene(ThreeDScene):
         ))
         self.wait()
 
-        # self.play(tensor.switch_mode(
-        #     style='beam',
-        #     direction=IN,
-        #     aargs={'run_time': 1.0},
-        # ))
-        # self.wait()
-        # self.play(tensor.switch_mode(
-        #     direction=DOWN,
-        #     aargs={'run_time': 1.0},
-        # ))
-        # self.wait()
         self.play(tensor.switch_mode(
             direction=RIGHT,
             aargs={'run_time': 1.0},
         ))
         self.wait()
 
-        # self.play(tensor.highlight_layer(
-        #     direction=IN,
-        #     n=1,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-        # self.play(tensor.highlight_row(
-        #     direction=DOWN,
-        #     n=1,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # for i in range(tensor.shape[0]):
-        #     self.play(tensor.highlight_mob(
-        #         direction=RIGHT,
-        #         n=i,
-        #         run_time=0.3,
-        #     ))
-        #     self.wait(0.1)
-        # self.wait()
-        for mob in tensor.get_mobs():
-            mob.save_state()
-        self.play(tensor.highlight_mob(
-            direction=RIGHT,
-            n=0,
-            run_time=1.0,
-        ))
-        vg1 = tensor.get_mobs(direction=RIGHT)[:-1]
-        vg2 = tensor.get_mobs(direction=RIGHT)[1:]
-        self.play(Succession(
-            *(AnimationGroup(
-                ApplyMethod(hide_mob.fade, 0.8),
-                ApplyMethod(show_mob.restore),
-                lag_ratio=0.0,
-            ) for hide_mob, show_mob in zip(vg1, vg2)),
-            run_time=1.0,
-            rate_func=rate_functions.smooth,
-        ))
-        self.wait(1.0)
-        # self.play(AnimationGroup(
-        #     *(tensor.highlight_mob(
-        #         direction=RIGHT,
-        #         n=i,
-        #     ) for i in range(tensor.shape[0]-2,-1,-1)),
-        #     rate_func=smooth,
-        #     lag_ratio=1.0,
-        #     run_time=1.0,
-        # ))
-        self.wait()
-
+        # for mob in tensor.get_mobs():
+        #     mob.save_state()
         # self.play(tensor.highlight_mob(
         #     direction=RIGHT,
-        #     n=1,
+        #     n=0,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+        # self.play(tensor.highlight_mob_loop(
+        #     direction=RIGHT,
+        #     run_time=1.0,
+        # ))
+        # self.play(tensor.highlight_mob_loop(
+        #     direction=LEFT,
         #     run_time=1.0,
         # ))
         # self.wait()
@@ -777,24 +891,160 @@ class SampleScene(ThreeDScene):
         )
         self.wait()
 
-        # self.play(tensor.highlight(
-        #     mask=None,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(tensor.uncreate(
-        #     style='beam',
-        #     direction=IN,
-        #     anim=ShrinkToCenter,
-        #     aargs={},
-        #     gargs={'run_time': 1.0},
-        # ))
-        # self.wait()
         self.play(tensor.uncreate(
             direction=RIGHT,
             anim=ShrinkToCenter,
             aargs={},
             gargs={'run_time': 1.0},
+        ))
+        self.wait()
+
+class Demo2D(ThreeDScene):
+    def construct(self):
+        self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
+
+        tensor = MTensor_2D(
+            array=np.random.randn(4,5),
+            mode='cube',
+            size=0.3,
+            padding=0.0,
+        )
+
+        # self.add(tensor)
+        # self.wait()
+
+        self.play(tensor.create(
+            direction=RIGHT,
+            anim=GrowFromCenter,
+            aargs={'rate_func': rate_functions.ease_out_back},
+            gargs={'run_time': 1.0},
+        ))
+        self.wait()
+
+        self.play(tensor.switch_mode(
+            direction=DOWN,
+            aargs={'run_time': 1.0},
+        ))
+        self.wait()
+        
+        self.play(tensor.highlight_row(
+            direction=DOWN,
+            n=1,
+            run_time=1.0,
+        ))
+        self.wait()
+
+        self.move_camera(
+            phi=60*DEGREES,
+            theta=-135*DEGREES,
+            run_time=1.0,
+        )
+        self.wait()
+
+        self.play(tensor.uncreate(
+            direction=RIGHT,
+            anim=ShrinkToCenter,
+            aargs={},
+            gargs={'run_time': 1.0},
+        ))
+        self.wait()
+
+class Demo3D(ThreeDScene):
+    def construct(self):
+        self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
+
+        tensor = MTensor_3D(
+            array=np.random.randn(5,3,3),
+            mode='cube',
+            size=0.3,
+            padding=0.00,
+        )
+
+        self.play(tensor.create(
+            style='beam',
+            direction=OUT,
+            anim=GrowFromCenter,
+            aargs={'rate_func': rate_functions.ease_out_back},
+            gargs={'run_time': 1.0},
+        ))
+        self.wait()
+
+        self.play(tensor.switch_mode(
+            style='beam',
+            direction=IN,
+            aargs={'run_time': 1.0},
+        ))
+        self.wait()
+
+        self.play(tensor.highlight_layer(
+            direction=IN,
+            n=1,
+            run_time=1.0,
+        ))
+        self.wait()
+
+        self.play(tensor.highlight(
+            mask=None,
+            run_time=1.0,
+        ))
+        self.wait()
+
+        self.play(tensor.uncreate(
+            style='beam',
+            direction=IN,
+            anim=ShrinkToCenter,
+            aargs={},
+            gargs={'run_time': 1.0},
+        ))
+        self.wait()
+
+class Demo4D(ThreeDScene):
+    def construct(self):
+        self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
+
+        tensor = MTensor_4D(
+            block_direction=RIGHT,
+            block_gap=0.3,
+            array=np.random.randn(5,8,3,3),
+            mode='cube',
+            size=0.3,
+            padding=0.0,
+        )
+
+        # self.add(tensor)
+        # self.wait()
+
+        self.play(tensor.create(
+            style='beam',
+            direction=OUT,
+            anim=GrowFromCenter,
+            aargs={'rate_func': rate_functions.ease_out_back},
+            gargs={},
+            ggargs={'lag_ratio': 0.3, 'run_time': 1.0},
+        ))
+        self.wait()
+
+        self.move_camera(
+            phi=60*DEGREES,
+            theta=-135*DEGREES,
+            run_time=1.0,
+        )
+        self.wait()
+
+        self.play(tensor.switch_mode(
+            style='beam',
+            direction=IN,
+            aargs={},
+            gargs={'run_time': 1.0},
+        ))
+        self.wait()
+
+        self.play(tensor.uncreate(
+            style='beam',
+            direction=IN,
+            anim=ShrinkToCenter,
+            aargs={},
+            gargs={},
+            ggargs={'lag_ratio': 0.3, 'run_time': 1.0},
         ))
         self.wait()

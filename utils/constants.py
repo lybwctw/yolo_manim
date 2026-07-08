@@ -100,6 +100,7 @@ MEDIUM_RECT_CONFIG = {
     'stroke_width': 1.0,
 }
 
+
 # # FIXME: all others
 # PATH_TENSOR_32_BOX = None
 # PATH_TENSOR_32_CLS = None

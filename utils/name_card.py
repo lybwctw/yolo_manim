@@ -3,7 +3,6 @@ import sys
 sys.path.append('..')
 
 from manim import *
-from utils.mtensor import MTensor
 from utils.loop import Loop
 
 DEFAULT_HEAD_CONFIG = {
