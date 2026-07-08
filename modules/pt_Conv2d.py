@@ -23,7 +23,16 @@ DEFAULT_PT_Conv2d_LEVELS = {
 
 DEFAULT_WEIGHT_CONFIG = {
     'block_direction': RIGHT,
-    'block_gap': 0.5,
+    'block_gap': 0.3,
+    'mode': 'cube',
+    'size': 0.3,
+    'padding': 0.0,
+    'cube_config': {},
+    'square_config': {},
+    'decimal_config': {},
+}
+
+DEFAULT_BIAS_CONFIG = {
     'mode': 'cube',
     'size': 0.3,
     'padding': 0.0,
@@ -48,6 +57,7 @@ class PT_Conv2d(VMobject):
         self.bias_config = bias_config
         self.bias_offset = bias_offset
 
+        # init weight mobs
         mobs_weight = MTensor_4D(
             array=self.module.weight,
             **{**DEFAULT_WEIGHT_CONFIG, **weight_config},
@@ -55,25 +65,17 @@ class PT_Conv2d(VMobject):
         self.mobs_weight = mobs_weight
         self.add(self.mobs_weight)
 
-        # mobs_weight = VGroup(
-        #     MTensor(
-        #         array=x,
-        #         **mtensor_config,
-        #     ) for x in module.weight.detach().numpy()
-        # ).arrange(weight_direction, buff=weight_buff).center()      # center weight
-        # self.mobs_weight = mobs_weight
-        # self.add(self.mobs_weight)
-
-        # if module_config['bias']:
-        #     mobs_bias = MTensor(
-        #         array=module.bias.detach().numpy()[None,None,:],    # make bias 3d
-        #         **mtensor_config,
-        #     )
-        #     # align bias to weight before any computation
-        #     for b, w in zip(mobs_bias.mobs, mobs_weight):
-        #         b.next_to(w, DOWN, buff=bias_buff)
-        #     self.mobs_bias = mobs_bias
-        #     self.add(self.mobs_bias)
+        # maybe init bias mobs
+        if self.module_config['bias']:
+            mobs_bias = MTensor_1D(
+                array=self.module.bias,
+                **{**DEFAULT_BIAS_CONFIG, **bias_config},
+            )
+            # align bias to weight
+            for i, mob in enumerate(mobs_bias.get_mobs()):
+                mob.next_to(self.mobs_weight[i], DOWN, self.bias_offset)
+            self.mobs_bias = mobs_bias
+            self.add(self.mobs_bias)
     
     def create(
         self,
@@ -85,20 +87,20 @@ class PT_Conv2d(VMobject):
         ggargs: dict = {},
     ) -> AnimationGroup:
         anims = []
-        anims.append(AnimationGroup(
-            *(mob.create(
-                style=style,
-                direction=direction,
-                anim=anim,
-                aargs=aargs,
-                gargs=gargs,
-            ) for mob in self.mobs_weight),
-            **ggargs,
+        anims.append(self.mobs_weight.create(
+            style=style,
+            direction=direction,
+            anim=anim,
+            aargs=aargs,
+            gargs=gargs,
+            ggargs=ggargs,
         ))
         if self.module_config['bias']:
-            anims.append( AnimationGroup(
-                *(anim(mob, **aargs) for mob in self.mobs_bias.mobs),
-                **ggargs,
+            anims.append(self.mobs_bias.create(
+                direction=RIGHT,        # always right direction
+                anim=anim,
+                aargs=aargs,
+                gargs=ggargs,
             ))
         return Succession(*anims)
     

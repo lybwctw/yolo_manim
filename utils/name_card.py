@@ -79,7 +79,10 @@ class NameCard(VMobject):
             self.mobs_ignore,
             self.mobs_value,
         )
+
+        # to edge positioning
         self.center()
+        self.to_edge(LEFT).shift(UP*0.3).set_z_index(999)
     
     def create_head_mob(
         self,

@@ -1,3 +1,7 @@
+from __future__ import annotations
+import sys
+sys.path.append('..')
+
 from manim import *
 import itertools
 import random
@@ -292,7 +296,6 @@ class MTensor_1D(MTensorGeneral):
         anims = AnimationGroup(
             *(anim(cube, **aargs) for cube in mobs),
             rate_func=smooth,
-            lag_ratio=0.8,
             **gargs,
         )
         return anims

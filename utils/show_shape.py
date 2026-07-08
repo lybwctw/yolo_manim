@@ -112,7 +112,7 @@ class HideShape(AnimationGroup):
         texts = getattr(mob, "shape_texts", VGroup())
         mob.remove(texts)
 
-        aargs = {**DEFAULT_HIDE_AARGS, **(aargs or {})}
+        aargs = {**DEFAULT_HIDE_AARGS, **aargs}
         super().__init__(
             *(Unwrite(t) for t in texts),
             **aargs,

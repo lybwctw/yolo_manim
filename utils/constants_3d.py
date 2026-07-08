@@ -26,5 +26,5 @@ MEDIUM_MTENSOR_CONFIG = {
     'decimal_config': {'font_size': SMALL_FONT_SIZE},       # FIXME
 }
 
-# namecard related
-align_card = lambda m: m.to_edge(LEFT).shift(UP*0.3).set_z_index(999)
+# # namecard related
+# align_card = lambda m: m.to_edge(LEFT).shift(UP*0.3).set_z_index(999)
