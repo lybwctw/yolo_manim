@@ -17,14 +17,33 @@ SMALL_FONT_SIZE = 10
 MEDIUM_FONT_SIZE = 18
 
 # mtensor related
-MEDIUM_MTENSOR_CONFIG = {
-    'size': SMALL_CUBE_SIZE,
+BIG_1D_CONFIG = {
     'mode': 'cube',
+    'size': 0.3,
     'padding': 0.0,
     'cube_config': {},
     'square_config': {},
-    'decimal_config': {'font_size': SMALL_FONT_SIZE},       # FIXME
+    'decimal_config': {},
 }
+BIG_3D_CONFIG = {
+    'mode': 'cube',
+    'size': 0.3,
+    'padding': 0.0,
+    'cube_config': {},
+    'square_config': {},
+    'decimal_config': {},
+}
+BIG_4D_CONFIG = {
+    'block_direction': RIGHT,
+    'block_gap': 0.3,
+    'mode': 'cube',
+    'size': 0.3,
+    'padding': 0.0,
+    'cube_config': {},
+    'square_config': {},
+    'decimal_config': {},
+}
+
 
 # # namecard related
 # align_card = lambda m: m.to_edge(LEFT).shift(UP*0.3).set_z_index(999)

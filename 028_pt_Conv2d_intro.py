@@ -30,7 +30,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.set_camera_orientation(
@@ -83,7 +83,6 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        self.wait()
         self.camera.add_fixed_in_frame_mobjects(card)
         self.play(Create(
             card,
@@ -109,80 +108,63 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # # highlight option 1 and shape text 1
-        # op1 = card.value_mob('in_channels')
-        # st1 = module.shape_texts[1]
-        # self.play(AnimationGroup(
-        #     op1.animate(
-        #         rate_func=rate_functions.there_and_back,
-        #     ).scale(2.0).set_color(PURE_RED),
-        #     st1.animate(
-        #         rate_func=rate_functions.there_and_back,
-        #     ).scale(2.0).set_color(PURE_RED),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # highlight out_channels and block dimension
+        op1 = card.value_mob('in_channels')
+        st1 = m_module.mobs_weight.shape_texts[1]
+        self.play(AnimationGroup(
+            op1.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_color(PURE_RED),
+            st1.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_color(PURE_RED),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # highlight option 2 and shape text 0
-        # op2 = card.value_mob('out_channels')
-        # st2 = module.shape_texts[0]
-        # self.play(AnimationGroup(
-        #     op2.animate(
-        #         rate_func=rate_functions.there_and_back,
-        #     ).scale(2.0).set_color(PURE_RED),
-        #     st2.animate(
-        #         rate_func=rate_functions.there_and_back,
-        #     ).scale(2.0).set_color(PURE_RED),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # highlight in_channels and layer dimension
+        op2 = card.value_mob('out_channels')
+        st2 = m_module.mobs_weight.shape_texts[0]
+        self.play(AnimationGroup(
+            op2.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_color(PURE_RED),
+            st2.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_color(PURE_RED),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # highlight option 3 and shape text 2&3
-        # op3 = card.value_mob('kernel_size')
-        # st3a = module.shape_texts[2]
-        # st3b = module.shape_texts[3]
-        # self.play(AnimationGroup(
-        #     op3.animate(
-        #         rate_func=rate_functions.there_and_back,
-        #     ).scale(2.0).set_color(PURE_RED),
-        #     st3a.animate(
-        #         rate_func=rate_functions.there_and_back,
-        #     ).scale(2.0).set_color(PURE_RED),
-        #     st3b.animate(
-        #         rate_func=rate_functions.there_and_back,
-        #     ).scale(2.0).set_color(PURE_RED),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # highlight kernel_size and w/h dimension
+        op3 = card.value_mob('kernel_size')
+        st3a = m_module.mobs_weight.shape_texts[2]
+        st3b = m_module.mobs_weight.shape_texts[3]
+        self.play(AnimationGroup(
+            op3.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_color(PURE_RED),
+            st3a.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_color(PURE_RED),
+            st3b.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_color(PURE_RED),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # hide shapes on module
-        # self.play(HideShape(
-        #     module,
-        #     aargs={'run_time': wt},
-        # ))
-        # self.wait(wt)
+        self.play(HideShape3D(
+            mob=m_module.mobs_weight,
+            aargs={
+                'lag_ratio': 0.5,
+                'run_time': wt,
+            },
+        ))
+        self.wait(wt)
 
-        # # prepare for compute demo
-        # self.move_camera(
-        #     run_time=wt,
-        #     **VIEW_COMPUTE,
-        # )
-        # self.wait(wt)
-
-        # mobs = Group(card, module)
-        # export_mobs(__file__, mobs)     # NOTE, used by 029
-
-        # # self.play(module.switch_mode(
-        # #     style='beam',
-        # #     direction=OUT,
-        # #     aargs={'lag_ratio': 0.5},
-        # #     gargs={},
-        # #     ggargs={
-        # #         'lag_ratio': 0.5,
-        # #         'run_time': wt,
-        # #     },
-        # # ))
-        # # self.wait(wt)
+        mobs = Group(card, m_module)
+        export_mobs(__file__, mobs)     # NOTE, used by 029

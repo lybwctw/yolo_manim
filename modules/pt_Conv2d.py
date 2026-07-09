@@ -21,25 +21,9 @@ DEFAULT_PT_Conv2d_LEVELS = {
     'padding_mode': 1,
 }
 
-DEFAULT_WEIGHT_CONFIG = {
-    'block_direction': RIGHT,
-    'block_gap': 0.3,
-    'mode': 'cube',
-    'size': 0.3,
-    'padding': 0.0,
-    'cube_config': {},
-    'square_config': {},
-    'decimal_config': {},
-}
+DEFAULT_WEIGHT_CONFIG = BIG_4D_CONFIG
 
-DEFAULT_BIAS_CONFIG = {
-    'mode': 'cube',
-    'size': 0.3,
-    'padding': 0.0,
-    'cube_config': {},
-    'square_config': {},
-    'decimal_config': {},
-}
+DEFAULT_BIAS_CONFIG = BIG_1D_CONFIG
 
 class PT_Conv2d(VMobject):
     def __init__(
