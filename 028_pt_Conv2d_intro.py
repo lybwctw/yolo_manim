@@ -30,7 +30,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.set_camera_orientation(
@@ -55,7 +55,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'introduce module',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(m_module.create(
