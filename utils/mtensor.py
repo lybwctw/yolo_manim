@@ -151,55 +151,22 @@ class MTensorGeneral(VMobject):
         if isinstance(res, MCube):
             return res
         return VGroup(*res.flat)
-        # """ Indexing utils.
-        #     Prerequisites: ndim, shape, objs
-        # """
-        # # normalize idx
-        # if not isinstance(idx, tuple):
-        #     idx = (idx,)
 
-        # # expand ellipsis
-        # if Ellipsis in idx:
-        #     pos = idx.index(Ellipsis)
-        #     missing = self.ndim - (len(idx) - 1)
-        #     idx = (
-        #         idx[:pos]
-        #         + (slice(None),) * missing
-        #         + idx[pos + 1 :]
-        #     )
-
-        # # fill missing dims
-        # idx = idx + (slice(None),) * (self.ndim - len(idx))
-
-        # if len(idx) != self.ndim:
-        #     raise IndexError("Invalid index dimension")
-
-        # resolved = []
-        # for part, size in zip(idx, self.shape):
-        #     if isinstance(part, (int, np.integer)):
-        #         data = [part]
-        #     elif isinstance(part, slice):
-        #         start, stop, step = part.indices(size)
-        #         data = list(range(start, stop, step))
-        #     else:
-        #         raise TypeError(f"Invalid index: {part}")
-        #     resolved.append(data)
-
-        # keys = list(itertools.product(*resolved))
-
-        # if not keys:
-        #     return VGroup()
-
-        # # FIXME, ugly design for list of list
-        # def nested_get(obj, idx_tuple):
-        #     for i in idx_tuple:
-        #         obj = obj[i]
-        #     return obj
-
-        # if len(keys) == 1:
-        #     return nested_get(self.objs, keys[0])
-        # return VGroup(*(nested_get(self.objs, k) for k in keys))
-
+    def make_cube(
+        self,
+        value,
+        cube_config: dict = {},     # override internal
+        square_config: dict = {},   # override internal
+        decimal_config: dict = {},  # override internal
+    ):
+        return MCube(
+            value=float(value),
+            size=self.size,
+            mode=self.mode,
+            cube_config={**self.cube_config, **cube_config},
+            square_config={**self.square_config, **square_config},
+            decimal_config={**self.decimal_config, **decimal_config},
+        )
     
     def create_mobs(self) -> tuple:
         raise NotImplementedError("not implement")
@@ -227,7 +194,7 @@ class MTensorGeneral(VMobject):
         for idx_list in np.argwhere(mask_dim):
             idx_tuple = tuple(idx_list.tolist())
             self[*idx_tuple].save_state()
-            anims.append(self[*idx_tuple].animate.fade(0.9))
+            anims.append(self[*idx_tuple].animate.fade(0.995))
         for idx_list in np.argwhere(mask_hl):
             idx_tuple = tuple(idx_list.tolist())
             anims.append(self[*idx_tuple].animate.restore())
@@ -248,21 +215,16 @@ class MTensor_1D(MTensorGeneral):
     def create_mobs(
         self,
     ) -> tuple:
-        objs = [
-            MCube(
-                value=float(self.array[i]),
-                size=self.size,
-                mode=self.mode,
-                cube_config=self.cube_config,
-                square_config=self.square_config,
-                decimal_config=self.decimal_config,
-            ).shift(RIGHT * i * (self.size + self.padding))
-            for i in range(self.array.shape[0])
-        ]
-        n_mobs = self.shape[0]
-        for i, cube in enumerate(objs):
-            cube.set_z_index(n_mobs - i)
-        mobs = VGroup(*objs).center()
+        objs = np.empty(self.shape, dtype=object)
+        step = self.size + self.padding
+
+        for i in range(self.shape[0]):
+            cube = self.make_cube(self.array[i])
+            cube.shift(RIGHT * i * step)
+            cube.set_z_index(self.shape[0] - i)
+            objs[i] = cube
+
+        mobs = VGroup(*objs.flat).center()
         return objs, mobs
     
     def get_mobs(
@@ -380,25 +342,19 @@ class MTensor_2D(MTensorGeneral):
     def create_mobs(
         self,
     ) -> tuple:
-        objs = [
-            [ MCube(
-                    value=float(self.array[i, j]),
-                    size=self.size,
-                    mode=self.mode,
-                    cube_config=self.cube_config,
-                    square_config=self.square_config,
-                    decimal_config=self.decimal_config,
-                ).shift(RIGHT * j * (self.size + self.padding) +\
-                        DOWN * i * (self.size + self.padding))
-                for j in range(self.array.shape[1])
-            ] for i in range(self.array.shape[0])
-        ]
-        n_rows, n_cols = self.shape
-        for i, row in enumerate(objs):
-            for j, cube in enumerate(row):
-                cube.set_z_index((n_rows-i)*n_cols + (n_cols-j))
-        flat_mobs = [mob for plane in objs for row in plane for mob in row]
-        mobs = VGroup(*flat_mobs).center()
+        objs = np.empty(self.shape, dtype=object)
+        step = self.size + self.padding
+
+        xs = [RIGHT * j * step for j in range(self.shape[1])]
+        ys = [DOWN * i * step for i in range(self.shape[0])]
+
+        for i, j in np.ndindex(self.shape):
+            cube = self.make_cube(self.array[i, j])
+            cube.shift(xs[j] + ys[i])
+            cube.set_z_index((self.shape[0] - i) * self.shape[1] + (self.shape[1] - j))
+            objs[i, j] = cube
+
+        mobs = VGroup(*objs.flat).center()
         return objs, mobs
     
     def get_rows(
@@ -499,69 +455,122 @@ class MTensor_2D(MTensorGeneral):
         anims = self.highlight(mask=mask, **aargs)
         return anims
 
-
 class MTensor_3D(MTensorGeneral):
     def __init__(
         self,
         **kwargs,
     ):
         super().__init__(**kwargs)
-    
-    # def create_mobs(
-    #     self,
-    # ) -> tuple:
-    #     c, h, w = self.shape
-    #     objs = np.empty((c, h, w), dtype=object)
-    #     for i in range(c):
-    #         for j in range(h):
-    #             for k in range(w):
-    #                 objs[i,j,k] = MCube(
-    #                     value=float(self.array[i, j, k]),
-    #                     size=self.size,
-    #                     mode=self.mode,
-    #                     cube_config=self.cube_config,
-    #                     square_config=self.square_config,
-    #                     decimal_config=self.decimal_config,
-    #                 ).shift(
-    #                     (RIGHT*k+DOWN*j+IN*i)*(self.size+self.padding)
-    #                 )
-    #     for i, layer in enumerate(objs):
-    #         for j, row in enumerate(layer):
-    #             for cube in row:
-    #                 cube.set_z_index((c-i)*h + j)
-    #     flat_mobs = [mob for plane in objs for row in plane for mob in row]
-    #     mobs = VGroup(*flat_mobs).center()
-    #     return objs, mobs
-
-    def make_cube(self, value):
-        return MCube(
-            value=float(value),
-            size=self.size,
-            mode=self.mode,
-            cube_config=self.cube_config,
-            square_config=self.square_config,
-            decimal_config=self.decimal_config,
-        )
 
     # TODO: update 1d.. version like this, and make_cube into general
-    def create_mobs(self):
-        objs = np.empty(self.shape, dtype=object)
+    def create_mobs(
+        self,
+        array: np.ndarray | None = None,
+        reuse_objs: np.ndarray | None = None,
+        offset: tuple = (0, 0, 0),
+        pad_cube_config: dict = {},
+        pad_square_config: dict = {},
+        pad_decimal_config: dict = {},
+    ) -> tuple:
+        if array is None:
+            array = self.array
+        if offset is None:
+            offset = (0, 0, 0)
 
-        c, h, w = self.shape
+        do_pad = reuse_objs is not None
+
+        objs = np.empty(array.shape, dtype=object)
+        c, h, w = array.shape
         step = self.size + self.padding
 
+        offset = tuple(int(v) for v in offset)
         xs = [RIGHT * k * step for k in range(w)]
         ys = [DOWN * j * step for j in range(h)]
         zs = [IN * i * step for i in range(c)]
 
-        for i, j, k in np.ndindex(self.shape):
-            cube = self.make_cube(self.array[i, j, k])
+        if do_pad:
+            orig_ul = reuse_objs[0,0,0].get_corner(UL)
+
+        for i, j, k in np.ndindex(array.shape):
+            src_idx = (i - offset[0], j - offset[1], k - offset[2])
+            reuse_cube = None
+            if (
+                do_pad and len(reuse_objs.shape) == 3
+                and all(0 <= src_idx[d] < reuse_objs.shape[d] for d in range(3))
+            ):
+                reuse_cube = reuse_objs[src_idx]
+
+            if reuse_cube is not None:
+                cube = reuse_cube.center()
+            else:
+                cube = self.make_cube(
+                    array[i, j, k],
+                    pad_cube_config if do_pad else {},
+                    pad_square_config if do_pad else {},
+                    pad_decimal_config if do_pad else {},
+                ).center()
+
             cube.shift(xs[k] + ys[j] + zs[i])
             cube.set_z_index((c - i) * h + j)
             objs[i, j, k] = cube
+        
+        mobs = VGroup(*objs.flat)
 
-        mobs = VGroup(*objs.flat).center()
+        # align to old or center
+        if reuse_objs is not None:
+            shift_mobs = orig_ul - objs[*offset].get_corner(UL)
+            mobs.shift(shift_mobs)
+        else:
+            mobs.center()
+
         return objs, mobs
+    
+    def create_conv2d_masks(
+        self,
+        conv2d_config: dict,
+    ) -> list:
+        """Return a list of boolean masks for Conv2d-style sliding windows.
+
+        The masks are ordered row-major over output positions (top-to-bottom,
+        left-to-right), and each mask marks the input cubes that participate in
+        the corresponding kernel application.
+        """
+        if self.ndim != 3:
+            raise ValueError("create_conv2d_masks only supports 3D tensors")
+
+        def _normalize_pair(value, default=(1, 1)):
+            if isinstance(value, (tuple, list)):
+                if len(value) != 2:
+                    raise ValueError("expected a 2-tuple/list for spatial parameter")
+                return int(value[0]), int(value[1])
+            return int(value), int(value)
+
+        kernel_size = conv2d_config.get('kernel_size', 3)
+        stride = conv2d_config.get('stride', 1)
+
+        kernel_h, kernel_w = _normalize_pair(kernel_size)
+        stride_h, stride_w = _normalize_pair(stride)
+
+        c, h, w = self.shape
+        out_h = (h - kernel_h) // stride_h + 1
+        out_w = (w - kernel_w) // stride_w + 1
+
+        masks = []
+        for out_i in range(out_h):
+            for out_j in range(out_w):
+                mask = np.zeros(self.shape, dtype=bool)
+                in_i_start = out_i * stride_h
+                in_i_end = in_i_start + kernel_h
+                in_j_start = out_j * stride_w
+                in_j_end = in_j_start + kernel_w
+
+                for i in range(in_i_start, min(h, in_i_end)):
+                    for j in range(in_j_start, min(w, in_j_end)):
+                        mask[:, i, j] = True
+
+                masks.append(mask)
+
+        return masks
     
     def get_beams(
         self,
@@ -731,19 +740,104 @@ class MTensor_3D(MTensorGeneral):
         anims = self.highlight(mask=mask, **aargs)
         return anims
 
+    def _normalize_padding(self, padding) -> tuple:
+        if isinstance(padding, (int, np.integer)):
+            pad = int(padding)
+            return pad, pad, pad, pad
+        padding = tuple(int(p) for p in padding)
+        if len(padding) == 2:
+            return padding[0], padding[0], padding[1], padding[1]
+        if len(padding) == 4:
+            return padding
+        raise ValueError("padding must be int, 2-tuple, or 4-tuple")
+
     def pad(
         self,
         padding: int = 1,
         pad_value: float = 0.0,
         aargs: dict = {},
     ) -> AnimationGroup:
-        pass
+        top, bottom, left, right = self._normalize_padding(padding)
+
+        self.pad_state = {
+            'array': self.array.copy(),
+            'shape': self.shape,
+            'ndim': self.ndim,
+            'objs': self.objs.copy(),
+            'mobs': self.mobs,
+            'hl_state': self.hl_state.copy(),
+        }
+
+        padded_array = np.pad(
+            self.array,
+            ((0, 0), (top, bottom), (left, right)),
+            mode='constant',
+            constant_values=pad_value,
+        )
+        objs, mobs = self.create_mobs(
+            array=padded_array,
+            reuse_objs=self.objs,
+            offset=(0, top, left),
+            pad_cube_config={
+                'stroke_color': GRAY,
+                'stroke_width': 0.6,
+                'fill_opacity': 0.5,
+            },
+            pad_square_config={
+                'stroke_color': GRAY,
+                'stroke_width': 1.0,
+                'fill_opacity': 0.5,
+            },
+            pad_decimal_config={},
+        )
+
+        old_mobs = self.mobs
+        self.remove(old_mobs)
+        self.array = padded_array
+        self.shape = padded_array.shape
+        self.ndim = padded_array.ndim
+        self.objs = objs
+        self.mobs = mobs
+        self.hl_state = np.full(self.shape, True, dtype=bool)
+        self.add(self.mobs)
+
+        new_cubes = [cube for cube in objs.flat if cube is not None and cube not in old_mobs]
+        self.pad_state['mobs_pad'] = new_cubes
+
+        return AnimationGroup(
+            *(GrowFromCenter(
+                cube,
+                rate_func=rate_functions.ease_out_back,
+            ) for cube in new_cubes),
+            **aargs,
+        )
 
     def unpad(
         self,
         aargs: dict = {},
     ) -> AnimationGroup:
-        pass
+        assert hasattr(self, 'pad_state'), 'not padded yet'
+
+        old_mobs = self.mobs
+        self.remove(old_mobs)
+
+        self.array = self.pad_state['array']
+        self.shape = self.pad_state['shape']
+        self.ndim = self.pad_state['ndim']
+        self.objs = self.pad_state['objs']
+        self.mobs = self.pad_state['mobs']
+        self.hl_state = self.pad_state['hl_state']
+        self.add(self.mobs)
+
+        mobs_pad = self.pad_state['mobs_pad']
+        del self.pad_state
+
+        return AnimationGroup(
+            *(ShrinkToCenter(
+                cube,
+            ) for cube in mobs_pad),
+            **aargs,
+        )
 
     
 class MTensor_4D(MTensorGeneral):
@@ -760,37 +854,31 @@ class MTensor_4D(MTensorGeneral):
     def create_mobs(
         self,
     ):
-        objs_4d = []
+        objs = np.empty(self.shape, dtype=object)
         blocks = VGroup()
-        nb, nc, nh, nw = self.array.shape
-        for i, block in enumerate(self.array):
-            objs = [
-                [
-                    [ MCube(
-                            value=float(block[j, k, l]),
-                            size=self.size,
-                            mode=self.mode,
-                            cube_config=self.cube_config,
-                            square_config=self.square_config,
-                            decimal_config=self.decimal_config,
-                        ).shift(RIGHT * l * (self.size + self.padding) +\
-                                DOWN * k * (self.size + self.padding) +\
-                                    IN * j * (self.size + self.padding))
-                        for l in range(nw)
-                    ] for k in range(nh)
-                ] for j in range(nc)
-            ]
-            for j, ch in enumerate(objs):
-                for k, row in enumerate(ch):
-                    for l, cube in enumerate(row):
-                        cube.set_z_index((nc-j)*nh+k)
-            flat_mobs = [mob for ch in objs for row in ch for mob in row]
-            mobs = VGroup(*flat_mobs).center()
-            objs_4d.append(objs)
-            blocks.add(mobs)
+
+        nb, nc, nh, nw = self.shape
+        step = self.size + self.padding
+
+        xs = [RIGHT * l * step for l in range(nw)]
+        ys = [DOWN * k * step for k in range(nh)]
+        zs = [IN * j * step for j in range(nc)]
+
+        for i in range(nb):
+            block_objs = np.empty((nc, nh, nw), dtype=object)
+            for j, k, l in np.ndindex((nc, nh, nw)):
+                cube = self.make_cube(self.array[i, j, k, l])
+                cube.shift(xs[l] + ys[k] + zs[j])
+                cube.set_z_index((nc - j) * nh + k)
+                block_objs[j, k, l] = cube
+                objs[i, j, k, l] = cube
+
+            block_mobs = VGroup(*block_objs.flat).center()
+            blocks.add(block_mobs)
+
         blocks.arrange(self.block_direction, self.block_gap)
-        mobs_4d = VGroup(mob for block in blocks for mob in block)
-        return objs_4d, mobs_4d
+        mobs = VGroup(*(mob for block in blocks for mob in block))
+        return objs, mobs
     
     def switch_mode(
         self,

@@ -65,8 +65,45 @@ class ShowShape3D(AnimationGroup):
                 ).next_to(p0, DOWN, buff=text_buff*2.0)      # tweak
             ps = VGroup(p0)
             ts = VGroup(t0).set_z_index(999)
-        elif isinstance(mob, MTensor_2D):   # TODO
-            pass
+        elif isinstance(mob, MTensor_2D):
+            # Not verified yet; please validate visually later.
+            s1, s2 = [str(s) for s in mob.shape]
+            if facing == 'left':
+                p1 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(DL+OUT),
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, LEFT, buff=text_buff)     # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, UP, buff=text_buff*1.2)     # tweak
+            elif facing == 'right':
+                p1 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(DL+OUT),
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, RIGHT, buff=text_buff)    # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, UP, buff=text_buff*1.2)     # tweak
+            ps = VGroup(p1, p2)
+            ts = VGroup(t1, t2).set_z_index(999)
         elif isinstance(mob, MTensor_3D):
             s1, s2, s3 = [str(s) for s in mob.shape]
             if facing == 'left':
