@@ -985,6 +985,18 @@ class MTensor_4D(MTensorGeneral):
             **ggargs,
         )
         return anims
+    
+    def highlight_block(
+        self,
+        direction = RIGHT,
+        n: int = 0,
+        **aargs,
+    ) -> Animation:
+        d = int(direction[0])
+        mask = np.full_like(self.hl_state, False, dtype=bool)
+        mask[d*n+(d-1)//2] = True
+        anims = self.highlight(mask=mask, **aargs)
+        return anims
 
 class Demo1D(ThreeDScene):
     def construct(self) -> None:

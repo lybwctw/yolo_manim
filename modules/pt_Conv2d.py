@@ -43,7 +43,7 @@ class PT_Conv2d(VMobject):
 
         # init weight mobs
         mobs_weight = MTensor_4D(
-            array=self.module.weight,
+            array=self.module.weight.detach().numpy(),
             **{**DEFAULT_WEIGHT_CONFIG, **weight_config},
         )
         self.mobs_weight = mobs_weight
@@ -52,7 +52,7 @@ class PT_Conv2d(VMobject):
         # maybe init bias mobs
         if self.module_config['bias']:
             mobs_bias = MTensor_1D(
-                array=self.module.bias,
+                array=self.module.bias.detach().numpy(),
                 **{**DEFAULT_BIAS_CONFIG, **bias_config},
             )
             # align bias to weight
@@ -210,21 +210,21 @@ class PT_Conv2d(VMobject):
     #     elif index == 3:
     #         mob.rotate(90*DEGREES, axis=RIGHT)
     
-    @property
-    def weight(self) -> np.ndarray:
-        return self.module.weight.numpy()
+    # @property
+    # def weight(self) -> np.ndarray:
+    #     return self.module.weight.numpy()
     
-    @property
-    def bias(self) -> np.ndarray:
-        return self.module.bias.numpy()
+    # @property
+    # def bias(self) -> np.ndarray:
+    #     return self.module.bias.numpy()
 
-    @property
-    def weight_shape(self):
-        return self.weight.shape
+    # @property
+    # def weight_shape(self):
+    #     return self.weight.shape
 
-    @property
-    def bias_shape(self):
-        return self.bias.shape
+    # @property
+    # def bias_shape(self):
+    #     return self.bias.shape
 
 class Demo(ThreeDScene):
     def construct(self):
