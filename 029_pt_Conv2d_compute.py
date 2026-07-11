@@ -37,10 +37,10 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'introduce input',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        t_input = torch.randn(1, 6, 3, 3)
+        t_input = torch.randn(1, 6, 5, 5)
         m_input = MTensor_3D(
             array=t_input[0].numpy(),
             **BIG_3D_CONFIG,
@@ -74,11 +74,6 @@ class MainScene(ThreeDScene):
         ))
         self.wait()
 
-        # prepare masks of input
-        masks = m_input.create_conv2d_masks(
-            conv2d_config=m_module.module_config,
-        )
-
         # loop into output
         layers_output = []
         for i in range(m_output.shape[0]):
@@ -91,39 +86,57 @@ class MainScene(ThreeDScene):
             ))
             self.wait(wt)
 
-            for mask, (j,k) in zip(masks, np.ndindex(m_output.shape[1:])):
-                # highlight input part
-                self.play(m_input.highlight(
-                    mask=mask,
-                    run_time=0.2,
-                ))
-                self.wait(0.2)
+            # loop through input and output
+            self.play(AnimationGroup(
+                m_input.highlight_loop_conv2d(
+                    kernel_size=m_module.module_config['kernel_size'],
+                    stride=m_module.module_config['stride'],
+                    back=False,
+                    rate_func=smooth,
+                ),
+                Succession(
+                    *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
+                    for mob in m_output[i]),
+                    rate_func=smooth,
+                ),
+                lag_ratio=0.0,
+                run_time=5.0,
+            ))
 
-                # create output part
-                self.play(Write(
-                    m_output[i,j,k],
-                    run_time=0.2,
-                ))
-                self.wait(0.2)
-
-            # fade current layer except the last
+            # fade current output layer except the last
             if i != m_output.shape[0]-1:
                 layer = m_output[i].save_state()
-                self.play(layer.animate(
+                self.play(AnimationGroup(
+                    *(mob.animate.set_fill(
+                        opacity=0.0,
+                    ).set_stroke(
+                        width=1.0,
+                        opacity=0.05,
+                    ) for mob in layer),
+                    lag_ratio=0.0,
                     run_time=wt,
-                ).fade(0.9))
+                ))
+                # self.play(layer.animate(
+                #     run_time=wt,
+                # ).fade(0.9))
                 layers_output.append(layer)
         
         # unfade output layers
         self.play(AnimationGroup(
-            *(layer.animate.restore() for layer in layers_output[::-1]),
+            *(layer.animate.restore()
+              for layer in layers_output[::-1]),
             lag_ratio=0.5,
+            rate_func=smooth,
             run_time=wt,
         ))
 
         # unfade module blocks
-        self.play(m_module.highlight(
-            mask=None,
+        self.play(m_module.mobs_weight.highlight(
+            run_time=wt,
+        ))
+
+        # unfade input tensor
+        self.play(m_input.highlight(
             run_time=wt,
         ))
 

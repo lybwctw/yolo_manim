@@ -142,6 +142,10 @@ class MTensorGeneral(VMobject):
         self.objs = objs
         self.mobs = mobs
         self.add(self.mobs)
+
+        # prepare for highlight
+        for mob in self.mobs:
+            mob.save_state()
     
     def __getitem__(
         self,
@@ -182,28 +186,88 @@ class MTensorGeneral(VMobject):
 
     def highlight(
         self,
-        mask,
+        mask: np.ndarray | None = None,
         **aargs,
     ) -> Animation:
+        # # save state for all mobs
+        # for mob in self.mobs:
+        #     mob.save_state()
+
         if mask is None:
             mask = np.full(self.shape, True, dtype=bool)
-        mask_hl = ~self.hl_state & mask
-        mask_dim = ~mask & self.hl_state
+        
+        mask_start = self.hl_state
+        mask_end = mask
+
+        mask_hl = ~mask_start & mask_end
+        mask_dm = ~mask_end & mask_start
 
         anims = []
-        for idx_list in np.argwhere(mask_dim):
-            idx_tuple = tuple(idx_list.tolist())
-            self[*idx_tuple].save_state()
-            anims.append(self[*idx_tuple].animate.fade(0.995))
-        for idx_list in np.argwhere(mask_hl):
-            idx_tuple = tuple(idx_list.tolist())
-            anims.append(self[*idx_tuple].animate.restore())
+        for idxs in np.argwhere(mask_dm):
+            idxs = tuple(idxs.tolist())
+            anims.append(self[*idxs].animate.set_fill(
+                opacity=0.0,
+            ).set_stroke(
+                width=1.0,
+                opacity=0.05,
+            ))
+        for idxs in np.argwhere(mask_hl):
+            idxs = tuple(idxs.tolist())
+            anims.append(self[*idxs].animate.restore())
+
         self.hl_state = mask
 
         return AnimationGroup(
             *anims,
             **aargs,
         )
+    
+    def highlight_loop(
+        self,
+        masks: list,            # a list of highlight states
+        back: bool = True,      # back to initial state or not
+        **aargs,
+    ) -> AnimationGroup:
+        # # save state for all mobs
+        # for mob in self.mobs:
+        #     mob.save_state()
+
+        if back:
+            masks_start = [self.hl_state] + masks
+            masks_end = masks + [self.hl_state]
+        else:
+            masks_start = [self.hl_state] + masks[:-1]
+            masks_end = masks
+
+        anims_loop = []
+        for start, end in zip(masks_start, masks_end):
+            mask_hl = ~start & end
+            mask_dm = ~end & start
+            anims = []
+            for idxs in np.argwhere(mask_dm):
+                idxs = tuple(idxs.tolist())
+                anims.append(self[*idxs].animate.set_fill(
+                    opacity=0.0,
+                ).set_stroke(
+                    width=1.0,
+                    opacity=0.05,
+                ))
+            for idxs in np.argwhere(mask_hl):
+                idxs = tuple(idxs.tolist())
+                anims.append(self[*idxs].animate.restore())
+            anims_loop.append(AnimationGroup(
+                *anims,
+                lag_ratio=0.0,  # highlight/fade at the same time
+            ))
+        
+        if not back:
+            self.hl_state = masks_end[-1]
+
+        return Succession(
+            *anims_loop,
+            **aargs,
+        )
+        
 
 class MTensor_1D(MTensorGeneral):
     def __init__(
@@ -292,43 +356,6 @@ class MTensor_1D(MTensorGeneral):
         mask[d*n+(d-1)//2] = True
         anims = self.highlight(mask=mask, **aargs)
         return anims
-    
-    def highlight_mob_loop(
-        self,
-        direction = RIGHT,
-        **aargs,
-    ):
-        """FIXME
-        Example usage:
-            for mob in tensor.get_mobs():
-                mob.save_state()
-            self.play(tensor.highlight_mob(
-                direction=RIGHT,
-                n=0,
-                run_time=1.0,
-            ))
-            self.wait()
-            self.play(tensor.highlight_mob_loop(
-                direction=RIGHT,
-                run_time=1.0,
-            ))
-            self.play(tensor.highlight_mob_loop(
-                direction=LEFT,
-                run_time=1.0,
-            ))
-            self.wait()
-        """
-        vg1 = self.get_mobs(direction=direction)[:-1]
-        vg2 = self.get_mobs(direction=direction)[1:]
-        return Succession(
-            *(AnimationGroup(
-                ApplyMethod(hide_mob.fade, 0.8),
-                ApplyMethod(show_mob.restore),
-                lag_ratio=0.0,
-            ) for hide_mob, show_mob in zip(vg1, vg2)),
-            rate_func=rate_functions.smooth,
-            **aargs,
-        )
 
 class MTensor_2D(MTensorGeneral):
     """Only layer animations are implemented.
@@ -525,52 +552,52 @@ class MTensor_3D(MTensorGeneral):
 
         return objs, mobs
     
-    def create_conv2d_masks(
-        self,
-        conv2d_config: dict,
-    ) -> list:
-        """Return a list of boolean masks for Conv2d-style sliding windows.
+    # def create_conv2d_masks(
+    #     self,
+    #     conv2d_config: dict,
+    # ) -> list:
+    #     """Return a list of boolean masks for Conv2d-style sliding windows.
 
-        The masks are ordered row-major over output positions (top-to-bottom,
-        left-to-right), and each mask marks the input cubes that participate in
-        the corresponding kernel application.
-        """
-        if self.ndim != 3:
-            raise ValueError("create_conv2d_masks only supports 3D tensors")
+    #     The masks are ordered row-major over output positions (top-to-bottom,
+    #     left-to-right), and each mask marks the input cubes that participate in
+    #     the corresponding kernel application.
+    #     """
+    #     if self.ndim != 3:
+    #         raise ValueError("create_conv2d_masks only supports 3D tensors")
 
-        def _normalize_pair(value, default=(1, 1)):
-            if isinstance(value, (tuple, list)):
-                if len(value) != 2:
-                    raise ValueError("expected a 2-tuple/list for spatial parameter")
-                return int(value[0]), int(value[1])
-            return int(value), int(value)
+    #     def _normalize_pair(value, default=(1, 1)):
+    #         if isinstance(value, (tuple, list)):
+    #             if len(value) != 2:
+    #                 raise ValueError("expected a 2-tuple/list for spatial parameter")
+    #             return int(value[0]), int(value[1])
+    #         return int(value), int(value)
 
-        kernel_size = conv2d_config.get('kernel_size', 3)
-        stride = conv2d_config.get('stride', 1)
+    #     kernel_size = conv2d_config.get('kernel_size', 3)
+    #     stride = conv2d_config.get('stride', 1)
 
-        kernel_h, kernel_w = _normalize_pair(kernel_size)
-        stride_h, stride_w = _normalize_pair(stride)
+    #     kernel_h, kernel_w = _normalize_pair(kernel_size)
+    #     stride_h, stride_w = _normalize_pair(stride)
 
-        c, h, w = self.shape
-        out_h = (h - kernel_h) // stride_h + 1
-        out_w = (w - kernel_w) // stride_w + 1
+    #     c, h, w = self.shape
+    #     out_h = (h - kernel_h) // stride_h + 1
+    #     out_w = (w - kernel_w) // stride_w + 1
 
-        masks = []
-        for out_i in range(out_h):
-            for out_j in range(out_w):
-                mask = np.zeros(self.shape, dtype=bool)
-                in_i_start = out_i * stride_h
-                in_i_end = in_i_start + kernel_h
-                in_j_start = out_j * stride_w
-                in_j_end = in_j_start + kernel_w
+    #     masks = []
+    #     for out_i in range(out_h):
+    #         for out_j in range(out_w):
+    #             mask = np.zeros(self.shape, dtype=bool)
+    #             in_i_start = out_i * stride_h
+    #             in_i_end = in_i_start + kernel_h
+    #             in_j_start = out_j * stride_w
+    #             in_j_end = in_j_start + kernel_w
 
-                for i in range(in_i_start, min(h, in_i_end)):
-                    for j in range(in_j_start, min(w, in_j_end)):
-                        mask[:, i, j] = True
+    #             for i in range(in_i_start, min(h, in_i_end)):
+    #                 for j in range(in_j_start, min(w, in_j_end)):
+    #                     mask[:, i, j] = True
 
-                masks.append(mask)
+    #             masks.append(mask)
 
-        return masks
+    #     return masks
     
     def get_beams(
         self,
@@ -701,44 +728,44 @@ class MTensor_3D(MTensorGeneral):
         )
         return anims
 
-    def highlight_layer(
-        self,
-        direction = IN,
-        n: int = 0,
-        **aargs,
-    ) -> Animation:
-        if direction[0] != 0:
-            d = int(direction[0])
-            mask = np.full_like(self.hl_state, False, dtype=bool)
-            mask[:,:,d*n+(d-1)//2] = True
-        elif direction[1] != 0:
-            d = int(direction[1])
-            mask = np.full_like(self.hl_state, False, dtype=bool)
-            mask[:,-d*n-(d+1)//2,:] = True
-        elif direction[2] != 0:
-            d = int(direction[2])
-            mask = np.full_like(self.hl_state, False, dtype=bool)
-            mask[-d*n-(d+1)//2,:,:] = True
-        anims = self.highlight(mask=mask, **aargs)
-        return anims
+    # def highlight_layer(
+    #     self,
+    #     direction = IN,
+    #     n: int = 0,
+    #     **aargs,
+    # ) -> Animation:
+    #     if direction[0] != 0:
+    #         d = int(direction[0])
+    #         mask = np.full_like(self.hl_state, False, dtype=bool)
+    #         mask[:,:,d*n+(d-1)//2] = True
+    #     elif direction[1] != 0:
+    #         d = int(direction[1])
+    #         mask = np.full_like(self.hl_state, False, dtype=bool)
+    #         mask[:,-d*n-(d+1)//2,:] = True
+    #     elif direction[2] != 0:
+    #         d = int(direction[2])
+    #         mask = np.full_like(self.hl_state, False, dtype=bool)
+    #         mask[-d*n-(d+1)//2,:,:] = True
+    #     anims = self.highlight(mask=mask, **aargs)
+    #     return anims
     
-    def highlight_beam(
-        self,
-        direction = IN,
-        ij: tuple = (0, 0),
-        **aargs,
-    ) -> Animation:
-        if direction[0] != 0:
-            mask = np.full_like(self.hl_state, False, dtype=bool)
-            mask[ij[0], ij[1], :] = True
-        elif direction[1] != 0:
-            mask = np.full_like(self.hl_state, False, dtype=bool)
-            mask[ij[0], :, ij[1]] = True
-        elif direction[2] != 0:
-            mask = np.full_like(self.hl_state, False, dtype=bool)
-            mask[:, ij[0], ij[1]] = True
-        anims = self.highlight(mask=mask, **aargs)
-        return anims
+    # def highlight_beam(
+    #     self,
+    #     direction = IN,
+    #     ij: tuple = (0, 0),
+    #     **aargs,
+    # ) -> Animation:
+    #     if direction[0] != 0:
+    #         mask = np.full_like(self.hl_state, False, dtype=bool)
+    #         mask[ij[0], ij[1], :] = True
+    #     elif direction[1] != 0:
+    #         mask = np.full_like(self.hl_state, False, dtype=bool)
+    #         mask[ij[0], :, ij[1]] = True
+    #     elif direction[2] != 0:
+    #         mask = np.full_like(self.hl_state, False, dtype=bool)
+    #         mask[:, ij[0], ij[1]] = True
+    #     anims = self.highlight(mask=mask, **aargs)
+    #     return anims
 
     def _normalize_padding(self, padding) -> tuple:
         if isinstance(padding, (int, np.integer)):
@@ -779,7 +806,7 @@ class MTensor_3D(MTensorGeneral):
             reuse_objs=self.objs,
             offset=(0, top, left),
             pad_cube_config={
-                'stroke_color': GRAY,
+                'stroke_color': TEAL,
                 'stroke_width': 0.6,
                 'fill_opacity': 0.5,
             },
@@ -800,6 +827,10 @@ class MTensor_3D(MTensorGeneral):
         self.mobs = mobs
         self.hl_state = np.full(self.shape, True, dtype=bool)
         self.add(self.mobs)
+
+        # NOTE: resave state
+        for mob in self.mobs:
+            mob.save_state()
 
         new_cubes = [cube for cube in objs.flat if cube is not None and cube not in old_mobs]
         self.pad_state['mobs_pad'] = new_cubes
@@ -838,7 +869,33 @@ class MTensor_3D(MTensorGeneral):
             ) for cube in mobs_pad),
             **aargs,
         )
+    
+    def highlight_loop_conv2d(
+        self,
+        kernel_size: int = 3,
+        stride: int = 1,
+        back: bool = True,
+        **aargs,
+    ) -> AnimationGroup:
+        c, h, w = self.shape
+        out_h = (h - kernel_size) // stride + 1
+        out_w = (w - kernel_size) // stride + 1
+        masks = []
+        for out_i in range(out_h):
+            for out_j in range(out_w):
+                mask = np.zeros(self.shape, dtype=bool)
+                in_i_start = out_i * stride
+                in_i_end = in_i_start + kernel_size
+                in_j_start = out_j * stride
+                in_j_end = in_j_start + kernel_size
 
+                mask[:, in_i_start:in_i_end, in_j_start:in_j_end] = True
+                masks.append(mask)
+        return self.highlight_loop(
+            masks=masks,
+            back=back,
+            **aargs,
+        )
     
 class MTensor_4D(MTensorGeneral):
     def __init__(
@@ -1164,7 +1221,7 @@ class Demo4D(ThreeDScene):
         tensor = MTensor_4D(
             block_direction=RIGHT,
             block_gap=0.3,
-            array=np.random.randn(5,8,3,3),
+            array=np.random.randn(5,4,3,3),
             mode='cube',
             size=0.3,
             padding=0.0,
