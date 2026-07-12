@@ -56,7 +56,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'loop compute into output',
+            'loop from input into output',
             skip_animations=False,
         )
         # ************************************************************
@@ -86,7 +86,7 @@ class MainScene(ThreeDScene):
             ))
             self.wait(wt)
 
-            # loop through input and output
+            # loop through Conv2d process
             self.play(AnimationGroup(
                 m_input.highlight_loop_conv2d(
                     kernel_size=m_module.module_config['kernel_size'],
@@ -146,3 +146,11 @@ class MainScene(ThreeDScene):
         ))
 
         self.wait(wt)
+
+        mobs = Group(
+            card,
+            m_input,
+            m_module,
+            m_output,
+        )
+        export_mobs(__file__, mobs)     # NOTE, used by 030

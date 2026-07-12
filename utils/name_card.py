@@ -50,35 +50,37 @@ class NameCard(VMobject):
 
         # create common lines
         self.mobs_common, self.anchors_common = self.create_pk_mobs(level=0)
-        self.mobs_common.next_to(
-            self.head_mob,
-            DOWN,
-            buff=DEFAULT_SECTION_BUFF,
-        ).align_to(
-            self.head_mob,
-            LEFT,
-        )
+        if self.mobs_common is not None:
+            self.mobs_common.next_to(
+                self.head_mob,
+                DOWN,
+                buff=DEFAULT_SECTION_BUFF,
+            ).align_to(
+                self.head_mob,
+                LEFT,
+            )
 
         # create ignore lines
         self.mobs_ignore, self.anchors_ignore = self.create_pk_mobs(level=1)
-        self.mobs_ignore.next_to(
-            self.mobs_common,
-            DOWN,
-            buff=DEFAULT_SECTION_BUFF,
-        ).align_to(
-            self.mobs_common,
-            LEFT,
-        )
+        if self.mobs_ignore is not None:
+            self.mobs_ignore.next_to(
+                self.mobs_common,
+                DOWN,
+                buff=DEFAULT_SECTION_BUFF,
+            ).align_to(
+                self.mobs_common,
+                LEFT,
+            )
 
         # create value mob
         self.mobs_value, self.objs_value = self.create_pv_mobs()
 
-        self.add(
-            self.head_mob,
-            self.mobs_common,
-            self.mobs_ignore,
-            self.mobs_value,
-        )
+        self.add(self.head_mob)
+        if self.mobs_common is not None:
+            self.add(self.mobs_common)
+        if self.mobs_ignore is not None:
+            self.add(self.mobs_ignore)
+        self.add(self.mobs_value)
 
         # to edge positioning
         self.center()
@@ -108,6 +110,8 @@ class NameCard(VMobject):
                 lines.append(p + ':')
                 counter = counter + len(p) + 1
                 anchors[p] = counter
+        if not lines:
+            return None, {}
         text = '\n'.join(lines)
         mobs = Text(
             text,
