@@ -45,7 +45,51 @@ class ShowShape3D(AnimationGroup):
 
         if isinstance(mob, MTensor_1D):
             s0 = str(mob.shape[0])
-            if facing == 'left':
+            if facing == 'horizontal':
+                p0 = Line(
+                    start=mob[0].get_corner(UL+OUT),
+                    end=mob[-1].get_corner(UR+OUT),
+                ).shift(
+                    (OUT+UP)*0.01,
+                ).set_stroke(**path_config)
+                t0 = Text(
+                    text=s0,
+                    **text_config,
+                ).next_to(p0, UP, buff=text_buff*2.0)      # tweak
+            elif facing == 'vertical':
+                p0 = Line(
+                    start=mob[0].get_corner(UR+OUT),
+                    end=mob[-1].get_corner(DR+OUT),
+                ).shift(
+                    (OUT+RIGHT)*0.01,
+                ).set_stroke(**path_config)
+                t0 = Text(
+                    text=s0,
+                    **text_config,
+                ).next_to(p0, RIGHT, buff=text_buff*2.0)      # tweak
+            elif facing == 'horizontal reverse':
+                p0 = Line(
+                    start=mob[0].get_corner(UR+OUT),
+                    end=mob[-1].get_corner(UL+OUT),
+                ).shift(
+                    (OUT+UP)*0.01,
+                ).set_stroke(**path_config)
+                t0 = Text(
+                    text=s0,
+                    **text_config,
+                ).next_to(p0, UP, buff=text_buff*2.0)      # tweak
+            elif facing == 'vertical reverse':
+                p0 = Line(
+                    start=mob[0].get_corner(DR+OUT),
+                    end=mob[-1].get_corner(UR+OUT),
+                ).shift(
+                    (OUT+RIGHT)*0.01,
+                ).set_stroke(**path_config)
+                t0 = Text(
+                    text=s0,
+                    **text_config,
+                ).next_to(p0, RIGHT, buff=text_buff*2.0)      # tweak
+            elif facing == 'left':
                 p0 = Line(
                     start=mob[0].get_corner(DL+IN),
                     end=mob[-1].get_corner(DR+IN),
@@ -63,6 +107,15 @@ class ShowShape3D(AnimationGroup):
                     text=s0,
                     **text_config,
                 ).next_to(p0, DOWN, buff=text_buff*2.0)      # tweak
+            elif facing == 'right erect':
+                p0 = Line(
+                    start=mob[0].get_corner(DR+OUT),
+                    end=mob[-1].get_corner(DR+IN),
+                ).set_stroke(**path_config)
+                t0 = Text(
+                    text=s0,
+                    **text_config,
+                ).next_to(p0, DR, buff=text_buff*1.5)      # tweak
             ps = VGroup(p0)
             ts = VGroup(t0).set_z_index(999)
         elif isinstance(mob, MTensor_2D):
