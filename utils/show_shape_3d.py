@@ -6,7 +6,7 @@ from manim import *
 from utils.mtensor import *
 
 DEFAULT_SHAPE_PATH_CONFIG = {
-    'color': GOLD,
+    'color': PURE_YELLOW,
     'width': 3,
     'opacity': 1.0,
 }
@@ -15,7 +15,7 @@ DEFAULT_SHAPE_TEXT_CONFIG = {
     'buff': 0.15,
     'font_size': 15,
     'font': 'JetBrains Mono',
-    'color': GOLD,
+    'color': PURE_YELLOW,
 }
 
 DEFAULT_SHOW_AARGS = {
@@ -121,7 +121,28 @@ class ShowShape3D(AnimationGroup):
         elif isinstance(mob, MTensor_2D):
             # Not verified yet; please validate visually later.
             s1, s2 = [str(s) for s in mob.shape]
-            if facing == 'left':
+            if facing == 'horizontal':
+                p1 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(DL+OUT),
+                ).shift(
+                    (OUT+LEFT)*0.01,
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).shift(
+                    (OUT+UP)*0.01,
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, LEFT, buff=text_buff*1.2)     # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, UP, buff=text_buff*1.2)     # tweak
+            elif facing == 'left':
                 p1 = Line(
                     start=mob.get_corner(UL+OUT),
                     end=mob.get_corner(DL+OUT),

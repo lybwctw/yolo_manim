@@ -1,25 +1,54 @@
 from manim import *
-from utils.mtensor import MCube, MTensor_3D
+from utils.mtensor import MCube, MTensor_2D
+from utils.show_shape_3d import ShowShape3D, HideShape3D
+from utils.name_card import NameCard
+from utils.constants_3d import *
 
+DECIMAL_2D_CONFIG = {
+    'font_size': 16,
+}
+
+wt = 1.0
 class MainScene(ThreeDScene):
     def construct(self):
-        self.set_camera_orientation(
-            phi=60*DEGREES,
-            theta=-75*DEGREES,
+        # ************************************************************
+        self.next_section(
+            'init mobs',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tensor = MTensor_2D(
+            array=np.random.randn(4,5),
+            mode='card',
+            size=0.5,
+            padding=0.0,
+            decimal_config=DECIMAL_2D_CONFIG,
         )
 
-        tensor = MTensor_3D(
-            array=np.random.randn(5,3,3),
-            mode='cube',
-            size=0.3,
-            padding=0.00,
+        # ************************************************************
+        self.next_section(
+            'horizontal 2d',
+            skip_animations=False,
         )
-
+        # ************************************************************
         self.play(tensor.create(
-            style='beam',
-            direction=OUT,
+            direction=DOWN,
             anim=GrowFromCenter,
             aargs={'rate_func': rate_functions.ease_out_back},
-            gargs={'run_time': 1.0},
+            gargs={'lag_ratio': 0.5, 'run_time': wt},
         ))
         self.wait()
+
+        self.play(ShowShape3D(
+            self,
+            tensor,
+            facing='horizontal',
+            aargs={'lag_ratio': 0.5, 'run_time': 3*wt},
+        ))
+        self.wait(wt)
+
+        self.play(HideShape3D(
+            tensor,
+            aargs={'run_time': wt},
+        ))
+        self.wait(wt)
