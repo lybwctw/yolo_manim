@@ -161,8 +161,8 @@ class ShowShape3D(AnimationGroup):
                 ).next_to(p2, UP, buff=text_buff*1.2)     # tweak
             elif facing == 'right':
                 p1 = Line(
-                    start=mob.get_corner(UL+OUT),
-                    end=mob.get_corner(DL+OUT),
+                    start=mob.get_corner(UR+OUT),
+                    end=mob.get_corner(DR+OUT),
                 ).set_stroke(**path_config)
                 p2 = Line(
                     start=mob.get_corner(UL+OUT),
@@ -171,16 +171,79 @@ class ShowShape3D(AnimationGroup):
                 t1 = Text(
                     text=s1,
                     **text_config,
-                ).next_to(p1, RIGHT, buff=text_buff)    # tweak
+                ).next_to(p1, RIGHT+OUT, buff=text_buff)    # tweak
                 t2 = Text(
                     text=s2,
                     **text_config,
                 ).next_to(p2, UP, buff=text_buff*1.2)     # tweak
+            elif facing == 'right erect':
+                p1 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UL+IN),
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, UL, buff=text_buff)    # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, UP, buff=text_buff*1.2)     # tweak
+            elif facing == 'left erect':
+                p1 = Line(
+                    start=mob.get_corner(DL+OUT),
+                    end=mob.get_corner(DL+IN),
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, LEFT, buff=text_buff*1.2)    # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, UP+OUT, buff=text_buff*1.0)     # tweak
             ps = VGroup(p1, p2)
             ts = VGroup(t1, t2).set_z_index(999)
         elif isinstance(mob, MTensor_3D):
             s1, s2, s3 = [str(s) for s in mob.shape]
-            if facing == 'left':
+            if facing == 'card left':
+                p1 = Line(
+                    start=mob.get_corner(DL+OUT),
+                    end=mob.get_corner(DL+IN),
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(DL+OUT),
+                ).shift(
+                    (LEFT)*0.03,
+                ).set_stroke(**path_config)
+                p3 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).shift(
+                    (UP)*0.05,
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, LEFT, buff=text_buff)     # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, LEFT, buff=text_buff*1.2)     # tweak
+                t3 = Text(
+                    text=s3,
+                    **text_config,
+                ).next_to(p3, UP, buff=text_buff*1.8)   # tweak
+            elif facing == 'left':
                 p1 = Line(
                     start=mob.get_corner(DL+OUT),
                     end=mob.get_corner(DL+IN),
@@ -230,6 +293,56 @@ class ShowShape3D(AnimationGroup):
                     text=s3,
                     **text_config,
                 ).next_to(p3, UP, buff=text_buff*1.1)   # tweak
+            elif facing == 'right erect':
+                p1 = Line(
+                    start=mob.get_corner(DR+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UL+IN),
+                ).set_stroke(**path_config)
+                p3 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, RIGHT+OUT, buff=text_buff*1.2)     # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, UL, buff=text_buff*1.0)     # tweak
+                t3 = Text(
+                    text=s3,
+                    **text_config,
+                ).next_to(p3, UP+OUT, buff=text_buff*1.0)   # tweak
+            elif facing == 'left erect':
+                p1 = Line(
+                    start=mob.get_corner(DL+OUT),
+                    end=mob.get_corner(UL+OUT),
+                ).set_stroke(**path_config)
+                p2 = Line(
+                    start=mob.get_corner(DL+OUT),
+                    end=mob.get_corner(DL+IN),
+                ).set_stroke(**path_config)
+                p3 = Line(
+                    start=mob.get_corner(UL+OUT),
+                    end=mob.get_corner(UR+OUT),
+                ).set_stroke(**path_config)
+                t1 = Text(
+                    text=s1,
+                    **text_config,
+                ).next_to(p1, LEFT, buff=text_buff*1.0)     # tweak
+                t2 = Text(
+                    text=s2,
+                    **text_config,
+                ).next_to(p2, LEFT, buff=text_buff*1.0)     # tweak
+                t3 = Text(
+                    text=s3,
+                    **text_config,
+                ).next_to(p3, UP+OUT, buff=text_buff*1.2)   # tweak
             ps = VGroup(p1, p2, p3)
             ts = VGroup(t1, t2, t3).set_z_index(999)
         elif isinstance(mob, MTensor_4D):
@@ -277,8 +390,8 @@ class ShowShape3D(AnimationGroup):
                     end=mob[0].get_corner(UL+IN),
                 ).set_stroke(**path_config)
                 p2 = Line(
-                    start=mob[-1].get_corner(UR+OUT),
-                    end=mob[-1].get_corner(DR+OUT),
+                    start=mob[0].get_corner(UL+IN),
+                    end=mob[0].get_corner(DL+IN),
                 ).set_stroke(**path_config)
                 p3 = Line(
                     start=mob[0].get_corner(UL+OUT),
@@ -295,7 +408,7 @@ class ShowShape3D(AnimationGroup):
                 t2 = Text(
                     text=s2,
                     **text_config,
-                ).next_to(p2, RIGHT, buff=text_buff*1.6)     # tweak
+                ).next_to(p2, LEFT, buff=text_buff*1.6)     # tweak
                 t3 = Text(
                     text=s3,
                     **text_config,

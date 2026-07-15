@@ -14,7 +14,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         tensor = MTensor_2D(
@@ -28,7 +28,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'horizontal 2d',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(tensor.create(
@@ -50,5 +50,126 @@ class MainScene(ThreeDScene):
         self.play(HideShape3D(
             tensor,
             aargs={'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '3d 2d',
+            skip_animations=True,
+        )
+        # ************************************************************
+        self.move_camera(
+            **VIEW_INTRO,
+            run_time=wt,
+        )
+        self.wait(wt)
+
+        self.play(tensor.switch_mode(
+            direction=RIGHT,
+            aargs={'run_time': wt},
+        ))
+        self.wait(wt)
+
+        self.play(ShowShape3D(
+            self,
+            tensor,
+            facing='left',
+            aargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.wait(wt)
+
+        self.play(HideShape3D(
+            tensor,
+            aargs={'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'another view',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.move_camera(
+            **VIEW_COMPUTE,
+            run_time=wt,
+        )
+        self.wait(wt)
+
+        self.play(ShowShape3D(
+            self,
+            tensor,
+            facing='right',
+            aargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.wait(wt)
+
+        self.play(HideShape3D(
+            tensor,
+            aargs={'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'erect right view',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO, make show shape positioning more natural
+        self.play(Rotate(
+            tensor,
+            angle=90*DEGREES,
+            axis=RIGHT,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(ShowShape3D(
+            self,
+            tensor,
+            facing='right erect',
+            aargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.wait(wt)
+
+        self.play(HideShape3D(
+            tensor,
+            aargs={'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'erect left view',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.move_camera(
+            **VIEW_INTRO,
+            run_time=wt,
+        )
+        self.wait(wt)
+
+        self.play(ShowShape3D(
+            self,
+            tensor,
+            facing='left erect',
+            aargs={'lag_ratio': 0.5, 'run_time': wt},
+        ))
+        self.wait(wt)
+
+        self.play(HideShape3D(
+            tensor,
+            aargs={'run_time': wt},
+        ))
+        self.wait(wt)
+
+        self.play(tensor.uncreate(
+            direction=RIGHT,
+            anim=ShrinkToCenter,
+            aargs={},
+            gargs={'lag_ratio': 0.5, 'run_time': wt},
         ))
         self.wait(wt)

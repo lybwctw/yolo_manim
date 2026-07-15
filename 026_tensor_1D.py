@@ -4,6 +4,8 @@ from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.name_card import NameCard
 from utils.constants_3d import *
 
+import numpy as np
+
 DECIMAL_1D_CONFIG = {
     'font_size': 16,
 }
@@ -52,6 +54,16 @@ class MainScene(ThreeDScene):
             aargs={'run_time': wt},
         ))
         self.wait(wt)
+
+        # NOTE: no update effect until 3d version?
+        # self.play(tensor.update_values(
+        #     np.random.randn(9),
+        #     aargs={
+        #         'lag_ratio': 0.0,
+        #         'run_time': 3.0,
+        #     },
+        # ))
+        # self.wait()
 
         # ************************************************************
         self.next_section(

@@ -267,7 +267,22 @@ class MTensorGeneral(VMobject):
             *anims_loop,
             **aargs,
         )
-        
+    
+    def update_values(
+        self,
+        values: np.ndarray,
+        aargs: dict = {},
+    ) -> Animation:
+        assert self.mode == 'card', "update_value only works in 'card' mode"
+        self.array = values
+
+        anims = AnimationGroup(
+            *(self.objs[*idxs].update_value(
+                values[*idxs]
+            ) for idxs in np.ndindex(self.shape)),
+            **aargs,
+        )
+        return anims
 
 class MTensor_1D(MTensorGeneral):
     def __init__(
@@ -285,7 +300,7 @@ class MTensor_1D(MTensorGeneral):
         for i in range(self.shape[0]):
             cube = self.make_cube(self.array[i])
             cube.shift(RIGHT * i * step)
-            cube.set_z_index(self.shape[0] - i)
+            # cube.set_z_index(self.shape[0] - i)   # NOTE: ChangeDecimalToValue issue
             objs[i] = cube
 
         mobs = VGroup(*objs.flat).center()
