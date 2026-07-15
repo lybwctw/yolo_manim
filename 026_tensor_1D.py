@@ -14,7 +14,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor = MTensor_1D(
@@ -28,7 +28,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'horizontal 1d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(tensor.create(
@@ -56,7 +56,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'vertical 1d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(tensor.mobs.animate(
@@ -84,7 +84,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'reverse horizontal 1d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(tensor.mobs.animate(
@@ -112,7 +112,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'reverse vertical 1d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(tensor.mobs.animate(
@@ -140,7 +140,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'back to horizontal 1d',
-            skip_animations=True,
+           skip_animations=False,
         )
         # ************************************************************
         self.play(tensor.mobs.animate(
