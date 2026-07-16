@@ -14,7 +14,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor = MTensor_3D(
@@ -28,7 +28,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'card left view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.set_camera_orientation(
@@ -61,7 +61,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'cube left view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # FIXME: decimals dim before switching!!
@@ -89,7 +89,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'cube right view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.move_camera(
@@ -123,7 +123,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'cube erect right view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(Rotate(
@@ -151,7 +151,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'cube erect left view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.move_camera(

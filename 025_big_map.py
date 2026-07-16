@@ -542,3 +542,5 @@ class MainScene(Scene):
              run_time=wt*4,
         ))
         self.wait(wt)
+
+        export_mobs(__file__, focus_mobs)         # NOTE: used by 025

@@ -4,6 +4,7 @@ sys.path.append('..')
 
 from manim import *
 from utils.mtensor import *
+from utils.layers_fake import LayersFake
 
 DEFAULT_SHAPE_PATH_CONFIG = {
     'color': PURE_YELLOW,
@@ -415,6 +416,41 @@ class ShowShape3D(AnimationGroup):
                 ).next_to(p3, UP, buff=text_buff*1.1)   # tweak
             ps = VGroup(p0, p1, p2, p3)
             ts = VGroup(t0, t1, t2, t3).set_z_index(999)
+        
+        elif isinstance(mob, LayersFake):
+            s1 = str(mob.depth_nominal)
+            s2 = str(mob.height_nominal)
+            s3 = str(mob.width_nominal)
+            p1 = Line(
+                start=mob.rects[0].get_corner(DL),
+                end=mob.rects[-1].get_corner(DL),
+            ).set_stroke(**path_config)
+            p2 = Line(
+                start=mob.rects[0].get_corner(UL),
+                end=mob.rects[0].get_corner(DL),
+            ).shift(
+                (LEFT)*0.01,
+            ).set_stroke(**path_config)
+            p3 = Line(
+                start=mob.rects[0].get_corner(UL),
+                end=mob.rects[0].get_corner(UR),
+            ).shift(
+                (UP)*0.04,
+            ).set_stroke(**path_config)
+            t1 = Text(
+                text=s1,
+                **text_config,
+            ).next_to(p1, LEFT, buff=text_buff*1.0)
+            t2 = Text(
+                text=s2,
+                **text_config,
+            ).next_to(p2, LEFT, buff=text_buff*1.0)
+            t3 = Text(
+                text=s3,
+                **text_config,
+            ).next_to(p3, UP+OUT, buff=text_buff*1.0)
+            ps = VGroup(p1, p2, p3)
+            ts = VGroup(t1, t2, t3).set_z_index(999)
 
         mob.shape_texts = ts
         # make text always face audience in 3d scene

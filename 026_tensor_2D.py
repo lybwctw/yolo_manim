@@ -14,7 +14,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor = MTensor_2D(
@@ -28,7 +28,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'horizontal 2d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(tensor.create(
@@ -56,7 +56,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '3d 2d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.move_camera(
