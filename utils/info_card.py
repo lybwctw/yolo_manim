@@ -25,7 +25,7 @@ IGNORE_LINES_CONFIG = {
 DEFAULT_SECTION_BUFF = 0.2
 DEFAULT_VALUE_BUFF = 0.15
 
-class NameCard(VMobject):
+class InfoCard(VMobject):
     def __init__(
         self,
         name: str,
@@ -199,7 +199,7 @@ class NameCard(VMobject):
     
 class Demo(Scene):
     def construct(self):
-        card = NameCard(
+        card = InfoCard(
             name='conv2d',
             params={
                 'in_channels': 3,
@@ -223,7 +223,7 @@ class Demo(Scene):
                 'groups': 1,
                 'padding_mode': 1,
             },
-        ).to_edge(LEFT).shift(UP*.5)
+        )
         self.play(Create(card))
         self.wait()
 
