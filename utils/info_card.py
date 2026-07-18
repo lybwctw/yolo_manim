@@ -3,245 +3,294 @@ import sys
 sys.path.append('..')
 
 from manim import *
+from utils.aligned_text import AlignedText
 from utils.loop import Loop
+
+UNKNOWN = '???'
+
+# three modes
+MINIMAL = 'minimal'
+SUMMARY = 'summary'
+DETAILED = 'detailed'
+
+# default configs
+BUFF_HEIGHT_RATIO = 0.8         # padding height / colon height
+BUFF_HEIGHT_RATIO_MINI = 0.4    # padding height / colon height
+BUFF_WIDTH_RATIO = 0.0          # padding width / colon height
 
 DEFAULT_HEAD_CONFIG = {
     'color': WHITE,
     'font': 'JetBrains Mono',
     'font_size': 12,
 }
+DEFAULT_FRAME_CONFIG = {
+    'fill_color': GRAY,
+    'fill_opacity': 1.0,
+    'stroke_color': WHITE,
+    'stroke_width': 2,
+    'stroke_opacity': 0.0,
+}
 COMMON_LINES_CONFIG = {
     'color': GRAY,
     'font': 'JetBrains Mono',
     'font_size': 12,
-    'line_spacing': 1.0,
 }
 IGNORE_LINES_CONFIG = {
     'color': DARK_GRAY,
     'font': 'JetBrains Mono',
     'font_size': 12,
-    'line_spacing': 1.0,
 }
-DEFAULT_SECTION_BUFF = 0.2
-DEFAULT_VALUE_BUFF = 0.15
 
 class InfoCard(VMobject):
     def __init__(
         self,
-        name: str,
-        params: dict,
-        levels: dict = {},
+        head: str,
+        params: dict | None = None,
+        ignores: list | None = None,
         head_config: dict = {},
+        frame_config: dict = {},
         common_config: dict = {},
         ignore_config: dict = {},
     ):
         super().__init__()
-        self.name = name
-        self.params = params
-        self.levels = levels
+
+        self.mode = MINIMAL
+
+        self.head = head
+        self.params = {} if params is None else params
+        self.ignores = [] if ignores is None else ignores
 
         # store config
         self.head_config = {**DEFAULT_HEAD_CONFIG, **head_config}
-        self.common_config = {**COMMON_LINES_CONFIG, **common_config}
-        self.ignore_config = {**IGNORE_LINES_CONFIG, **ignore_config}
+        self.frame_config = {**DEFAULT_FRAME_CONFIG, **frame_config}
+        self.common_config = {**COMMON_LINES_CONFIG, **common_config}   # font_size infered
+        self.ignore_config = {**IGNORE_LINES_CONFIG, **ignore_config}   # font_size infered
 
-        # create head mob
-        self.head_mob = self.create_head_mob()
+        # create head text and frame
+        head_mob = self.create_head_mob().set_z_index(1)
+        frame_mob = self.create_frame_mob(head_mob).set_z_index(0)
+        head_mob.align_to_corner(
+            frame_mob.get_corner(UL),
+            buff_w = head_mob.get_height() * BUFF_WIDTH_RATIO,
+            buff_h = head_mob.get_height() * BUFF_HEIGHT_RATIO,
+        )
 
-        # create common lines
-        self.mobs_common, self.anchors_common = self.create_pk_mobs(level=0)
-        if self.mobs_common is not None:
-            self.mobs_common.next_to(
-                self.head_mob,
-                DOWN,
-                buff=DEFAULT_SECTION_BUFF,
-            ).align_to(
-                self.head_mob,
-                LEFT,
+        self.head_mob = head_mob
+        self.frame_mob = frame_mob
+        self.add(self.frame_mob, self.head_mob)
+
+        self.head_mob_updater = lambda m: m.align_to_corner(
+                self.frame_mob.get_corner(UL),
+                buff_w = self.head_mob.get_height() * BUFF_WIDTH_RATIO,
+                buff_h = self.head_mob.get_height() * BUFF_HEIGHT_RATIO,
             )
 
-        # create ignore lines
-        self.mobs_ignore, self.anchors_ignore = self.create_pk_mobs(level=1)
-        if self.mobs_ignore is not None:
-            self.mobs_ignore.next_to(
-                self.mobs_common,
-                DOWN,
-                buff=DEFAULT_SECTION_BUFF,
-            ).align_to(
-                self.mobs_common,
-                LEFT,
-            )
-
-        # create value mob
-        self.mobs_value, self.objs_value = self.create_pv_mobs()
-
-        self.add(self.head_mob)
-        if self.mobs_common is not None:
-            self.add(self.mobs_common)
-        if self.mobs_ignore is not None:
-            self.add(self.mobs_ignore)
-        self.add(self.mobs_value)
-
-        # to edge positioning
+        # start positioning
         self.center()
-        self.to_edge(LEFT).shift(UP*0.3).set_z_index(999)
     
     def create_head_mob(
         self,
     ) -> VMobject:
-        """Depends on nothing, starting point.
-        """
-        return Text(
-            self.name,
+        return AlignedText(
+            self.head,
             **self.head_config,
         )
-    
-    def create_pk_mobs(
+
+    def create_frame_mob(
         self,
-        level: int = 0,
-    ) -> tuple:
-        """create lines mob, not positioned.
-        """
-        lines = []
-        anchors = {}
-        counter = -1
-        for p in self.params:
-            if self.levels[p] == level:
-                lines.append(p + ':')
-                counter = counter + len(p) + 1
-                anchors[p] = counter
-        if not lines:
-            return None, {}
-        text = '\n'.join(lines)
-        mobs = Text(
-            text,
-            **self.level_config(level),
-        )
-        return mobs, anchors
-    
-    def new_value_mob(
-        self,
-        key,
-        value = None,
+        ref: AlignedText,
     ) -> VMobject:
-        level = self.levels[key]
-        ref_mobs = self.mobs_common if level==0 else self.mobs_ignore
-        ref_anchors = self.anchors_common if level==0 else self.anchors_ignore
-        config = self.param_config(key)
-        value = value if value is not None else self.params[key]
-        mob = Text(
-            str(value),
-            **config,
-        ).next_to(
-            ref_mobs[ref_anchors[key]],
-            RIGHT,
-            buff=DEFAULT_VALUE_BUFF,
-        ).align_to(
-            ref_mobs[ref_anchors[key]],
-            DOWN,
+        return Rectangle(
+            width=ref.get_width() + ref.get_height()*BUFF_WIDTH_RATIO*2,
+            height=ref.get_height() + ref.get_height()*BUFF_HEIGHT_RATIO*2,
+            **self.frame_config,
         )
-        return mob
     
-    def update_value_mob(
+    def start_updater(
         self,
-        key,
-        value,
+    ):
+        self.head_mob.add_updater(self.head_mob_updater)
+    
+    def stop_updater(
+        self,
+    ):
+        self.head_mob.remove_updater(self.head_mob_updater)
+    
+    def expand_frame_detailed(
+        self,
+        aligned_edge: np.ndarray = LEFT,
         **aargs,
     ) -> Animation:
-        self.params[key] = value
-        new_mob = self.new_value_mob(key, value)
-        return Transform(
-            self.value_mob(key),
-            new_mob,
+        name_objs = {}
+        value_objs = {}
+        line_objs = {}
+
+        # create new mobs only when params is not empty
+        if self.params:
+            for idx, (name, value) in enumerate(self.params.items()):
+                text_config = self.common_config if name not in self.ignores else self.ignore_config
+                text_config = {**text_config, 'font_size': self.head_mob.mob.font_size}
+
+                name_mob = AlignedText(str(name)+':', **text_config)
+                prop_height = name_mob.get_height() * (1 + BUFF_HEIGHT_RATIO_MINI * 2)
+
+                name_mob.align_to_corner(
+                    self.frame_mob.get_corner(UL),
+                    buff_w = name_mob.get_height() * BUFF_WIDTH_RATIO,
+                    # buff_h = name_mob.get_height() * (idx + (idx*2+1)*BUFF_HEIGHT_RATIO),
+                    buff_h = self.head_height + idx*prop_height + name_mob.get_height()*BUFF_HEIGHT_RATIO_MINI,
+                )
+
+                value_mob = AlignedText(str(value), **text_config)
+                value_mob.concat_to_atext(name_mob)
+
+                name_objs[name] = name_mob
+                value_objs[name] = value_mob
+                line_objs[name] = VGroup(name_mob, value_mob)
+            
+            line_mobs = VGroup(line for line in line_objs.values())
+
+        self.name_objs = name_objs
+        self.value_objs = value_objs
+        self.line_objs = line_objs
+
+        if self.params:
+            self.line_mobs = line_mobs
+            # compute target frame width and height
+            target_width = self.line_mobs.width + self.line_mobs[0][0].get_height()*BUFF_WIDTH_RATIO*2
+            target_height = self.head_height + prop_height * len(self.line_mobs)
+            target_height += self.head_mob.get_height()*BUFF_HEIGHT_RATIO - self.line_mobs[0][0].get_height()*BUFF_HEIGHT_RATIO_MINI
+        else:
+            self.line_mobs = None   # empty line mobs
+            target_width = self.frame_mob.width
+            target_height = self.frame_mob.height
+
+        rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
+        rect1.align_to(self.frame_mob, aligned_edge)
+        rect1.set_fill(opacity=0.0).set_stroke(opacity=1.0)
+        rect2 = rect1.copy().stretch_to_fit_height(target_height)
+
+        return Succession(
+            Transform(self.frame_mob, rect1),
+            Transform(self.frame_mob, rect2),
             **aargs,
         )
     
-    def value_mob(
+    def write_properties_detailed(
         self,
-        key,
-    ) -> VMobject:
-        return self.objs_value[key]
+        **aargs,
+    ) -> Animation:
+        # wait if empty params
+        if self.line_mobs is None:
+            return Wait(**aargs)
+
+        # positioning lines
+        ref = self.line_mobs[0][0]
+        offset = ref.offset_to_corner(
+            self.frame_mob.get_corner(UL),
+            buff_w = ref.get_height() * BUFF_WIDTH_RATIO,
+            buff_h = self.head_height + ref.get_height() * BUFF_WIDTH_RATIO
+        )
+        self.line_mobs.shift(offset)
+
+        self.add(self.line_mobs)
+        return Create(self.line_mobs, **aargs)
     
-    def create_pv_mobs(
+    @property
+    def head_height(
         self,
-    ) -> VMobject:
-        mobs = VGroup()
-        objs = {}
-        params = list(self.params.keys())
-        for p in params:
-            mob = self.new_value_mob(
-                key=p,
-                value=self.params[p],
-            )
-            mobs.add(mob)
-            objs[p] = mob
-
-        return mobs, objs
-        
-    def level_config(
-        self,
-        level,
-    ) -> dict:
-        """Collect text config according to level.
-        """
-        text_config = self.common_config if level==0 else self.ignore_config
-        return text_config
-
-    def param_config(
-        self,
-        key,
-    ) -> dict:
-        """Collect text config according to param name.
-        """
-        text_config = self.level_config(self.levels[key])
-        return text_config
-
+    ) -> float:
+        height = self.head_mob.get_height() * (1 + BUFF_HEIGHT_RATIO * 2)
+        return height
     
 class Demo(Scene):
     def construct(self):
-        card = InfoCard(
-            name='conv2d',
-            params={
-                'in_channels': 3,
-                'out_channels': 4,
-                'kernel_size': 3,
-                'stride': 1,
-                'padding': 0,
-                'bias': False,
-                'dilation': 1,
-                'groups': 1,
-                'padding_mode': 'zeros',
-            },
-            levels={
-                'in_channels': 0,
-                'out_channels': 0,
-                'kernel_size': 0,
-                'stride': 0,
-                'padding': 0,
-                'bias': 0,
-                'dilation': 1,
-                'groups': 1,
-                'padding_mode': 1,
-            },
-        )
-        self.play(Create(card))
-        self.wait()
+        names_t = [
+            'add', 'split', 'concat',
+            'Conv2d', 'MaxPool2d', 'Upsample', 'SiLU', 'Sigmoid', 'Sofmax', 'Linear', 'BatchNorm2d',
+        ]
+        names_u = [
+            'Conv', 'BottleNeck', 'C2f', 'SPPF', 'Detect',
+        ]
 
-        # series = [
-        #     card.new_value_mob('in_channels', x)
-        #      for x in range(4, 100)
-        # ]
+        cards = VGroup()
+        for name in names_t:
+            card = InfoCard(name, frame_config={'fill_color': ORANGE})
+            cards.add(card)
+        for name in names_u:
+            card = InfoCard(name, frame_config={'fill_color': PURE_BLUE})
+            cards.add(card)
+        cards.arrange(DOWN, buff=0.08, aligned_edge=LEFT)
+        cards.move_to(LEFT*10)
 
-        # self.play(Loop(
-        #     card.value_mob('in_channels'),
-        #     series,
-        #     run_time=3.0,
-        #     rate_func=rate_functions.ease_in_out_expo,
-        # ))
-        # self.wait()
-        self.play(card.update_value_mob(
-            'bias',
-            True,
-            run_time=0.5,
+        self.play(AnimationGroup(
+            *(card.animate.to_edge(LEFT, buff=0.5)
+              for card in cards),
+            lag_ratio=0.5,
+            run_time=1.0,
         ))
         self.wait()
+
+        # focus on specific card
+        focus_card = cards[3]
+        other_cards = VGroup(cards[i] for i in range(len(cards)) if i != 3)
+
+        other_cards.save_state()
+        self.play(other_cards.animate(
+            run_time=1.0,
+        ).fade(0.8))
+
+        # self.play(other_cards.animate(
+        #     run_time=1.0,
+        # ).restore())
+        # self.wait()
+
+        self.play(AnimationGroup(
+            other_cards.animate.shift(LEFT*2),
+            focus_card.animate.set_y(0.0),
+            lag_ratio=0.5,
+            run_time=1.0,
+        ))
+        self.wait()
+
+        # self.play(focus_card.expand_frame_detailed(
+        #     aligned_edge=LEFT,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(focus_card.write_properties_detailed(
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # card = InfoCard(
+        #     head='Conv2d',
+        #     params={
+        #         'in_channels': 3,
+        #         'out_channels': 4,
+        #         'kernel_size': 3,
+        #         'stride': 1,
+        #         'padding': 0,
+        #         'bias': False,
+        #         'dilation': 1,
+        #         'groups': 1,
+        #         'padding_mode': 'zeros',
+        #     },
+        # ).shift(LEFT*8)
+        # self.add(card)
+
+        # self.wait()
+        # self.play(card.animate(
+        #     run_time=0.5,
+        #     # rate_func=rate_functions.ease_out_back,
+        # ).center())
+        # # self.wait()
+
+        # self.play(card.expand_frame_detailed(
+        #     run_time=0.6,
+        # ))
+        # self.play(card.write_properties_detailed(
+        #     run_time=0.5,
+        # ))
+        # self.wait()

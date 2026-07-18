@@ -2,7 +2,7 @@ from manim import *
 
 from utils.general import import_mobs, export_mobs
 from utils.mtensor import MTensor_3D
-from utils.info_card import NameCard
+from utils.info_card import InfoCard
 from utils.constants_3d import *
 from utils.constants import *
 import torch

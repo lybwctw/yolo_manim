@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.info_card import NameCard
+from utils.info_card import InfoCard
 from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.general import export_mobs
 from utils.constants import *

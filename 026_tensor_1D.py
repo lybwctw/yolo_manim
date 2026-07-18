@@ -1,7 +1,6 @@
 from manim import *
 from utils.mtensor import MCube, MTensor_1D
 from utils.show_shape_3d import ShowShape3D, HideShape3D
-from utils.info_card import NameCard
 from utils.constants_3d import *
 
 import numpy as np
