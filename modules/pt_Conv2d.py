@@ -6,20 +6,59 @@ from manim import *
 from utils.mtensor import *
 from utils.constants import *
 from utils.constants_3d import *
+from utils.info_card import *
 
 import numpy as np
 
-DEFAULT_PT_Conv2d_LEVELS = {
-    'in_channels': 0,
-    'out_channels': 0,
-    'kernel_size': 0,
-    'stride': 0,
-    'padding': 0,
-    'bias': 0,
-    'dilation': 1,
-    'groups': 1,
-    'padding_mode': 1,
+# ------------- info card ---------------------
+IC_HEAD = 'Conv2d'
+IC_PARAMS = {
+    'in_channels': UNKNOWN,
+    'out_channels': UNKNOWN,
+    'kernel_size': UNKNOWN,
+    'stride': UNKNOWN,
+    'padding': UNKNOWN,
+    'bias': UNKNOWN,
+    'dilation': UNKNOWN,
+    'groups': UNKNOWN,
+    'padding_mode': UNKNOWN,
 }
+IC_IGNORES = [
+    'dilation',
+    'groups',
+    'padding_mode',
+]
+IC_HEAD_CONFIG = {}
+IC_FRAME_CONFIG = {
+    'fill_color': ORANGE,
+}
+IC_COMMON_CONFIG = {}
+IC_IGNORE_CONFIG = {}
+
+def create_ic_Conv2d():
+    """Create empty InfoCard.
+    """
+    return InfoCard(
+        head=IC_HEAD,
+        params=IC_PARAMS,
+        ignores=IC_IGNORES,
+        head_config=IC_HEAD_CONFIG,
+        frame_config=IC_FRAME_CONFIG,
+        common_config=IC_COMMON_CONFIG,
+        ignore_config=IC_IGNORE_CONFIG,
+    )
+
+# DEFAULT_PT_Conv2d_LEVELS = {
+#     'in_channels': 0,
+#     'out_channels': 0,
+#     'kernel_size': 0,
+#     'stride': 0,
+#     'padding': 0,
+#     'bias': 0,
+#     'dilation': 1,
+#     'groups': 1,
+#     'padding_mode': 1,
+# }
 
 DEFAULT_WEIGHT_CONFIG = BIG_4D_CONFIG
 

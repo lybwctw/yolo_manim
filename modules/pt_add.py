@@ -6,7 +6,7 @@ from manim import *
 
 from utils.info_card import *
 
-# info card constants
+# ------------- info card ---------------------
 IC_HEAD = 'add'
 IC_PARAMS = {}
 IC_IGNORES = []

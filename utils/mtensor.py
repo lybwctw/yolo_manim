@@ -41,7 +41,8 @@ class MCube(VMobject):
         self,
         value: float = 0.0,
         size: float = 0.5,
-        mode: str ='card',
+        mode: str = 'card',
+        z_index: float = 0,
         cube_config: dict = {},
         square_config: dict = {},
         decimal_config: dict = {},
@@ -53,15 +54,20 @@ class MCube(VMobject):
         self.decimal_config = { **DEFAULT_DECIMAL_CONFIG, **decimal_config }
 
         self.mode = mode
+        self.z_index = z_index
+
         if mode == 'card':
             square_config = {**self.square_config, 'side_length': size}
             self.mob = VGroup(
                 Square(**square_config),
                 DecimalNumber(self.value, **self.decimal_config),
             )
+            self.mob[0].set_z_index(self.z_index)
+            self.mob[1].set_z_index(self.z_index+0.1)
         elif mode == 'cube':
             cube_config = {**self.cube_config, 'side_length': size}
             self.mob = Cube(**cube_config)
+            self.mob.set_z_index(self.z_index)
 
         self.add(self.mob)
     
@@ -73,6 +79,8 @@ class MCube(VMobject):
         if self.mode == 'card':
             self.cube_config = {**self.cube_config, 'side_length': self.mob.width}
             new_mob = Cube(**self.cube_config)
+            new_mob[0].set_z_index(self.z_index)
+            new_mob[1].set_z_index(self.z_index+0.1)
             self.mode = 'cube'
         elif self.mode == 'cube':
             self.square_config = {**self.square_config, 'side_length': self.mob.width}
@@ -80,6 +88,7 @@ class MCube(VMobject):
                 Square(**self.square_config),
                 DecimalNumber(self.value, **self.decimal_config),
             )
+            new_mob.set_z_index(self.z_index)
             self.mode = 'card'
         new_mob.move_to(self.mob)
 
@@ -159,6 +168,7 @@ class MTensorGeneral(VMobject):
     def make_cube(
         self,
         value,
+        z_index: float = 0,
         cube_config: dict = {},     # override internal
         square_config: dict = {},   # override internal
         decimal_config: dict = {},  # override internal
@@ -167,6 +177,7 @@ class MTensorGeneral(VMobject):
             value=float(value),
             size=self.size,
             mode=self.mode,
+            z_index=z_index,
             cube_config={**self.cube_config, **cube_config},
             square_config={**self.square_config, **square_config},
             decimal_config={**self.decimal_config, **decimal_config},
@@ -273,6 +284,10 @@ class MTensorGeneral(VMobject):
         values: np.ndarray,
         aargs: dict = {},
     ) -> Animation:
+        """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        NOTE: update manim ChangeDecimalToValue source to sync z_index.
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        """
         assert self.mode == 'card', "update_value only works in 'card' mode"
         self.array = values
 
@@ -298,7 +313,10 @@ class MTensor_1D(MTensorGeneral):
         step = self.size + self.padding
 
         for i in range(self.shape[0]):
-            cube = self.make_cube(self.array[i])
+            cube = self.make_cube(
+                self.array[i],
+                self.shape[0] - i,      # z_index
+            )
             cube.shift(RIGHT * i * step)
             # cube.set_z_index(self.shape[0] - i)   # NOTE: ChangeDecimalToValue issue
             objs[i] = cube
@@ -321,6 +339,11 @@ class MTensor_1D(MTensorGeneral):
         direction: np.ndarray = RIGHT,
         aargs: dict = {},
     ) -> Animation:
+        if self.mode == 'card':
+            self.mode = 'cube'
+        elif self.mode == 'cube':
+            self.mode = 'card'
+
         mobs = self.get_mobs(direction=direction)
         anims = AnimationGroup(
             *(cube.switch_mode() for cube in mobs),
@@ -387,13 +410,18 @@ class MTensor_2D(MTensorGeneral):
         objs = np.empty(self.shape, dtype=object)
         step = self.size + self.padding
 
-        xs = [RIGHT * j * step for j in range(self.shape[1])]
-        ys = [DOWN * i * step for i in range(self.shape[0])]
+        nh, nw = self.shape
+
+        xs = [RIGHT * j * step for j in range(nw)]
+        ys = [DOWN * i * step for i in range(nh)]
 
         for i, j in np.ndindex(self.shape):
-            cube = self.make_cube(self.array[i, j])
+            cube = self.make_cube(
+                self.array[i, j],
+                (nh-i) * nw + nw - j,       # z_index
+            )
             cube.shift(xs[j] + ys[i])
-            cube.set_z_index((self.shape[0] - i) * self.shape[1] + (self.shape[1] - j))
+            # cube.set_z_index((self.shape[0] - i) * self.shape[1] + (self.shape[1] - j))
             objs[i, j] = cube
 
         mobs = VGroup(*objs.flat).center()
@@ -426,6 +454,11 @@ class MTensor_2D(MTensorGeneral):
         direction: np.ndarray = DOWN,
         aargs: dict = {},
     ) -> Animation:
+        if self.mode == 'card':
+            self.mode = 'cube'
+        elif self.mode == 'cube':
+            self.mode = 'card'
+
         get_lines = self.get_cols if direction[0]!=0 else self.get_rows
         lines = get_lines(direction=direction)
         anims = AnimationGroup(
@@ -547,13 +580,14 @@ class MTensor_3D(MTensorGeneral):
             else:
                 cube = self.make_cube(
                     array[i, j, k],
+                    (c-i)*h+j,          # z_index
                     pad_cube_config if do_pad else {},
                     pad_square_config if do_pad else {},
                     pad_decimal_config if do_pad else {},
                 ).center()
 
             cube.shift(xs[k] + ys[j] + zs[i])
-            cube.set_z_index((c - i) * h + j)
+            # cube.set_z_index((c - i) * h + j)
             objs[i, j, k] = cube
         
         mobs = VGroup(*objs.flat)
@@ -660,6 +694,11 @@ class MTensor_3D(MTensorGeneral):
         direction: np.ndarray = OUT,
         aargs: dict = {},
     ) -> Animation:
+        if self.mode == 'card':
+            self.mode = 'cube'
+        elif self.mode == 'cube':
+            self.mode = 'card'
+
         if style == 'layer':
             layers = self.get_layers(direction=direction)
             anims = Succession(
@@ -939,9 +978,12 @@ class MTensor_4D(MTensorGeneral):
         for i in range(nb):
             block_objs = np.empty((nc, nh, nw), dtype=object)
             for j, k, l in np.ndindex((nc, nh, nw)):
-                cube = self.make_cube(self.array[i, j, k, l])
+                cube = self.make_cube(
+                    self.array[i, j, k, l],
+                    (nc-j) * nh + k,        # z_index
+                )
                 cube.shift(xs[l] + ys[k] + zs[j])
-                cube.set_z_index((nc - j) * nh + k)
+                # cube.set_z_index((nc - j) * nh + k)
                 block_objs[j, k, l] = cube
                 objs[i, j, k, l] = cube
 
@@ -961,6 +1003,11 @@ class MTensor_4D(MTensorGeneral):
     ) -> Animation:
         """based on implementation of 3d.
         """
+        if self.mode == 'card':
+            self.mode = 'cube'
+        elif self.mode == 'cube':
+            self.mode = 'card'
+
         vgs = [
             MTensor_3D(
                 objs=self.objs[i],

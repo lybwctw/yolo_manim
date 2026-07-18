@@ -9,25 +9,21 @@ from utils.constants_3d import *
 from utils.info_card import *
 
 # ------------- info card ---------------------
-IC_HEAD = 'C2f'
+IC_HEAD = 'YOLOv8'
 IC_PARAMS = {
-    'c1': UNKNOWN,
-    'c2': UNKNOWN,
-    'n': UNKNOWN,
-    'shortcut': UNKNOWN,
-    'g': UNKNOWN,
-    'e': UNKNOWN,
+    'nc': UNKNOWN,
+    'scale': UNKNOWN,
 }
 IC_IGNORES = [
 ]
 IC_HEAD_CONFIG = {}
 IC_FRAME_CONFIG = {
-    'fill_color': PURE_BLUE,
+    'fill_color': PURE_RED,
 }
 IC_COMMON_CONFIG = {}
 IC_IGNORE_CONFIG = {}
 
-def create_ic_C2f():
+def create_ic_YOLOv8():
     """Create empty InfoCard.
     """
     return InfoCard(
@@ -39,4 +35,7 @@ def create_ic_C2f():
         common_config=IC_COMMON_CONFIG,
         ignore_config=IC_IGNORE_CONFIG,
     )
+
+
+
 

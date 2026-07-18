@@ -6,7 +6,7 @@ from manim import *
 
 from utils.info_card import *
 
-# info card constants, fixed
+# ------------- info card ---------------------
 IC_HEAD = 'split'
 IC_PARAMS = {
     'split_size': UNKNOWN,
