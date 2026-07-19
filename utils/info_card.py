@@ -79,11 +79,7 @@ class InfoCard(VMobject):
         self.frame_mob = frame_mob
         self.add(self.frame_mob, self.head_mob)
 
-        self.head_mob_updater = lambda m: m.align_to_corner(
-                self.frame_mob.get_corner(UL),
-                buff_w = self.head_mob.get_height() * BUFF_WIDTH_RATIO,
-                buff_h = self.head_mob.get_height() * BUFF_HEIGHT_RATIO,
-            )
+        self._head_mob_updater = self.head_mob_updater
 
         # start positioning
         self.center()
@@ -106,17 +102,27 @@ class InfoCard(VMobject):
             **self.frame_config,
         )
     
+    def head_mob_updater(
+        self,
+        m,
+    ):
+        m.align_to_corner(
+            self.frame_mob.get_corner(UL),
+            buff_w = self.head_mob.get_height() * BUFF_WIDTH_RATIO,
+            buff_h = self.head_mob.get_height() * BUFF_HEIGHT_RATIO,
+        )
+
     def start_updater(
         self,
     ):
-        self.head_mob.add_updater(self.head_mob_updater)
+        self.head_mob.add_updater(self._head_mob_updater)
     
     def stop_updater(
         self,
     ):
-        self.head_mob.remove_updater(self.head_mob_updater)
+        self.head_mob.remove_updater(self._head_mob_updater)
     
-    def expand_frame_detailed(
+    def expand_for_detail(
         self,
         aligned_edge: np.ndarray = LEFT,
         **aargs,
@@ -176,7 +182,7 @@ class InfoCard(VMobject):
             **aargs,
         )
     
-    def write_properties_detailed(
+    def write_detail(
         self,
         **aargs,
     ) -> Animation:
@@ -196,6 +202,58 @@ class InfoCard(VMobject):
         self.add(self.line_mobs)
         return Create(self.line_mobs, **aargs)
     
+    def expand_summary(
+        self,
+        summary: str = UNKNOWN,
+        **aargs,
+    ) -> Animation:
+        """Expand frame to show summary text.
+        """
+        smob = AlignedText(summary, **self.head_config).set_z_index(1)
+        smob.concat_to_atext(self.head_mob)
+
+        target_width = self.head_mob.get_width() + smob.get_width() + smob.get_height()*BUFF_WIDTH_RATIO*2
+        target_rect = self.frame_mob.copy().stretch_to_fit_width(target_width)
+        target_rect.align_to(self.frame_mob, LEFT)
+
+        self.smob = smob
+        return Succession(
+            Transform(self.frame_mob, target_rect),
+            Write(self.smob, fixed=True),
+            **aargs,
+        )
+    
+    def update_summary(
+        self,
+        summary: str = UNKNOWN,
+        **aargs,
+    ) -> Animation:
+        """Update summary text.
+        """
+        smob_old = self.smob
+
+        smob = AlignedText(summary, **self.head_config).set_z_index(1)
+        smob.concat_to_atext(self.head_mob)
+
+        target_width = self.head_mob.get_width() + smob.get_width() + smob.get_height()*BUFF_WIDTH_RATIO*2
+        target_rect = self.frame_mob.copy().stretch_to_fit_width(target_width)
+        target_rect.align_to(self.frame_mob, LEFT)
+
+        self.smob = smob
+
+        return Succession(
+            Transform(
+                self.frame_mob,
+                target_rect,
+            ),
+            AnimationGroup(
+                Unwrite(smob_old),
+                Write(self.smob, fixed=True),
+                lag_ratio=0.0,
+            ),
+            **aargs,
+        )
+    
     @property
     def head_height(
         self,
@@ -205,92 +263,17 @@ class InfoCard(VMobject):
     
 class Demo(Scene):
     def construct(self):
-        names_t = [
-            'add', 'split', 'concat',
-            'Conv2d', 'MaxPool2d', 'Upsample', 'SiLU', 'Sigmoid', 'Sofmax', 'Linear', 'BatchNorm2d',
-        ]
-        names_u = [
-            'Conv', 'BottleNeck', 'C2f', 'SPPF', 'Detect',
-        ]
+        card = InfoCard('test')
+        self.play(Write(card))
+        self.wait()
 
-        cards = VGroup()
-        for name in names_t:
-            card = InfoCard(name, frame_config={'fill_color': ORANGE})
-            cards.add(card)
-        for name in names_u:
-            card = InfoCard(name, frame_config={'fill_color': PURE_BLUE})
-            cards.add(card)
-        cards.arrange(DOWN, buff=0.08, aligned_edge=LEFT)
-        cards.move_to(LEFT*10)
-
-        self.play(AnimationGroup(
-            *(card.animate.to_edge(LEFT, buff=0.5)
-              for card in cards),
-            lag_ratio=0.5,
-            run_time=1.0,
+        self.play(card.expand_frame_summary(
+            summary='(1,2,3)',
+            run_time=0.5,
         ))
         self.wait()
 
-        # focus on specific card
-        focus_card = cards[3]
-        other_cards = VGroup(cards[i] for i in range(len(cards)) if i != 3)
-
-        other_cards.save_state()
-        self.play(other_cards.animate(
-            run_time=1.0,
-        ).fade(0.8))
-
-        # self.play(other_cards.animate(
-        #     run_time=1.0,
-        # ).restore())
-        # self.wait()
-
-        self.play(AnimationGroup(
-            other_cards.animate.shift(LEFT*2),
-            focus_card.animate.set_y(0.0),
-            lag_ratio=0.5,
-            run_time=1.0,
+        self.play(card.update_summary(
+            summary='(1,5,8)',
+            run_time=0.5,
         ))
-        self.wait()
-
-        # self.play(focus_card.expand_frame_detailed(
-        #     aligned_edge=LEFT,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(focus_card.write_properties_detailed(
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # card = InfoCard(
-        #     head='Conv2d',
-        #     params={
-        #         'in_channels': 3,
-        #         'out_channels': 4,
-        #         'kernel_size': 3,
-        #         'stride': 1,
-        #         'padding': 0,
-        #         'bias': False,
-        #         'dilation': 1,
-        #         'groups': 1,
-        #         'padding_mode': 'zeros',
-        #     },
-        # ).shift(LEFT*8)
-        # self.add(card)
-
-        # self.wait()
-        # self.play(card.animate(
-        #     run_time=0.5,
-        #     # rate_func=rate_functions.ease_out_back,
-        # ).center())
-        # # self.wait()
-
-        # self.play(card.expand_frame_detailed(
-        #     run_time=0.6,
-        # ))
-        # self.play(card.write_properties_detailed(
-        #     run_time=0.5,
-        # ))
-        # self.wait()

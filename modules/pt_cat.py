@@ -14,7 +14,7 @@ IC_PARAMS = {
 IC_IGNORES = []
 IC_HEAD_CONFIG = {}
 IC_FRAME_CONFIG = {
-    'fill_color': GRAY,
+    'fill_color': TEAL,
 }
 IC_COMMON_CONFIG = {}
 IC_IGNORE_CONFIG = {}
