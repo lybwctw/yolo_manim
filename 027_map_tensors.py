@@ -77,7 +77,7 @@ class MainScene(ThreeDScene):
         ).next_to(act_game, LEFT, buff=BUFF_MOB_W)
 
         t8_prob = LayersFake(
-            n=8,
+            n=3,
             ref=t8_prob,
             expanded=True,
             buff=BUFF_LAYER_2D,
@@ -87,24 +87,24 @@ class MainScene(ThreeDScene):
         ).next_to(t8_distrib, RIGHT, BUFF_MOB_W)
 
         t16_prob = LayersFake(
-            n=8,
+            n=3,
             ref=t16_prob,
             expanded=True,
             buff=BUFF_LAYER_2D,
             width_nominal=40,
             height_nominal=40,
             depth_nominal=3,
-        ).next_to(t16_distrib, RIGHT, BUFF_MOB_W)
+        ).next_to(t16_distrib, RIGHT).set_x(t8_prob.get_x())
 
         t32_prob = LayersFake(
-            n=8,
+            n=3,
             ref=t32_prob,
             expanded=True,
             buff=BUFF_LAYER_2D,
             width_nominal=20,
             height_nominal=20,
             depth_nominal=3,
-        ).next_to(t32_distrib, RIGHT, BUFF_MOB_W)
+        ).next_to(t32_distrib, RIGHT).set_x(t8_prob.get_x())
 
         mobs = VGroup(
                                 t8_distrib,  t8_prob,
@@ -133,13 +133,10 @@ class MainScene(ThreeDScene):
         t8_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, OUT, buff=BUFF_MOB_H*2)
         t32_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, IN, buff=BUFF_MOB_H*2)
         act_game.target.rotate(90*DEGREES, axis=RIGHT).next_to(t16_distrib.target, LEFT, buff=BUFF_MOB_W*1.5)
-        # act_game.target.shift(DOWN*0.3)
         tin_norm.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(act_game.target, LEFT, buff=BUFF_MOB_W*1.5)
-        # tin_norm.target.shift(DOWN*0.3)
-        t16_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, RIGHT, buff=BUFF_MOB_W*1.5)
-        # t16_prob.target.shift(UP*0.3)
-        t8_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_prob.target, OUT, buff=BUFF_MOB_H*2)
-        t32_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_prob.target, IN, buff=BUFF_MOB_H*2)
+        t8_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t8_distrib.target, RIGHT, buff=BUFF_MOB_W*1.5)
+        t16_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, RIGHT).set_x(t8_prob.target.get_x())
+        t32_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t32_distrib.target, RIGHT).set_x(t16_prob.target.get_x())
         
         self.move_camera(
             **VIEW_INTRO,
