@@ -30,9 +30,9 @@ class MainScene(ThreeDScene):
         card_others = VGroup(card for card in cards_module if card is not card_module)
 
         # input/output
-        card_i1 = InfoCard('input_1').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_UP)
-        card_i2 = InfoCard('input_2').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_UP)
-        card_o1 = InfoCard('output_2').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_DOWN)
+        card_i1 = InfoCard('in_1').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_UP)
+        card_i2 = InfoCard('in_2').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_UP)
+        card_o1 = InfoCard('out_2').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_DOWN)
 
         cards = VGroup(card_i1, card_i2, card_module, card_o1)
 

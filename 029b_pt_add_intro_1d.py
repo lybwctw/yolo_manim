@@ -2,8 +2,8 @@ from manim import *
 
 from utils.info_card import InfoCard
 from utils.show_shape_3d import ShowShape3D, HideShape3D
-from utils.general import import_mobs, export_mobs
 from utils.mtensor import MTensor_1D
+from utils.general import *
 from utils.constants import *
 from utils.constants_3d import *
 
@@ -34,7 +34,7 @@ class MainScene(ThreeDScene):
             card_o1,
         ) = cards
 
-        # tensor arrays
+        # sample tensors
         t_i1 = np.random.randn(8)
         t_i2 = np.random.randn(8)
         t_o1 = t_i1 + t_i2
@@ -63,10 +63,9 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # self.add_fixed_in_frame_mobjects(summary_i1)
         self.play(AnimationGroup(
             AnimationGroup(
-                card_i1.expand_summary(summary='(8)'),
+                card_i1.expand_summary(summary=shape_str(t_i1)),
                 tensor_i1.create(
                     direction=RIGHT,
                     anim=GrowFromCenter,
@@ -75,7 +74,7 @@ class MainScene(ThreeDScene):
                 ),
             ),
             AnimationGroup(
-                card_i2.expand_summary(summary='(8)'),
+                card_i2.expand_summary(summary=shape_str(t_i2)),
                 tensor_i2.create(
                     direction=RIGHT,
                     anim=GrowFromCenter,
@@ -88,8 +87,15 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
+        # ************************************************************
+        self.next_section(
+            'compute output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO: highlight loop
         self.play(AnimationGroup(
-            card_o1.expand_summary(summary='(8)'),
+            card_o1.expand_summary(summary=shape_str(t_o1)),
             tensor_o1.create(
                 direction=RIGHT,
                 anim=GrowFromCenter,
@@ -99,10 +105,3 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         self.wait(wt)
-
-        # ************************************************************
-        self.next_section(
-            'switch input mode',
-            skip_animations=False,
-        )
-        # ************************************************************

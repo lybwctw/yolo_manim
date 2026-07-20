@@ -173,3 +173,13 @@ def random_path(
         col = min(max(col + dc, 0), w - 1)
         sample_idxs.append(row*w + col)
     return sample_idxs
+
+def shape_str(
+    tensor: np.ndarray,
+):
+    """Create tensor shape str.
+    """
+    shape = str(tensor.shape)
+    if shape[-2] == ',':
+        shape = shape[:-2] + ')'
+    return shape

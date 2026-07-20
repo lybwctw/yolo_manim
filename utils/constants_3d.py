@@ -63,32 +63,33 @@ BIG_CUBE_CONFIG = {
     **BIG_TENSOR_CONFIG,
 }
 
-# BIG_1D_CONFIG = {
-#     'mode': 'cube',
-#     'size': 0.3,
-#     'padding': 0.0,
-#     'cube_config': {},
-#     'square_config': {},
-#     'decimal_config': {},
-# }
-# BIG_3D_CONFIG = {
-#     'mode': 'cube',
-#     'size': 0.3,
-#     'padding': 0.0,
-#     'cube_config': {},
-#     'square_config': {},
-#     'decimal_config': {},
-# }
-# BIG_4D_CONFIG = {
-#     'block_direction': RIGHT,
-#     'block_gap': 0.3,
-#     'mode': 'cube',
-#     'size': 0.3,
-#     'padding': 0.0,
-#     'cube_config': {},
-#     'square_config': {},
-#     'decimal_config': {},
-# }
+# TODO: more censor
+BIG_1D_CONFIG = {
+    'mode': 'cube',
+    'size': 0.3,
+    'padding': 0.0,
+    'cube_config': {},
+    'square_config': {},
+    'decimal_config': {},
+}
+BIG_3D_CONFIG = {
+    'mode': 'cube',
+    'size': 0.3,
+    'padding': 0.0,
+    'cube_config': {},
+    'square_config': {},
+    'decimal_config': {},
+}
+BIG_4D_CONFIG = {
+    'block_direction': RIGHT,
+    'block_gap': 0.3,
+    'mode': 'cube',
+    'size': 0.3,
+    'padding': 0.0,
+    'cube_config': {},
+    'square_config': {},
+    'decimal_config': {},
+}
 
 # info card related
 CARD_FADE_VALUE = 0.8
