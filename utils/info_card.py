@@ -223,6 +223,25 @@ class InfoCard(VMobject):
             **aargs,
         )
     
+    def remove_summary(
+        self,
+        **aargs,
+    ) -> Animation:
+        """Remove summary and shrink frame.
+        """
+        smob = self.smob
+        del self.smob
+
+        target_width = self.head_mob.get_width() + self.head_mob.get_height()*BUFF_WIDTH_RATIO*2
+        target_rect = self.frame_mob.copy().stretch_to_fit_width(target_width)
+        target_rect.align_to(self.frame_mob, LEFT)
+
+        return Succession(
+            Unwrite(smob),
+            Transform(self.frame_mob, target_rect),
+            **aargs,
+        )
+    
     def update_summary(
         self,
         summary: str = UNKNOWN,

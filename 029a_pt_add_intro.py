@@ -8,8 +8,6 @@ from utils.constants_3d import *
 
 from modules.pt_add import create_ic_add
 
-import torch
-
 wt = 0.5
 class MainScene(ThreeDScene):
     def construct(self):
@@ -20,24 +18,24 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # modules
-        cards_module = import_mobs('028')
+        card_list = import_mobs('028')
         (
             ic_add, ic_split, ic_cat,
             ic_Conv2d, ic_MaxPool2d, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_Linear, ic_BatchNorm2d,
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
-        ) = cards_module
-        card_module = ic_add
-        card_others = VGroup(card for card in cards_module if card is not card_module)
+        ) = card_list
+        card_focus = ic_add
+        card_others = VGroup(card for card in card_list if card is not card_focus)
 
         # input/output
         card_i1 = InfoCard('in_1').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_UP)
         card_i2 = InfoCard('in_2').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_UP)
-        card_o1 = InfoCard('out_2').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_DOWN)
+        card_o1 = InfoCard('out_1').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_DOWN)
 
-        cards = VGroup(card_i1, card_i2, card_module, card_o1)
+        cards = VGroup(card_i1, card_i2, card_focus, card_o1)
 
         self.add_fixed_in_frame_mobjects(
-            cards_module, card_i1, card_i2, card_o1,
+            cards, card_others,
         )
         self.wait(wt)
 
@@ -48,8 +46,8 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # focus on current card
+        card_list.save_state()
         self.play(card_others.animate.fade(CARD_FADE_VALUE), run_time=wt)
-        card_others.save_state()
         self.play(AnimationGroup(
             card_others.animate.shift(LEFT*CARD_OUT_OFFSET),
             lag_ratio=0.5,
@@ -70,4 +68,5 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        export_mobs(__file__, cards)
+        mobs = VGroup(cards, card_list)
+        export_mobs(__file__, mobs)

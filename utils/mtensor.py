@@ -152,9 +152,9 @@ class MTensorGeneral(VMobject):
         self.mobs = mobs
         self.add(self.mobs)
 
-        # prepare for highlight
-        for mob in self.mobs:
-            mob.save_state()
+        # # NOTE: prepare for highlight loop
+        # for mob in self.mobs:
+        #     mob.save_state()
     
     def __getitem__(
         self,
@@ -233,15 +233,27 @@ class MTensorGeneral(VMobject):
             **aargs,
         )
     
+    def prepare_highlight_loop(self):
+        """Should be called before any highlight operation.
+           Assert that NO movement before getting back.
+        """
+        # save state for all mobs
+        for mob in self.mobs:
+            mob.save_state()
+    
     def highlight_loop(
         self,
-        masks: list,            # a list of highlight states
+        masks: list | np.ndarray,            # a list of highlight states
         back: bool = True,      # back to initial state or not
         **aargs,
     ) -> AnimationGroup:
         # # save state for all mobs
         # for mob in self.mobs:
         #     mob.save_state()
+
+        # convert 1st dim into list
+        if isinstance(masks, np.ndarray):
+            masks = list(masks)
 
         if back:
             masks_start = [self.hl_state] + masks
@@ -370,7 +382,7 @@ class MTensor_1D(MTensorGeneral):
     
     def uncreate(
         self,
-        direction: np.ndarray = DOWN,
+        direction: np.ndarray = RIGHT,
         anim = Uncreate,
         aargs: dict = {},
         gargs: dict = {},
@@ -410,15 +422,15 @@ class MTensor_2D(MTensorGeneral):
         objs = np.empty(self.shape, dtype=object)
         step = self.size + self.padding
 
-        nh, nw = self.shape
+        h, w = self.shape
 
-        xs = [RIGHT * j * step for j in range(nw)]
-        ys = [DOWN * i * step for i in range(nh)]
+        xs = [RIGHT * j * step for j in range(w)]
+        ys = [DOWN * i * step for i in range(h)]
 
         for i, j in np.ndindex(self.shape):
             cube = self.make_cube(
                 self.array[i, j],
-                (nh-i) * nw + nw - j,       # z_index
+                i * w - j,       # z_index
             )
             cube.shift(xs[j] + ys[i])
             # cube.set_z_index((self.shape[0] - i) * self.shape[1] + (self.shape[1] - j))

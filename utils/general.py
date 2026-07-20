@@ -26,6 +26,11 @@ def export_mobs(path_source, mobs, suffix=''):
     i = 0
     while i < len(base_name) and base_name[i].isdigit():
         i += 1
+    
+    # 023a_xxxx logics
+    if base_name[i] != '_':
+        i += 1
+
     digits = base_name[:i]
     rest = base_name[i:]
     
