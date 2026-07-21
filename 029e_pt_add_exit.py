@@ -26,7 +26,6 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
         ) = cards
-        card_others = VGroup(card for card in card_list if card is not card_module)
 
         self.add_fixed_in_frame_mobjects(
             cards

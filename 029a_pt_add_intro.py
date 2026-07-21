@@ -76,5 +76,5 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        mobs = VGroup(cards, card_list)
+        mobs = VGroup(cards, card_list)     # NOTE: used by b/c/d/e...
         export_mobs(__file__, mobs)

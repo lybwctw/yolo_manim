@@ -179,12 +179,19 @@ def random_path(
         sample_idxs.append(row*w + col)
     return sample_idxs
 
-def shape_str(
-    tensor: np.ndarray,
-):
-    """Create tensor shape str.
+# torch tensor related
+def t2s(
+    tensor: torch.Tensor,
+) -> tuple:
+    """From torch tensor to shape str.
     """
-    shape = str(tensor.shape)
+    shape = str(tensor.numpy().shape)
     if shape[-2] == ',':
         shape = shape[:-2] + ')'
     return shape
+def t2n(
+    tensor: torch.Tensor,
+) -> np.ndarray:
+    """From torch tensor to numpy array.
+    """
+    return tensor.numpy()

@@ -9,7 +9,7 @@ DEFAULT_TEXT_CONFIG = {
 class AlignedText(VMobject):
     def __init__(
         self,
-        text: str = '???',
+        text: str = 'None',
         **text_config,
     ):
         super().__init__()
@@ -41,50 +41,80 @@ class AlignedText(VMobject):
         """
         return self.mob[0].height
     
-    def get_center(
+    def colon_width(
         self,
-    ) -> np.ndarray:
-        """Center based on colon.
-        """
-        return np.array([
-            self.get_x(),
-            self.mob[0].get_y(),
-            0,
-        ])
+    ) -> float:
+        return self.mob[0].width
     
-    def offset_to_corner(
+    def get_font_size(
         self,
-        corner,
-        buff_w: float = 0.0,
-        buff_h: float = 0.0,
-    ) -> np.ndarray:
-        tpos = corner + buff_w*RIGHT + buff_h*DOWN
-        spos = self.mob[0].get_corner(UL)
-        offset = tpos - spos
+    ) -> float:
+        return self.mob.font_size
+    
+    def attach_offset(
+        self,
+        ref: np.ndarray,
+    ):
+        offset = ref - self.mob[0].get_corner(LEFT)
         return offset
     
-    def align_to_corner(
+    def attach_to_point(
         self,
-        corner,
-        buff_w: float = 0.0,
-        buff_h: float = 0.0,
+        ref: np.ndarray,
     ):
-        offset = self.offset_to_corner(
-            corner,
-            buff_w,
-            buff_h,
-        )
+        """Align 1st colon's center to point.
+        """
+        # offset = ref - self.mob[0].get_corner(LEFT)
+        offset = self.attach_offset(ref)
         self.shift(offset)
     
-    def concat_to_atext(
-        self,
-        ref,
-    ):
-        self.next_to(ref, RIGHT, buff=0.0)
-        tbot = ref.mob[0].get_bottom()[1]
-        sbot = self.mob[0].get_bottom()[1]
-        offset = (tbot - sbot) * UP
-        self.shift(offset)
+    # def get_center(
+    #     self,
+    # ) -> np.ndarray:
+    #     """Center based on colon.
+    #     """
+    #     return np.array([
+    #         self.get_x(),
+    #         self.mob[0].get_y(),
+    #         0,
+    #     ])
+    
+    # def offset_to_corner(
+    #     self,
+    #     corner,
+    #     buff_w: float = 0.0,
+    #     buff_h: float = 0.0,
+    # ) -> np.ndarray:
+    #     tpos = corner + buff_w*RIGHT + buff_h*DOWN
+    #     spos = self.mob[0].get_corner(UL)
+    #     offset = tpos - spos
+    #     return offset
+    
+    # def align_to_corner(
+    #     self,
+    #     corner,
+    #     buff_w: float = 0.0,
+    #     buff_h: float = 0.0,
+    # ):
+    #     offset = self.offset_to_corner(
+    #         corner,
+    #         buff_w,
+    #         buff_h,
+    #     )
+    #     self.shift(offset)
+    
+    # def concat_to_atext(
+    #     self,
+    #     ref,
+    #     closer: bool = False,       # ignore the first colon?
+    # ):
+    #     self.next_to(ref, RIGHT, buff=0.0)
+    #     if closer:
+    #         self.shift(self.mob[0].get_width() * LEFT)
+    #     tbot = ref.mob[0].get_bottom()[1]
+    #     sbot = self.mob[0].get_bottom()[1]
+    #     offset = (tbot - sbot) * UP
+    #     self.shift(offset)
 
 class Demo(Scene):
     def construct(self):

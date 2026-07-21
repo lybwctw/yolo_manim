@@ -32,7 +32,12 @@ class MainScene(ThreeDScene):
         card_o1 = InfoCard('out_1').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_DOWN)
         card_o2 = InfoCard('out_2').to_edge(LEFT, buff=CARD_EDGE_BUFF).set_y(CARD_INIT_DOWN)
 
-        cards = VGroup(card_i1, card_focus, card_o1, card_o2)
+        cards = VGroup(
+            card_i1,
+            card_focus,
+            card_o1,
+            card_o2,
+        )
 
         self.add_fixed_in_frame_mobjects(
             cards, card_others,
@@ -54,19 +59,41 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # introduce input/output
-        self.play(cards.animate(
+        # to edge center
+        self.play(card_focus.animate(
             run_time=wt,
-            rate_func=rate_functions.ease_out_cubic,
-        ).arrange(
+        ).set_y(
+            CARD_CENTER_Y,
+        ))
+        self.wait(wt)
+
+        # expand card params
+        self.play(card_focus.expand_for_detail(
+            aligned_edge=LEFT,
+            run_time=wt,
+        ))
+        self.play(card_focus.write_detail(
+            run_time=wt,
+        ))
+        # self.wait(wt)
+
+        # introduce 2 inputs and 1 output
+        cards.generate_target()
+        cards.target.arrange(
             DOWN,
             buff=CARD_GAP,
             aligned_edge=LEFT,
         ).to_edge(
             LEFT,
             buff=CARD_EDGE_BUFF,
+        )
+        offset = card_focus.get_y() - cards.target[1].get_y()
+        cards.target.shift(offset*UP)
+        self.play(MoveToTarget(
+            cards,
+            run_time=wt,
         ))
         self.wait(wt)
 
-        mobs = VGroup(cards, card_list)
+        mobs = VGroup(cards, card_list)     # used by b/c/d/e...
         export_mobs(__file__, mobs)

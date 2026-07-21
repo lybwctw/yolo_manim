@@ -30,15 +30,15 @@ class MainScene(ThreeDScene):
             card_o1,
         ) = cards
 
-        # arrays
-        t_i1 = np.random.randn(3,4,5)
-        t_i2 = np.random.randn(3,4,5)
-        t_i3 = np.random.randn(4,3,2)
+        # raw torch arrays
+        t_i1 = torch.randn(3,4,5)
+        t_i2 = torch.randn(3,4,5)
+        t_i3 = torch.randn(4,3,2)
         t_o1 = t_i1 + t_i2
 
         # tensor mobs
         tensor_i1 = MTensor_3D(
-            array=t_i1,
+            array=t2n(t_i1),
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             UP*TENSOR_VGAP_3D,
@@ -48,7 +48,7 @@ class MainScene(ThreeDScene):
             RIGHT,
         )
         tensor_i2 = MTensor_3D(
-            array=t_i2,
+            array=t2n(t_i2),
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             UP*TENSOR_VGAP_3D,
@@ -58,7 +58,7 @@ class MainScene(ThreeDScene):
             LEFT,
         )
         tensor_i3 = MTensor_3D(
-            array=t_i3,
+            array=t2n(t_i3),
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             UP*TENSOR_VGAP_3D,
@@ -71,14 +71,14 @@ class MainScene(ThreeDScene):
             IN,
         )
         tensor_o1 = MTensor_3D(
-            array=t_o1,
+            array=t2n(t_o1),
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             DOWN*TENSOR_VGAP_3D,
             UP,
         )
 
-        # add initial mobs
+        # show initial mobs
         self.set_camera_orientation(
             **VIEW_COMPUTE,
         )
@@ -91,7 +91,7 @@ class MainScene(ThreeDScene):
             skip_animations=True,
         )
         # ************************************************************
-        # create input tensors
+        # show input tensor 1
         self.play(AnimationGroup(
             tensor_i1.create(
                 style='beam',
@@ -100,12 +100,12 @@ class MainScene(ThreeDScene):
                 aargs={'rate_func': rate_functions.ease_out_back},
                 gargs={},
             ),
-            card_i1.expand_summary(shape_str(t_i1)),
+            card_i1.expand_summary(t2s(t_i1)),
             lag_ratio=0.5,
             run_time=wt,
         ))
 
-        # create card summaries
+        # show input tensor 2
         self.play(AnimationGroup(
             tensor_i2.create(
                 style='beam',
@@ -114,7 +114,7 @@ class MainScene(ThreeDScene):
                 aargs={'rate_func': rate_functions.ease_out_back},
                 gargs={},
             ),
-            card_i2.expand_summary(shape_str(t_i2)),
+            card_i2.expand_summary(t2s(t_i2)),
             lag_ratio=0.5,
             run_time=wt,
         ))
@@ -180,7 +180,7 @@ class MainScene(ThreeDScene):
 
         # show output card shape
         self.play(card_o1.expand_summary(
-            shape_str(t_o1),
+            t2s(t_o1),
             run_time=wt,
         ))
         self.wait(wt)
@@ -188,7 +188,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'vectorized thinking',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # remove output
@@ -236,7 +236,7 @@ class MainScene(ThreeDScene):
                 ) for mob in tensor_o1.mobs),
                 lag_ratio=0.0,
             ),
-            card_o1.expand_summary(shape_str(t_o1)),
+            card_o1.expand_summary(t2s(t_o1)),
             lag_ratio=0.5,
             run_time=wt,
         ))
@@ -281,7 +281,7 @@ class MainScene(ThreeDScene):
                 anim=GrowFromCenter,
                 aargs={'rate_func': rate_functions.ease_out_back},
             ),
-            card_i1.expand_summary(shape_str(t_i3)),
+            card_i1.expand_summary(t2s(t_i3)),
             lag_ratio=0.5,
             run_time=wt,
         ))
@@ -309,42 +309,29 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'clean',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # remove tensors 
-        # self.play(AnimationGroup(
-        #     tensor_i1.uncreate(
-        #         style='beam',
-        #         direction=IN,
-        #         anim=ShrinkToCenter,
-        #         gargs={},
-        #     ),
-        #     tensor_i2.uncreate(
-        #         style='beam',
-        #         direction=IN,
-        #         anim=ShrinkToCenter,
-        #         gargs={},
-        #     ),
-        #     tensor_o2.uncreate(
-        #         style='beam',
-        #         direction=IN,
-        #         anim=ShrinkToCenter,
-        #         gargs={},
-        #     ),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-
-        # # remove card summaries
-        # self.play(AnimationGroup(
-        #     card_i1.remove_summary(),
-        #     card_i2.remove_summary(),
-        #     card_o1.remove_summary(),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # ************************************************************
+        self.next_section(
+            'clean',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # remove tensors 
+        self.play(AnimationGroup(
+            tensor_i2.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+                gargs={},
+            ),
+            tensor_i3.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+                gargs={},
+            ),
+            card_i1.remove_summary(),
+            card_i2.remove_summary(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)

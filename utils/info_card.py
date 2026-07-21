@@ -66,141 +66,139 @@ class InfoCard(VMobject):
         self.common_config = {**COMMON_LINES_CONFIG, **common_config}   # font_size infered
         self.ignore_config = {**IGNORE_LINES_CONFIG, **ignore_config}   # font_size infered
 
-        # create head text and frame
-        head_mob = self.create_head_mob().set_z_index(1)
-        frame_mob = self.create_frame_mob(head_mob).set_z_index(0)
-        head_mob.align_to_corner(
-            frame_mob.get_corner(UL),
-            buff_w = head_mob.get_height() * BUFF_WIDTH_RATIO,
-            buff_h = head_mob.get_height() * BUFF_HEIGHT_RATIO,
-        )
-
-        self.head_mob = head_mob
-        self.frame_mob = frame_mob
-        self.add(self.frame_mob, self.head_mob)
-
-        self._head_mob_updater = self.head_mob_updater
-
-        # start positioning
-        self.center()
-    
-    def create_head_mob(
-        self,
-    ) -> VMobject:
-        return AlignedText(
-            self.head,
-            **self.head_config,
-        )
-
-    def create_frame_mob(
-        self,
-        ref: AlignedText,
-    ) -> VMobject:
-        return Rectangle(
-            width=ref.get_width() + ref.get_height()*BUFF_WIDTH_RATIO*2,
-            height=ref.get_height() + ref.get_height()*BUFF_HEIGHT_RATIO*2,
+        # create mobs and helper members
+        self.head_mob = AlignedText(self.head, **self.head_config).set_z_index(999)
+        self.line_height = self.head_mob.get_height()
+        self.buff_height = self.head_mob.get_height() * BUFF_HEIGHT_RATIO
+        self.frame_mob = Rectangle(
+            width=self.head_mob.width,
+            height=self.line_height + self.buff_height*2,
             **self.frame_config,
         )
-    
-    def head_mob_updater(
-        self,
-        m,
-    ):
-        m.align_to_corner(
-            self.frame_mob.get_corner(UL),
-            buff_w = self.head_mob.get_height() * BUFF_WIDTH_RATIO,
-            buff_h = self.head_mob.get_height() * BUFF_HEIGHT_RATIO,
-        )
+        self.attach_to_frame_index(self.head_mob, 0)
 
-    def start_updater(
-        self,
-    ):
-        self.head_mob.add_updater(self._head_mob_updater)
+        self.add(self.frame_mob, self.head_mob)
+        self.center()
     
-    def stop_updater(
+    def expand_params(
         self,
-    ):
-        self.head_mob.remove_updater(self._head_mob_updater)
-    
-    def expand_for_detail(
-        self,
-        aligned_edge: np.ndarray = LEFT,
         **aargs,
     ) -> Animation:
+        """Introduce name_objs, value_objs, line_mobs.
+        """
+        if not self.params:
+            return None
+
         name_objs = {}
         value_objs = {}
-        line_objs = {}
 
-        # create new mobs only when params is not empty
-        if self.params:
-            for idx, (name, value) in enumerate(self.params.items()):
-                text_config = self.common_config if name not in self.ignores else self.ignore_config
-                text_config = {**text_config, 'font_size': self.head_mob.mob.font_size}
+        # create line mobs
+        for idx, (name, value) in enumerate(self.params.items()):
+            text_config = self.common_config if name not in self.ignores else self.ignore_config
+            text_config = {**text_config, 'font_size': self.head_mob.get_font_size()}
 
-                name_mob = AlignedText(str(name)+':', **text_config)
-                prop_height = name_mob.get_height() * (1 + BUFF_HEIGHT_RATIO_MINI * 2)
+            name_mob = AlignedText(str(name)+':', **text_config)
 
-                name_mob.align_to_corner(
-                    self.frame_mob.get_corner(UL),
-                    buff_w = name_mob.get_height() * BUFF_WIDTH_RATIO,
-                    # buff_h = name_mob.get_height() * (idx + (idx*2+1)*BUFF_HEIGHT_RATIO),
-                    buff_h = self.head_height + idx*prop_height + name_mob.get_height()*BUFF_HEIGHT_RATIO_MINI,
-                )
+            self.attach_to_frame_index(name_mob, idx+1)
 
-                value_mob = AlignedText(str(value), **text_config)
-                value_mob.concat_to_atext(name_mob)
+            value_mob = AlignedText(str(value), **text_config)
+            self.attach_to_frame_index(value_mob, idx+1)
+            value_mob.shift(RIGHT*(name_mob.get_width()-value_mob.colon_width()))
 
-                name_objs[name] = name_mob
-                value_objs[name] = value_mob
-                line_objs[name] = VGroup(name_mob, value_mob)
-            
-            line_mobs = VGroup(line for line in line_objs.values())
+            name_objs[name] = name_mob
+            value_objs[name] = value_mob
 
         self.name_objs = name_objs
         self.value_objs = value_objs
-        self.line_objs = line_objs
 
-        if self.params:
-            self.line_mobs = line_mobs
-            # compute target frame width and height
-            target_width = self.line_mobs.width + self.line_mobs[0][0].get_height()*BUFF_WIDTH_RATIO*2
-            target_height = self.head_height + prop_height * len(self.line_mobs)
-            target_height += self.head_mob.get_height()*BUFF_HEIGHT_RATIO - self.line_mobs[0][0].get_height()*BUFF_HEIGHT_RATIO_MINI
-        else:
-            self.line_mobs = None   # empty line mobs
-            target_width = self.frame_mob.width
-            target_height = self.frame_mob.height
+        self.line_mobs = VGroup(
+            VGroup(self.name_objs[name], self.value_objs[name])
+            for name in self.params
+        )
+
+        target_width = max(self.line_mobs.width, self.frame_mob.width)
+        target_height = (1+len(self.params))*(self.buff_height+self.line_height) + self.buff_height
 
         rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
-        rect1.align_to(self.frame_mob, aligned_edge)
-        rect1.set_fill(opacity=0.0).set_stroke(opacity=1.0)
+        rect1.align_to(self.frame_mob, LEFT)
+        rect1.set_fill(opacity=0.0).set_stroke(
+            color=rect1.fill_color,
+            opacity=1.0,
+        )
         rect2 = rect1.copy().stretch_to_fit_height(target_height)
+
+        head_mob_new = self.head_mob.copy()
+        self.attach_to_frame_index(
+            head_mob_new, 0, rect2,
+        )
+        lines_offset = self.line_mobs[0][0].attach_offset(
+            rect2.get_corner(UL) + (2*self.buff_height+1.5*self.line_height)*DOWN
+        )
+        self.line_mobs.shift(lines_offset)
 
         return Succession(
             Transform(self.frame_mob, rect1),
+            AnimationGroup(
+                Transform(self.frame_mob, rect2),
+                Transform(self.head_mob, head_mob_new),
+                lag_ratio=0.0,
+            ),
+            AnimationGroup(
+                *(Create(line) for line in self.line_mobs),
+                lag_ratio=0.3,
+            ),
+            **aargs,
+        )
+    
+    def shrink_params(
+        self,
+        **aargs,
+    ) -> Animation:
+        """Remove name_objs, value_objs, line_mobs.
+        """
+        target_width = self.head_mob.width
+        target_height = self.line_height + self.buff_height*2
+        
+        rect1 = self.frame_mob.copy().stretch_to_fit_height(target_height)
+        rect2 = rect1.copy().stretch_to_fit_width(target_width)
+        rect2.align_to(self.frame_mob, LEFT)
+        rect2.set_fill(
+            color=rect2.stroke_color,
+            opacity=1.0,
+        ).set_stroke(
+            opacity=0.0,
+        )
+
+        head_mob_new = self.head_mob.copy()
+        self.attach_to_frame_index(
+            head_mob_new, 0, rect2,
+        )
+        
+        line_mobs = self.line_mobs
+        del self.line_mobs
+        del self.name_objs
+        del self.value_objs
+
+        return Succession(
+            AnimationGroup(
+                *(Uncreate(line) for line in line_mobs),
+                lag_ratio=0.3,
+            ),
+            AnimationGroup(
+                Transform(self.frame_mob, rect1),
+                Transform(self.head_mob, head_mob_new),
+                lag_ratio=0.0,
+            ),
             Transform(self.frame_mob, rect2),
             **aargs,
         )
     
-    def write_detail(
+    def update_params(
         self,
+        params: dict,
         **aargs,
     ) -> Animation:
-        # wait if empty params
-        if self.line_mobs is None:
-            return Wait(**aargs)
-
-        # positioning lines
-        ref = self.line_mobs[0][0]
-        offset = ref.offset_to_corner(
-            self.frame_mob.get_corner(UL),
-            buff_w = ref.get_height() * BUFF_WIDTH_RATIO,
-            buff_h = self.head_height + ref.get_height() * BUFF_WIDTH_RATIO
-        )
-        self.line_mobs.shift(offset)
-
-        self.add(self.line_mobs)
-        return Create(self.line_mobs, **aargs)
+        pass
     
     def expand_summary(
         self,
@@ -223,7 +221,7 @@ class InfoCard(VMobject):
             **aargs,
         )
     
-    def remove_summary(
+    def shrink_summary(
         self,
         **aargs,
     ) -> Animation:
@@ -273,6 +271,30 @@ class InfoCard(VMobject):
             **aargs,
         )
     
+    # def update_values(
+    #     self,
+    #     values: dict,       # kv pairs
+    #     **aargs,
+    # ) -> Animation:
+    #     nmob = self.name_objs[name]
+    #     vmob_old = self.value_objs[name]
+
+    #     text_config = self.common_config if name not in self.ignores else self.ignore_config
+    #     text_config = {**text_config, 'font_size': self.head_mob.mob.font_size}
+    #     vmob_new = AlignedText(str(value), **text_config)
+    #     vmob_new.concat_to_atext(nmob, closer=True)
+
+    #     # update data and mob
+    #     self.params[name] = value
+    #     self.value_objs[name] = vmob_new
+        
+    #     return AnimationGroup(
+    #         Unwrite(vmob_old),
+    #         Write(vmob_new, fixed=True),
+    #         lag_ratio=0.0,
+    #         **aargs,
+    #     )
+    
     def suggest_failure(
         self,
         **aargs,
@@ -282,26 +304,39 @@ class InfoCard(VMobject):
             **aargs,
         ).set_fill(color=PURE_RED)
     
-    @property
-    def head_height(
+    def attach_to_frame_index(
         self,
-    ) -> float:
-        height = self.head_mob.get_height() * (1 + BUFF_HEIGHT_RATIO * 2)
-        return height
+        mob,
+        idx: int = 0,   # 0 for head, 1 for 1st line ...
+        frame: Rectangle | None = None,
+    ):
+        """Helper function for positioning text mobs.
+        """
+        if frame is None:
+            frame = self.frame_mob
+        ref = frame.get_corner(UL)
+        ref += ((idx+1)*self.buff_height + (idx+0.5)*self.line_height) * DOWN
+        mob.attach_to_point(ref)
     
 class Demo(Scene):
     def construct(self):
-        card = InfoCard('test')
+        card = InfoCard(
+            'test',
+            params={
+                'first': 1,
+                'second': 2,
+                'third': 3,
+            },
+        )
         self.play(Write(card))
         self.wait()
 
-        self.play(card.expand_frame_summary(
-            summary='(1,2,3)',
-            run_time=0.5,
+        self.play(card.expand_params(
+            run_time=1.0,
         ))
         self.wait()
 
-        self.play(card.update_summary(
-            summary='(1,5,8)',
-            run_time=0.5,
+        self.play(card.shrink_params(
+            run_time=1.0,
         ))
+        self.wait()
