@@ -92,7 +92,6 @@ class MainScene(ThreeDScene):
             lag_ratio=0.8,
             run_time=wt,
         ))
-        self.wait(wt)
 
         # create card summaries
         self.play(AnimationGroup(
@@ -122,7 +121,6 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
-        self.wait(wt)
 
         # generate the first output
         self.play(GrowFromCenter(
@@ -130,7 +128,6 @@ class MainScene(ThreeDScene):
             rate_func=rate_functions.ease_out_back,
             run_time=wt,
         ))
-        self.wait(wt)
 
         # loop into the last output
         self.play(AnimationGroup(

@@ -47,6 +47,8 @@ class MainScene(ThreeDScene):
         # ************************************************************
         # focus on current card
         card_list.save_state()
+
+        # remove other cards
         self.play(card_others.animate.fade(CARD_FADE_VALUE), run_time=wt)
         self.play(AnimationGroup(
             card_others.animate.shift(LEFT*CARD_OUT_OFFSET),
@@ -54,17 +56,23 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # introduce input/output
-        self.play(cards.animate(
-            run_time=wt,
-            rate_func=rate_functions.ease_out_cubic,
-        ).arrange(
+        # setup target
+        cards.generate_target()
+        cards.target.arrange(
             DOWN,
             buff=CARD_GAP,
             aligned_edge=LEFT,
         ).to_edge(
             LEFT,
             buff=CARD_EDGE_BUFF,
+        )
+        offset = CARD_CENTER_Y - cards.target[2].get_y()
+        cards.target.shift(offset*UP)
+
+        # focus and introduce input/output
+        self.play(MoveToTarget(
+            cards,
+            run_time=wt,
         ))
         self.wait(wt)
 

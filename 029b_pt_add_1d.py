@@ -100,22 +100,20 @@ class MainScene(ThreeDScene):
         tensor_i2.prepare_highlight_loop()
         masks_in = np.eye(t_i1.shape[0], dtype=bool)
 
-        # pause in the first inputs
+        # focus on first inputs
         self.play(AnimationGroup(
             tensor_i1.highlight(masks_in[0]),
             tensor_i2.highlight(masks_in[0]),
             lag_ratio=0.0,
             run_time=wt,
         ))
-        self.wait(wt)
 
-        # generate the first output
+        # generate first output
         self.play(GrowFromCenter(
             tensor_o1[0],
             rate_func=rate_functions.ease_out_back,
             run_time=wt,
         ))
-        self.wait(wt)
 
         # loop into the last output
         self.play(AnimationGroup(

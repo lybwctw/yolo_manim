@@ -273,6 +273,15 @@ class InfoCard(VMobject):
             **aargs,
         )
     
+    def suggest_failure(
+        self,
+        **aargs,
+    ) -> Animation:
+        return self.frame_mob.animate(
+            rate_func=rate_functions.there_and_back,
+            **aargs,
+        ).set_fill(color=PURE_RED)
+    
     @property
     def head_height(
         self,
