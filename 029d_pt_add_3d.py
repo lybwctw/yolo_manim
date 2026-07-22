@@ -1,9 +1,8 @@
 from manim import *
 
-from utils.info_card import InfoCard
-from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.mtensor import MTensor_3D
 from utils.general import *
+from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
@@ -18,7 +17,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # cards
@@ -26,11 +25,11 @@ class MainScene(ThreeDScene):
         (
             card_i1,
             card_i2,
-            card_module,
+            card_m,
             card_o1,
         ) = cards
 
-        # raw torch arrays
+        # raw tensors
         t_i1 = torch.randn(3,4,5)
         t_i2 = torch.randn(3,4,5)
         t_i3 = torch.randn(4,3,2)
@@ -38,7 +37,7 @@ class MainScene(ThreeDScene):
 
         # tensor mobs
         tensor_i1 = MTensor_3D(
-            array=t2n(t_i1),
+            array=t_i1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             UP*TENSOR_VGAP_3D,
@@ -48,7 +47,7 @@ class MainScene(ThreeDScene):
             RIGHT,
         )
         tensor_i2 = MTensor_3D(
-            array=t2n(t_i2),
+            array=t_i2,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             UP*TENSOR_VGAP_3D,
@@ -58,7 +57,7 @@ class MainScene(ThreeDScene):
             LEFT,
         )
         tensor_i3 = MTensor_3D(
-            array=t2n(t_i3),
+            array=t_i3,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             UP*TENSOR_VGAP_3D,
@@ -71,7 +70,7 @@ class MainScene(ThreeDScene):
             IN,
         )
         tensor_o1 = MTensor_3D(
-            array=t2n(t_o1),
+            array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
             DOWN*TENSOR_VGAP_3D,
@@ -88,10 +87,10 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'introduce cube inputs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        # show input tensor 1
+        # create input tensor 1
         self.play(AnimationGroup(
             tensor_i1.create(
                 style='beam',
@@ -105,7 +104,7 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # show input tensor 2
+        # create input tensor 2
         self.play(AnimationGroup(
             tensor_i2.create(
                 style='beam',
@@ -123,7 +122,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'compute output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # prepare for highlight
@@ -132,7 +131,7 @@ class MainScene(ThreeDScene):
         c, h, w = t_i1.shape
         masks_in = np.eye(c*h*w, dtype=bool).reshape(c*h*w, c, h, w)
 
-        # pause in the first inputs
+        # focus on first inputs
         self.play(AnimationGroup(
             tensor_i1.highlight(masks_in[0]),
             tensor_i2.highlight(masks_in[0]),
@@ -140,14 +139,14 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # generate the first output
+        # generate first output
         self.play(GrowFromCenter(
             tensor_o1[0,0,0],
             rate_func=rate_functions.ease_out_back,
             run_time=wt,
         ))
 
-        # loop into the last output
+        # loop into last output
         self.play(AnimationGroup(
             tensor_i1.highlight_loop(
                 masks=masks_in[1:],
@@ -188,10 +187,10 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'vectorized thinking',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        # remove output
+        # remove output tensor (recreate later)
         tensor_o1.save_state()
         self.play(AnimationGroup(
             tensor_o1.uncreate(
@@ -200,7 +199,7 @@ class MainScene(ThreeDScene):
                 anim=ShrinkToCenter,
                 gargs={'run_time': wt},
             ),
-            card_o1.remove_summary(),
+            card_o1.shrink_summary(),
             lag_ratio=0.5,
             run_time=wt,
         ))
@@ -226,7 +225,7 @@ class MainScene(ThreeDScene):
             run_time=wt*0.5,
         ))
 
-        # pop create an output copy
+        # pop recreate output tensor
         tensor_o1.restore()
         self.play(AnimationGroup(
             AnimationGroup(
@@ -255,25 +254,25 @@ class MainScene(ThreeDScene):
                 direction=IN,
                 anim=ShrinkToCenter,
             ),
-            card_o1.remove_summary(),
+            card_o1.shrink_summary(),
             lag_ratio=0.5,
             run_time=wt,
         ))
 
-        # remove first input
+        # remove input 1
         self.play(AnimationGroup(
             tensor_i1.uncreate(
                 style='beam',
                 direction=IN,
                 anim=ShrinkToCenter,
             ),
-            card_i1.remove_summary(),
+            card_i1.shrink_summary(),
             lag_ratio=0.5,
             run_time=wt,
         ))
         self.wait(wt)
 
-        # introduce unmatched input
+        # create unmatched input
         self.play(AnimationGroup(
             tensor_i3.create(
                 style='beam',
@@ -303,7 +302,7 @@ class MainScene(ThreeDScene):
                 for mob in tensor_i2.mobs),
                 lag_ratio=0.0,
             ),
-            card_module.suggest_failure(),
+            card_m.suggest_failure(),
             lag_ratio=0.0,
             run_time=wt*0.5,
         ))
@@ -329,8 +328,8 @@ class MainScene(ThreeDScene):
                 anim=Unwrite,
                 gargs={},
             ),
-            card_i1.remove_summary(),
-            card_i2.remove_summary(),
+            card_i1.shrink_summary(),
+            card_i2.shrink_summary(),
             lag_ratio=0.0,
             run_time=wt,
         ))

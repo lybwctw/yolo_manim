@@ -9,33 +9,9 @@ from utils.constants_3d import *
 from utils.info_card import *
 
 # ------------- info card ---------------------
-IC_HEAD = 'BottleNeck'
-IC_PARAMS = {
-    'c1': UNKNOWN,
-    'c2': UNKNOWN,
-    'shortcut': UNKNOWN,
-    'g': UNKNOWN,
-    'k': UNKNOWN,
-    'e': UNKNOWN,
-}
-IC_IGNORES = [
-]
-IC_HEAD_CONFIG = {}
-IC_FRAME_CONFIG = {
-    'fill_color': PURE_BLUE,
-}
-IC_COMMON_CONFIG = {}
-IC_IGNORE_CONFIG = {}
-
-def create_ic_Bottleneck():
-    """Create empty InfoCard.
-    """
-    return InfoCard(
-        head=IC_HEAD,
-        params=IC_PARAMS,
-        ignores=IC_IGNORES,
-        head_config=IC_HEAD_CONFIG,
-        frame_config=IC_FRAME_CONFIG,
-        common_config=IC_COMMON_CONFIG,
-        ignore_config=IC_IGNORE_CONFIG,
-    )
+# 'c1': UNKNOWN,
+# 'c2': UNKNOWN,
+# 'shortcut': UNKNOWN,
+# 'g': UNKNOWN,
+# 'k': UNKNOWN,
+# 'e': UNKNOWN,

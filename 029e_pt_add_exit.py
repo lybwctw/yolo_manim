@@ -1,15 +1,11 @@
 from manim import *
 
-from utils.info_card import InfoCard
-from utils.show_shape_3d import ShowShape3D, HideShape3D
-from utils.mtensor import MTensor_3D
 from utils.general import *
+from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-import torch
-
-wt = 1.0
+wt = 0.5
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -19,11 +15,11 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # cards
-        cards, card_list = import_mobs('029a')
+        cards, card_modules = import_mobs('029a')
         (
             card_i1,
             card_i2,
-            card_module,
+            card_m,
             card_o1,
         ) = cards
 
@@ -39,11 +35,13 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         self.play(AnimationGroup(
-            card_i1.animate.set_y(CARD_INIT_UP),
-            card_i2.animate.set_y(CARD_INIT_UP),
-            card_o1.animate.set_y(CARD_INIT_DOWN),
-            card_list.animate.restore(),
+            detach_to_ref(card_i1, UP),
+            detach_to_ref(card_i2, UP),
+            detach_to_ref(card_o1, DOWN),
             lag_ratio=0.0,
             run_time=wt,
         ))
+        self.play(card_modules.animate(
+            run_time=wt,
+        ).restore())
         self.wait(wt)

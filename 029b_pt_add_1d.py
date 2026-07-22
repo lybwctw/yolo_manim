@@ -1,9 +1,8 @@
 from manim import *
 
-from utils.info_card import InfoCard
-from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.mtensor import MTensor_1D
 from utils.general import *
+from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
@@ -25,13 +24,13 @@ class MainScene(ThreeDScene):
         (
             card_i1,
             card_i2,
-            card_module,
+            card_m,
             card_o1,
         ) = cards
 
-        # arrays
-        t_i1 = np.random.randn(9)
-        t_i2 = np.random.randn(9)
+        # raw tensors
+        t_i1 = torch.randn(9)
+        t_i2 = torch.randn(9)
         t_o1 = t_i1 + t_i2
 
         # tensor mobs
@@ -49,7 +48,7 @@ class MainScene(ThreeDScene):
         ).shift(DOWN*TENSOR_VGAP_1D)
         VGroup(tensor_i1, tensor_i2, tensor_o1).center()
 
-        # add initial mobs
+        # show initial mobs
         self.set_camera_orientation(
             **VIEW_COMPUTE,
         )
@@ -82,8 +81,8 @@ class MainScene(ThreeDScene):
 
         # create card summaries
         self.play(AnimationGroup(
-            card_i1.expand_summary(summary=shape_str(t_i1)),
-            card_i2.expand_summary(summary=shape_str(t_i2)),
+            card_i1.expand_summary(summary=t2s(t_i1)),
+            card_i2.expand_summary(summary=t2s(t_i2)),
             lag_ratio=0.8,
             run_time=wt,
         ))
@@ -115,7 +114,7 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # loop into the last output
+        # loop into last output
         self.play(AnimationGroup(
             tensor_i1.highlight_loop(
                 masks=masks_in[1:],
@@ -148,7 +147,7 @@ class MainScene(ThreeDScene):
 
         # show output card shape
         self.play(card_o1.expand_summary(
-            summary=shape_str(t_o1),
+            summary=t2s(t_o1),
             run_time=wt,
         ))
         self.wait(wt)
@@ -180,11 +179,11 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # remove card summaries
+        # shrink card summaries
         self.play(AnimationGroup(
-            card_i1.remove_summary(),
-            card_i2.remove_summary(),
-            card_o1.remove_summary(),
+            card_i1.shrink_summary(),
+            card_i2.shrink_summary(),
+            card_o1.shrink_summary(),
             lag_ratio=0.0,
             run_time=wt,
         ))

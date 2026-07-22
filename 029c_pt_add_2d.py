@@ -1,9 +1,8 @@
 from manim import *
 
-from utils.info_card import InfoCard
-from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.mtensor import MTensor_2D
 from utils.general import *
+from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
@@ -26,13 +25,13 @@ class MainScene(ThreeDScene):
         (
             card_i1,
             card_i2,
-            card_module,
+            card_m,
             card_o1,
         ) = cards
 
-        # arrays
-        t_i1 = np.random.randn(4,5)
-        t_i2 = np.random.randn(4,5)
+        # raw tensors
+        t_i1 = torch.randn(4,5)
+        t_i2 = torch.randn(4,5)
         t_o1 = t_i1 + t_i2
 
         # tensor mobs
@@ -62,7 +61,7 @@ class MainScene(ThreeDScene):
             UP,
         )
 
-        # add initial mobs
+        # show initial mobs
         self.set_camera_orientation(
             **VIEW_COMPUTE,
         )
@@ -95,8 +94,8 @@ class MainScene(ThreeDScene):
 
         # create card summaries
         self.play(AnimationGroup(
-            card_i1.expand_summary(summary=shape_str(t_i1)),
-            card_i2.expand_summary(summary=shape_str(t_i2)),
+            card_i1.expand_summary(summary=t2s(t_i1)),
+            card_i2.expand_summary(summary=t2s(t_i2)),
             lag_ratio=0.8,
             run_time=wt,
         ))
@@ -114,7 +113,7 @@ class MainScene(ThreeDScene):
         h, w = t_i1.shape
         masks_in = np.eye(h*w, dtype=bool).reshape(h*w, h, w)
 
-        # pause in the first inputs
+        # focus on first inputs
         self.play(AnimationGroup(
             tensor_i1.highlight(masks_in[0]),
             tensor_i2.highlight(masks_in[0]),
@@ -122,14 +121,14 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # generate the first output
+        # generate first output
         self.play(GrowFromCenter(
             tensor_o1[0,0],
             rate_func=rate_functions.ease_out_back,
             run_time=wt,
         ))
 
-        # loop into the last output
+        # loop into last output
         self.play(AnimationGroup(
             tensor_i1.highlight_loop(
                 masks=masks_in[1:],
@@ -162,7 +161,7 @@ class MainScene(ThreeDScene):
 
         # show output card shape
         self.play(card_o1.expand_summary(
-            summary=shape_str(t_o1),
+            summary=t2s(t_o1),
             run_time=wt,
         ))
         self.wait(wt)
@@ -194,11 +193,11 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # remove card summaries
+        # shrink card summaries
         self.play(AnimationGroup(
-            card_i1.remove_summary(),
-            card_i2.remove_summary(),
-            card_o1.remove_summary(),
+            card_i1.shrink_summary(),
+            card_i2.shrink_summary(),
+            card_o1.shrink_summary(),
             lag_ratio=0.0,
             run_time=wt,
         ))

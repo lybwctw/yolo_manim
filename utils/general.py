@@ -189,9 +189,3 @@ def t2s(
     if shape[-2] == ',':
         shape = shape[:-2] + ')'
     return shape
-def t2n(
-    tensor: torch.Tensor,
-) -> np.ndarray:
-    """From torch tensor to numpy array.
-    """
-    return tensor.numpy()

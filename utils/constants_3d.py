@@ -90,12 +90,3 @@ BIG_4D_CONFIG = {
     'square_config': {},
     'decimal_config': {},
 }
-
-# info card related
-CARD_FADE_VALUE = 0.8
-CARD_OUT_OFFSET = 2.0
-CARD_CENTER_Y = 0.0
-CARD_EDGE_BUFF = 0.3
-CARD_GAP = 0.2
-CARD_INIT_UP = 7.0
-CARD_INIT_DOWN = -7.0

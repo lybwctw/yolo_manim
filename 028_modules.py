@@ -1,27 +1,9 @@
 from manim import *
 
-from utils.info_card import InfoCard
-from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.general import export_mobs
+from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
-
-from modules.pt_add import create_ic_add
-from modules.pt_split import create_ic_split
-from modules.pt_cat import create_ic_cat
-from modules.pt_Conv2d import create_ic_Conv2d
-from modules.pt_MaxPool2d import create_ic_MaxPool2d
-from modules.pt_activations import create_ic_Sigmoid, create_ic_ReLU, create_ic_SiLU, create_ic_Softmax
-from modules.pt_Linear import create_ic_Linear
-from modules.pt_BatchNorm2d import create_ic_BatchNorm2d
-
-from modules.ut_Conv import create_ic_Conv
-from modules.ut_Bottleneck import create_ic_Bottleneck
-from modules.ut_C2f import create_ic_C2f
-from modules.ut_SPPF import create_ic_SPPF
-from modules.ut_Detect import create_ic_Detect
-
-import torch
 
 wt = 1.0
 class MainScene(ThreeDScene):
@@ -33,31 +15,32 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # pytorch module cards
-        ic_add = create_ic_add()
-        ic_split = create_ic_split()
-        ic_cat = create_ic_cat()
-        ic_Conv2d = create_ic_Conv2d()
-        ic_MaxPool2d = create_ic_MaxPool2d()
-        ic_Sigmoid = create_ic_Sigmoid()
-        ic_ReLU = create_ic_ReLU()
-        ic_SiLU = create_ic_SiLU()
-        ic_Softmax = create_ic_Softmax()
-        ic_Linear = create_ic_Linear()
-        ic_BatchNorm2d = create_ic_BatchNorm2d()
+        ic_add = InfoCard('add', frame_config={'fill_color': TEAL})
+        ic_split = InfoCard('split', frame_config={'fill_color': TEAL})
+        ic_cat = InfoCard('cat', frame_config={'fill_color': TEAL})
+        ic_Conv2d = InfoCard('Conv2d', frame_config={'fill_color': ORANGE})
+        ic_MaxPool2d = InfoCard('MaxPool2d', frame_config={'fill_color': ORANGE})
+        ic_Upsample = InfoCard('Upsample', frame_config={'fill_color': ORANGE})
+        ic_Sigmoid = InfoCard('Sigmoid', frame_config={'fill_color': ORANGE})
+        ic_ReLU = InfoCard('ReLU', frame_config={'fill_color': ORANGE})
+        ic_SiLU = InfoCard('SiLU', frame_config={'fill_color': ORANGE})
+        ic_Softmax = InfoCard('Softmax', frame_config={'fill_color': ORANGE})
+        ic_Linear = InfoCard('Linear', frame_config={'fill_color': ORANGE})
+        ic_BatchNorm2d = InfoCard('BatchNorm2d', frame_config={'fill_color': ORANGE})
 
         # ultralytics module cards
-        ic_Conv = create_ic_Conv()
-        ic_Bottleneck = create_ic_Bottleneck()
-        ic_C2f = create_ic_C2f()
-        ic_SPPF = create_ic_SPPF()
-        ic_Detect = create_ic_Detect()
+        ic_Conv = InfoCard('Conv', frame_config={'fill_color': PURE_BLUE})
+        ic_Bottleneck = InfoCard('Bottleneck', frame_config={'fill_color': PURE_BLUE})
+        ic_C2f = InfoCard('C2f', frame_config={'fill_color': PURE_BLUE})
+        ic_SPPF = InfoCard('SPPF', frame_config={'fill_color': PURE_BLUE})
+        ic_Detect = InfoCard('Detect', frame_config={'fill_color': PURE_BLUE})
 
         # arrange cards into three groups
         ics_m = VGroup(
             ic_add, ic_split, ic_cat,
         ).arrange(RIGHT)
         ics_t = VGroup(
-            ic_Conv2d, ic_MaxPool2d, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_Linear, ic_BatchNorm2d,
+            ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_Linear, ic_BatchNorm2d,
         ).arrange(RIGHT)
         ics_u = VGroup(
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
@@ -68,7 +51,7 @@ class MainScene(ThreeDScene):
 
         ics_all = VGroup(
             ic_add, ic_split, ic_cat,
-            ic_Conv2d, ic_MaxPool2d, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_Linear, ic_BatchNorm2d,
+            ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_Linear, ic_BatchNorm2d,
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
         )
 
@@ -79,14 +62,15 @@ class MainScene(ThreeDScene):
                 rate_func=rate_functions.ease_out_back,
             ) for card in ics_all),
             lag_ratio=0.0,
-            run_time=0.5,
+            run_time=wt,
         ))
         self.wait()
 
         # into left
         self.play(ics_all.animate(
             lag_ratio=0.0,
-            run_time=0.5,
+            run_time=wt,
+            rate_func=rate_functions.exponential_decay,
         ).arrange(
             DOWN,
             buff=0.1,

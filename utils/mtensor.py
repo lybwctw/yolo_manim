@@ -7,6 +7,7 @@ import itertools
 import random
 from enum import Enum
 import numpy as np
+import torch
 
 from manim.utils.rate_functions import ease_in_quart
 
@@ -125,7 +126,7 @@ class MTensorGeneral(VMobject):
         self,
         objs: list | None = None,
         mobs: VGroup | None = None,
-        array: np.ndarray | None = None,
+        array: torch.Tensor | np.ndarray | None = None,
         mode: str = 'cube',
         size: float = 0.5,
         padding: float = 0.1,
@@ -134,7 +135,7 @@ class MTensorGeneral(VMobject):
         decimal_config: dict = {},
     ):
         super().__init__()
-        self.array = array
+        self.array = array.numpy() if isinstance(array, torch.Tensor) else array
         self.shape = array.shape
         self.ndim = array.ndim
         self.size = size
@@ -293,7 +294,7 @@ class MTensorGeneral(VMobject):
     
     def update_values(
         self,
-        values: np.ndarray,
+        values: torch.Tensor | np.ndarray,
         aargs: dict = {},
     ) -> Animation:
         """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -301,7 +302,7 @@ class MTensorGeneral(VMobject):
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         """
         assert self.mode == 'card', "update_value only works in 'card' mode"
-        self.array = values
+        self.array = values.numpy() if isinstance(values, torch.Tensor) else values
 
         anims = AnimationGroup(
             *(self.objs[*idxs].update_value(
