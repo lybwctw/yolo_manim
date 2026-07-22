@@ -144,7 +144,7 @@ class InfoCard(VMobject):
                 lag_ratio=0.0,
             ),
             AnimationGroup(
-                *(Create(line) for line in self.line_mobs),
+                *(Write(line, fixed=True) for line in self.line_mobs),
                 lag_ratio=0.3,
             ),
             **aargs,
@@ -318,8 +318,13 @@ class InfoCard(VMobject):
         ref += ((idx+1)*self.buff_height + (idx+0.5)*self.line_height) * DOWN
         mob.attach_to_point(ref)
     
-class Demo(Scene):
+class Demo(ThreeDScene):
     def construct(self):
+        self.set_camera_orientation(
+            phi=60*DEGREES,
+            theta=-75*DEGREES,
+        )
+
         card = InfoCard(
             'test',
             params={
@@ -328,8 +333,10 @@ class Demo(Scene):
                 'third': 3,
             },
         )
-        self.play(Write(card))
-        self.wait()
+        self.add_fixed_in_frame_mobjects(card)
+
+        # self.play(Write(card, fixed=True))
+        # self.wait()
 
         self.play(card.expand_params(
             run_time=1.0,
