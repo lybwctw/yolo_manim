@@ -6,7 +6,7 @@ from manim import *
 from utils.aligned_text import AlignedText
 from utils.loop import Loop
 
-UNKNOWN = '???'
+UNKNOWN = '?'
 
 # arrange constants
 CARD_EDGE_BUFF = 0.3
@@ -137,7 +137,7 @@ class InfoCard(VMobject):
                 lag_ratio=0.0,
             ),
             AnimationGroup(
-                *(Write(line, fixed=True) for line in self.line_mobs),
+                *(Create(line, fixed=True) for line in self.line_mobs),
                 lag_ratio=0.3,
             ),
             **aargs,
@@ -161,8 +161,8 @@ class InfoCard(VMobject):
             self.value_objs[name] = value_mob
 
             anims.append(AnimationGroup(
-                Unwrite(value_mob_old),
-                Write(value_mob, fixed=True),
+                Uncreate(value_mob_old),
+                Create(value_mob, fixed=True),
                 lag_ratio=0.0,
             ))
         
@@ -246,7 +246,7 @@ class InfoCard(VMobject):
         self.smob = smob
         return Succession(
             Transform(self.frame_mob, rect1),
-            Write(self.smob, fixed=True),
+            Create(self.smob, fixed=True),
             **aargs,
         )
 
@@ -271,8 +271,8 @@ class InfoCard(VMobject):
         return Succession(
             Transform(self.frame_mob, rect1),
             AnimationGroup(
-                Unwrite(smob_old),
-                Write(self.smob, fixed=True),
+                Uncreate(smob_old),
+                Create(self.smob, fixed=True),
                 lag_ratio=0.0,
             ),
             **aargs,
@@ -292,7 +292,7 @@ class InfoCard(VMobject):
         rect1.align_to(self.frame_mob, LEFT)
 
         return Succession(
-            Unwrite(smob),
+            Uncreate(smob),
             Transform(self.frame_mob, rect1),
             **aargs,
         )

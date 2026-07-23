@@ -160,30 +160,19 @@ class MainScene(ThreeDScene):
         # ************************************************************
         # remove tensors 
         self.play(AnimationGroup(
-            tensor_i1.uncreate(
+            *(tmob.uncreate(
                 direction=RIGHT,
                 anim=ShrinkToCenter,
                 gargs={'lag_ratio': 0.5},
-            ),
-            tensor_i2.uncreate(
-                direction=RIGHT,
-                anim=ShrinkToCenter,
-                gargs={'lag_ratio': 0.5},
-            ),
-            tensor_o1.uncreate(
-                direction=RIGHT,
-                anim=ShrinkToCenter,
-                gargs={'lag_ratio': 0.5},
-            ),
+            ) for tmob in [tensor_i1, tensor_i2, tensor_o1]),
             lag_ratio=0.0,
             run_time=wt,
         ))
 
         # shrink card summaries
         self.play(AnimationGroup(
-            card_i1.shrink_summary(),
-            card_i2.shrink_summary(),
-            card_o1.shrink_summary(),
+            *(cmob.shrink_summary()
+              for cmob in [card_i1, card_i2, card_o1]),
             lag_ratio=0.0,
             run_time=wt,
         ))

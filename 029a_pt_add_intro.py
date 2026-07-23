@@ -37,11 +37,6 @@ class MainScene(ThreeDScene):
         # ************************************************************
         cards_module.save_state()
 
-        # fade
-        # self.play(cards_other.animate(
-        #     run_time=wt,
-        # ).fade(CARD_FADE_VALUE))
-
         # exit and focus
         self.play(AnimationGroup(
             cards_other.animate.set_x(CARD_EXIT_X),
