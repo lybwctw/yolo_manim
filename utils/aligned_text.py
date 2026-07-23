@@ -3,7 +3,7 @@ from manim import *
 DEFAULT_TEXT_CONFIG = {
     'font': 'JetBrains Mono',
     'font_size': 32,
-    'disable_ligatures': True,
+    # 'disable_ligatures': True,
 }
 
 class AlignedText(VMobject):

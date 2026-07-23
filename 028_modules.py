@@ -73,7 +73,7 @@ class MainScene(ThreeDScene):
             rate_func=rate_functions.exponential_decay,
         ).arrange(
             DOWN,
-            buff=0.1,
+            buff=CARD_VGAP,
             aligned_edge=LEFT,
         ).to_edge(
             LEFT,

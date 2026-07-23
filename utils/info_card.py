@@ -10,7 +10,7 @@ UNKNOWN = '???'
 
 # arrange constants
 CARD_EDGE_BUFF = 0.3
-CARD_VGAP = 0.2
+CARD_VGAP = 0.1
 CARD_FOCUS_Y = 0.0
 CARD_FADE_VALUE = 0.8
 CARD_HIDE_Y = config['frame_height']/2 + 2
@@ -205,7 +205,9 @@ class InfoCard(VMobject):
             head_mob_new, 0, rect2,
         )
         
+        ManimBanner
         line_mobs = self.line_mobs
+        self.remove(line_mobs)
         del self.line_mobs
         del self.name_objs
         del self.value_objs

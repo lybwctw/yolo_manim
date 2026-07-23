@@ -61,7 +61,7 @@ class MainScene(ThreeDScene):
             params=MODULE_PARAMS,
             run_time=wt,
         ))
-        self.wait(wt)
+        card_focus.add(card_focus.line_mobs)    # FIXME: quick fix
 
         # introduce intput/output
         self.play(AnimationGroup(

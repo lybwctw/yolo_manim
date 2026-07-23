@@ -5,7 +5,7 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-wt = 0.5
+wt = 1.0
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -38,15 +38,15 @@ class MainScene(ThreeDScene):
         cards_module.save_state()
 
         # fade
-        self.play(cards_other.animate(
-            run_time=wt,
-        ).fade(CARD_FADE_VALUE))
+        # self.play(cards_other.animate(
+        #     run_time=wt,
+        # ).fade(CARD_FADE_VALUE))
 
         # exit and focus
         self.play(AnimationGroup(
             cards_other.animate.set_x(CARD_EXIT_X),
             card_focus.animate.set_y(CARD_FOCUS_Y),
-            lag_ratio=0.0,
+            lag_ratio=0.5,
             run_time=wt,
         ))
 
@@ -59,7 +59,7 @@ class MainScene(ThreeDScene):
             attach_to_ref(card_o1, card_focus, DOWN,
                 rate_func=rate_functions.exponential_decay),
             lag_ratio=0.0,
-            run_time=wt*2,
+            run_time=wt,
         ))
         self.wait(wt)
 
