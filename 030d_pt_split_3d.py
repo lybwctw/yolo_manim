@@ -309,12 +309,12 @@ class MainScene(ThreeDScene):
         tensor_os.target[1].next_to(
             tensor_os.target[0],
             DOWN,
-            buff=TENSOR_VGAP_3D,
+            buff=TENSOR_VGAP_3D*0.5,
         )
         tensor_os.target[2].next_to(
             tensor_os.target[1],
             DOWN,
-            buff=TENSOR_VGAP_3D,
+            buff=TENSOR_VGAP_3D*0.5,
         )
         self.play(MoveToTarget(
             tensor_os,
