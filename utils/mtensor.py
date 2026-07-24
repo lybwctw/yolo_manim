@@ -130,6 +130,7 @@ class MTensorGeneral(VMobject):
         mode: str = 'cube',
         size: float = 0.5,
         padding: float = 0.1,
+        z_style: str | None = None,
         cube_config: dict = {},
         square_config: dict = {},
         decimal_config: dict = {},
@@ -144,11 +145,12 @@ class MTensorGeneral(VMobject):
         self.cube_config = {**DEFAULT_CUBE_CONFIG, **cube_config}
         self.square_config = {**DEFAULT_SQUARE_CONFIG, **square_config}
         self.decimal_config = {**DEFAULT_DECIMAL_CONFIG, **decimal_config}
+        # self.z_style = z_style
 
         self.hl_state = np.full(self.shape, True, dtype=bool)
 
         if objs is None and mobs is None:
-            objs, mobs = self.create_mobs()
+            objs, mobs = self.create_mobs(z_style)
         self.objs = objs
         self.mobs = mobs
         self.add(self.mobs)
@@ -419,6 +421,7 @@ class MTensor_2D(MTensorGeneral):
 
     def create_mobs(
         self,
+        z_style: str | None = None,
     ) -> tuple:
         objs = np.empty(self.shape, dtype=object)
         step = self.size + self.padding
@@ -429,9 +432,14 @@ class MTensor_2D(MTensorGeneral):
         ys = [DOWN * i * step for i in range(h)]
 
         for i, j in np.ndindex(self.shape):
+            if z_style == 'erect':
+                z_index = -i * w - j
+            else:
+                z_index = i * w - j
+
             cube = self.make_cube(
                 self.array[i, j],
-                i * w - j,       # z_index
+                z_index,
             )
             cube.shift(xs[j] + ys[i])
             # cube.set_z_index((self.shape[0] - i) * self.shape[1] + (self.shape[1] - j))
