@@ -323,6 +323,7 @@ class MTensor_1D(MTensorGeneral):
     
     def create_mobs(
         self,
+        z_style: str | None = None,
     ) -> tuple:
         objs = np.empty(self.shape, dtype=object)
         step = self.size + self.padding
@@ -333,7 +334,6 @@ class MTensor_1D(MTensorGeneral):
                 self.shape[0] - i,      # z_index
             )
             cube.shift(RIGHT * i * step)
-            # cube.set_z_index(self.shape[0] - i)   # NOTE: ChangeDecimalToValue issue
             objs[i] = cube
 
         mobs = VGroup(*objs.flat).center()
@@ -433,7 +433,7 @@ class MTensor_2D(MTensorGeneral):
 
         for i, j in np.ndindex(self.shape):
             if z_style == 'erect':
-                z_index = -i * w - j
+                z_index = (h-i) * w - j
             else:
                 z_index = i * w - j
 
@@ -447,31 +447,36 @@ class MTensor_2D(MTensorGeneral):
 
         mobs = VGroup(*objs.flat).center()
         return objs, mobs
-    
-    def get_rows(
+
+    def get_layers(
         self,
         direction=DOWN,
     ) -> VGroup:
         direction = direction.astype(np.int32)
         h, w = self.shape
-        vgs = VGroup(self[i,:] for i in range(h))
-        if direction[1] > 0:        # UP
-            vgs = vgs[::-1]
+        if direction[0] != 0:
+            vgs = VGroup(self[:,j] for j in range(w))
+            vgs = vgs[::direction[0]]
+        elif direction[1] != 0:
+            vgs = VGroup(self[i,:] for i in range(h))
+            vgs = vgs[::-direction[1]]
         return vgs
-    
-    def get_cols(
+
+    def get_beams(
         self,
         direction=RIGHT,
     ) -> VGroup:
         direction = direction.astype(np.int32)
         h, w = self.shape
-        vgs = VGroup(self[:,j] for j in range(w))
-        if direction[0] < 0:        # LEFT
-            vgs = vgs[::-1]
+        if direction[0] != 0:
+            vgs = VGroup(self[i,::direction[0]] for i in range(h))
+        elif direction[1] != 0:
+            vgs = VGroup(self[::-direction[1],j] for j in range(w))
         return vgs
 
     def switch_mode(
         self,
+        style: str = 'layer',
         direction: np.ndarray = DOWN,
         aargs: dict = {},
     ) -> Animation:
@@ -480,46 +485,74 @@ class MTensor_2D(MTensorGeneral):
         elif self.mode == 'cube':
             self.mode = 'card'
 
-        get_lines = self.get_cols if direction[0]!=0 else self.get_rows
-        lines = get_lines(direction=direction)
-        anims = AnimationGroup(
-            *(AnimationGroup(
-                *(cube.switch_mode() for cube in line),
+        if style == 'layer':
+            layers = self.get_layers(direction=direction)
+            anims = Succession(
+                *(AnimationGroup(
+                    *(cube.switch_mode() for cube in layer),
+                    lag_ratio=0.0,
+                ) for layer in layers),
+                rate_func=smooth,
+                **aargs,
+            )
+            return anims
+        elif style == 'beam':
+            beams = self.get_beams(direction=direction)
+            anims = AnimationGroup(
+                *(AnimationGroup(
+                    *(cube.switch_mode() for cube in beam),
+                    run_time=random.random()+1,
+                    lag_ratio=0.8,
+                    rate_func=smooth,
+                ) for beam in beams),
                 lag_ratio=0.0,
-            ) for line in lines),
-            lag_ratio=0.8,
-            rate_func=smooth,
-            **aargs
-        )
-        return anims
+                **aargs,
+            )
+            return anims
+
     
     def create(
         self,
+        style='layer',
         direction: np.ndarray = DOWN,
         anim=Create,
         aargs: dict = {},
         gargs: dict = {},
     ) -> AnimationGroup:
-        get_lines = self.get_cols if direction[0]!=0 else self.get_rows
-        lines = get_lines(direction=direction)
-        anims = Succession(
-            *(AnimationGroup(
-                *(anim(cube, **aargs) for cube in line),
+        if style == 'layer':
+            layers = self.get_layers(direction=direction)
+            anims = Succession(
+                *(AnimationGroup(
+                    *(anim(cube, **aargs) for cube in layer),
+                    lag_ratio=0.0,
+                ) for layer in layers),
+                rate_func=smooth,
+                **gargs,
+            )
+            return anims
+        if style == 'beam':
+            beams = self.get_beams(direction=direction)
+            anims = AnimationGroup(
+                *(Succession(
+                    *(anim(cube, **aargs) for cube in beam),
+                    run_time=random.random()+1,
+                    rate_func=smooth,
+                ) for beam in beams),
                 lag_ratio=0.0,
-            ) for line in lines),
-            rate_func=smooth,
-            **gargs
-        )
-        return anims
+                **gargs,
+            )
+            return anims
 
     def uncreate(
         self,
+        style='layer',
         direction: np.ndarray = DOWN,
         anim = Uncreate,
         aargs: dict = {},
         gargs: dict = {},
     ) -> AnimationGroup:
         anims = self.create(
+            style=style,
             direction=direction,
             anim=anim,
             aargs=aargs,
@@ -558,12 +591,12 @@ class MTensor_3D(MTensorGeneral):
     ):
         super().__init__(**kwargs)
 
-    # TODO: update 1d.. version like this, and make_cube into general
     def create_mobs(
         self,
         array: np.ndarray | None = None,
         reuse_objs: np.ndarray | None = None,
         offset: tuple = (0, 0, 0),
+        z_style: str | None = None,
         pad_cube_config: dict = {},
         pad_square_config: dict = {},
         pad_decimal_config: dict = {},
@@ -985,6 +1018,7 @@ class MTensor_4D(MTensorGeneral):
     
     def create_mobs(
         self,
+        z_style: str | None = None,
     ):
         objs = np.empty(self.shape, dtype=object)
         blocks = VGroup()
