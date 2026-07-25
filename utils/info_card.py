@@ -14,6 +14,7 @@ CARD_VGAP = 0.1
 CARD_FOCUS_Y = 0.0
 CARD_FADE_VALUE = 0.8
 CARD_HIDE_Y = config['frame_height']/2 + 2
+CARD_HIDE_X = config['frame_width']/2 + 2
 CARD_EXIT_X = -config['frame_width']/2 - 2
 
 # default configs
@@ -301,10 +302,16 @@ class InfoCard(VMobject):
         self,
         **aargs,
     ) -> Animation:
-        return self.frame_mob.animate(
-            rate_func=rate_functions.there_and_back,
-            **aargs,
-        ).set_fill(color=PURE_RED)
+        if hasattr(self, 'line_mobs'):  # expanded mode
+            return self.frame_mob.animate(
+                rate_func=rate_functions.there_and_back,
+                **aargs,
+            ).set_stroke(color=PURE_RED)
+        else:
+            return self.frame_mob.animate(
+                rate_func=rate_functions.there_and_back,
+                **aargs,
+            ).set_fill(color=PURE_RED)
     
     def attach_to_frame_index(
         self,
@@ -324,9 +331,11 @@ class InfoCard(VMobject):
         self,
         direction: np.ndarray = UP,
     ):
-        self.to_edge(LEFT, buff=CARD_EDGE_BUFF)
-        # self.set_y(direction[1]*(config['frame_height']/2)+2)
-        self.set_y(direction[1]*CARD_HIDE_Y)
+        if direction is LEFT:
+            self.set_x(-CARD_HIDE_X)
+        else:
+            self.to_edge(LEFT, buff=CARD_EDGE_BUFF)
+            self.set_y(direction[1]*CARD_HIDE_Y)
         return self
     
     @property
