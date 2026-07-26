@@ -42,7 +42,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # cards
@@ -55,7 +55,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'focus on current module',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         card_gallery.save_state()
@@ -80,7 +80,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init config and params',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # intro view
@@ -104,6 +104,7 @@ class MainScene(ThreeDScene):
             INIT_CONFIG,
             run_time=wt,
         ))
+        card_module.add(card_module.line_mobs)      # FIXME
 
         # params
         self.play(m_module.create(
@@ -122,7 +123,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'param shapes',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show shapes on weight (no bias)
@@ -193,16 +194,19 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # mobs = Group(card, m_module)
-        # export_mobs(__file__, mobs)     # NOTE, used by 029
+        # ************************************************************
+        self.next_section(
+            'prepare for computation',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # compute view
+        self.move_camera(
+            **VIEW_COMPUTE,
+            run_time=wt,
+        )
+        self.wait(wt)
 
-
-        # # export
-        # mobs = VGroup(card_module, card_gallery)     # NOTE: used by b/c/d/e...
-        # export_mobs(__file__, mobs)
-
-        # self.move_camera(
-        #     **VIEW_COMPUTE,
-        #     run_time=wt,
-        # )
-        # self.wait(wt)
+        # export
+        mobs = VGroup(card_module, m_module, card_gallery)     # NOTE: used by b/c/d/e...
+        export_mobs(__file__, mobs)
