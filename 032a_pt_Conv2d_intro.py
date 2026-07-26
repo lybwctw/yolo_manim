@@ -1,8 +1,8 @@
 from manim import *
 
-from utils.info_card import InfoCard
+from utils.general import import_mobs, export_mobs
 from utils.show_shape_3d import ShowShape3D, HideShape3D
-from utils.general import export_mobs
+from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
@@ -12,7 +12,19 @@ import torch
 
 # TODO: reference image
 
-PT_Conv2d_CONFIG = {
+EMPTY_CONFIG = {
+    'in_channels': UNKNOWN,
+    'out_channels': UNKNOWN,
+    'kernel_size': UNKNOWN,
+    'stride': UNKNOWN,
+    'padding': UNKNOWN,
+    'bias': UNKNOWN,
+    'dilation': UNKNOWN,
+    'groups': UNKNOWN,
+    'padding_mode': UNKNOWN,
+}
+
+INIT_CONFIG = {
     'in_channels': 6,
     'out_channels': 5,
     'kernel_size': 3,
@@ -24,40 +36,76 @@ PT_Conv2d_CONFIG = {
     'padding_mode': 'zeros',
 }
 
-wt = 1.0
+wt = 0.5
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
+        # cards
+        card_gallery = import_mobs('028')
+        card_module, cards_other = collect_idx_card(card_gallery, 3)
+
+        self.add_fixed_in_frame_mobjects(card_gallery)
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'focus on current module',
+            skip_animations=True,
+        )
+        # ************************************************************
+        card_gallery.save_state()
+
+        # focus
+        self.play(AnimationGroup(
+            cards_other.animate.set_x(CARD_EXIT_X),
+            card_module.animate.set_y(CARD_FOCUS_Y),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+
+        # expand empty
+        self.play(card_module.expand_params(
+            params=EMPTY_CONFIG,
+            run_time=wt,
+        ))
+        card_module.add(card_module.line_mobs)    # FIXME
+        self.wait(wt)
+
+
+        # ************************************************************
+        self.next_section(
+            'init config and params',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # intro view
         self.set_camera_orientation(
             **VIEW_INTRO,
         )
 
-        card = NameCard(
-            name='Conv2d',
-            params=PT_Conv2d_CONFIG,
-            levels=DEFAULT_PT_Conv2d_LEVELS,
-        )
-
+        # raw module
         t_module = torch.nn.Conv2d(
-            **PT_Conv2d_CONFIG,
+            **INIT_CONFIG,
         )
 
+        # mob module
         m_module = PT_Conv2d(
             module=t_module,
-            module_config=PT_Conv2d_CONFIG,
+            module_config=INIT_CONFIG,
         )
 
-        # ************************************************************
-        self.next_section(
-            'introduce module',
-            skip_animations=False,
-        )
-        # ************************************************************
+        # options
+        self.play(card_module.update_params(
+            INIT_CONFIG,
+            run_time=wt,
+        ))
+
+        # params
         self.play(m_module.create(
             style='beam',
             direction=OUT,
@@ -71,92 +119,71 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        self.move_camera(
-            **VIEW_COMPUTE,
-            run_time=wt,
-        )
-        self.wait(wt)
-
         # ************************************************************
         self.next_section(
-            'introduce name card',
-            skip_animations=False,
+            'param shapes',
+            skip_animations=True,
         )
         # ************************************************************
-        self.camera.add_fixed_in_frame_mobjects(card)
-        self.play(Create(
-            card,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # show shapes on weight (bias later)
+        # show shapes on weight (no bias)
         self.play(ShowShape3D(
             scene=self,
             mob=m_module.mobs_weight,
-            facing='right',
+            facing='left',
             aargs={
                 'lag_ratio': 0.5,
-                'run_time': wt,
+                'run_time': wt*4,
             },
         ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'highlight option and module mapping',
+            'config value vs param shapes',
             skip_animations=False,
         )
         # ************************************************************
-        # highlight out_channels and block dimension
-        op1 = card.value_mob('in_channels')
-        st1 = m_module.mobs_weight.shape_texts[1]
+        # out_channels vs block dimension
+        value_mob = card_module.value_objs['out_channels']
+        shape_mob = m_module.mobs_weight.shape_texts[0]
         self.play(AnimationGroup(
-            op1.animate(
+            *(AnimationGroup(mob.animate(
                 rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_color(PURE_RED),
-            st1.animate(
-                rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_color(PURE_RED),
+            ).scale(2.0).set_fill(color=PURE_RED))
+             for mob in [value_mob, shape_mob]),
             lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
 
         # highlight in_channels and layer dimension
-        op2 = card.value_mob('out_channels')
-        st2 = m_module.mobs_weight.shape_texts[0]
+        value_mob = card_module.value_objs['in_channels']
+        shape_mob = m_module.mobs_weight.shape_texts[1]
         self.play(AnimationGroup(
-            op2.animate(
+            *(AnimationGroup(mob.animate(
                 rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_color(PURE_RED),
-            st2.animate(
-                rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_color(PURE_RED),
+            ).scale(2.0).set_fill(color=PURE_RED))
+             for mob in [value_mob, shape_mob]),
             lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
 
-        # highlight kernel_size and w/h dimension
-        op3 = card.value_mob('kernel_size')
-        st3a = m_module.mobs_weight.shape_texts[2]
-        st3b = m_module.mobs_weight.shape_texts[3]
+        # highlight kernel_size and w/h dimensions
+        value_mob = card_module.value_objs['kernel_size']
+        shape_mob1 = m_module.mobs_weight.shape_texts[2]
+        shape_mob2 = m_module.mobs_weight.shape_texts[3]
         self.play(AnimationGroup(
-            op3.animate(
+            *(AnimationGroup(mob.animate(
                 rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_color(PURE_RED),
-            st3a.animate(
-                rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_color(PURE_RED),
-            st3b.animate(
-                rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_color(PURE_RED),
+            ).scale(2.0).set_fill(color=PURE_RED))
+             for mob in [value_mob, shape_mob1, shape_mob2]),
             lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
 
+        # hide shapes on weights
         self.play(HideShape3D(
             mob=m_module.mobs_weight,
             aargs={
@@ -166,5 +193,16 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        mobs = Group(card, m_module)
-        export_mobs(__file__, mobs)     # NOTE, used by 029
+        # mobs = Group(card, m_module)
+        # export_mobs(__file__, mobs)     # NOTE, used by 029
+
+
+        # # export
+        # mobs = VGroup(card_module, card_gallery)     # NOTE: used by b/c/d/e...
+        # export_mobs(__file__, mobs)
+
+        # self.move_camera(
+        #     **VIEW_COMPUTE,
+        #     run_time=wt,
+        # )
+        # self.wait(wt)

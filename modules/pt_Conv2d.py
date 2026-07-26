@@ -10,7 +10,7 @@ from utils.info_card import *
 
 import numpy as np
 
-# ------------- info card ---------------------
+# ----------------- config --------------------
 # 'in_channels': UNKNOWN,
 # 'out_channels': UNKNOWN,
 # 'kernel_size': UNKNOWN,
@@ -20,10 +20,10 @@ import numpy as np
 # 'dilation': UNKNOWN,
 # 'groups': UNKNOWN,
 # 'padding_mode': UNKNOWN,
+# ---------------------------------------------
 
-DEFAULT_WEIGHT_CONFIG = BIG_4D_CONFIG
-
-DEFAULT_BIAS_CONFIG = BIG_1D_CONFIG
+DEFAULT_WEIGHT_CONFIG = SMALL_4D_CUBE_CONFIG
+DEFAULT_BIAS_CONFIG = SMALL_1D_CUBE_CONFIG
 
 class PT_Conv2d(VMobject):
     def __init__(

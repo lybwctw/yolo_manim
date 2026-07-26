@@ -48,6 +48,7 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         card_focus.add(card_focus.line_mobs)    # FIXME
+        self.wait(wt)
 
         # export
         mobs = VGroup(card_focus, cards_module)     # NOTE: used by b/c/d/e...
