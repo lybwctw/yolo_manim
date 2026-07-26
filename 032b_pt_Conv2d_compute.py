@@ -19,7 +19,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load mobs and torch module
@@ -36,12 +36,12 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '(6,5,5) -[Conv2d]- (5,5,5)',
-            skip_animations=True,
+            '(6,4,7) -[Conv2d]- (5,4,7)',
+            skip_animations=False,
         )
         # ************************************************************
         # raw tensor
-        t_i1 = torch.randn(1, 6, 5, 5)
+        t_i1 = torch.randn(1, 6, 4, 7)
         t_o1 = torch_module(t_i1)
 
         # input tensor mob
