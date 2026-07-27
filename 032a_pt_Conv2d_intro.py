@@ -144,6 +144,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
+        # TODO: highlight whole line instead of value
         # out_channels vs block dimension
         value_mob = card_module.value_objs['out_channels']
         shape_mob = m_module.mobs_weight.shape_texts[0]

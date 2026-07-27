@@ -250,6 +250,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
+        # TODO: highlight whole line instead of value
         # shape of module weights
         self.play(ShowShape3D(
             scene=self,
