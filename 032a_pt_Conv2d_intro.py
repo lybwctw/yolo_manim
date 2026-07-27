@@ -148,9 +148,9 @@ class MainScene(ThreeDScene):
         value_mob = card_module.value_objs['out_channels']
         shape_mob = m_module.mobs_weight.shape_texts[0]
         self.play(AnimationGroup(
-            *(AnimationGroup(mob.animate(
+            *(mob.animate(
                 rate_func=rate_functions.there_and_back,
-            ).scale(2.0).set_fill(color=PURE_RED))
+            ).scale(2.0).set_fill(color=PURE_RED)
              for mob in [value_mob, shape_mob]),
             lag_ratio=0.0,
             run_time=wt,

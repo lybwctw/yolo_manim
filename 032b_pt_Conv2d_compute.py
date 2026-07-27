@@ -38,7 +38,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '(6,4,7) -[Conv2d]- (5,4,7)',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # raw tensor
@@ -75,33 +75,27 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # show input summary
-        # card_i1 = InfoCard('in_1').hide_to_corner(UP)
-        # self.add_fixed_in_frame_mobjects(card_i1)
-        # self.play(attach_to_ref(
-        #     card_i1,
-        #     card_module,
-        #     UP,
-        #     run_time=wt,
-        # ))
-        # self.play(card_i1.expand_summary(
-        #     t2s(t_i1.detach()[0]),
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # show input summary
+        card_i1 = InfoCard('in_1').hide_to_corner(UP)
+        self.add_fixed_in_frame_mobjects(card_i1)
+        self.play(attach_to_ref(
+            card_i1,
+            card_module,
+            UP,
+            run_time=wt,
+        ))
+        self.play(card_i1.expand_summary(
+            t2s(t_i1.detach()[0]),
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # FIXME: show compute output
-        # self.play(mob_o1.create(
-        #     style='beam',
-        #     direction=OUT,
-        #     anim=GrowFromCenter,
-        #     aargs={'rate_func': rate_functions.ease_out_back},
-        #     gargs={'run_time': wt},
-        # ))
-        # self.wait(wt)
-
-        # --------------  compute output ----------------
-        # pad
+        # ************************************************************
+        self.next_section(
+            'pad before compute',
+            skip_animations=True,
+        )
+        # ************************************************************
         self.play(mob_i1.pad(
             pad_width=(
                 0,
@@ -113,13 +107,18 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # TODO: switch mode to show exact pad value
+        # TODO: switch mode to show exact pad value?
 
-        layers_output = []
+        # ************************************************************
+        self.next_section(
+            'first compute in first layer',
+            skip_animations=True,
+        )
+        # ************************************************************
         mob_i1.prepare_for_highlight()
-        # for i in range(mob_o1.shape[0]):
+        mob_module.mobs_weight.prepare_for_highlight()
 
-        # first weights block
+        # highlight block
         self.play(mob_module.mobs_weight.highlight_block(
             direction=RIGHT,
             n=0,
@@ -128,7 +127,7 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # first input subblock
+        # highlight first input
         self.play(mob_i1.highlight(
             mob_i1.highlight_loop_conv2d_mask(
                 kernel_size=module_config['kernel_size'],
@@ -137,7 +136,7 @@ class MainScene(ThreeDScene):
 
         ))
 
-        # first output cube
+        # highlight first output
         self.play(GrowFromCenter(
             mob_o1[0][0],
             rate_func=rate_functions.ease_out_back,
@@ -145,91 +144,181 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # generate first output layer
-        # self.play(AnimationGroup(
-        #     mob_i1.highlight_loop_conv2d(
-        #         kernel_size=mob_module.module_config['kernel_size'],
-        #         stride=mob_module.module_config['stride'],
-        #         back=False,
-        #         rate_func=smooth,
-        #     ),
-        #     Succession(
-        #         *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
-        #         for mob in mob_o1[i]),
-        #         rate_func=smooth,
-        #     ),
-        #     lag_ratio=0.0,
-        #     run_time=5.0,
-        # ))
+        # ************************************************************
+        self.next_section(
+            'entire compute loop (skip first of first)',
+            skip_animations=True,
+        )
+        # ************************************************************
+        output_layers = []
+        i_masks = mob_i1.highlight_loop_conv2d_mask(
+            kernel_size=module_config['kernel_size'],
+            stride=module_config['stride'],
+        )
+        for blk_idx in range(mob_o1.shape[0]):
+            # highlight weights block
+            if blk_idx != 0:
+                self.play(mob_module.mobs_weight.highlight_block(
+                    direction=RIGHT,
+                    n=blk_idx,
+                    lag_ratio=0.0,
+                    run_time=wt,
+                ))
+                self.wait(wt)
 
-        # # fade current output layer, use highlight args
-        # if i != mob_o1.shape[0]-1:
-        #     layer = mob_o1[i].save_state()
-        #     self.play(AnimationGroup(
-        #         *(mob.animate.set_fill(
-        #             opacity=0.0,
-        #         ).set_stroke(
-        #             width=1.0,
-        #             opacity=0.05,
-        #         ) for mob in layer),
-        #         lag_ratio=0.0,
-        #         run_time=wt,
-        #     ))
-        #     # self.play(layer.animate(
-        #     #     run_time=wt,
-        #     # ).fade(0.9))
-        #     layers_output.append(layer)
-        # self.wait(wt)
+            # loop through inputs/outputs
+            o_mobs = mob_o1[blk_idx] if blk_idx != 0 else mob_o1[0][1:]
+            self.play(AnimationGroup(
+                mob_i1.highlight_loop(
+                    i_masks if blk_idx != 0 else i_masks[1:],
+                    back=False,
+                    rate_func=smooth,
+                ),
+                Succession(
+                    *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
+                      for mob in o_mobs),
+                    rate_func=smooth,
+                ),
+                lag_ratio=0.0,
+                run_time=wt,        # FIXME: use 5.0
+            ))
+            self.wait(wt)
 
-        # -----------------------------------------------
+            # fade current output layer
+            if blk_idx != mob_o1.shape[0]-1:
+                layer = mob_o1[blk_idx].save_state()
+                self.play(AnimationGroup(
+                    *(mob.animate.set_fill(
+                        opacity=0.0,
+                    ).set_stroke(
+                        width=1.0,
+                        opacity=0.05,
+                    ) for mob in layer),
+                    lag_ratio=0.0,
+                    run_time=wt,
+                ))
+                output_layers.append(layer)
 
-        # # show output summary
-        # card_o1 = InfoCard('out_1').hide_to_corner(DOWN)
-        # self.add_fixed_in_frame_mobjects(card_o1)
-        # self.play(attach_to_ref(
-        #     card_o1,
-        #     card_module,
-        #     DOWN,
-        #     run_time=wt,
-        # ))
-        # self.play(card_o1.expand_summary(
-        #     t2s(t_o1.detach()[0]),
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # unfade output layers
+        self.play(AnimationGroup(
+            *(layer.animate.restore()
+              for layer in output_layers[::-1]),
+            lag_ratio=0.5,
+            rate_func=smooth,
+            run_time=wt,
+        ))
 
-        # # ************************************************************
-        # self.next_section(
-        #     'shape relationships',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # shape of module weights
-        # self.play(ShowShape3D(
-        #     scene=self,
-        #     mob=mob_module.mobs_weight,
-        #     facing='right',
-        #     aargs={
-        #         'lag_ratio': 0.5,
-        #         'run_time': wt*4,
-        #     },
-        # ))
-        # self.wait(wt)
+        # unfade module blocks
+        self.play(mob_module.mobs_weight.highlight(
+            run_time=wt,
+        ))
 
-        # # shape of input/output tensor
-        # self.play(AnimationGroup(
-        #     ShowShape3D(
-        #         scene=self,
-        #         mob=mob_i1,
-        #         facing='right',
-        #         aargs={'lag_ratio': 0.5},
-        #     ),
-        #     ShowShape3D(
-        #         scene=self,
-        #         mob=mob_o1,
-        #         facing='right',
-        #         aargs={'lag_ratio': 0.5},
-        #     ),
-        #     run_time=wt*4,
-        # ))
-        # self.wait(wt)
+        # unfade input tensor
+        self.play(mob_i1.highlight(
+            run_time=wt,
+        ))
+
+        # unpad input tensor
+        self.play(mob_i1.unpad(
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'output summary',
+            skip_animations=True,
+        )
+        # ************************************************************
+        card_o1 = InfoCard('out_1').hide_to_corner(DOWN)
+        self.add_fixed_in_frame_mobjects(card_o1)
+        self.play(attach_to_ref(
+            card_o1,
+            card_module,
+            DOWN,
+            run_time=wt,
+        ))
+        self.play(card_o1.expand_summary(
+            t2s(t_o1.detach()[0]),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'shapes on input/weights/output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # shape of module weights
+        self.play(ShowShape3D(
+            scene=self,
+            mob=mob_module.mobs_weight,
+            facing='right',
+            aargs={
+                'lag_ratio': 0.5,
+                'run_time': wt*4,
+            },
+        ))
+        self.wait(wt)
+
+        # shape of input/output tensor
+        self.play(AnimationGroup(
+            ShowShape3D(
+                scene=self,
+                mob=mob_i1,
+                facing='right',
+                aargs={'lag_ratio': 0.5},
+            ),
+            ShowShape3D(
+                scene=self,
+                mob=mob_o1,
+                facing='right',
+                aargs={'lag_ratio': 0.5},
+            ),
+            run_time=wt*4,
+        ))
+        self.wait(wt)
+
+        # in_channels(weights layer dim) and input
+        value_mob = card_module.value_objs['in_channels']
+        shape_mob_m = mob_module.mobs_weight.shape_texts[1]
+        shape_mob_i = mob_i1.shape_texts[0]
+        self.play(AnimationGroup(
+            *(mob.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_fill(color=PURE_RED)
+             for mob in [value_mob, shape_mob_m, shape_mob_i]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # out_channels(weights block dim) and output
+        value_mob = card_module.value_objs['out_channels']
+        shape_mob_m = mob_module.mobs_weight.shape_texts[0]
+        shape_mob_o = mob_o1.shape_texts[0]
+        self.play(AnimationGroup(
+            *(mob.animate(
+                rate_func=rate_functions.there_and_back,
+            ).scale(2.0).set_fill(color=PURE_RED)
+             for mob in [value_mob, shape_mob_m, shape_mob_o]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # hide shapes
+        self.play(AnimationGroup(
+            *(HideShape3D(
+                mob=mob,
+                aargs={'lag_ratio': 0.5},
+            ) for mob in [
+                mob_i1,
+                mob_module.mobs_weight,
+                mob_o1,
+            ]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
