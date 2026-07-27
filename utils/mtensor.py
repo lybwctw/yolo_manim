@@ -203,10 +203,6 @@ class MTensorGeneral(VMobject):
         mask: np.ndarray | None = None,
         **aargs,
     ) -> Animation:
-        # # save state for all mobs
-        # for mob in self.mobs:
-        #     mob.save_state()
-
         if mask is None:
             mask = np.full(self.shape, True, dtype=bool)
         
@@ -236,24 +232,19 @@ class MTensorGeneral(VMobject):
             **aargs,
         )
     
-    def prepare_highlight_loop(self):
-        """Should be called before any highlight operation.
-           Assert that NO movement before getting back.
+    def prepare_for_highlight(self):
+        """SHOULD be called before highlight animations.
+           Assert that NO movement happens before getting back.
         """
-        # save state for all mobs
         for mob in self.mobs:
             mob.save_state()
     
     def highlight_loop(
         self,
-        masks: list | np.ndarray,            # a list of highlight states
-        back: bool = True,      # back to initial state or not
+        masks: list | np.ndarray,
+        back: bool = True,              # back to initial state or not
         **aargs,
     ) -> AnimationGroup:
-        # # save state for all mobs
-        # for mob in self.mobs:
-        #     mob.save_state()
-
         # convert 1st dim into list
         if isinstance(masks, np.ndarray):
             masks = list(masks)
@@ -424,9 +415,8 @@ class MTensor_2D(MTensorGeneral):
         z_style: str | None = None,
     ) -> tuple:
         objs = np.empty(self.shape, dtype=object)
-        step = self.size + self.padding
-
         h, w = self.shape
+        step = self.size + self.padding
 
         xs = [RIGHT * j * step for j in range(w)]
         ys = [DOWN * i * step for i in range(h)]
@@ -442,7 +432,6 @@ class MTensor_2D(MTensorGeneral):
                 z_index,
             )
             cube.shift(xs[j] + ys[i])
-            # cube.set_z_index((self.shape[0] - i) * self.shape[1] + (self.shape[1] - j))
             objs[i, j] = cube
 
         mobs = VGroup(*objs.flat).center()
@@ -592,6 +581,29 @@ class MTensor_3D(MTensorGeneral):
         super().__init__(**kwargs)
 
     def create_mobs(
+        self,
+        z_style: str | None = None,
+    ) -> tuple:
+        objs = np.empty(self.shape, dtype=object)
+        c, h, w = self.shape
+        step = self.size + self.padding
+
+        xs = [RIGHT * k * step for k in range(w)]
+        ys = [DOWN * j * step for j in range(h)]
+        zs = [IN * i * step for i in range(c)]
+
+        for i, j, k in np.ndindex(self.shape):
+            cube = self.make_cube(
+                self.array[i, j, k],
+                (c-i)*h+j,          # z_index
+            )
+            cube.shift(xs[k] + ys[j] + zs[i])
+            objs[i, j, k] = cube
+        
+        mobs = VGroup(*objs.flat).center()
+        return objs, mobs
+
+    def create_mobs_padded(
         self,
         array: np.ndarray | None = None,
         reuse_objs: np.ndarray | None = None,
@@ -755,7 +767,7 @@ class MTensor_3D(MTensorGeneral):
 
         if style == 'layer':
             layers = self.get_layers(direction=direction)
-            anims = Succession(
+            anims = AnimationGroup(
                 *(AnimationGroup(
                     *(cube.switch_mode() for cube in layer),
                     lag_ratio=0.0,
@@ -875,116 +887,111 @@ class MTensor_3D(MTensorGeneral):
     #     anims = self.highlight(mask=mask, **aargs)
     #     return anims
 
-    def _normalize_padding(self, padding) -> tuple:
-        if isinstance(padding, (int, np.integer)):
-            pad = int(padding)
-            return pad, pad, pad, pad
-        padding = tuple(int(p) for p in padding)
-        if len(padding) == 2:
-            return padding[0], padding[0], padding[1], padding[1]
-        if len(padding) == 4:
-            return padding
-        raise ValueError("padding must be int, 2-tuple, or 4-tuple")
-
     def pad(
         self,
-        padding: int = 1,
+        pad_width: list | tuple,    # (c, h, w)
         pad_value: float = 0.0,
-        aargs: dict = {},
+        **aargs,
     ) -> AnimationGroup:
-        top, bottom, left, right = self._normalize_padding(padding)
+        pad_c, pad_h, pad_w = pad_width
 
-        self.pad_state = {
-            'array': self.array.copy(),
-            'shape': self.shape,
-            'ndim': self.ndim,
-            'objs': self.objs.copy(),
-            'mobs': self.mobs,
-            'hl_state': self.hl_state.copy(),
-        }
+        mask_pad = ~np.pad(
+            np.ones(self.shape, dtype=bool),
+            ((pad_c, pad_c), (pad_h, pad_h), (pad_w, pad_w)),
+        )
+        mask_orig = (
+            slice(pad_c, pad_c+self.shape[0]),
+            slice(pad_h, pad_h+self.shape[1]),
+            slice(pad_w, pad_w+self.shape[2]),
+        )
 
-        padded_array = np.pad(
+        array_new = np.pad(
             self.array,
-            ((0, 0), (top, bottom), (left, right)),
+            ((pad_c, pad_c), (pad_h, pad_h), (pad_w, pad_w)),
             mode='constant',
             constant_values=pad_value,
         )
-        objs, mobs = self.create_mobs(
-            array=padded_array,
-            reuse_objs=self.objs,
-            offset=(0, top, left),
-            pad_cube_config={
-                'stroke_color': TEAL,
-                'stroke_width': 0.6,
-                'fill_opacity': 0.5,
-            },
-            pad_square_config={
-                'stroke_color': GRAY,
-                'stroke_width': 1.0,
-                'fill_opacity': 0.5,
-            },
-            pad_decimal_config={},
-        )
+        c_new, h_new, w_new = array_new.shape
+        objs_new = np.empty(array_new.shape, dtype=object)
+        step = self.size + self.padding
 
-        old_mobs = self.mobs
-        self.remove(old_mobs)
-        self.array = padded_array
-        self.shape = padded_array.shape
-        self.ndim = padded_array.ndim
-        self.objs = objs
-        self.mobs = mobs
-        self.hl_state = np.full(self.shape, True, dtype=bool)
+        orig_center = self.objs[0,0,0].get_center()
+
+        xs = [RIGHT * k * step for k in range(w_new)]
+        ys = [DOWN * j * step for j in range(h_new)]
+        zs = [IN * i * step for i in range(c_new)]
+        for i, j, k in np.ndindex(array_new.shape):
+            if not mask_pad[i,j,k]:
+                mob = self.objs[i-pad_c, j-pad_h, k-pad_w]
+                mob.set_z_index((c_new-i)*h_new+j)
+                mob.center()
+            else:
+                mob = self.make_cube(
+                    array_new[i,j,k],
+                    (c_new-i)*h_new+j,      # z_index
+                    cube_config={**self.cube_config, 'stroke_color': TEAL},
+                    square_config={**self.square_config},
+                    decimal_config={**self.decimal_config},
+                ).center()
+            mob.shift(xs[k] + ys[j] + zs[i])
+            objs_new[i,j,k] = mob
+
+        mobs_new = VGroup(*objs_new.flat)
+        offset = orig_center - objs_new[pad_c,pad_h,pad_w].get_center()
+        mobs_new.shift(offset)
+
+        self.mask_pad = mask_pad
+        self.mask_orig = mask_orig
+        self.array = array_new
+        self.objs = objs_new
+        self.mobs = mobs_new
+        self.shape = self.array.shape
+        self.ndim = self.array.ndim
+        self.hl_state = np.ones(self.shape, dtype=bool)
         self.add(self.mobs)
-
-        # NOTE: resave state
-        for mob in self.mobs:
-            mob.save_state()
-
-        new_cubes = [cube for cube in objs.flat if cube is not None and cube not in old_mobs]
-        self.pad_state['mobs_pad'] = new_cubes
 
         return AnimationGroup(
             *(GrowFromCenter(
-                cube,
+                mob,
                 rate_func=rate_functions.ease_out_back,
-            ) for cube in new_cubes),
+            ) for mob in VGroup(*self.objs[self.mask_pad])),
             **aargs,
         )
 
     def unpad(
         self,
-        aargs: dict = {},
+        **aargs,
     ) -> AnimationGroup:
-        assert hasattr(self, 'pad_state'), 'not padded yet'
+        assert hasattr(self, 'mask_pad')
+        assert hasattr(self, 'mask_orig')
 
-        old_mobs = self.mobs
-        self.remove(old_mobs)
+        self.remove(self.mobs)
 
-        self.array = self.pad_state['array']
-        self.shape = self.pad_state['shape']
-        self.ndim = self.pad_state['ndim']
-        self.objs = self.pad_state['objs']
-        self.mobs = self.pad_state['mobs']
-        self.hl_state = self.pad_state['hl_state']
+        pmobs = VGroup(*self.objs[self.mask_pad])
+        self.array = self.array[self.mask_orig]     # use slice
+        self.shape = self.array.shape
+        self.ndim = self.array.ndim
+        self.objs = self.objs[self.mask_orig]
+        self.mobs = VGroup(*self.objs.flat)
+        self.hl_state = np.ones(self.shape, dtype=bool)
+
         self.add(self.mobs)
 
-        mobs_pad = self.pad_state['mobs_pad']
-        del self.pad_state
+        del self.mask_pad
+        del self.mask_orig
 
         return AnimationGroup(
             *(ShrinkToCenter(
                 cube,
-            ) for cube in mobs_pad),
+            ) for cube in pmobs),
             **aargs,
         )
-    
-    def highlight_loop_conv2d(
+
+    def highlight_loop_conv2d_mask(
         self,
-        kernel_size: int = 3,
-        stride: int = 1,
-        back: bool = True,
-        **aargs,
-    ) -> AnimationGroup:
+        kernel_size,
+        stride,
+    ) -> list:
         c, h, w = self.shape
         out_h = (h - kernel_size) // stride + 1
         out_w = (w - kernel_size) // stride + 1
@@ -999,6 +1006,19 @@ class MTensor_3D(MTensorGeneral):
 
                 mask[:, in_i_start:in_i_end, in_j_start:in_j_end] = True
                 masks.append(mask)
+        return masks
+    
+    def highlight_loop_conv2d(
+        self,
+        kernel_size: int = 3,
+        stride: int = 1,
+        back: bool = True,
+        **aargs,
+    ) -> AnimationGroup:
+        masks = self.highlight_loop_conv2d_mask(
+            kernel_size=kernel_size,
+            stride=stride,
+        )
         return self.highlight_loop(
             masks=masks,
             back=back,
