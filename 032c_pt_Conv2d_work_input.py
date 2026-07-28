@@ -1,0 +1,187 @@
+from manim import *
+
+from utils.general import import_mobs, export_mobs
+from utils.show_shape_3d import ShowShape3D, HideShape3D
+from utils.mtensor import MTensor_3D
+from utils.info_card import *
+from utils.constants_3d import *
+from utils.constants import *
+from utils.general import *
+import torch
+
+TENSOR_VGAP_3D = 2.0
+# TENSOR_HGAP_3D = 1.0
+# TENSOR_EGAP_3D = 1.0
+
+wt = 0.5
+class MainScene(ThreeDScene):
+    def construct(self):
+        # ************************************************************
+        self.next_section(
+            'init all mobs',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # load mobs and torch module
+        (
+            card_i1,
+            card_module,
+            card_o1,
+            mob_module,
+        ) = import_mobs('032b')
+        torch_module = mob_module.module
+        module_config = mob_module.module_config
+
+        # show initial mobs
+        self.set_camera_orientation(
+            **VIEW_COMPUTE,
+        )
+        self.add_fixed_in_frame_mobjects(
+            card_i1,
+            card_module,
+            card_o1,
+        )
+        self.add(mob_module)
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '(6,5,9) -[Conv2d]- (5,5,9)',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # raw tensor
+        t_i1 = torch.randn(1, 6, 5, 9)
+        t_o1 = torch_module(t_i1)
+
+        # input tensor mob
+        mob_i1 = MTensor_3D(
+            array=t_i1.detach()[0],
+            **SMALL_3D_CUBE_CONFIG,
+        ).next_to(
+            mob_module,
+            UP,
+            TENSOR_VGAP_3D,
+        )
+
+        # output tensor mob
+        mob_o1 = MTensor_3D(
+            array=t_o1.detach()[0],
+            **SMALL_3D_CUBE_CONFIG,
+        ).next_to(
+            mob_module,
+            DOWN,
+            TENSOR_VGAP_3D,
+        )
+
+        # show input tensor
+        self.play(mob_i1.create(
+            style='beam',
+            direction=OUT,
+            anim=GrowFromCenter,
+            aargs={'rate_func': rate_functions.ease_out_back},
+            gargs={'run_time': wt},
+        ))
+        self.wait(wt)
+
+        # show input summary
+        self.play(card_i1.expand_summary(
+            t2s(t_i1.detach()[0]),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'pad before compute',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(mob_i1.pad(
+            pad_width=(
+                0,
+                module_config['padding'],
+                module_config['padding'],
+            ),
+            pad_value=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'entire compute loop',
+            skip_animations=False,
+        )
+        # ************************************************************
+        mob_i1.prepare_for_highlight()
+        mob_module.mobs_weight.prepare_for_highlight()
+        output_layers = []
+
+        for blk_idx in range(mob_o1.shape[0]):
+            # highlight weights block
+            self.play(mob_module.mobs_weight.highlight_block(
+                direction=RIGHT,
+                n=blk_idx,
+                lag_ratio=0.0,
+                run_time=wt,
+            ))
+            self.wait(wt)
+
+            # loop through inputs/outputs
+            self.play(AnimationGroup(
+                mob_i1.highlight_loop_conv2d(
+                    kernel_size=module_config['kernel_size'],
+                    stride=module_config['stride'],
+                    back=False,
+                    rate_func=smooth,
+                ),
+                Succession(
+                    *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
+                      for mob in mob_o1[blk_idx]),
+                    rate_func=smooth,
+                ),
+                lag_ratio=0.0,
+                run_time=wt,        # FIXME: use 5.0
+            ))
+            self.wait(wt)
+
+            # fade current output layer
+            if blk_idx != mob_o1.shape[0]-1:
+                layer = mob_o1[blk_idx].save_state()
+                self.play(AnimationGroup(
+                    *(mob.animate.set_fill(
+                        opacity=0.0,
+                    ).set_stroke(
+                        width=1.0,
+                        opacity=0.05,
+                    ) for mob in layer),
+                    lag_ratio=0.0,
+                    run_time=wt,
+                ))
+                output_layers.append(layer)
+
+        # unfade output layers
+        self.play(AnimationGroup(
+            *(layer.animate.restore()
+              for layer in output_layers[::-1]),
+            lag_ratio=0.5,
+            rate_func=smooth,
+            run_time=wt,
+        ))
+
+        # unfade module blocks
+        self.play(mob_module.mobs_weight.highlight(
+            run_time=wt,
+        ))
+
+        # unfade input tensor
+        self.play(mob_i1.highlight(
+            run_time=wt,
+        ))
+
+        # unpad input tensor
+        self.play(mob_i1.unpad(
+            run_time=wt,
+        ))
+        self.wait(wt)

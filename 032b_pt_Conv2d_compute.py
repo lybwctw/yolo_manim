@@ -247,7 +247,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'shapes on input/weights/output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO: highlight whole line instead of value
@@ -323,3 +323,37 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'clean input/output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                tmob.uncreate(
+                    style='beam',
+                    direction=IN,
+                    anim=ShrinkToCenter,
+                    gargs={},
+                ),
+                cmob.shrink_summary(),
+                lag_ratio=0.5,
+            ) for tmob, cmob in zip(
+                [mob_i1, mob_o1],
+                [card_i1, card_o1],
+            )),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # export for next
+        mobs = VGroup(
+            card_i1,
+            card_module,
+            card_o1,
+            mob_module,
+        )
+        export_mobs(__file__, mobs)     # used by 032c
