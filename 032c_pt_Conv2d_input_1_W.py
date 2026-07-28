@@ -110,7 +110,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'entire compute loop',
+            'layer compute loop',
             skip_animations=False,
         )
         # ************************************************************
@@ -127,28 +127,21 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             ))
             self.wait(wt)
-
-            # loop through inputs/outputs
+            
+            # concise output layer generation
+            layer = mob_o1[blk_idx].save_state()
             self.play(AnimationGroup(
-                mob_i1.highlight_loop_conv2d(
-                    kernel_size=module_config['kernel_size'],
-                    stride=module_config['stride'],
-                    back=False,
-                    rate_func=smooth,
-                ),
-                Succession(
-                    *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
-                      for mob in mob_o1[blk_idx]),
-                    rate_func=smooth,
-                ),
+                *(GrowFromCenter(
+                    mob,
+                rate_func=rate_functions.ease_out_back)
+                for mob in layer),
                 lag_ratio=0.0,
-                run_time=wt,        # FIXME: use 5.0
+                run_time=wt
             ))
-            self.wait(wt)
+            # self.wait(wt)
 
             # fade current output layer
             if blk_idx != mob_o1.shape[0]-1:
-                layer = mob_o1[blk_idx].save_state()
                 self.play(AnimationGroup(
                     *(mob.animate.set_fill(
                         opacity=0.0,
@@ -175,13 +168,90 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # unfade input tensor
-        self.play(mob_i1.highlight(
-            run_time=wt,
-        ))
-
         # unpad input tensor
         self.play(mob_i1.unpad(
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'output summary',
+            skip_animations=True,
+        )
+        # ************************************************************
+        self.play(card_o1.expand_summary(
+            t2s(t_o1.detach()[0]),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'shapes on input/weights/output',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # show shapes
+        self.play(AnimationGroup(
+            ShowShape3D(
+                scene=self,
+                mob=mob_module.mobs_weight,
+                facing='right',
+                aargs={'lag_ratio': 0.5},
+            ),
+            ShowShape3D(
+                scene=self,
+                mob=mob_i1,
+                facing='right',
+                aargs={'lag_ratio': 0.5},
+            ),
+            ShowShape3D(
+                scene=self,
+                mob=mob_o1,
+                facing='right',
+                aargs={'lag_ratio': 0.5},
+            ),
+            run_time=wt*4,
+        ))
+        self.wait(wt)
+
+        # hide shapes
+        self.play(AnimationGroup(
+            *(HideShape3D(
+                mob=mob,
+                aargs={'lag_ratio': 0.5},
+            ) for mob in [
+                mob_i1,
+                mob_module.mobs_weight,
+                mob_o1,
+            ]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'clean input/output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                tmob.uncreate(
+                    style='beam',
+                    direction=IN,
+                    anim=ShrinkToCenter,
+                    gargs={},
+                ),
+                cmob.shrink_summary(),
+                lag_ratio=0.5,
+            ) for tmob, cmob in zip(
+                [mob_i1, mob_o1],
+                [card_i1, card_o1],
+            )),
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)

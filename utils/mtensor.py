@@ -136,7 +136,12 @@ class MTensorGeneral(VMobject):
         decimal_config: dict = {},
     ):
         super().__init__()
-        self.array = array.numpy() if isinstance(array, torch.Tensor) else array
+        if isinstance(array, torch.Tensor):
+            self.tensor = array
+            self.array = array.numpy()
+        else:
+            self.array = array
+        # self.array = array.numpy() if isinstance(array, torch.Tensor) else array
         self.shape = array.shape
         self.ndim = array.ndim
         self.size = size
