@@ -19,7 +19,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load mobs and torch module
@@ -46,12 +46,12 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '(4,5,6) -[Conv2d]- FAILURE',
-            skip_animations=True,
+            '(3,5,6) -[Conv2d]- FAILURE',
+            skip_animations=False,
         )
         # ************************************************************
         # raw tensor
-        t_i1 = torch.randn(1, 4, 5, 6)
+        t_i1 = torch.randn(1, 3, 5, 6)
 
         # input tensor mob
         mob_i1 = MTensor_3D(
@@ -83,7 +83,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'failed compute loop',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(

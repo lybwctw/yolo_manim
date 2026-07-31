@@ -35,7 +35,7 @@ class MainScene(ThreeDScene):
 
         # new module and mob
         module_config = {
-            'in_channels': 4,
+            'in_channels': 3,
             'out_channels': 5,
             'kernel_size': 3,
             'stride': 1,
@@ -84,10 +84,12 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # update with new params
+        # NOTE: assert that only in_channels changes
         self.play(card_module.update_params(
             params={'in_channels': module_config['in_channels']},
             run_time=wt,
-        ))  # assert that only in_channels changes
+        ))
+        card_module.add(card_module.line_mobs)    # FIXME
 
         # show new weights
         self.play(mob_module.mobs_weight.create(

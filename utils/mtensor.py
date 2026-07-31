@@ -5,121 +5,11 @@ sys.path.append('..')
 from manim import *
 import itertools
 import random
-from enum import Enum
 import numpy as np
 import torch
 
-from manim.utils.rate_functions import ease_in_quart
-
-DEFAULT_CUBE_CONFIG = {
-    'side_length': 0.3,
-    'fill_color': BLACK,
-    'fill_opacity': 0.8,
-    'stroke_width': 2,
-    'stroke_opacity': 1.0,
-    'stroke_color': WHITE,
-}
-
-DEFAULT_SQUARE_CONFIG = {
-    'side_length': 0.3,
-    'fill_color': BLACK,
-    'fill_opacity': 0.8,
-    'stroke_width': 2,
-    'stroke_opacity': 1.0,
-    'stroke_color': WHITE,
-}
-
-DEFAULT_DECIMAL_CONFIG = {
-    'num_decimal_places': 2,
-    'mob_class': MathTex,
-    'include_sign': True,
-    'font_size': 10,
-    'fill_opacity': 1.0,
-}
-
-class MCube(VMobject):
-    def __init__(
-        self,
-        value: float = 0.0,
-        size: float = 0.5,
-        mode: str = 'card',
-        z_index: float = 0,
-        cube_config: dict = {},
-        square_config: dict = {},
-        decimal_config: dict = {},
-    ):
-        super().__init__()
-        self.value = value
-        self.cube_config = { **DEFAULT_CUBE_CONFIG, **cube_config }
-        self.square_config = { **DEFAULT_SQUARE_CONFIG, **square_config }
-        self.decimal_config = { **DEFAULT_DECIMAL_CONFIG, **decimal_config }
-
-        self.mode = mode
-        self.z_index = z_index
-
-        if mode == 'card':
-            square_config = {**self.square_config, 'side_length': size}
-            self.mob = VGroup(
-                Square(**square_config),
-                DecimalNumber(self.value, **self.decimal_config),
-            )
-            self.mob[0].set_z_index(self.z_index)
-            self.mob[1].set_z_index(self.z_index+0.1)
-        elif mode == 'cube':
-            cube_config = {**self.cube_config, 'side_length': size}
-            self.mob = Cube(**cube_config)
-            self.mob.set_z_index(self.z_index)
-
-        self.add(self.mob)
-    
-    def switch_mode(
-        self,
-        **aargs,
-    ) -> Animation:
-        # new mob according to current mode
-        if self.mode == 'card':
-            self.cube_config = {**self.cube_config, 'side_length': self.mob.width}
-            new_mob = Cube(**self.cube_config)
-            new_mob[0].set_z_index(self.z_index)
-            new_mob[1].set_z_index(self.z_index+0.1)
-            self.mode = 'cube'
-        elif self.mode == 'cube':
-            self.square_config = {**self.square_config, 'side_length': self.mob.width}
-            new_mob = VGroup(
-                Square(**self.square_config),
-                DecimalNumber(self.value, **self.decimal_config),
-            )
-            new_mob.set_z_index(self.z_index)
-            self.mode = 'card'
-        new_mob.move_to(self.mob)
-
-        # remove current mob
-        anims = []
-        anims.append(Unwrite(self.mob))
-        self.remove(self.mob)
-
-        # add new mob
-        self.mob = new_mob
-        self.add(self.mob)
-        anims.append(Write(self.mob))
-        return AnimationGroup(
-            *anims,
-            **aargs,
-        )
-    
-    def update_value(
-        self,
-        value: float = 0.0,
-        **aargs,
-    ) -> Animation:
-        assert self.mode == 'card', "update_value only works in 'card' mode"
-        self.value = value
-
-        return ChangeDecimalToValue(
-            self.mob[1],
-            self.value,
-            **aargs,
-        )
+from utils.mcube import MCube
+from utils.constants_3d import *
 
 class MTensorGeneral(VMobject):
     def __init__(
@@ -128,9 +18,10 @@ class MTensorGeneral(VMobject):
         mobs: VGroup | None = None,
         array: torch.Tensor | np.ndarray | None = None,
         mode: str = 'cube',
-        size: float = 0.5,
-        padding: float = 0.1,
         z_style: str | None = None,
+        side_length: float = 0.5,
+        font_size: float = 18,
+        padding: float = 0.0,
         cube_config: dict = {},
         square_config: dict = {},
         decimal_config: dict = {},
@@ -141,28 +32,23 @@ class MTensorGeneral(VMobject):
             self.array = array.numpy()
         else:
             self.array = array
-        # self.array = array.numpy() if isinstance(array, torch.Tensor) else array
-        self.shape = array.shape
-        self.ndim = array.ndim
-        self.size = size
         self.mode = mode
-        self.padding = padding
-        self.cube_config = {**DEFAULT_CUBE_CONFIG, **cube_config}
-        self.square_config = {**DEFAULT_SQUARE_CONFIG, **square_config}
-        self.decimal_config = {**DEFAULT_DECIMAL_CONFIG, **decimal_config}
-        # self.z_style = z_style
+        self.z_style = z_style
 
-        self.hl_state = np.full(self.shape, True, dtype=bool)
+        self.side_length = side_length
+        self.font_size = font_size
+        self.padding = padding
+        self.cube_config = cube_config
+        self.square_config = square_config
+        self.decimal_config = decimal_config
+
+        self.hl_state = np.ones(self.shape, dtype=bool)
 
         if objs is None and mobs is None:
             objs, mobs = self.create_mobs(z_style)
         self.objs = objs
         self.mobs = mobs
         self.add(self.mobs)
-
-        # # NOTE: prepare for highlight loop
-        # for mob in self.mobs:
-        #     mob.save_state()
     
     def __getitem__(
         self,
@@ -176,40 +62,29 @@ class MTensorGeneral(VMobject):
     def make_cube(
         self,
         value,
-        z_index: float = 0,
+        z_index: float = 0.0,
         cube_config: dict = {},     # override internal
         square_config: dict = {},   # override internal
         decimal_config: dict = {},  # override internal
     ):
         return MCube(
             value=float(value),
-            size=self.size,
             mode=self.mode,
             z_index=z_index,
+            side_length=self.side_length,
+            font_size=self.font_size,
             cube_config={**self.cube_config, **cube_config},
             square_config={**self.square_config, **square_config},
             decimal_config={**self.decimal_config, **decimal_config},
         )
     
-    def create_mobs(self) -> tuple:
-        raise NotImplementedError("not implement")
-    
-    def switch_mode(self) -> Animation:
-        raise NotImplementedError("not implement")
-    
-    def create(self) -> Animation:
-        raise NotImplementedError("not implement")
-
-    def uncreate(self) -> Animation:
-        raise NotImplementedError("not implement")
-
     def highlight(
         self,
         mask: np.ndarray | None = None,
         **aargs,
     ) -> Animation:
         if mask is None:
-            mask = np.full(self.shape, True, dtype=bool)
+            mask = np.ones(self.shape, dtype=bool)
         
         mask_start = self.hl_state
         mask_end = mask
@@ -217,37 +92,20 @@ class MTensorGeneral(VMobject):
         mask_hl = ~mask_start & mask_end
         mask_dm = ~mask_end & mask_start
 
-        anims = []
-        for idxs in np.argwhere(mask_dm):
-            idxs = tuple(idxs.tolist())
-            anims.append(self[*idxs].animate.set_fill(
-                opacity=0.0,
-            ).set_stroke(
-                width=1.0,
-                opacity=0.05,
-            ))
-        for idxs in np.argwhere(mask_hl):
-            idxs = tuple(idxs.tolist())
-            anims.append(self[*idxs].animate.restore())
+        anims_hl = [mob.lightup() for mob in self[mask_hl]]
+        anims_dm = [mob.tarnish() for mob in self[mask_dm]]
 
         self.hl_state = mask
-
         return AnimationGroup(
-            *anims,
+            *anims_hl,
+            *anims_dm,
             **aargs,
         )
-    
-    def prepare_for_highlight(self):
-        """SHOULD be called before highlight animations.
-           Assert that NO movement happens before getting back.
-        """
-        for mob in self.mobs:
-            mob.save_state()
     
     def highlight_loop(
         self,
         masks: list | np.ndarray,
-        back: bool = True,              # back to initial state or not
+        back: bool = False,              # back to initial state or not
         **aargs,
     ) -> AnimationGroup:
         # convert 1st dim into list
@@ -265,20 +123,11 @@ class MTensorGeneral(VMobject):
         for start, end in zip(masks_start, masks_end):
             mask_hl = ~start & end
             mask_dm = ~end & start
-            anims = []
-            for idxs in np.argwhere(mask_dm):
-                idxs = tuple(idxs.tolist())
-                anims.append(self[*idxs].animate.set_fill(
-                    opacity=0.0,
-                ).set_stroke(
-                    width=1.0,
-                    opacity=0.05,
-                ))
-            for idxs in np.argwhere(mask_hl):
-                idxs = tuple(idxs.tolist())
-                anims.append(self[*idxs].animate.restore())
+            anims_hl = [mob.lightup() for mob in self[mask_hl]]
+            anims_dm = [mob.tarnish() for mob in self[mask_dm]]
             anims_loop.append(AnimationGroup(
-                *anims,
+                *anims_hl,
+                *anims_dm,
                 lag_ratio=0.0,  # highlight/fade at the same time
             ))
         
@@ -310,6 +159,14 @@ class MTensorGeneral(VMobject):
         )
         return anims
 
+    @property
+    def shape(self):
+        return self.array.shape
+
+    @property
+    def ndim(self):
+        return self.array.ndim
+
 class MTensor_1D(MTensorGeneral):
     def __init__(
         self,
@@ -322,12 +179,15 @@ class MTensor_1D(MTensorGeneral):
         z_style: str | None = None,
     ) -> tuple:
         objs = np.empty(self.shape, dtype=object)
-        step = self.size + self.padding
+        step = self.side_length + self.padding
+
+        w = self.shape[0]
 
         for i in range(self.shape[0]):
+            z_index = w - i
             cube = self.make_cube(
-                self.array[i],
-                self.shape[0] - i,      # z_index
+                value=self.array[i],
+                z_index=z_index,
             )
             cube.shift(RIGHT * i * step)
             objs[i] = cube
@@ -358,7 +218,6 @@ class MTensor_1D(MTensorGeneral):
         mobs = self.get_mobs(direction=direction)
         anims = AnimationGroup(
             *(cube.switch_mode() for cube in mobs),
-            lag_ratio=0.8,
             rate_func=smooth,
             **aargs,
         )
@@ -367,44 +226,49 @@ class MTensor_1D(MTensorGeneral):
     def create(
         self,
         direction: np.ndarray = RIGHT,
-        anim=Create,
+        anim: Animation = GrowFromCenter,
         aargs: dict = {},
-        gargs: dict = {},
     ) -> AnimationGroup:
         mobs = self.get_mobs(direction=direction)
+        if anim is GrowFromCenter:
+            rf = rate_functions.ease_out_back
+        elif anim is Create:
+            rf = smooth
+        else:
+            rf = smooth
+
         anims = AnimationGroup(
-            *(anim(cube, **aargs) for cube in mobs),
+            *(anim(cube, rate_func=rf) for cube in mobs),
             rate_func=smooth,
-            **gargs,
+            **aargs,
         )
+
         return anims
     
     def uncreate(
         self,
         direction: np.ndarray = RIGHT,
-        anim = Uncreate,
+        anim: Animation = ShrinkToCenter,
         aargs: dict = {},
-        gargs: dict = {},
     ) -> AnimationGroup:
         anims = self.create(
             direction=direction,
             anim=anim,
             aargs=aargs,
-            gargs=gargs,
         )
         return anims
     
-    def highlight_mob(
-        self,
-        direction = RIGHT,
-        n: int = 0,
-        **aargs,
-    ) -> Animation:
-        d = int(direction[0])
-        mask = np.full_like(self.hl_state, False, dtype=bool)
-        mask[d*n+(d-1)//2] = True
-        anims = self.highlight(mask=mask, **aargs)
-        return anims
+    # def highlight_mob(
+    #     self,
+    #     direction = RIGHT,
+    #     n: int = 0,
+    #     **aargs,
+    # ) -> Animation:
+    #     d = int(direction[0])
+    #     mask = np.full_like(self.hl_state, False, dtype=bool)
+    #     mask[d*n+(d-1)//2] = True
+    #     anims = self.highlight(mask=mask, **aargs)
+    #     return anims
 
 class MTensor_2D(MTensorGeneral):
     """Only layer animations are implemented.
@@ -1199,30 +1063,58 @@ class MTensor_4D(MTensorGeneral):
 
 class Demo1D(ThreeDScene):
     def construct(self) -> None:
-        self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
+        self.set_camera_orientation(
+            **VIEW_INTRO,
+        )
         tensor = MTensor_1D(
             array=np.random.randn(25),
             mode='cube',
-            size=0.3,
+            side_length=0.5,
+            font_size=18,
             padding=0.0,
         )
 
-        # self.add(tensor)
+        # self.play(tensor.create(
+        #     direction=LEFT,
+        #     aargs={'lag_ratio': 0.5, 'run_time': 1.0},
+        # ))
         # self.wait()
 
-        self.play(tensor.create(
-            direction=RIGHT,
-            anim=GrowFromCenter,
-            aargs={'rate_func': rate_functions.ease_out_back},
-            gargs={'run_time': 1.0},
+        mask = np.zeros(tensor.shape, dtype=bool)
+        mask[3] = True
+        mask[5] = True
+        mask[9] = True
+        mobs = tensor[mask]
+        self.play(AnimationGroup(
+            *(GrowFromCenter(mob) for mob in mobs),
+            lag_ratio=0.0,
+            run_time=1.0,
         ))
         self.wait()
 
-        self.play(tensor.switch_mode(
-            direction=RIGHT,
-            aargs={'run_time': 1.0},
-        ))
-        self.wait()
+        # self.move_camera(
+        #     **VIEW_COMPUTE,
+        #     run_time=1.0,
+        # )
+        # self.wait()
+
+        # self.play(tensor.switch_mode(
+        #     direction=RIGHT,
+        #     aargs={'lag_ratio': 0.5, 'run_time': 1.0},
+        # ))
+        # self.wait()
+
+        # # self.play(tensor.switch_mode(
+        # #     direction=LEFT,
+        # #     aargs={'lag_ratio': 0.5, 'run_time': 1.0},
+        # # ))
+        # # self.wait()
+
+        # self.play(tensor.uncreate(
+        #     direction=LEFT,
+        #     aargs={'lag_ratio': 0.5, 'run_time': 1.0},
+        # ))
+        # self.wait()
 
         # for mob in tensor.get_mobs():
         #     mob.save_state()
@@ -1242,20 +1134,19 @@ class Demo1D(ThreeDScene):
         # ))
         # self.wait()
 
-        self.move_camera(
-            phi=60*DEGREES,
-            theta=-135*DEGREES,
-            run_time=1.0,
-        )
-        self.wait()
+        # self.move_camera(
+        #     **VIEW_COMPUTE,
+        #     run_time=1.0,
+        # )
+        # self.wait()
 
-        self.play(tensor.uncreate(
-            direction=RIGHT,
-            anim=ShrinkToCenter,
-            aargs={},
-            gargs={'run_time': 1.0},
-        ))
-        self.wait()
+        # self.play(tensor.uncreate(
+        #     direction=RIGHT,
+        #     anim=ShrinkToCenter,
+        #     aargs={},
+        #     gargs={'run_time': 1.0},
+        # ))
+        # self.wait()
 
 class Demo2D(ThreeDScene):
     def construct(self):

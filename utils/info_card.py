@@ -172,6 +172,9 @@ class InfoCard(VMobject):
             for name in self.params
         )
 
+        # FIMXE: manual add for next scene
+        # self.add(self.line_mobs)
+
         target_width = max(self.line_mobs.width, self.head_width)
 
         rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
