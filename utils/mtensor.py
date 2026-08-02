@@ -167,13 +167,6 @@ class MTensorGeneral(VMobject):
         else:
             self.array = values
 
-        # anims = AnimationGroup(
-        #     *(self.objs[*idxs].update_value(
-        #         values[*idxs]
-        #     ) for idxs in np.ndindex(self.shape)),
-        #     **aargs,
-        # )
-
         anims = AnimationGroup(
             *(mob.update_value(value)
             for mob, value in zip(self.mobs, self.array.flat)),
