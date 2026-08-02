@@ -49,15 +49,6 @@ class MTensorGeneral(VMobject):
         self.objs = objs
         self.mobs = mobs
         self.add(self.mobs)
-    
-    def __getitem__(
-        self,
-        idx,
-    ) -> VMobject:
-        res = self.objs[idx]
-        if isinstance(res, MCube):
-            return res
-        return VGroup(*res.flat)
 
     def make_cube(
         self,
@@ -77,6 +68,27 @@ class MTensorGeneral(VMobject):
             square_config={**self.square_config, **square_config},
             decimal_config={**self.decimal_config, **decimal_config},
         )
+    
+    def __getitem__(
+        self,
+        idx,
+    ) -> VMobject:
+        res = self.objs[idx]
+        if isinstance(res, MCube):
+            return res
+        return VGroup(*res.flat)
+
+    def get_vmobs(
+        self,
+        masks: list | np.ndarray,
+    ) -> VGroup:
+        if isinstance(masks, np.ndarray):
+            masks = list(masks)
+
+        vmobs = VGroup(
+            self[mask] for mask in masks
+        )
+        return vmobs
     
     def highlight(
         self,
@@ -142,19 +154,29 @@ class MTensorGeneral(VMobject):
     def update_values(
         self,
         values: torch.Tensor | np.ndarray,
-        aargs: dict = {},
+        **aargs,
     ) -> Animation:
         """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         NOTE: update manim ChangeDecimalToValue source to sync z_index.
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         """
         assert self.mode == 'card', "update_value only works in 'card' mode"
-        self.array = values.numpy() if isinstance(values, torch.Tensor) else values
+        if isinstance(values, torch.Tensor):
+            self.tensor = values
+            self.array = values.numpy()
+        else:
+            self.array = values
+
+        # anims = AnimationGroup(
+        #     *(self.objs[*idxs].update_value(
+        #         values[*idxs]
+        #     ) for idxs in np.ndindex(self.shape)),
+        #     **aargs,
+        # )
 
         anims = AnimationGroup(
-            *(self.objs[*idxs].update_value(
-                values[*idxs]
-            ) for idxs in np.ndindex(self.shape)),
+            *(mob.update_value(value)
+            for mob, value in zip(self.mobs, self.array.flat)),
             **aargs,
         )
         return anims
@@ -1064,29 +1086,31 @@ class MTensor_4D(MTensorGeneral):
 class Demo1D(ThreeDScene):
     def construct(self) -> None:
         self.set_camera_orientation(
-            **VIEW_INTRO,
+            **VIEW_COMPUTE,
         )
         tensor = MTensor_1D(
-            array=np.random.randn(25),
+            array=np.random.randn(9),
             mode='cube',
             side_length=0.5,
             font_size=18,
             padding=0.0,
         )
 
-        # self.play(tensor.create(
-        #     direction=LEFT,
-        #     aargs={'lag_ratio': 0.5, 'run_time': 1.0},
-        # ))
-        # self.wait()
+        self.play(tensor.create(
+            direction=RIGHT,
+            aargs={'lag_ratio': 0.5, 'run_time': 1.0},
+        ))
+        self.wait()
 
-        mask = np.zeros(tensor.shape, dtype=bool)
-        mask[3] = True
-        mask[5] = True
-        mask[9] = True
-        mobs = tensor[mask]
-        self.play(AnimationGroup(
-            *(GrowFromCenter(mob) for mob in mobs),
+        self.play(tensor.switch_mode(
+            direction=RIGHT,
+            aargs={'lag_ratio': 0.5, 'run_time': 1.0},
+        ))
+        self.wait()
+
+        self.play(tensor.update_values(
+            # values=np.random.randn(9),
+            values=np.arange(9, dtype=float),
             lag_ratio=0.0,
             run_time=1.0,
         ))
@@ -1098,11 +1122,6 @@ class Demo1D(ThreeDScene):
         # )
         # self.wait()
 
-        # self.play(tensor.switch_mode(
-        #     direction=RIGHT,
-        #     aargs={'lag_ratio': 0.5, 'run_time': 1.0},
-        # ))
-        # self.wait()
 
         # # self.play(tensor.switch_mode(
         # #     direction=LEFT,
