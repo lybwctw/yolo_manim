@@ -18,7 +18,7 @@ class MTensorGeneral(VMobject):
         mobs: VGroup | None = None,
         array: torch.Tensor | np.ndarray | None = None,
         mode: str = 'cube',
-        z_style: str | None = None,
+        style: str | None = None,
         side_length: float = 0.5,
         font_size: float = 18,
         padding: float = 0.0,
@@ -33,7 +33,7 @@ class MTensorGeneral(VMobject):
         else:
             self.array = array
         self.mode = mode
-        self.z_style = z_style
+        self.style = style
 
         self.side_length = side_length
         self.font_size = font_size
@@ -45,7 +45,7 @@ class MTensorGeneral(VMobject):
         self.hl_state = np.ones(self.shape, dtype=bool)
 
         if objs is None and mobs is None:
-            objs, mobs = self.create_mobs(z_style)
+            objs, mobs = self.create_mobs(style)
         self.objs = objs
         self.mobs = mobs
         self.add(self.mobs)
@@ -78,15 +78,14 @@ class MTensorGeneral(VMobject):
             return res
         return VGroup(*res.flat)
 
-    def get_vmobs(
+    def get_vgs(
         self,
         masks: list | np.ndarray,
+        reverse: bool = False,
     ) -> VGroup:
-        if isinstance(masks, np.ndarray):
-            masks = list(masks)
-
+        step = -1 if reverse else 1
         vmobs = VGroup(
-            self[mask] for mask in masks
+            self[mask][::step] for mask in masks
         )
         return vmobs
     
@@ -188,10 +187,10 @@ class MTensor_1D(MTensorGeneral):
         **kwargs,
     ):
         super().__init__(**kwargs)
-    
+
     def create_mobs(
         self,
-        z_style: str | None = None,
+        style: str | None = None,
     ) -> tuple:
         objs = np.empty(self.shape, dtype=object)
         step = self.side_length + self.padding
@@ -210,106 +209,103 @@ class MTensor_1D(MTensorGeneral):
         mobs = VGroup(*objs.flat).center()
         return objs, mobs
     
-    def get_mobs(
-        self,
-        direction=RIGHT,
-    ) -> VGroup:
-        direction = direction.astype(np.int32)
-        vgs = self.mobs
-        if direction[0] < 0:        # LEFT
-            vgs = vgs[::-1]
-        return vgs
-    
-    def switch_mode(
-        self,
-        direction: np.ndarray = RIGHT,
-        aargs: dict = {},
-    ) -> Animation:
-        if self.mode == 'card':
-            self.mode = 'cube'
-        elif self.mode == 'cube':
-            self.mode = 'card'
-
-        mobs = self.get_mobs(direction=direction)
-        anims = AnimationGroup(
-            *(cube.switch_mode() for cube in mobs),
-            rate_func=smooth,
-            **aargs,
-        )
-        return anims
-    
-    def create(
-        self,
-        direction: np.ndarray = RIGHT,
-        anim: Animation = GrowFromCenter,
-        aargs: dict = {},
-    ) -> AnimationGroup:
-        mobs = self.get_mobs(direction=direction)
-        if anim is GrowFromCenter:
-            rf = rate_functions.ease_out_back
-        elif anim is Create:
-            rf = smooth
-        else:
-            rf = smooth
-
-        anims = AnimationGroup(
-            *(anim(cube, rate_func=rf) for cube in mobs),
-            rate_func=smooth,
-            **aargs,
-        )
-
-        return anims
-    
-    def uncreate(
-        self,
-        direction: np.ndarray = RIGHT,
-        anim: Animation = ShrinkToCenter,
-        aargs: dict = {},
-    ) -> AnimationGroup:
-        anims = self.create(
-            direction=direction,
-            anim=anim,
-            aargs=aargs,
-        )
-        return anims
-    
-    # def highlight_mob(
+    # def switch_mode(
     #     self,
-    #     direction = RIGHT,
-    #     n: int = 0,
-    #     **aargs,
+    #     direction: np.ndarray = RIGHT,
+    #     aargs: dict = {},
     # ) -> Animation:
-    #     d = int(direction[0])
-    #     mask = np.full_like(self.hl_state, False, dtype=bool)
-    #     mask[d*n+(d-1)//2] = True
-    #     anims = self.highlight(mask=mask, **aargs)
+    #     if self.mode == 'card':
+    #         self.mode = 'cube'
+    #     elif self.mode == 'cube':
+    #         self.mode = 'card'
+
+    #     mobs = self.get_mobs(direction=direction)
+    #     anims = AnimationGroup(
+    #         *(cube.switch_mode() for cube in mobs),
+    #         rate_func=smooth,
+    #         **aargs,
+    #     )
     #     return anims
+    
+    # def create(
+    #     self,
+    #     direction: np.ndarray = RIGHT,
+    #     anim: Animation = GrowFromCenter,
+    #     aargs: dict = {},
+    # ) -> AnimationGroup:
+    #     mobs = self.get_mobs(direction=direction)
+    #     if anim is GrowFromCenter:
+    #         rf = rate_functions.ease_out_back
+    #     elif anim is Create:
+    #         rf = smooth
+    #     else:
+    #         rf = smooth
+
+    #     anims = AnimationGroup(
+    #         *(anim(cube, rate_func=rf) for cube in mobs),
+    #         rate_func=smooth,
+    #         **aargs,
+    #     )
+
+    #     return anims
+    
+    # def uncreate(
+    #     self,
+    #     direction: np.ndarray = RIGHT,
+    #     anim: Animation = ShrinkToCenter,
+    #     aargs: dict = {},
+    # ) -> AnimationGroup:
+    #     anims = self.create(
+    #         direction=direction,
+    #         anim=anim,
+    #         aargs=aargs,
+    #     )
+    #     return anims
+    
+    # # def highlight_mob(
+    # #     self,
+    # #     direction = RIGHT,
+    # #     n: int = 0,
+    # #     **aargs,
+    # # ) -> Animation:
+    # #     d = int(direction[0])
+    # #     mask = np.full_like(self.hl_state, False, dtype=bool)
+    # #     mask[d*n+(d-1)//2] = True
+    # #     anims = self.highlight(mask=mask, **aargs)
+    # #     return anims
 
 class MTensor_2D(MTensorGeneral):
     """Only layer animations are implemented.
     """
     def __init__(
         self,
+        style: str = 'horizontal',
         **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__(
+            style=style,
+            **kwargs,
+        )
 
     def create_mobs(
         self,
-        z_style: str | None = None,
+        style: str = 'horizontal',
     ) -> tuple:
         objs = np.empty(self.shape, dtype=object)
         h, w = self.shape
-        step = self.size + self.padding
+        step = self.side_length + self.padding
 
         xs = [RIGHT * j * step for j in range(w)]
-        ys = [DOWN * i * step for i in range(h)]
+        if style == 'horizontal':
+            ys = [DOWN * i * step for i in range(h)]
+        elif style == 'erect':
+            ys = [IN * i * step for i in range(h)]
 
         for i, j in np.ndindex(self.shape):
-            if z_style == 'erect':
-                z_index = (h-i) * w - j
-            else:
+            if style == 'horizontal':
                 z_index = i * w - j
+            elif style == 'erect':
+                z_index = (h-i) * w - j
 
             cube = self.make_cube(
                 self.array[i, j],
@@ -321,141 +317,262 @@ class MTensor_2D(MTensorGeneral):
         mobs = VGroup(*objs.flat).center()
         return objs, mobs
 
-    def get_layers(
+    def get_rows(
         self,
-        direction=DOWN,
-    ) -> VGroup:
-        direction = direction.astype(np.int32)
-        h, w = self.shape
-        if direction[0] != 0:
-            vgs = VGroup(self[:,j] for j in range(w))
-            vgs = vgs[::direction[0]]
-        elif direction[1] != 0:
-            vgs = VGroup(self[i,:] for i in range(h))
-            vgs = vgs[::-direction[1]]
-        return vgs
-
-    def get_beams(
-        self,
-        direction=RIGHT,
-    ) -> VGroup:
-        direction = direction.astype(np.int32)
-        h, w = self.shape
-        if direction[0] != 0:
-            vgs = VGroup(self[i,::direction[0]] for i in range(h))
-        elif direction[1] != 0:
-            vgs = VGroup(self[::-direction[1],j] for j in range(w))
-        return vgs
-
-    def switch_mode(
-        self,
-        style: str = 'layer',
         direction: np.ndarray = DOWN,
-        aargs: dict = {},
-    ) -> Animation:
-        if self.mode == 'card':
-            self.mode = 'cube'
-        elif self.mode == 'cube':
-            self.mode = 'card'
+        reverse: bool = False,
+    ) -> np.ndarray:
+        """Return a 3D boolean mask array of shape (h, h, w)."""
+        h, w = self.shape
+        masks = np.eye(h, dtype=bool)[:, :, None].repeat(w, axis=2)
+        vgs = self.get_vgs(masks, reverse=reverse)
+        vgs = vgs[::-1] if np.array_equal(direction, UP) else vgs
+        return vgs
 
+    def get_cols(
+        self,
+        direction: np.ndarray = RIGHT,
+        reverse: bool = False,
+    ) -> np.ndarray:
+        """Return a 3D boolean mask array of shape (w, h, w)."""
+        h, w = self.shape
+        masks = np.eye(w, dtype=bool)[:, None, :].repeat(h, axis=1)
+        vgs = self.get_vgs(masks, reverse=reverse)
+        vgs = vgs[::-1] if np.array_equal(direction, LEFT) else vgs
+        return vgs
+
+    def loop_anims(
+        self,
+        style: str,
+        direction: np.ndarray,
+        anim: Animation,
+        aargs: dict = {},   # unit anim args
+        gargs: dict = {},   # run_time
+        **kwargs,           # _on_finish
+    ) -> Animation:
         if style == 'layer':
-            layers = self.get_layers(direction=direction)
+            if np.array_equal(direction, DOWN) or np.array_equal(direction, UP):
+                vgs = self.get_rows(direction=direction)
+            elif np.array_equal(direction, RIGHT) or np.array_equal(direction, LEFT):
+                vgs = self.get_cols(direction=direction)
             anims = Succession(
                 *(AnimationGroup(
-                    *(cube.switch_mode() for cube in layer),
+                    *(anim(mob, **aargs) for mob in vg),
                     lag_ratio=0.0,
-                ) for layer in layers),
+                ) for vg in vgs),
                 rate_func=smooth,
-                **aargs,
+                lag_ratio=0.5,
+                **gargs,        # run_time
+                **kwargs,       # _on_finish
             )
-            return anims
         elif style == 'beam':
-            beams = self.get_beams(direction=direction)
+            if np.array_equal(direction, DOWN) or np.array_equal(direction, UP):
+                vgs = self.get_cols(reverse=np.array_equal(direction, UP))
+            elif np.array_equal(direction, RIGHT) or np.array_equal(direction, LEFT):
+                vgs = self.get_rows(reverse=np.array_equal(direction, LEFT))
             anims = AnimationGroup(
-                *(AnimationGroup(
-                    *(cube.switch_mode() for cube in beam),
+                *(Succession(
+                    *(anim(mob, **aargs) for mob in vg),
                     run_time=random.random()+1,
                     lag_ratio=0.8,
                     rate_func=smooth,
-                ) for beam in beams),
+                ) for vg in vgs),
                 lag_ratio=0.0,
-                **aargs,
+                **gargs,        # run_time
+                **kwargs,       # _on_finish
             )
-            return anims
+        return anims
 
-    
     def create(
         self,
-        style='layer',
+        style: str = 'layer',
         direction: np.ndarray = DOWN,
-        anim=Create,
-        aargs: dict = {},
-        gargs: dict = {},
+        anim: Animation = GrowFromCenter,
+        **gargs,
     ) -> AnimationGroup:
-        if style == 'layer':
-            layers = self.get_layers(direction=direction)
-            anims = Succession(
-                *(AnimationGroup(
-                    *(anim(cube, **aargs) for cube in layer),
-                    lag_ratio=0.0,
-                ) for layer in layers),
-                rate_func=smooth,
-                **gargs,
-            )
-            return anims
-        if style == 'beam':
-            beams = self.get_beams(direction=direction)
-            anims = AnimationGroup(
-                *(Succession(
-                    *(anim(cube, **aargs) for cube in beam),
-                    run_time=random.random()+1,
-                    rate_func=smooth,
-                ) for beam in beams),
-                lag_ratio=0.0,
-                **gargs,
-            )
-            return anims
-
-    def uncreate(
-        self,
-        style='layer',
-        direction: np.ndarray = DOWN,
-        anim = Uncreate,
-        aargs: dict = {},
-        gargs: dict = {},
-    ) -> AnimationGroup:
-        anims = self.create(
+        if anim is GrowFromCenter:
+            aargs = {'rate_func': rate_functions.ease_out_back}
+        else:
+            aargs = {}
+        anims = self.loop_anims(
             style=style,
             direction=direction,
             anim=anim,
             aargs=aargs,
             gargs=gargs,
+            _on_finish=lambda s: s.add(self),
         )
         return anims
-    
-    def highlight_row(
+
+    def switch(
         self,
-        direction = DOWN,
-        n: int = 0,
-        **aargs,
-    ) -> Animation:
-        d = int(direction[1])
-        mask = np.full_like(self.hl_state, False, dtype=bool)
-        mask[-d*n-(d+1)//2,:] = True
-        anims = self.highlight(mask=mask, **aargs)
+        style: str = 'layer',
+        direction: np.ndarray = DOWN,
+        **gargs,
+    ) -> AnimationGroup:
+        self.mode = 'cube' if self.mode == 'card' else 'card'
+
+        anims = self.loop_anims(
+            style=style,
+            direction=direction,
+            anim=lambda mob, **aargs: mob.switch(**aargs),
+            gargs=gargs,
+        )
         return anims
-    
-    def highlight_col(
+
+    def uncreate(
         self,
-        direction = RIGHT,
-        n: int = 0,
-        **aargs,
-    ) -> Animation:
-        d = int(direction[0])
-        mask = np.full_like(self.hl_state, False, dtype=bool)
-        mask[:,d*n+(d-1)//2] = True
-        anims = self.highlight(mask=mask, **aargs)
+        style: str = 'layer',
+        direction: np.ndarray = DOWN,
+        anim: Animation = ShrinkToCenter,
+        **gargs,
+    ) -> AnimationGroup:
+        aargs = {}
+        anims = self.loop_anims(
+            style=style,
+            direction=direction,
+            anim=anim,
+            aargs=aargs,
+            gargs=gargs,
+            _on_finish=lambda s: s.remove(self),
+        )
         return anims
+
+    # def get_layers(
+    #     self,
+    #     direction=DOWN,
+    # ) -> VGroup:
+    #     direction = direction.astype(np.int32)
+    #     h, w = self.shape
+    #     if direction[0] != 0:
+    #         vgs = VGroup(self[:,j] for j in range(w))
+    #         vgs = vgs[::direction[0]]
+    #     elif direction[1] != 0:
+    #         vgs = VGroup(self[i,:] for i in range(h))
+    #         vgs = vgs[::-direction[1]]
+    #     return vgs
+
+    # def get_beams(
+    #     self,
+    #     direction=RIGHT,
+    # ) -> VGroup:
+    #     direction = direction.astype(np.int32)
+    #     h, w = self.shape
+    #     if direction[0] != 0:
+    #         vgs = VGroup(self[i,::direction[0]] for i in range(h))
+    #     elif direction[1] != 0:
+    #         vgs = VGroup(self[::-direction[1],j] for j in range(w))
+    #     return vgs
+
+    # def switch_mode(
+    #     self,
+    #     style: str = 'layer',
+    #     direction: np.ndarray = DOWN,
+    #     aargs: dict = {},
+    # ) -> Animation:
+    #     if self.mode == 'card':
+    #         self.mode = 'cube'
+    #     elif self.mode == 'cube':
+    #         self.mode = 'card'
+
+    #     if style == 'layer':
+    #         layers = self.get_layers(direction=direction)
+    #         anims = Succession(
+    #             *(AnimationGroup(
+    #                 *(cube.switch_mode() for cube in layer),
+    #                 lag_ratio=0.0,
+    #             ) for layer in layers),
+    #             rate_func=smooth,
+    #             **aargs,
+    #         )
+    #         return anims
+    #     elif style == 'beam':
+    #         beams = self.get_beams(direction=direction)
+    #         anims = AnimationGroup(
+    #             *(AnimationGroup(
+    #                 *(cube.switch_mode() for cube in beam),
+    #                 run_time=random.random()+1,
+    #                 lag_ratio=0.8,
+    #                 rate_func=smooth,
+    #             ) for beam in beams),
+    #             lag_ratio=0.0,
+    #             **aargs,
+    #         )
+    #         return anims
+
+    
+    # def create(
+    #     self,
+    #     style='layer',
+    #     direction: np.ndarray = DOWN,
+    #     anim=Create,
+    #     aargs: dict = {},
+    #     gargs: dict = {},
+    # ) -> AnimationGroup:
+    #     if style == 'layer':
+    #         layers = self.get_layers(direction=direction)
+    #         anims = Succession(
+    #             *(AnimationGroup(
+    #                 *(anim(cube, **aargs) for cube in layer),
+    #                 lag_ratio=0.0,
+    #             ) for layer in layers),
+    #             rate_func=smooth,
+    #             **gargs,
+    #         )
+    #         return anims
+    #     if style == 'beam':
+    #         beams = self.get_beams(direction=direction)
+    #         anims = AnimationGroup(
+    #             *(Succession(
+    #                 *(anim(cube, **aargs) for cube in beam),
+    #                 run_time=random.random()+1,
+    #                 rate_func=smooth,
+    #             ) for beam in beams),
+    #             lag_ratio=0.0,
+    #             **gargs,
+    #         )
+    #         return anims
+
+    # def uncreate(
+    #     self,
+    #     style='layer',
+    #     direction: np.ndarray = DOWN,
+    #     anim = Uncreate,
+    #     aargs: dict = {},
+    #     gargs: dict = {},
+    # ) -> AnimationGroup:
+    #     anims = self.create(
+    #         style=style,
+    #         direction=direction,
+    #         anim=anim,
+    #         aargs=aargs,
+    #         gargs=gargs,
+    #     )
+    #     return anims
+    
+    # def highlight_row(
+    #     self,
+    #     direction = DOWN,
+    #     n: int = 0,
+    #     **aargs,
+    # ) -> Animation:
+    #     d = int(direction[1])
+    #     mask = np.full_like(self.hl_state, False, dtype=bool)
+    #     mask[-d*n-(d+1)//2,:] = True
+    #     anims = self.highlight(mask=mask, **aargs)
+    #     return anims
+    
+    # def highlight_col(
+    #     self,
+    #     direction = RIGHT,
+    #     n: int = 0,
+    #     **aargs,
+    # ) -> Animation:
+    #     d = int(direction[0])
+    #     mask = np.full_like(self.hl_state, False, dtype=bool)
+    #     mask[:,d*n+(d-1)//2] = True
+    #     anims = self.highlight(mask=mask, **aargs)
+    #     return anims
 
 class MTensor_3D(MTensorGeneral):
     def __init__(
@@ -470,7 +587,7 @@ class MTensor_3D(MTensorGeneral):
     ) -> tuple:
         objs = np.empty(self.shape, dtype=object)
         c, h, w = self.shape
-        step = self.size + self.padding
+        step = self.side_length + self.padding
 
         xs = [RIGHT * k * step for k in range(w)]
         ys = [DOWN * j * step for j in range(h)]
@@ -506,7 +623,7 @@ class MTensor_3D(MTensorGeneral):
 
         objs = np.empty(array.shape, dtype=object)
         c, h, w = array.shape
-        step = self.size + self.padding
+        step = self.side_length + self.padding
 
         offset = tuple(int(v) for v in offset)
         xs = [RIGHT * k * step for k in range(w)]
@@ -797,7 +914,7 @@ class MTensor_3D(MTensorGeneral):
         )
         c_new, h_new, w_new = array_new.shape
         objs_new = np.empty(array_new.shape, dtype=object)
-        step = self.size + self.padding
+        step = self.side_length + self.padding
 
         orig_center = self.objs[0,0,0].get_center()
 
@@ -922,17 +1039,19 @@ class MTensor_4D(MTensorGeneral):
     
     def create_mobs(
         self,
-        z_style: str | None = None,
+        style: str | None = None,
     ):
         objs = np.empty(self.shape, dtype=object)
         blocks = VGroup()
 
         nb, nc, nh, nw = self.shape
-        step = self.size + self.padding
+        step = self.side_length + self.padding
 
         xs = [RIGHT * l * step for l in range(nw)]
         ys = [DOWN * k * step for k in range(nh)]
         zs = [IN * j * step for j in range(nc)]
+
+        # TODO: three styles
 
         for i in range(nb):
             block_objs = np.empty((nc, nh, nw), dtype=object)
@@ -973,7 +1092,7 @@ class MTensor_4D(MTensorGeneral):
                 mobs=self[i],
                 array=self.array[i],
                 mode=self.mode,
-                size=self.size,
+                size=self.side_length,
                 padding=self.padding,
                 cube_config=self.cube_config,
                 square_config=self.square_config,
@@ -1007,7 +1126,7 @@ class MTensor_4D(MTensorGeneral):
                 mobs=self[i],
                 array=self.array[i],
                 mode=self.mode,
-                size=self.size,
+                size=self.side_length,
                 padding=self.padding,
                 cube_config=self.cube_config,
                 square_config=self.square_config,
@@ -1044,7 +1163,7 @@ class MTensor_4D(MTensorGeneral):
                 mobs=self[i],
                 array=self.array[i],
                 mode=self.mode,
-                size=self.size,
+                size=self.side_length,
                 padding=self.padding,
                 cube_config=self.cube_config,
                 square_config=self.square_config,
@@ -1162,53 +1281,121 @@ class Demo1D(ThreeDScene):
 
 class Demo2D(ThreeDScene):
     def construct(self):
-        self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
+        self.set_camera_orientation(
+            **VIEW_COMPUTE,
+        )
 
         tensor = MTensor_2D(
-            array=np.random.randn(4,5),
+            array=np.random.randn(8,9),
             mode='cube',
-            size=0.3,
+            style='horizontal',
+            side_length=0.5,
+            font_size=18,
             padding=0.0,
         )
 
-        # self.add(tensor)
+        self.play(tensor.create(
+            style='beam',
+            direction=DOWN,
+            run_time=1.0,
+        ))
+        self.add(tensor)
+        self.wait()
+
+        # self.play(tensor.switch(
+        #     style='beam',
+        #     direction=UP,
+        #     run_time=1.0,
+        # ))
         # self.wait()
 
-        self.play(tensor.create(
+        self.play(tensor.uncreate(
+            style='beam',
             direction=RIGHT,
-            anim=GrowFromCenter,
-            aargs={'rate_func': rate_functions.ease_out_back},
-            gargs={'run_time': 1.0},
-        ))
-        self.wait()
-
-        self.play(tensor.switch_mode(
-            direction=DOWN,
-            aargs={'run_time': 1.0},
-        ))
-        self.wait()
-        
-        self.play(tensor.highlight_row(
-            direction=DOWN,
-            n=1,
             run_time=1.0,
         ))
-        self.wait()
 
-        self.move_camera(
-            phi=60*DEGREES,
-            theta=-135*DEGREES,
-            run_time=1.0,
+        tensor = MTensor_2D(
+            array=np.random.randn(8,9),
+            mode='cube',
+            style='horizontal',
+            side_length=0.5,
+            font_size=18,
+            padding=0.0,
         )
+
+        self.play(tensor.create(
+            style='beam',
+            direction=DOWN,
+            run_time=1.0,
+        ))
+        self.add(tensor)
         self.wait()
+
+        # self.play(tensor.switch(
+        #     style='beam',
+        #     direction=UP,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
 
         self.play(tensor.uncreate(
+            style='beam',
             direction=RIGHT,
-            anim=ShrinkToCenter,
-            aargs={},
-            gargs={'run_time': 1.0},
+            run_time=1.0,
         ))
+
+        tensor = MTensor_2D(
+            array=np.random.randn(8,9),
+            mode='cube',
+            style='horizontal',
+            side_length=0.5,
+            font_size=18,
+            padding=0.0,
+        )
+
+        self.play(tensor.create(
+            style='beam',
+            direction=DOWN,
+            run_time=1.0,
+        ))
+        self.add(tensor)
         self.wait()
+
+        # self.play(tensor.switch(
+        #     style='beam',
+        #     direction=UP,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        self.play(tensor.uncreate(
+            style='beam',
+            direction=RIGHT,
+            run_time=1.0,
+        ))
+        
+        # self.play(tensor.highlight_row(
+        #     direction=DOWN,
+        #     n=1,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.move_camera(
+        #     phi=60*DEGREES,
+        #     theta=-135*DEGREES,
+        #     run_time=1.0,
+        # )
+        # self.wait()
+
+        # self.play(tensor.uncreate(
+        #     direction=RIGHT,
+        #     anim=ShrinkToCenter,
+        #     aargs={},
+        #     gargs={'run_time': 1.0},
+        # ))
+        # self.wait()
 
 class Demo3D(ThreeDScene):
     def construct(self):

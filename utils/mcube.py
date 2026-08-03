@@ -84,7 +84,7 @@ class MCube(VMobject):
         self.mob = mob
         self.add(self.mob)
     
-    def switch_mode(
+    def switch(
         self,
         **aargs,
     ) -> Animation:
@@ -108,14 +108,15 @@ class MCube(VMobject):
             if self.tarnished:
                 new_mob[0].set_style(**TARNISH_SQUARE_CONFIG)
                 new_mob[1].set_style(**TARNISH_DECIMAL_CONFIG)
+
         old_mob = self.mob
-        self.remove(old_mob)
         self.mob = new_mob
-        self.add(self.mob)
+        self.remove(old_mob)
 
         return AnimationGroup(
             Unwrite(old_mob),
             Write(self.mob),
+            _on_finish=lambda _: self.add(self.mob),
             **aargs,
         )
 
@@ -224,7 +225,7 @@ class DemoMC(ThreeDScene):
         self.play(Write(cube))
         self.wait()
 
-        self.play(cube.switch_mode(
+        self.play(cube.switch(
             run_time=1.0,
         ))
         self.wait()
@@ -240,7 +241,7 @@ class DemoMC(ThreeDScene):
         ))
         self.wait()
 
-        self.play(cube.switch_mode(
+        self.play(cube.switch(
             run_time=1.0,
         ))
         self.wait()
