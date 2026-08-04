@@ -1302,8 +1302,8 @@ class Demo2D(ThreeDScene):
         self.add(tensor)
         self.wait()
 
-        base_mask = np.eye(9, dtype=bool)[:, None, :].repeat(7, axis=1)
-        masks = np.vstack((base_mask, base_mask[::-1][1:]))
+        masks=np.eye(9,dtype=bool)[:,None,:].repeat(7,axis=1)
+        masks = np.concat([masks, masks[::-1][1:]], axis=0)
         self.play(tensor.highlight_loop(
             masks=masks,
             rate_func=smooth,
