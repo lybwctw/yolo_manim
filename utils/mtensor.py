@@ -1286,7 +1286,7 @@ class Demo2D(ThreeDScene):
         )
 
         tensor = MTensor_2D(
-            array=np.random.randn(8,9),
+            array=np.random.randn(7,9),
             mode='cube',
             style='horizontal',
             side_length=0.5,
@@ -1302,34 +1302,19 @@ class Demo2D(ThreeDScene):
         self.add(tensor)
         self.wait()
 
-        # self.play(tensor.switch(
-        #     style='beam',
-        #     direction=UP,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
+        base_mask = np.eye(9, dtype=bool)[:, None, :].repeat(7, axis=1)
+        masks = np.vstack((base_mask, base_mask[::-1][1:]))
+        self.play(tensor.highlight_loop(
+            masks=masks,
+            rate_func=smooth,
+            back=False,
+            run_time=3.0,
+        ))
+        self.wait()
 
-        self.play(tensor.uncreate(
-            style='beam',
-            direction=RIGHT,
+        self.play(tensor.highlight(
             run_time=1.0,
         ))
-
-        tensor = MTensor_2D(
-            array=np.random.randn(8,9),
-            mode='cube',
-            style='horizontal',
-            side_length=0.5,
-            font_size=18,
-            padding=0.0,
-        )
-
-        self.play(tensor.create(
-            style='beam',
-            direction=DOWN,
-            run_time=1.0,
-        ))
-        self.add(tensor)
         self.wait()
 
         # self.play(tensor.switch(
@@ -1345,57 +1330,6 @@ class Demo2D(ThreeDScene):
             run_time=1.0,
         ))
 
-        tensor = MTensor_2D(
-            array=np.random.randn(8,9),
-            mode='cube',
-            style='horizontal',
-            side_length=0.5,
-            font_size=18,
-            padding=0.0,
-        )
-
-        self.play(tensor.create(
-            style='beam',
-            direction=DOWN,
-            run_time=1.0,
-        ))
-        self.add(tensor)
-        self.wait()
-
-        # self.play(tensor.switch(
-        #     style='beam',
-        #     direction=UP,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        self.play(tensor.uncreate(
-            style='beam',
-            direction=RIGHT,
-            run_time=1.0,
-        ))
-        
-        # self.play(tensor.highlight_row(
-        #     direction=DOWN,
-        #     n=1,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.move_camera(
-        #     phi=60*DEGREES,
-        #     theta=-135*DEGREES,
-        #     run_time=1.0,
-        # )
-        # self.wait()
-
-        # self.play(tensor.uncreate(
-        #     direction=RIGHT,
-        #     anim=ShrinkToCenter,
-        #     aargs={},
-        #     gargs={'run_time': 1.0},
-        # ))
-        # self.wait()
 
 class Demo3D(ThreeDScene):
     def construct(self):
