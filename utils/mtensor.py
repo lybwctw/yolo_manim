@@ -1243,18 +1243,29 @@ class Demo3D(ThreeDScene):
         ))
         self.wait()
 
-        self.play(tensor.switch(
-            style='beam',
-            direction=DOWN,
-            run_time=1.0,
+        masks = np.tile(
+            np.eye(6,dtype=bool)[:,:,None,None],
+            (1,1,4,4),
+        )
+        self.play(tensor.highlight_loop(
+            masks=masks,
+            back=True,
+            run_time=3.0,
         ))
         self.wait()
 
-        self.play(tensor.update_values(
-            values=np.random.randn(6,4,4),
-            run_time=1.0,
-        ))
-        self.wait()
+        # self.play(tensor.switch(
+        #     style='beam',
+        #     direction=DOWN,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(tensor.update_values(
+        #     values=np.random.randn(6,4,4),
+        #     run_time=1.0,
+        # ))
+        # self.wait()
 
         self.play(tensor.uncreate(
             style='beam',
@@ -1265,48 +1276,56 @@ class Demo3D(ThreeDScene):
 
 class Demo4D(ThreeDScene):
     def construct(self):
-        self.set_camera_orientation(phi=60*DEGREES, theta=-75*DEGREES)
+        self.set_camera_orientation(
+            **VIEW_COMPUTE,
+        )
 
         tensor = MTensor4D(
-            block_direction=RIGHT,
             block_gap=0.3,
-            array=np.random.randn(5,4,3,3),
+            array=np.random.randn(10,7,2,2),
             mode='cube',
-            size=0.3,
+            style='horizontal',
+            side_length=0.3,
+            font_size=12,
             padding=0.0,
         )
 
         self.play(tensor.create(
             style='beam',
             direction=OUT,
-            anim=GrowFromCenter,
-            aargs={'rate_func': rate_functions.ease_out_back},
-            gargs={},
-            ggargs={'lag_ratio': 0.3, 'run_time': 1.0},
-        ))
-        self.wait()
-
-        self.move_camera(
-            phi=60*DEGREES,
-            theta=-135*DEGREES,
             run_time=1.0,
-        )
-        self.wait()
-
-        self.play(tensor.switch_mode(
-            style='beam',
-            direction=IN,
-            aargs={},
-            gargs={'run_time': 1.0},
+            lag_ratio=0.5,
         ))
         self.wait()
+
+        masks = np.tile(
+            np.eye(10,dtype=bool)[:,:,None,None,None],
+            (1,1,7,2,2),
+        )
+        self.play(tensor.highlight_loop(
+            masks=masks,
+            back=True,
+            run_time=3.0,
+        ))
+        self.wait()
+
+        # self.play(tensor.switch(
+        #     style='beam',
+        #     direction=IN,
+        #     run_time=1.0,
+        #     lag_ratio=0.5,
+        # ))
+        # self.wait()
+
+        # self.play(tensor.update_values(
+        #     values=np.random.randn(5,4,3,3),
+        #     run_time=1.0,
+        # ))
+        # self.wait()
 
         self.play(tensor.uncreate(
             style='beam',
             direction=IN,
-            anim=ShrinkToCenter,
-            aargs={},
-            gargs={},
-            ggargs={'lag_ratio': 0.3, 'run_time': 1.0},
+            run_time=1.0,
         ))
         self.wait()

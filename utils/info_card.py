@@ -8,7 +8,7 @@ from utils.loop import Loop
 
 UNKNOWN = '?'
 
-# arrange constants
+# positioning constants
 CARD_EDGE_BUFF = 0.3
 CARD_VGAP = 0.1
 CARD_FOCUS_Y = 0.0
@@ -47,8 +47,10 @@ class InfoCard(VMobject):
         head_config: dict = {},
         frame_config: dict = {},
         common_config: dict = {},
+        fixed_in_3d: bool = True,         # True if 3d scene and fixed in frame
     ):
         super().__init__()
+        self.fixed_in_3d = fixed_in_3d
 
         self.head = head
         self.params = {} if params is None else params
@@ -138,9 +140,10 @@ class InfoCard(VMobject):
                 lag_ratio=0.0,
             ),
             AnimationGroup(
-                *(Create(line, fixed=True) for line in self.line_mobs),
+                *(Create(line, fixed=self.fixed_in_3d) for line in self.line_mobs),
                 lag_ratio=0.3,
             ),
+            _on_finish=lambda _: self.add(self.line_mobs),
             **aargs,
         )
     
@@ -163,7 +166,7 @@ class InfoCard(VMobject):
 
             anims.append(AnimationGroup(
                 Uncreate(value_mob_old),
-                Create(value_mob, fixed=True),
+                Create(value_mob, fixed=self.fixed_in_3d),
                 lag_ratio=0.0,
             ))
         
@@ -172,9 +175,6 @@ class InfoCard(VMobject):
             for name in self.params
         )
 
-        # FIMXE: manual add for next scene
-        # self.add(self.line_mobs)
-
         target_width = max(self.line_mobs.width, self.head_width)
 
         rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
@@ -182,6 +182,7 @@ class InfoCard(VMobject):
         return Succession(
             AnimationGroup(*anims, lag_ratio=0.0),
             Transform(self.frame_mob, rect1),
+            _on_finish=lambda _: self.add(self.line_mobs),
             **aargs,
         )
     
@@ -227,6 +228,7 @@ class InfoCard(VMobject):
                 lag_ratio=0.0,
             ),
             Transform(self.frame_mob, rect2),
+            _on_finish=lambda _: self.remove(line_mobs),
             **aargs,
         )
     
@@ -250,7 +252,8 @@ class InfoCard(VMobject):
         self.smob = smob
         return Succession(
             Transform(self.frame_mob, rect1),
-            Create(self.smob, fixed=True),
+            Create(self.smob, fixed=self.fixed_in_3d),
+            _on_finish=lambda _: self.add(self.smob),
             **aargs,
         )
 
@@ -271,14 +274,16 @@ class InfoCard(VMobject):
         rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
         rect1.align_to(self.frame_mob, LEFT)
 
+        self.remove(smob_old)
         self.smob = smob
         return Succession(
             Transform(self.frame_mob, rect1),
             AnimationGroup(
                 Uncreate(smob_old),
-                Create(self.smob, fixed=True),
+                Create(self.smob, fixed=self.fixed_in_3d),
                 lag_ratio=0.0,
             ),
+            _on_finish=lambda _: self.add(self.smob),
             **aargs,
         )
     
@@ -298,6 +303,7 @@ class InfoCard(VMobject):
         return Succession(
             Uncreate(smob),
             Transform(self.frame_mob, rect1),
+            _on_finish=lambda _: self.remove(smob),
             **aargs,
         )
     
@@ -420,7 +426,7 @@ class Demo(ThreeDScene):
                 'third': 3,
             },
         )
-        self.add_fixed_in_frame_mobjects(card)
+        # self.add_fixed_in_frame_mobjects(card)
 
         self.play(card.expand_summary(
             'for test here',
