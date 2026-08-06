@@ -2,7 +2,7 @@ from manim import *
 
 from utils.general import import_mobs, export_mobs
 from utils.show_shape_3d import ShowShape3D, HideShape3D
-from utils.mtensor import MTensor_3D
+from utils.mtensor import MTensor3D
 from utils.info_card import *
 from utils.constants_3d import *
 from utils.constants import *
@@ -46,7 +46,7 @@ class MainScene(ThreeDScene):
         t_o1 = torch_module(t_i1)
 
         # input tensor mob
-        mob_i1 = MTensor_3D(
+        mob_i1 = MTensor3D(
             array=t_i1.detach()[0],
             **SMALL_3D_CUBE_CONFIG,
         ).next_to(
@@ -56,7 +56,7 @@ class MainScene(ThreeDScene):
         )
 
         # output tensor mob
-        mob_o1 = MTensor_3D(
+        mob_o1 = MTensor3D(
             array=t_o1.detach()[0],
             **SMALL_3D_CUBE_CONFIG,
         ).next_to(

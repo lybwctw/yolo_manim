@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor_3D
+from utils.mtensor import MTensor3D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -45,7 +45,7 @@ class MainScene(ThreeDScene):
 
         # input tensor mob
         tensor_is = VGroup(
-            MTensor_3D(
+            MTensor3D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ) for t in [t_i1, t_i2]
@@ -58,7 +58,7 @@ class MainScene(ThreeDScene):
         )
 
         # output tensor mob
-        tensor_o1 = MTensor_3D(
+        tensor_o1 = MTensor3D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -230,7 +230,7 @@ class MainScene(ThreeDScene):
         t_o1 = torch.cat([t_i1, t_i2], dim=1)
 
         # input tensor mob
-        tensor_i1 = MTensor_3D(
+        tensor_i1 = MTensor3D(
             array=t_i1,
             **MEDIUM_CUBE_CONFIG,
         ).next_to(
@@ -241,7 +241,7 @@ class MainScene(ThreeDScene):
         tensor_is = VGroup(tensor_i1, tensor_is[1])
 
         # output tensor mob
-        tensor_o1 = MTensor_3D(
+        tensor_o1 = MTensor3D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -321,7 +321,7 @@ class MainScene(ThreeDScene):
         t_i2 = torch.randn(2,3,2)
         t_o1 = torch.cat([t_i1, t_i2], dim=2)
 
-        tensor_i2 = MTensor_3D(
+        tensor_i2 = MTensor3D(
             array=t_i2,
             **MEDIUM_CUBE_CONFIG,
         ).next_to(
@@ -332,7 +332,7 @@ class MainScene(ThreeDScene):
         tensor_is = VGroup(tensor_is[0], tensor_i2)
 
         # output tensor mob
-        tensor_o1 = MTensor_3D(
+        tensor_o1 = MTensor3D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -434,7 +434,7 @@ class MainScene(ThreeDScene):
 
         # input tensor mob
         tensor_i2 = tensor_i1
-        tensor_i1 = MTensor_3D(
+        tensor_i1 = MTensor3D(
             array=t_i1,
             **MEDIUM_CUBE_CONFIG,
         ).next_to(
@@ -442,7 +442,7 @@ class MainScene(ThreeDScene):
             OUT,
             TENSOR_EGAP_3D,
         )
-        tensor_i3 = MTensor_3D(
+        tensor_i3 = MTensor3D(
             array=t_i3,
             **MEDIUM_CUBE_CONFIG,
         ).next_to(
@@ -457,7 +457,7 @@ class MainScene(ThreeDScene):
         )
 
         # output tensor mob
-        tensor_o1 = MTensor_3D(
+        tensor_o1 = MTensor3D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(

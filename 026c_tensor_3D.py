@@ -1,5 +1,5 @@
 from manim import *
-from utils.mtensor import MCube, MTensor_3D
+from utils.mtensor import MCube, MTensor3D
 from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.constants_3d import *
 
@@ -17,7 +17,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        tensor = MTensor_3D(
+        tensor = MTensor3D(
             array=np.random.randn(4,5,6),
             mode='card',
             size=0.5,

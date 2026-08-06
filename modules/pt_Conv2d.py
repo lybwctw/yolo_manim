@@ -42,7 +42,7 @@ class PT_Conv2d(VMobject):
         self.bias_offset = bias_offset
 
         # init weight mobs
-        mobs_weight = MTensor_4D(
+        mobs_weight = MTensor4D(
             array=self.module.weight.detach().numpy(),
             **{**DEFAULT_WEIGHT_CONFIG, **weight_config},
         )
@@ -51,7 +51,7 @@ class PT_Conv2d(VMobject):
 
         # maybe init bias mobs
         if self.module_config['bias']:
-            mobs_bias = MTensor_1D(
+            mobs_bias = MTensor1D(
                 array=self.module.bias.detach().numpy(),
                 **{**DEFAULT_BIAS_CONFIG, **bias_config},
             )

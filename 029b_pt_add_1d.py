@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor_1D
+from utils.mtensor import MTensor1D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -34,15 +34,15 @@ class MainScene(ThreeDScene):
         t_o1 = t_i1 + t_i2
 
         # tensor mobs
-        tensor_i1 = MTensor_1D(
+        tensor_i1 = MTensor1D(
             array=t_i1,
             **MEDIUM_CUBE_CONFIG,
         ).shift(UP*TENSOR_VGAP_1D*2)
-        tensor_i2 = MTensor_1D(
+        tensor_i2 = MTensor1D(
             array=t_i2,
             **MEDIUM_CUBE_CONFIG,
         ).shift(UP*TENSOR_VGAP_1D)
-        tensor_o1 = MTensor_1D(
+        tensor_o1 = MTensor1D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).shift(DOWN*TENSOR_VGAP_1D)

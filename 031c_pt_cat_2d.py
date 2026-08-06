@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor_2D
+from utils.mtensor import MTensor2D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -45,7 +45,7 @@ class MainScene(ThreeDScene):
 
         # input tensor mob
         tensor_is = VGroup(
-            MTensor_2D(
+            MTensor2D(
                 array=t,
                 z_style='erect',
                 **MEDIUM_CUBE_CONFIG,
@@ -60,7 +60,7 @@ class MainScene(ThreeDScene):
         )
 
         # output tensor mob
-        tensor_o1 = MTensor_2D(
+        tensor_o1 = MTensor2D(
             array=t_o1,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,
@@ -230,7 +230,7 @@ class MainScene(ThreeDScene):
         t_o1 = torch.cat([t_i1, t_i2], dim=1)
 
         # input tensor mob
-        tensor_i1 = MTensor_2D(
+        tensor_i1 = MTensor2D(
             array=t_i1,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,
@@ -242,7 +242,7 @@ class MainScene(ThreeDScene):
         tensor_is = VGroup(tensor_i1, tensor_is[1])
 
         # output tensor mob
-        tensor_o1 = MTensor_2D(
+        tensor_o1 = MTensor2D(
             array=t_o1,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,
@@ -319,7 +319,7 @@ class MainScene(ThreeDScene):
         t_o1 = torch.cat([t_i1, t_i2, t_i3], dim=1)
 
         # input tensor mob
-        tensor_i3 = MTensor_2D(
+        tensor_i3 = MTensor2D(
             array=t_i3,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,
@@ -331,7 +331,7 @@ class MainScene(ThreeDScene):
         tensor_is = VGroup(tensor_is[0], tensor_is[1], tensor_i3)
 
         # output tensor mob
-        tensor_o1 = MTensor_2D(
+        tensor_o1 = MTensor2D(
             array=t_o1,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,

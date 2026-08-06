@@ -44,7 +44,7 @@ class ShowShape3D(AnimationGroup):
         text_buff = text_config.pop('buff')
         aargs = {**DEFAULT_SHOW_AARGS, **aargs}
 
-        if isinstance(mob, MTensor_1D):
+        if isinstance(mob, MTensor1D):
             s0 = str(mob.shape[0])
             if facing == 'horizontal':
                 p0 = Line(
@@ -119,7 +119,7 @@ class ShowShape3D(AnimationGroup):
                 ).next_to(p0, DR, buff=text_buff*1.5)      # tweak
             ps = VGroup(p0)
             ts = VGroup(t0).set_z_index(999)
-        elif isinstance(mob, MTensor_2D):
+        elif isinstance(mob, MTensor2D):
             # Not verified yet; please validate visually later.
             s1, s2 = [str(s) for s in mob.shape]
             if facing == 'horizontal':
@@ -213,7 +213,7 @@ class ShowShape3D(AnimationGroup):
                 ).next_to(p2, UP+OUT, buff=text_buff*1.0)     # tweak
             ps = VGroup(p1, p2)
             ts = VGroup(t1, t2).set_z_index(999)
-        elif isinstance(mob, MTensor_3D):
+        elif isinstance(mob, MTensor3D):
             s1, s2, s3 = [str(s) for s in mob.shape]
             if facing == 'card left':
                 p1 = Line(
@@ -346,7 +346,7 @@ class ShowShape3D(AnimationGroup):
                 ).next_to(p3, UP+OUT, buff=text_buff*1.2)   # tweak
             ps = VGroup(p1, p2, p3)
             ts = VGroup(t1, t2, t3).set_z_index(999)
-        elif isinstance(mob, MTensor_4D):
+        elif isinstance(mob, MTensor4D):
             s0, s1, s2, s3 = [str(s) for s in mob.shape]
             if facing == 'left':
                 p0 = Line(

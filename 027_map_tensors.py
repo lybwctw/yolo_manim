@@ -1,5 +1,5 @@
 from manim import *
-from utils.mtensor import MCube, MTensor_4D
+from utils.mtensor import MCube, MTensor4D
 from utils.show_shape import HideShape
 from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.general import import_mobs, export_mobs

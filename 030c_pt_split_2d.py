@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor_2D
+from utils.mtensor import MTensor2D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -28,7 +28,7 @@ class MainScene(ThreeDScene):
         t_i1 = torch.randn(6,8)
 
         # input tensor mob
-        tensor_i1 = MTensor_2D(
+        tensor_i1 = MTensor2D(
             array=t_i1,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,
@@ -98,7 +98,7 @@ class MainScene(ThreeDScene):
         t_o1, t_o2 = torch.split(t_i1, 3, dim=0)
 
         # tensor mob, FIXME: vgroup directly
-        tensor_o1 = MTensor_2D(
+        tensor_o1 = MTensor2D(
             array=t_o1,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,
@@ -106,7 +106,7 @@ class MainScene(ThreeDScene):
             90*DEGREES,
             RIGHT,
         ).align_to(tensor_i1, UL+OUT)
-        tensor_o2 = MTensor_2D(
+        tensor_o2 = MTensor2D(
             array=t_o2,
             z_style='erect',
             **MEDIUM_CUBE_CONFIG,
@@ -198,7 +198,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_2D(
+            MTensor2D(
                 array=t,
                 z_style='erect',
                 **MEDIUM_CUBE_CONFIG,
@@ -292,7 +292,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_2D(
+            MTensor2D(
                 array=t,
                 z_style='erect',
                 **MEDIUM_CUBE_CONFIG,
@@ -385,7 +385,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_2D(
+            MTensor2D(
                 array=t,
                 z_style='erect',
                 **MEDIUM_CUBE_CONFIG,
@@ -470,7 +470,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_2D(
+            MTensor2D(
                 array=t,
                 z_style='erect',
                 **MEDIUM_CUBE_CONFIG,

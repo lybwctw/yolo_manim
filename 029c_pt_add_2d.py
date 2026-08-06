@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor_2D
+from utils.mtensor import MTensor2D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -35,7 +35,7 @@ class MainScene(ThreeDScene):
         t_o1 = t_i1 + t_i2
 
         # tensor mobs
-        tensor_i1 = MTensor_2D(
+        tensor_i1 = MTensor2D(
             array=t_i1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -44,7 +44,7 @@ class MainScene(ThreeDScene):
         ).shift(
             OUT*TENSOR_EGAP_2D,
         )
-        tensor_i2 = MTensor_2D(
+        tensor_i2 = MTensor2D(
             array=t_i2,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -53,7 +53,7 @@ class MainScene(ThreeDScene):
         ).shift(
             IN*TENSOR_EGAP_2D,
         )
-        tensor_o1 = MTensor_2D(
+        tensor_o1 = MTensor2D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(

@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor_1D
+from utils.mtensor import MTensor1D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -44,7 +44,7 @@ class MainScene(ThreeDScene):
 
         # input tensor mob
         tensor_is = VGroup(
-            MTensor_1D(
+            MTensor1D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ).shift(UP*TENSOR_VGAP_1D)
@@ -58,7 +58,7 @@ class MainScene(ThreeDScene):
         )
 
         # output tensor mob
-        tensor_o1 = MTensor_1D(
+        tensor_o1 = MTensor1D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -175,7 +175,7 @@ class MainScene(ThreeDScene):
 
         # input tensor mob and copy
         tensor_is = VGroup(
-            MTensor_1D(
+            MTensor1D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ).shift(UP*TENSOR_VGAP_1D)
@@ -189,7 +189,7 @@ class MainScene(ThreeDScene):
         )
 
         # output tensor mob
-        tensor_o1 = MTensor_1D(
+        tensor_o1 = MTensor1D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -283,7 +283,7 @@ class MainScene(ThreeDScene):
 
         # input tensor mob
         tensor_is = VGroup(
-            MTensor_1D(
+            MTensor1D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ).shift(UP*TENSOR_VGAP_1D)
@@ -297,7 +297,7 @@ class MainScene(ThreeDScene):
         )
 
         # output tensor mob
-        tensor_o1 = MTensor_1D(
+        tensor_o1 = MTensor1D(
             array=t_o1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(

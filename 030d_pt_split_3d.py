@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor_3D
+from utils.mtensor import MTensor3D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -28,7 +28,7 @@ class MainScene(ThreeDScene):
         t_i1 = torch.randn(4,5,6)
 
         # input tensor mob
-        tensor_i1 = MTensor_3D(
+        tensor_i1 = MTensor3D(
             array=t_i1,
             **MEDIUM_CUBE_CONFIG,
         ).align_to(
@@ -98,7 +98,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_3D(
+            MTensor3D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ).align_to(
@@ -195,7 +195,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_3D(
+            MTensor3D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ).align_to(
@@ -290,7 +290,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_3D(
+            MTensor3D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ).align_to(
@@ -392,7 +392,7 @@ class MainScene(ThreeDScene):
 
         # tensor mob
         tensor_os = VGroup(
-            MTensor_3D(
+            MTensor3D(
                 array=t,
                 **MEDIUM_CUBE_CONFIG,
             ).align_to(

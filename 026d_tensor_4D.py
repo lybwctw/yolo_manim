@@ -1,5 +1,5 @@
 from manim import *
-from utils.mtensor import MCube, MTensor_4D
+from utils.mtensor import MCube, MTensor4D
 from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.constants_3d import *
 
@@ -18,7 +18,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        tensor = MTensor_4D(
+        tensor = MTensor4D(
             array=np.random.randn(6,5,3,4),
             mode='cube',
             size=0.25,
