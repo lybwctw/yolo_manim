@@ -45,12 +45,12 @@ class MTensorGeneral(VMobject):
         self.hl_state = np.ones(self.shape, dtype=bool)
 
         if objs is None and mobs is None:
-            objs, mobs = self.create_mobs(style)
+            objs, mobs = self._create_mobs(style)
         self.objs = objs
         self.mobs = mobs
         self.add(self.mobs)
 
-    def make_cube(
+    def _make_cube(
         self,
         value,
         z_index: float = 0.0,
@@ -150,22 +150,27 @@ class MTensorGeneral(VMobject):
             rate_func=smooth,
             **aargs,
         )
-    
+
+    def _loop_anims(self):
+        raise NotImplementedError
+
     def update_values(
         self,
-        values: torch.Tensor | np.ndarray,
+        values: torch.Tensor | np.ndarray | None = None,
         **aargs,
     ) -> Animation:
-        """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        NOTE: update manim ChangeDecimalToValue source to sync z_index.
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        """!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        NOTE update manim ChangeDecimalToValue source to sync z_index. NOTE
+        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         """
         assert self.mode == 'card', "update_value only works in 'card' mode"
         if isinstance(values, torch.Tensor):
             self.tensor = values
             self.array = values.numpy()
-        else:
+        elif isinstance(values, np.ndarray):
             self.array = values
+        elif values is None:
+            self.array = np.random.randn(*self.shape)
 
         anims = AnimationGroup(
             *(mob.update_value(value)
@@ -174,27 +179,62 @@ class MTensorGeneral(VMobject):
         )
         return anims
 
-    def loop_anims(self):
-        raise NotImplementedError
-
     def create(
         self,
         style: str | None = None,
         direction: np.ndarray = DOWN,
         anim: Animation = GrowFromCenter,
-        **gargs,
+        **aargs,
     ) -> AnimationGroup:
-        if anim is GrowFromCenter:
-            aargs = {'rate_func': rate_functions.ease_out_back}
-        else:
-            aargs = {}
-        anims = self.loop_anims(
+        anims = self._loop_anims(
             style=style,
             direction=direction,
             anim=anim,
+            aargs_unit={
+                'rate_func': rate_functions.ease_out_back
+                    if anim is GrowFromCenter else smooth,
+            },
+            aargs_series={'lag_ratio': 0.5},
+            aargs_layer={'lag_ratio': 0.5},
+            aargs_beam={'lag_ratio': 0.8},
             aargs=aargs,
-            gargs=gargs,
             _on_finish=lambda s: s.add(self),
+        )
+        return anims
+
+    def translate(
+        self,
+        style: str | None = None,
+        direction: np.ndarray = DOWN,
+        **aargs,
+    ) -> AnimationGroup:
+        anims = self._loop_anims(
+            style=style,
+            direction=direction,
+            anim=lambda mob, **uargs: mob.translate(**uargs),
+            aargs_unit={},
+            aargs_series={'lag_ratio': 0.1},
+            aargs_layer={'lag_ratio': 0.1},
+            aargs_beam={'lag_ratio': 0.1},
+            aargs=aargs,
+        )
+        return anims
+    
+    def breath(
+        self,
+        style: str | None = None,
+        direction: np.ndarray = DOWN,
+        **aargs,
+    ) -> AnimationGroup:
+        anims = self._loop_anims(
+            style=style,
+            direction=direction,
+            anim=lambda mob, **uargs: mob.breath(**uargs),
+            aargs_unit={},
+            aargs_series={'lag_ratio': 0.1},
+            aargs_layer={'lag_ratio': 0.1},
+            aargs_beam={'lag_ratio': 0.1},
+            aargs=aargs,
         )
         return anims
 
@@ -202,15 +242,19 @@ class MTensorGeneral(VMobject):
         self,
         style: str | None = None,
         direction: np.ndarray = DOWN,
-        **gargs,
+        **aargs,
     ) -> AnimationGroup:
         self.mode = 'cube' if self.mode == 'card' else 'card'
 
-        anims = self.loop_anims(
+        anims = self._loop_anims(
             style=style,
             direction=direction,
-            anim=lambda mob, **aargs: mob.switch(**aargs),
-            gargs=gargs,
+            anim=lambda mob, **uargs: mob.switch(**uargs),
+            aargs_unit={},
+            aargs_series={'lag_ratio': 0.5},
+            aargs_layer={'lag_ratio': 0.5},
+            aargs_beam={'lag_ratio': 0.8},
+            aargs=aargs,
         )
         return anims
 
@@ -219,15 +263,17 @@ class MTensorGeneral(VMobject):
         style: str | None = None,
         direction: np.ndarray = DOWN,
         anim: Animation = ShrinkToCenter,
-        **gargs,
+        **aargs,
     ) -> AnimationGroup:
-        aargs = {}
-        anims = self.loop_anims(
+        anims = self._loop_anims(
             style=style,
             direction=direction,
             anim=anim,
+            aargs_unit={},
+            aargs_series={'lag_ratio': 0.5},
+            aargs_layer={'lag_ratio': 0.5},
+            aargs_beam={'lag_ratio': 0.8},
             aargs=aargs,
-            gargs=gargs,
             _on_finish=lambda s: s.remove(self),
         )
         return anims
@@ -251,7 +297,7 @@ class MTensor1D(MTensorGeneral):
             **kwargs,
         )
 
-    def create_mobs(
+    def _create_mobs(
         self,
         style: str = 'horizontal',
     ) -> tuple:
@@ -274,7 +320,7 @@ class MTensor1D(MTensorGeneral):
             elif style == 'erect':
                 z_index = w - i
 
-            cube = self.make_cube(
+            cube = self._make_cube(
                 value=self.array[i],
                 z_index=z_index,
             )
@@ -284,7 +330,7 @@ class MTensor1D(MTensorGeneral):
         mobs = VGroup(*objs.flat).center()
         return objs, mobs
 
-    def loop_anims(
+    def _loop_anims(
         self,
         style: str | None,  # not used
         direction: np.ndarray,
@@ -322,7 +368,7 @@ class MTensor2D(MTensorGeneral):
             **kwargs,
         )
 
-    def create_mobs(
+    def _create_mobs(
         self,
         style: str = 'horizontal',
     ) -> tuple:
@@ -342,7 +388,7 @@ class MTensor2D(MTensorGeneral):
             elif style == 'erect':
                 z_index = (h-i) * w - j
 
-            cube = self.make_cube(
+            cube = self._make_cube(
                 value=self.array[i, j],
                 z_index=z_index,
             )
@@ -369,7 +415,7 @@ class MTensor2D(MTensorGeneral):
         vgs = self.get_vgs(masks, reverse=reverse)
         return vgs
 
-    def loop_anims(
+    def _loop_anims(
         self,
         style: str | None,
         direction: np.ndarray,
@@ -392,7 +438,7 @@ class MTensor2D(MTensorGeneral):
             )
         elif style == 'layer':
             vgs = self.get_layers(direction=direction)
-            anims = Succession(
+            anims = AnimationGroup(
                 *(AnimationGroup(
                     *(anim(mob, **aargs) for mob in vg),
                     lag_ratio=0.0,
@@ -433,7 +479,7 @@ class MTensor3D(MTensorGeneral):
             **kwargs,
         )
 
-    def create_mobs(
+    def _create_mobs(
         self,
         style: str | None = None,   # not used
     ) -> tuple:
@@ -446,7 +492,7 @@ class MTensor3D(MTensorGeneral):
         zs = [IN * i * step for i in range(c)]
 
         for i, j, k in np.ndindex(self.shape):
-            cube = self.make_cube(
+            cube = self._make_cube(
                 value=self.array[i, j, k],
                 z_index=(c-i)*h+j,          # z_index
             )
@@ -501,164 +547,16 @@ class MTensor3D(MTensorGeneral):
             vgs = self.get_vgs(masks, reverse=True)
         return vgs
 
-    # def create_mobs_padded(
-    #     self,
-    #     array: np.ndarray | None = None,
-    #     reuse_objs: np.ndarray | None = None,
-    #     offset: tuple = (0, 0, 0),
-    #     z_style: str | None = None,
-    #     pad_cube_config: dict = {},
-    #     pad_square_config: dict = {},
-    #     pad_decimal_config: dict = {},
-    # ) -> tuple:
-    #     if array is None:
-    #         array = self.array
-    #     if offset is None:
-    #         offset = (0, 0, 0)
-
-    #     do_pad = reuse_objs is not None
-
-    #     objs = np.empty(array.shape, dtype=object)
-    #     c, h, w = array.shape
-    #     step = self.side_length + self.padding
-
-    #     offset = tuple(int(v) for v in offset)
-    #     xs = [RIGHT * k * step for k in range(w)]
-    #     ys = [DOWN * j * step for j in range(h)]
-    #     zs = [IN * i * step for i in range(c)]
-
-    #     if do_pad:
-    #         orig_ul = reuse_objs[0,0,0].get_corner(UL)
-
-    #     for i, j, k in np.ndindex(array.shape):
-    #         src_idx = (i - offset[0], j - offset[1], k - offset[2])
-    #         reuse_cube = None
-    #         if (
-    #             do_pad and len(reuse_objs.shape) == 3
-    #             and all(0 <= src_idx[d] < reuse_objs.shape[d] for d in range(3))
-    #         ):
-    #             reuse_cube = reuse_objs[src_idx]
-
-    #         if reuse_cube is not None:
-    #             cube = reuse_cube.center()
-    #         else:
-    #             cube = self.make_cube(
-    #                 array[i, j, k],
-    #                 (c-i)*h+j,          # z_index
-    #                 pad_cube_config if do_pad else {},
-    #                 pad_square_config if do_pad else {},
-    #                 pad_decimal_config if do_pad else {},
-    #             ).center()
-
-    #         cube.shift(xs[k] + ys[j] + zs[i])
-    #         # cube.set_z_index((c - i) * h + j)
-    #         objs[i, j, k] = cube
-        
-    #     mobs = VGroup(*objs.flat)
-
-    #     # align to old or center
-    #     if reuse_objs is not None:
-    #         shift_mobs = orig_ul - objs[*offset].get_corner(UL)
-    #         mobs.shift(shift_mobs)
-    #     else:
-    #         mobs.center()
-
-    #     return objs, mobs
-    
-    # def create_conv2d_masks(
-    #     self,
-    #     conv2d_config: dict,
-    # ) -> list:
-    #     """Return a list of boolean masks for Conv2d-style sliding windows.
-
-    #     The masks are ordered row-major over output positions (top-to-bottom,
-    #     left-to-right), and each mask marks the input cubes that participate in
-    #     the corresponding kernel application.
-    #     """
-    #     if self.ndim != 3:
-    #         raise ValueError("create_conv2d_masks only supports 3D tensors")
-
-    #     def _normalize_pair(value, default=(1, 1)):
-    #         if isinstance(value, (tuple, list)):
-    #             if len(value) != 2:
-    #                 raise ValueError("expected a 2-tuple/list for spatial parameter")
-    #             return int(value[0]), int(value[1])
-    #         return int(value), int(value)
-
-    #     kernel_size = conv2d_config.get('kernel_size', 3)
-    #     stride = conv2d_config.get('stride', 1)
-
-    #     kernel_h, kernel_w = _normalize_pair(kernel_size)
-    #     stride_h, stride_w = _normalize_pair(stride)
-
-    #     c, h, w = self.shape
-    #     out_h = (h - kernel_h) // stride_h + 1
-    #     out_w = (w - kernel_w) // stride_w + 1
-
-    #     masks = []
-    #     for out_i in range(out_h):
-    #         for out_j in range(out_w):
-    #             mask = np.zeros(self.shape, dtype=bool)
-    #             in_i_start = out_i * stride_h
-    #             in_i_end = in_i_start + kernel_h
-    #             in_j_start = out_j * stride_w
-    #             in_j_end = in_j_start + kernel_w
-
-    #             for i in range(in_i_start, min(h, in_i_end)):
-    #                 for j in range(in_j_start, min(w, in_j_end)):
-    #                     mask[:, i, j] = True
-
-    #             masks.append(mask)
-
-    #     return masks
-    
-    # def get_beams(
-    #     self,
-    #     direction=OUT,
-    # ) -> VGroup:
-    #     direction = direction.astype(np.int32)
-    #     c, h, w = self.shape
-    #     if direction[0] != 0:
-    #         vgs = VGroup(
-    #             self[i,j,:][::direction[0]]
-    #             for i, j in itertools.product(range(c), range(h))
-    #         )
-    #     elif direction[1] != 0:
-    #         vgs = VGroup(
-    #             self[i,:,k][::-direction[1]]
-    #             for i, k in itertools.product(range(c), range(w))
-    #         )
-    #     elif direction[2] != 0:
-    #         vgs = VGroup(
-    #             self[:,j,k][::-direction[2]]
-    #             for j, k in itertools.product(range(h), range(w))
-    #         )
-    #     return vgs
-
-    # def get_layers(
-    #     self,
-    #     direction=OUT,
-    # ) -> VGroup:
-    #     direction = direction.astype(np.int32)
-    #     c, h, w = self.shape
-    #     if direction[0] != 0:
-    #         vgs = VGroup(self[:,:,k] for k in range(w))
-    #         vgs = vgs[::direction[0]]
-    #     elif direction[1] != 0:
-    #         vgs = VGroup(self[:,j,:] for j in range(h))
-    #         vgs = vgs[::-direction[1]]
-    #     elif direction[2] != 0:
-    #         vgs = VGroup(self[i,:,:] for i in range(c))
-    #         vgs = vgs[::-direction[2]]
-    #     return vgs
-
-    def loop_anims(
+    def _loop_anims(
         self,
         style: str,
         direction: np.ndarray,
         anim: Animation,
-        aargs: dict = {},   # unit anim args
-        gargs: dict = {},   # run_time
+        aargs_unit: dict = {},
+        aargs_series: dict = {},
+        aargs_layer: dict = {},
+        aargs_beam: dict = {},
+        aargs: dict = {},   # run_time
         **kwargs,           # _on_finish
     ) -> Animation:
         if style == 'series':
@@ -667,172 +565,46 @@ class MTensor3D(MTensorGeneral):
             elif np.array_equal(direction, LEFT):
                 mobs = self.mobs[::-1]
             anims = AnimationGroup(
-                *(anim(mob, **aargs) for mob in mobs),
+                *(anim(mob, **aargs_unit) for mob in mobs),
                 rate_func=smooth,
-                lag_ratio=0.5,
-                **gargs,        # run_time
+                **aargs_series, # lag_ratio
+                **aargs,        # run_time
                 **kwargs,       # _on_finish
             )
         elif style == 'layer':
             layers = self.get_layers(direction=direction)
-            anims = Succession(
+            anims = AnimationGroup(
                 *(AnimationGroup(
-                    *(anim(mob, **aargs) for mob in layer),
+                    *(anim(mob, **aargs_unit) for mob in layer),
                     lag_ratio=0.0,
                 ) for layer in layers),
                 rate_func=smooth,
-                lag_ratio=0.5,
-                **gargs,        # run_time
+                **aargs_layer,  # lag_ratio
+                **aargs,        # run_time
                 **kwargs,       # _on_finish
             )
         elif style == 'beam':
             vgs = self.get_beams(direction=direction)
             anims = AnimationGroup(
-                *(Succession(
-                    *(anim(mob, **aargs) for mob in beam),
+                *(AnimationGroup(
+                    *(anim(mob, **aargs_unit) for mob in beam),
                     run_time=random.random()+1,
-                    lag_ratio=0.8,
                     rate_func=smooth,
+                    **aargs_beam,
                 ) for beam in vgs),
                 lag_ratio=0.0,
-                **gargs,        # run_time
+                **aargs,        # run_time
+                **kwargs,       # _on_finish
+            )
+        elif style == 'whole':
+            anims = AnimationGroup(
+                *(anim(mob, **aargs_unit) for mob in self.mobs),
+                lag_ratio=0.0,
+                **aargs,        # run_time
                 **kwargs,       # _on_finish
             )
         return anims
-
-    # def switch_mode(
-    #     self,
-    #     style: str = 'layer',
-    #     direction: np.ndarray = OUT,
-    #     aargs: dict = {},
-    # ) -> Animation:
-    #     if self.mode == 'card':
-    #         self.mode = 'cube'
-    #     elif self.mode == 'cube':
-    #         self.mode = 'card'
-
-    #     if style == 'layer':
-    #         layers = self.get_layers(direction=direction)
-    #         anims = AnimationGroup(
-    #             *(AnimationGroup(
-    #                 *(cube.switch_mode() for cube in layer),
-    #                 lag_ratio=0.0,
-    #             ) for layer in layers),
-    #             rate_func=smooth,
-    #             **aargs,
-    #         )
-    #         return anims
-    #     elif style == 'beam':
-    #         beams = self.get_beams(direction=direction)
-    #         anims = AnimationGroup(
-    #             *(AnimationGroup(
-    #                 *(cube.switch_mode() for cube in beam),
-    #                 run_time=random.random()+1,
-    #                 lag_ratio=0.8,
-    #                 rate_func=smooth,
-    #             ) for beam in beams),
-    #             lag_ratio=0.0,
-    #             **aargs,
-    #         )
-    #         return anims
-
-    # def create(
-    #     self,
-    #     style='layer',
-    #     direction=OUT,
-    #     anim=Create,
-    #     aargs: dict = {},
-    #     gargs: dict = {},
-    # ) -> AnimationGroup:
-    #     if style == 'layer':
-    #         layers = self.get_layers(direction=direction)
-    #         anims = Succession(
-    #             *(AnimationGroup(
-    #                 *(anim(cube, **aargs) for cube in layer),
-    #                 lag_ratio=0.0,
-    #             ) for layer in layers),
-    #             rate_func=smooth,
-    #             **gargs,
-    #         )
-    #         return anims
-    #     elif style == 'beam':
-    #         beams = self.get_beams(direction=direction)
-    #         anims = AnimationGroup(
-    #             *(Succession(
-    #                 *(anim(cube, **aargs) for cube in beam),
-    #                 run_time=random.random()+1,
-    #                 rate_func=smooth,
-    #             ) for beam in beams),
-    #             lag_ratio=0.0,
-    #             **gargs,
-    #         )
-    #         return anims
     
-    # def create_index(
-    #     self,
-    #     index,
-    #     anim=Create,
-    #     aargs: dict = {},
-    # ) -> Animation:
-    #     mob = self[index]
-    #     return anim(mob, **aargs)
-
-    # def uncreate(
-    #     self,
-    #     style='layer',
-    #     direction=OUT,
-    #     anim=Uncreate,
-    #     aargs: dict = {},
-    #     gargs: dict = {},
-    # ) -> AnimationGroup:
-    #     anims = self.create(
-    #         style=style,
-    #         direction=direction,
-    #         anim=anim,
-    #         aargs=aargs,
-    #         gargs=gargs,
-    #     )
-    #     return anims
-
-    # def highlight_layer(
-    #     self,
-    #     direction = IN,
-    #     n: int = 0,
-    #     **aargs,
-    # ) -> Animation:
-    #     if direction[0] != 0:
-    #         d = int(direction[0])
-    #         mask = np.full_like(self.hl_state, False, dtype=bool)
-    #         mask[:,:,d*n+(d-1)//2] = True
-    #     elif direction[1] != 0:
-    #         d = int(direction[1])
-    #         mask = np.full_like(self.hl_state, False, dtype=bool)
-    #         mask[:,-d*n-(d+1)//2,:] = True
-    #     elif direction[2] != 0:
-    #         d = int(direction[2])
-    #         mask = np.full_like(self.hl_state, False, dtype=bool)
-    #         mask[-d*n-(d+1)//2,:,:] = True
-    #     anims = self.highlight(mask=mask, **aargs)
-    #     return anims
-    
-    # def highlight_beam(
-    #     self,
-    #     direction = IN,
-    #     ij: tuple = (0, 0),
-    #     **aargs,
-    # ) -> Animation:
-    #     if direction[0] != 0:
-    #         mask = np.full_like(self.hl_state, False, dtype=bool)
-    #         mask[ij[0], ij[1], :] = True
-    #     elif direction[1] != 0:
-    #         mask = np.full_like(self.hl_state, False, dtype=bool)
-    #         mask[ij[0], :, ij[1]] = True
-    #     elif direction[2] != 0:
-    #         mask = np.full_like(self.hl_state, False, dtype=bool)
-    #         mask[:, ij[0], ij[1]] = True
-    #     anims = self.highlight(mask=mask, **aargs)
-    #     return anims
-
     def pad(
         self,
         pad_width: list | tuple,    # (c, h, w)
@@ -872,7 +644,7 @@ class MTensor3D(MTensorGeneral):
                 mob.set_z_index((c_new-i)*h_new+j)
                 mob.center()
             else:
-                mob = self.make_cube(
+                mob = self._make_cube(
                     array_new[i,j,k],
                     (c_new-i)*h_new+j,      # z_index
                     cube_config={**self.cube_config, 'stroke_color': TEAL},
@@ -891,8 +663,6 @@ class MTensor3D(MTensorGeneral):
         self.array = array_new
         self.objs = objs_new
         self.mobs = mobs_new
-        self.shape = self.array.shape
-        self.ndim = self.array.ndim
         self.hl_state = np.ones(self.shape, dtype=bool)
         self.add(self.mobs)
 
@@ -915,8 +685,6 @@ class MTensor3D(MTensorGeneral):
 
         pmobs = VGroup(*self.objs[self.mask_pad])
         self.array = self.array[self.mask_orig]     # use slice
-        self.shape = self.array.shape
-        self.ndim = self.array.ndim
         self.objs = self.objs[self.mask_orig]
         self.mobs = VGroup(*self.objs.flat)
         self.hl_state = np.ones(self.shape, dtype=bool)
@@ -933,44 +701,46 @@ class MTensor3D(MTensorGeneral):
             **aargs,
         )
 
-    def highlight_loop_conv2d_mask(
+    def conv2d_masks(
         self,
-        kernel_size,
-        stride,
-    ) -> list:
+        kh: int = 3,
+        kw: int = 3,
+        sh: int = 1,
+        sw: int = 1,
+    ) -> np.ndarray:
         c, h, w = self.shape
-        out_h = (h - kernel_size) // stride + 1
-        out_w = (w - kernel_size) // stride + 1
-        masks = []
-        for out_i in range(out_h):
-            for out_j in range(out_w):
-                mask = np.zeros(self.shape, dtype=bool)
-                in_i_start = out_i * stride
-                in_i_end = in_i_start + kernel_size
-                in_j_start = out_j * stride
-                in_j_end = in_j_start + kernel_size
 
-                mask[:, in_i_start:in_i_end, in_j_start:in_j_end] = True
-                masks.append(mask)
+        out_h = (h - kh) // sh + 1
+        out_w = (w - kw) // sw + 1
+
+        # top-left corner of each kernel window
+        y0 = np.arange(out_h) * sh
+        x0 = np.arange(out_w) * sw
+
+        # kernel offsets
+        ky = np.arange(kh)
+        kx = np.arange(kw)
+
+        # absolute coordinates of kernel elements
+        yy = y0[:, None, None, None] + ky[None, None, :, None]
+        xx = x0[None, :, None, None] + kx[None, None, None, :]
+
+        # create spatial masks
+        spatial = np.zeros((out_h, out_w, h, w), dtype=bool)
+
+        spatial[
+            np.arange(out_h)[:, None, None, None],
+            np.arange(out_w)[None, :, None, None],
+            yy,
+            xx,
+        ] = True
+
+        # duplicate for channels
+        masks = spatial[:, :, None].repeat(c, axis=2)
+        masks = masks.reshape(-1, c, h, w)
+
         return masks
-    
-    def highlight_loop_conv2d(
-        self,
-        kernel_size: int = 3,
-        stride: int = 1,
-        back: bool = True,
-        **aargs,
-    ) -> AnimationGroup:
-        masks = self.highlight_loop_conv2d_mask(
-            kernel_size=kernel_size,
-            stride=stride,
-        )
-        return self.highlight_loop(
-            masks=masks,
-            back=back,
-            **aargs,
-        )
-    
+
 class MTensor4D(MTensorGeneral):
     def __init__(
         self,
@@ -980,32 +750,26 @@ class MTensor4D(MTensorGeneral):
         self.block_gap = block_gap
         super().__init__(**kwargs)
     
-    def create_mobs(
+    def _create_mobs(
         self,
         style: str = 'horizontal',
     ):
         objs = np.empty(self.shape, dtype=object)
         b, c, h, w = self.shape
         step = self.side_length + self.padding
-        # blocks = VGroup()
 
         xs = [RIGHT * l * step for l in range(w)]
         ys = [DOWN * k * step for k in range(h)]
         zs = [IN * j * step for j in range(c)]
 
         for i in range(b):
-            # block_objs = np.empty((c, h, w), dtype=object)
             for j, k, l in np.ndindex((c, h, w)):
-                cube = self.make_cube(
+                cube = self._make_cube(
                     value=self.array[i, j, k, l],
                     z_index=(c-j) * h + k,        # z_index
                 )
                 cube.shift(xs[l] + ys[k] + zs[j])
-                # block_objs[j, k, l] = cube
                 objs[i, j, k, l] = cube
-
-            # block_mobs = VGroup(*block_objs.flat).center()
-            # blocks.add(block_mobs)
         
         blocks = VGroup(VGroup(*objs[i].flat) for i in range(b))
         if style == 'horizontal':
@@ -1014,10 +778,6 @@ class MTensor4D(MTensorGeneral):
             blocks.arrange(DOWN, buff=self.block_gap)
         mobs = VGroup(*objs.flat).center()
         return objs, mobs
-
-        # blocks.arrange(self.block_direction, self.block_gap)
-        # mobs = VGroup(*(mob for block in blocks for mob in block))
-        # return objs, mobs
     
     def to_3ds(
         self,
@@ -1098,18 +858,6 @@ class MTensor4D(MTensorGeneral):
             **gargs,
         )
         return anims
-    
-    # def highlight_block(
-    #     self,
-    #     direction = RIGHT,
-    #     n: int = 0,
-    #     **aargs,
-    # ) -> Animation:
-    #     d = int(direction[0])
-    #     mask = np.full_like(self.hl_state, False, dtype=bool)
-    #     mask[d*n+(d-1)//2] = True
-    #     anims = self.highlight(mask=mask, **aargs)
-    #     return anims
 
 class Demo1D(ThreeDScene):
     def construct(self) -> None:

@@ -39,16 +39,18 @@ class MainScene(ThreeDScene):
         self.play(ShowShape3D(
             self,
             tensor,
-            facing='horizontal',
-            aargs={'run_time': wt},
+            view='top',
+            style='horizontal',
+            lag_ratio=0.5,
+            run_time=1.0,
         ))
         self.wait(wt)
 
-        self.play(HideShape3D(
-            tensor,
-            aargs={'run_time': wt},
-        ))
-        self.wait(wt)
+        # self.play(HideShape3D(
+        #     tensor,
+        #     aargs={'run_time': wt},
+        # ))
+        # self.wait(wt)
 
         # NOTE: no update effect until 3d version?
         # self.play(tensor.update_values(

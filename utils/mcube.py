@@ -41,6 +41,9 @@ TARNISH_DECIMAL_CONFIG = {
     'fill_opacity': 0.3,
 }
 
+# cube update related
+MID_SCALE = 0.5
+
 class MCube(VMobject):
     def __init__(
         self,
@@ -162,17 +165,58 @@ class MCube(VMobject):
 
     def update_value(
         self,
-        value: float = 0.0,
+        value: float | None = None,
         **aargs,
     ) -> Animation:
         assert self.mode == 'card', "update_value only works in 'card' mode"
+        if value is None:
+            value = np.random.randn()
         self.value = value
 
-        return ChangeDecimalToValue(
+        anim = ChangeDecimalToValue(
             self.mob[1],
             self.value,
             **aargs,
         )
+        return anim
+
+    def _af_translate(
+        self,
+        mob,
+        alpha,
+    ):
+        if hasattr(mob, 'saved_state'):
+            mob.restore()
+        else:
+            mob.save_state()
+
+        target_scale = 1.0 + (MID_SCALE-1.0)*there_and_back(alpha)
+
+        mob.scale(target_scale)
+        mob.rotate(90 * DEGREES * smooth(alpha), OUT)
+
+    def translate(
+        self,
+        **aargs,
+    ) -> Animation:
+        assert self.mode == 'cube', "translate only works in 'cube' mode"
+        anim = UpdateFromAlphaFunc(
+            self.mob,
+            self._af_translate,
+            **aargs,
+        )
+        return anim
+
+    def breath(
+        self,
+        **aargs,    # run_time
+    ) -> Animation:
+        assert self.mode == 'cube', "breath only works in 'cube' mode"
+        anim = self.mob.animate(
+            rate_func=rate_functions.there_and_back,
+            **aargs,
+        ).scale(0.8)
+        return anim
 
     @property
     def lightup_cube_config(self):
