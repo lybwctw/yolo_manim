@@ -181,11 +181,13 @@ def random_path(
 
 # torch tensor related
 def t2s(
-    tensor: torch.Tensor,
-) -> tuple:
+    tensor: torch.Tensor | np.ndarray,
+) -> str:
     """From torch tensor to shape str.
     """
-    shape = str(tensor.numpy().shape)
+    if isinstance(tensor, torch.Tensor):
+        tensor = tensor.numpy()
+    shape = str(tensor.shape)
     if shape[-2] == ',':
         shape = shape[:-2] + ')'
     return shape

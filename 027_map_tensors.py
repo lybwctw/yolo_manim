@@ -159,17 +159,20 @@ class MainScene(ThreeDScene):
             *(ShowShape3D(
                 self,
                 mob,
-                aargs={'lag_ratio': 0.5},
+                view='intro',
+                text_config={'font_size': 12},      # bit smaller than default 15
+                text_buff=0.1,                      # bit closer than default 0.2
+                lag_ratio=1.0,
             ) for mob in t_mobs),
              lag_ratio=0.0,
-             run_time=wt,
+             run_time=wt*3,
         ))
         self.wait(wt)
 
         self.play(AnimationGroup(
-            *(HideShape(
+            *(HideShape3D(
                 mob,
-                aargs={'lag_ratio': 0.0},
+                lag_ratio=0.0,
             ) for mob in t_mobs),
              lag_ratio=0.0,
              run_time=wt,

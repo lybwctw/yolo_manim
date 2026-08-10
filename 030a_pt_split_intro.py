@@ -10,7 +10,7 @@ MODULE_PARAMS = {
     'dim': UNKNOWN,
 }
 
-wt = 0.5
+wt = 1.0
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -41,15 +41,14 @@ class MainScene(ThreeDScene):
             lag_ratio=0.5,
             run_time=wt,
         ))
-        # self.wait(wt)
 
         # expand
         self.play(card_focus.expand_params(
             params=MODULE_PARAMS,
             run_time=wt,
         ))
-        card_focus.add(card_focus.line_mobs)    # FIXME
+        # card_focus.add(card_focus.line_mobs)    # FIXME
 
         # export
-        mobs = VGroup(card_focus, cards_module)     # NOTE: used by b/c/d/e...
+        mobs = VGroup(card_focus, cards_module)     # NOTE: used by next
         export_mobs(__file__, mobs)

@@ -69,6 +69,8 @@ class LayersFake(VMobject):
         self.expanded=expanded
         self.buff=buff
 
+        self.style = None   # used by ShowShape3D
+
         # width and height not members
         if width is None:
             width = ref.rects[0].width if isinstance(ref, LayersFake) else ref.width
@@ -260,6 +262,27 @@ class LayersFake(VMobject):
             ).next_to(self.rects[-1], UP, buff=buff)
             text = VGroup(text_h, text_c, text_w)
         return text
+
+    def __getitem__(
+        self,
+        idx,
+    ) -> VMobject:
+        """Used by ShowShape3D.
+        """
+        res = self.rects[idx]
+        return res
+
+    @property
+    def shape(
+        self,
+    ) -> tuple:
+        """Used by ShowShape3D.
+        """
+        return (
+            self.depth_nominal,
+            self.height_nominal,
+            self.width_nominal,
+        )
 
 class Demo(Scene):
     def construct(self) -> None:

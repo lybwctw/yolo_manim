@@ -17,7 +17,7 @@ VIEW_COMPUTE = {
 # general mtensor config
 SMALL_TENSOR_CONFIG = {
     'side_length': 0.3,
-    'font_size': 12,
+    'font_size': 10,
     'padding': 0.0,
     'cube_config': {},
     'square_config': {},

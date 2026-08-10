@@ -25,7 +25,6 @@ class MainScene(ThreeDScene):
         ic_ReLU = InfoCard('ReLU', frame_config={'fill_color': ORANGE})
         ic_SiLU = InfoCard('SiLU', frame_config={'fill_color': ORANGE})
         ic_Softmax = InfoCard('Softmax', frame_config={'fill_color': ORANGE})
-        ic_Linear = InfoCard('Linear', frame_config={'fill_color': ORANGE})
         ic_BatchNorm2d = InfoCard('BatchNorm2d', frame_config={'fill_color': ORANGE})
 
         # ultralytics module cards
@@ -40,7 +39,7 @@ class MainScene(ThreeDScene):
             ic_add, ic_split, ic_cat,
         ).arrange(RIGHT)
         ics_t = VGroup(
-            ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_Linear, ic_BatchNorm2d,
+            ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_BatchNorm2d,
         ).arrange(RIGHT)
         ics_u = VGroup(
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
@@ -51,7 +50,7 @@ class MainScene(ThreeDScene):
 
         ics_all = VGroup(
             ic_add, ic_split, ic_cat,
-            ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_Linear, ic_BatchNorm2d,
+            ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_BatchNorm2d,
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
         )
 

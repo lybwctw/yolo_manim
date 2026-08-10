@@ -5,7 +5,7 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-wt = 0.5
+wt = 1.0
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -15,17 +15,9 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # cards
-        cards, card_modules = import_mobs('029a')
-        (
-            card_i1,
-            card_i2,
-            card_m,
-            card_o1,
-        ) = cards
+        card_focus, cards_module = import_mobs('029a')
 
-        self.add_fixed_in_frame_mobjects(
-            cards
-        )
+        self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)
 
         # ************************************************************
@@ -34,14 +26,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        self.play(AnimationGroup(
-            detach_to_ref(card_i1, UP),
-            detach_to_ref(card_i2, UP),
-            detach_to_ref(card_o1, DOWN),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.play(card_modules.animate(
+        self.play(cards_module.animate(
             run_time=wt,
         ).restore())
         self.wait(wt)

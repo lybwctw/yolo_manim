@@ -7,7 +7,7 @@ from utils.mtensor import *
 from utils.layers_fake import LayersFake
 
 DEFAULT_SHAPE_PATH_CONFIG = {
-    'stroke_color': BLACK,
+    'stroke_color': ORANGE,
     'stroke_width': 3,
     'stroke_opacity': 0.5,
 }
@@ -15,12 +15,12 @@ DEFAULT_SHAPE_PATH_CONFIG = {
 DEFAULT_SHAPE_TEXT_CONFIG = {
     'font_size': 15,
     'font': 'JetBrains Mono',
-    'color': GRAY,
+    'color': ORANGE,
 }
 
 DEFAULT_TEXT_BUFF = 0.2
 
-SHAPE_3D_MAPPING = {
+SHAPE_MAPPING = {
     (MTensor1D, 'top', 'horizontal'): {
         'path_info': [
             [[(0,), UL+OUT], [(-1,), UR+OUT]],
@@ -71,7 +71,16 @@ SHAPE_3D_MAPPING = {
             [0, DR],
         ],
     },
-    (MTensor2D, 'top', 'horizontal'): {},
+    (MTensor2D, 'top', 'horizontal'): {
+        'path_info': [
+            [[(0,0), UL], [(-1,0), DL]],
+            [[(0,0), UL], [(0,-1), UR]],
+        ],
+        'text_info': [
+            [0, LEFT+OUT],
+            [1, UP+OUT],
+        ],
+    },
     (MTensor2D, 'intro', 'horizontal'): {
         'path_info': [
             [[(0,0), UL+OUT], [(-1,0), DL+OUT]],
@@ -166,6 +175,18 @@ SHAPE_3D_MAPPING = {
         ],
     },
     (MTensor4D, 'compute', 'vertical'): {},
+    (LayersFake, 'intro', None): {
+        'path_info': [
+            [[0, DL], [-1, DL]],        # VGroup indexing
+            [[0, UL], [0, DL]],
+            [[0, UL], [0, UR]],
+        ],
+        'text_info': [
+            [0, DL],
+            [1, LEFT+OUT],
+            [2, UP+OUT],
+        ],
+    },
 }
 
 class ShowShape3D(AnimationGroup):
@@ -173,9 +194,10 @@ class ShowShape3D(AnimationGroup):
         self,
         scene,
         mob: MTensorGeneral,
-        view: str | None = 'compute',
+        view: str = 'compute',
         path_config: dict = {},
         text_config: dict = {},
+        text_buff: float = DEFAULT_TEXT_BUFF,
         **aargs,
     ):
         path_config = {**DEFAULT_SHAPE_PATH_CONFIG, **path_config}
@@ -184,8 +206,8 @@ class ShowShape3D(AnimationGroup):
         pmobs = VGroup()
         tmobs = VGroup()
         for pinfo, tinfo in zip(
-            SHAPE_3D_MAPPING[type(mob), view, mob.style]['path_info'],
-            SHAPE_3D_MAPPING[type(mob), view, mob.style]['text_info'],
+            SHAPE_MAPPING[type(mob), view, mob.style]['path_info'],
+            SHAPE_MAPPING[type(mob), view, mob.style]['text_info'],
         ):
             (p1_idx, p1_corner), (p2_idx, p2_corner) = pinfo
             t_idx, t_dir = tinfo
@@ -200,10 +222,15 @@ class ShowShape3D(AnimationGroup):
             ).next_to(
                 pmob,
                 t_dir,
-                buff=DEFAULT_TEXT_BUFF,
+                buff=text_buff,
             )
+
             pmobs.add(pmob)
             tmobs.add(tmob)
+
+        # make path and text always visible
+        pmobs.set_z_index(998)
+        tmobs.set_z_index(999)
 
         mob.shape_texts = tmobs
         # make text always face audience in 3d scene

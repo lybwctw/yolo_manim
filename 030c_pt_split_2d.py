@@ -12,7 +12,7 @@ TENSOR_VGAP_2D = 1.5
 TENSOR_EGAP_2D = 1.0
 TENSOR_HGAP_2D = 1.0
 
-wt = 0.5
+wt = 1.0
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************

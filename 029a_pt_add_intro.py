@@ -18,15 +18,7 @@ class MainScene(ThreeDScene):
         cards_module = import_mobs('028')
         card_focus, cards_other = collect_idx_card(cards_module, 0)
 
-        # input/output
-        card_i1 = InfoCard('in_1').hide_to_corner(UP)
-        card_i2 = InfoCard('in_2').hide_to_corner(UP)
-        card_o1 = InfoCard('out_1').hide_to_corner(DOWN)
-        card_is = VGroup(card_i1, card_i2)
-
-        self.add_fixed_in_frame_mobjects(
-            cards_module, card_is, card_o1,
-        )
+        self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)
 
         # ************************************************************
@@ -47,23 +39,6 @@ class MainScene(ThreeDScene):
 
         # no expansion
 
-        # introduce intput/output
-        self.play(AnimationGroup(
-            attach_to_ref(card_is, card_focus, UP,
-                rate_func=rate_functions.exponential_decay),
-            attach_to_ref(card_o1, card_focus, DOWN,
-                rate_func=rate_functions.exponential_decay),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
         # export
-        cards = VGroup(
-            card_i1,
-            card_i2,
-            card_focus,
-            card_o1,
-        )
-        mobs = VGroup(cards, cards_module)     # NOTE: used by b/c/d/e...
+        mobs = VGroup(card_focus, cards_module)     # NOTE: used by next
         export_mobs(__file__, mobs)

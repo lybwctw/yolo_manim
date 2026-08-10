@@ -9,7 +9,6 @@ from utils.constants_3d import *
 import torch
 
 TENSOR_VGAP_2D = 1.5
-TENSOR_EGAP_2D = 0.8
 
 wt = 1.0
 class MainScene(ThreeDScene):
@@ -21,7 +20,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # cards
-        cards, _ = import_mobs('029a')
+        cards = import_mobs('029b')
         (
             card_i1,
             card_i2,
@@ -37,29 +36,23 @@ class MainScene(ThreeDScene):
         # tensor mobs
         tensor_i1 = MTensor2D(
             array=t_i1,
-            **MEDIUM_CUBE_CONFIG,
-        ).align_to(
-            UP*TENSOR_VGAP_2D,
-            DOWN,
-        ).shift(
-            OUT*TENSOR_EGAP_2D,
-        )
+            mode='cube',
+            style='erect',
+            **MEDIUM_TENSOR_CONFIG,
+        ).shift(UP*TENSOR_VGAP_2D*2)
         tensor_i2 = MTensor2D(
             array=t_i2,
-            **MEDIUM_CUBE_CONFIG,
-        ).align_to(
-            UP*TENSOR_VGAP_2D,
-            DOWN,
-        ).shift(
-            IN*TENSOR_EGAP_2D,
-        )
+            mode='cube',
+            style='erect',
+            **MEDIUM_TENSOR_CONFIG,
+        ).shift(UP*TENSOR_VGAP_2D)
         tensor_o1 = MTensor2D(
             array=t_o1,
-            **MEDIUM_CUBE_CONFIG,
-        ).align_to(
-            DOWN*TENSOR_VGAP_2D,
-            UP,
-        )
+            mode='cube',
+            style='erect',
+            **MEDIUM_TENSOR_CONFIG,
+        ).shift(DOWN*TENSOR_VGAP_2D)
+        VGroup(tensor_i1, tensor_i2, tensor_o1).center()
 
         # show initial mobs
         self.set_camera_orientation(
@@ -70,88 +63,63 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'introduce cube inputs',
+            'introduce input',
             skip_animations=False,
         )
         # ************************************************************
-        # create input tensors
+        # introduce input 1
         self.play(AnimationGroup(
             tensor_i1.create(
+                style='layer',
                 direction=RIGHT,
-                anim=GrowFromCenter,
-                aargs={'rate_func': rate_functions.ease_out_back},
-                gargs={'lag_ratio': 0.5},
             ),
-            tensor_i2.create(
-                direction=RIGHT,
-                anim=GrowFromCenter,
-                aargs={'rate_func': rate_functions.ease_out_back},
-                gargs={'lag_ratio': 0.5},
+            card_i1.expand_summary(
+                t2s(t_i1),
+                run_time=wt,
             ),
-            lag_ratio=0.8,
+            lag_ratio=0.5,
             run_time=wt,
         ))
 
-        # create card summaries
+        # introduce input 2
         self.play(AnimationGroup(
-            card_i1.expand_summary(summary=t2s(t_i1)),
-            card_i2.expand_summary(summary=t2s(t_i2)),
-            lag_ratio=0.8,
+            tensor_i2.create(
+                style='layer',
+                direction=RIGHT,
+            ),
+            card_i2.expand_summary(
+                t2s(t_i2),
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
             run_time=wt,
         ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'compute output',
+            'detailed computation',
             skip_animations=False,
         )
         # ************************************************************
-        # prepare for highlight
-        tensor_i1.prepare_highlight_loop()
-        tensor_i2.prepare_highlight_loop()
-        h, w = t_i1.shape
-        masks_in = np.eye(h*w, dtype=bool).reshape(h*w, h, w)
-
-        # focus on first inputs
+        # compute into output 1
+        h, w = tensor_i1.shape
+        masks = np.eye(h*w, dtype=bool).reshape(h*w, h, w)
         self.play(AnimationGroup(
-            tensor_i1.highlight(masks_in[0]),
-            tensor_i2.highlight(masks_in[0]),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-
-        # generate first output
-        self.play(GrowFromCenter(
-            tensor_o1[0,0],
-            rate_func=rate_functions.ease_out_back,
-            run_time=wt,
-        ))
-
-        # loop into last output
-        self.play(AnimationGroup(
-            tensor_i1.highlight_loop(
-                masks=masks_in[1:],
-                back=False,
-                rate_func=smooth,
-            ),
-            tensor_i2.highlight_loop(
-                masks=masks_in[1:],
-                back=False,
-                rate_func=smooth,
-            ),
+            tensor_i1.highlight_loop(masks=masks, back=False),
+            tensor_i2.highlight_loop(masks=masks, back=False),
             Succession(
                 *(GrowFromCenter(
-                    tensor_o1[i,j],
+                    mob,
                     rate_func=rate_functions.ease_out_back,
-                ) for i, j in np.ndindex(h, w)),
+                ) for mob in tensor_o1.mobs),
                 rate_func=smooth,
             ),
             lag_ratio=0.0,
-            run_time=wt,
+            run_time=wt*2,
         ))
 
-        # back to original hl states
+        # highlight back input
         self.play(AnimationGroup(
             tensor_i1.highlight(),
             tensor_i2.highlight(),
@@ -159,12 +127,12 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # show output card shape
+        # expand output card
         self.play(card_o1.expand_summary(
-            summary=t2s(t_o1),
+            t2s(t_o1),
             run_time=wt,
         ))
-        self.wait(wt)
+        self.wait()
 
         # ************************************************************
         self.next_section(
@@ -174,30 +142,19 @@ class MainScene(ThreeDScene):
         # ************************************************************
         # remove tensors 
         self.play(AnimationGroup(
-            tensor_i1.uncreate(
+            *(tmob.uncreate(
+                style='layer',
                 direction=RIGHT,
-                anim=ShrinkToCenter,
-                gargs={'lag_ratio': 0.5},
-            ),
-            tensor_i2.uncreate(
-                direction=RIGHT,
-                anim=ShrinkToCenter,
-                gargs={'lag_ratio': 0.5},
-            ),
-            tensor_o1.uncreate(
-                direction=RIGHT,
-                anim=ShrinkToCenter,
-                gargs={'lag_ratio': 0.5},
-            ),
+                anim=Unwrite,
+            ) for tmob in [tensor_i1, tensor_i2, tensor_o1]),
             lag_ratio=0.0,
             run_time=wt,
         ))
 
-        # shrink card summaries
+        # shrink tensor cards
         self.play(AnimationGroup(
-            card_i1.shrink_summary(),
-            card_i2.shrink_summary(),
-            card_o1.shrink_summary(),
+            *(cmob.shrink_summary()
+              for cmob in [card_i1, card_i2, card_o1]),
             lag_ratio=0.0,
             run_time=wt,
         ))
