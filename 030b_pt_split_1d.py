@@ -8,6 +8,11 @@ from utils.constants_3d import *
 
 import torch
 
+INIT_MODULE_PARAMS = {
+    'split_size': UNKNOWN,
+    'dim': UNKNOWN,
+}
+
 TENSOR_VGAP_1D = 1.5
 TENSOR_HGAP_1D = 1.0
 
@@ -45,6 +50,13 @@ class MainScene(ThreeDScene):
             card_m,
             card_i1,
         )
+        self.wait(wt)
+
+        # expand module card
+        self.play(card_m.expand_params(
+            params=INIT_MODULE_PARAMS,
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
@@ -269,105 +281,97 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'compute output with [1,3,4,2]|0',
-        #     skip_animations=True,
-        # )
-        # # ************************************************************
-        # # params
-        # self.play(card_m.update_params(
-        #     {
-        #         'split_size': [1,3,4,2],
-        #         # 'dim': 0,
-        #     },
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # ************************************************************
+        self.next_section(
+            '(10) -[(1,3,4,2)|0]- (1)(3)(4)(2)',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # params
+        self.play(card_m.update_params(
+            {
+                'split_size': [1,3,4,2],
+                # 'dim': 0,
+            },
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # raw tensor
-        # t_o1, t_o2, t_o3, t_o4 = torch.split(t_i1, [1,3,4,2], dim=0)
+        # raw output tensor
+        t_o1, t_o2, t_o3, t_o4 = torch.split(t_i1, [1,3,4,2], dim=0)
 
-        # # tensor mobs
-        # tensor_os = VGroup(
-        #     MTensor1D(
-        #         array=t,
-        #         **MEDIUM_CUBE_CONFIG,
-        #     ).align_to(tensor_i1[idx:], UL)
-        #     for idx, t in zip(
-        #         [0, 1, 4, 8],
-        #         [t_o1, t_o2, t_o3, t_o4]
-        #     )
-        # )
+        # output tensor mobs
+        tensor_os = VGroup(
+            MTensor1D(
+                array=t,
+                mode='cube',
+                style='horizontal',
+                **MEDIUM_TENSOR_CONFIG,
+            ).align_to(tensor_i1[idx:], UL)
+            for idx, t in zip(
+                [0, 1, 4, 8],
+                [t_o1, t_o2, t_o3, t_o4]
+            )
+        )
 
-        # # fade in tensor
-        # self.play(AnimationGroup(
-        #     *(FadeIn(tensor_o) for tensor_o in tensor_os),
-        #     lag_ratio=0.0,
-        #     run_time=wt*0.1,
-        # ))
+        # fade in out tensor mobs
+        self.play(AnimationGroup(
+            *(FadeIn(tensor_o) for tensor_o in tensor_os),
+            lag_ratio=0.0,
+            run_time=wt*0.1,
+        ))
 
-        # # split animation
-        # tensor_os.generate_target()
-        # tensor_os.target.shift(DOWN*TENSOR_VGAP_1D*2)
-        # orig_center = tensor_os.target.get_center()
-        # tensor_os.target.arrange(RIGHT, buff=TENSOR_HGAP_1D).move_to(orig_center)
-        # self.play(MoveToTarget(
-        #     tensor_os,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # split animation
+        tensor_os.generate_target()
+        tensor_os.target.shift(DOWN*TENSOR_VGAP_1D*2)
+        orig_center = tensor_os.target.get_center()
+        tensor_os.target.arrange(RIGHT, buff=TENSOR_HGAP_1D).move_to(orig_center)
+        self.play(MoveToTarget(
+            tensor_os,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # card summary
-        # self.play(AnimationGroup(
-        #     *(cmob.expand_summary(t2s(t))
-        #      for cmob, t in zip(
-        #          [card_o1, card_o2, card_o3, card_o4],
-        #          [t_o1, t_o2, t_o3, t_o4],
-        #      )),
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # expand output cards summary
+        self.play(AnimationGroup(
+            *(cmob.expand_summary(t2s(t))
+             for cmob, t in zip(
+                 [card_o1, card_o2, card_o3, card_o4],
+                 [t_o1, t_o2, t_o3, t_o4],
+             )),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # # clean merged
         
-        # # ************************************************************
-        # self.next_section(
-        #     'clean everything',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # self.play(AnimationGroup(
-        #     *(AnimationGroup(
-        #         tmob.uncreate(
-        #             direction=RIGHT,
-        #             anim=ShrinkToCenter,
-        #             gargs={'lag_ratio': 0.5},
-        #         ),
-        #         cmob.shrink_summary(),
-        #         lag_ratio=0.5,
-        #     ) for tmob, cmob in zip(
-        #         [tensor_i1] + list(tensor_os),
-        #         [card_i1, card_o1, card_o2, card_o3, card_o4],
-        #     )),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
+        # ************************************************************
+        self.next_section(
+            'clean',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # remove tensors
+        self.play(AnimationGroup(
+            *(tmob.uncreate(
+                style='series',
+                direction=RIGHT,
+                anim=Unwrite,
+            ) for tmob in [tensor_i1, *tensor_os]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
 
-        # self.play(AnimationGroup(
-        #     detach_to_ref(card_i1, UP),
-        #     detach_to_ref(card_o1, DOWN),
-        #     detach_to_ref(card_o2, DOWN),
-        #     detach_to_ref(card_o3, DOWN),
-        #     detach_to_ref(card_o4, DOWN),
-        #     card_m.update_params(
-        #         {
-        #             'split_size': UNKNOWN,
-        #             'dim': UNKNOWN,
-        #         },
-        #     ),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # shrink tensor cards
+        self.play(AnimationGroup(
+            *(cmob.shrink_summary()
+              for cmob in [card_i1, card_o1, card_o2, card_o3, card_o4]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # export
+        mobs = VGroup(card_i1, card_m, card_o1, card_o2, card_o3, card_o4)
+        export_mobs(__file__, mobs)     # NOTE: used by next

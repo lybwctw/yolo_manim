@@ -5,11 +5,6 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-MODULE_PARAMS = {
-    'split_size': UNKNOWN,
-    'dim': UNKNOWN,
-}
-
 wt = 1.0
 class MainScene(ThreeDScene):
     def construct(self):
@@ -41,13 +36,6 @@ class MainScene(ThreeDScene):
             lag_ratio=0.5,
             run_time=wt,
         ))
-
-        # expand
-        self.play(card_focus.expand_params(
-            params=MODULE_PARAMS,
-            run_time=wt,
-        ))
-        # card_focus.add(card_focus.line_mobs)    # FIXME
 
         # export
         mobs = VGroup(card_focus, cards_module)     # NOTE: used by next

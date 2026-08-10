@@ -181,4 +181,4 @@ class MainScene(ThreeDScene):
 
         # export
         mobs = VGroup(card_i1, card_i2, card_m, card_o1)
-        export_mobs(__file__, mobs)     # NOTE: used by 029c
+        export_mobs(__file__, mobs)     # NOTE: used by next

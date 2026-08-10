@@ -14,10 +14,12 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # pytorch module cards
+        # pytorch operation cards
         ic_add = InfoCard('add', frame_config={'fill_color': TEAL})
         ic_split = InfoCard('split', frame_config={'fill_color': TEAL})
         ic_cat = InfoCard('cat', frame_config={'fill_color': TEAL})
+
+        # pytorch module cards
         ic_Conv2d = InfoCard('Conv2d', frame_config={'fill_color': ORANGE})
         ic_MaxPool2d = InfoCard('MaxPool2d', frame_config={'fill_color': ORANGE})
         ic_Upsample = InfoCard('Upsample', frame_config={'fill_color': ORANGE})
@@ -34,6 +36,13 @@ class MainScene(ThreeDScene):
         ic_SPPF = InfoCard('SPPF', frame_config={'fill_color': PURE_BLUE})
         ic_Detect = InfoCard('Detect', frame_config={'fill_color': PURE_BLUE})
 
+        # ultralytics model cards
+        ic_YOLOv8n = InfoCard('YOLOv8n', frame_config={'fill_color': PURE_RED})
+        ic_YOLOv8s = InfoCard('YOLOv8s', frame_config={'fill_color': PURE_RED})
+        ic_YOLOv8m = InfoCard('YOLOv8m', frame_config={'fill_color': PURE_RED})
+        ic_YOLOv8l = InfoCard('YOLOv8l', frame_config={'fill_color': PURE_RED})
+        ic_YOLOv8x = InfoCard('YOLOv8x', frame_config={'fill_color': PURE_RED})
+
         # arrange cards into three groups
         ics_m = VGroup(
             ic_add, ic_split, ic_cat,
@@ -44,14 +53,19 @@ class MainScene(ThreeDScene):
         ics_u = VGroup(
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
         ).arrange(RIGHT)
+        ics_y = VGroup(
+            ic_YOLOv8n, ic_YOLOv8s, ic_YOLOv8m, ic_YOLOv8l, ic_YOLOv8x,
+        ).arrange(RIGHT)
+
         VGroup(
-            ics_m, ics_t, ics_u,
+            ics_m, ics_t, ics_u, ics_y,
         ).arrange(DOWN, buff=0.5)
 
         ics_all = VGroup(
             ic_add, ic_split, ic_cat,
             ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_ReLU, ic_SiLU, ic_Softmax, ic_BatchNorm2d,
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
+            ic_YOLOv8n, ic_YOLOv8s, ic_YOLOv8m, ic_YOLOv8l, ic_YOLOv8x,
         )
 
         # show starting cards
@@ -80,4 +94,4 @@ class MainScene(ThreeDScene):
         ))
         self.wait()
 
-        export_mobs(__file__, ics_all)      # used by 029
+        export_mobs(__file__, ics_all)      # used by next

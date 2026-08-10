@@ -37,8 +37,6 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
 
-        # no expansion
-
         # export
         mobs = VGroup(card_focus, cards_module)     # NOTE: used by next
         export_mobs(__file__, mobs)
