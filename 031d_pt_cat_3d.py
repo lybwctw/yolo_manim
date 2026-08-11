@@ -460,6 +460,8 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
+        # TODO: zoom 0.7
+
         # show input tensor 1 and 3
         self.play(AnimationGroup(
             *(tmob.create(
