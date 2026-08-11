@@ -60,6 +60,7 @@ class MainScene(ThreeDScene):
                 array=t,
                 mode='cube',
                 style='horizontal',
+                **MEDIUM_TENSOR_CONFIG,
             ) for t in [t_i1, t_i2]
         ).arrange(
             RIGHT,
@@ -193,22 +194,22 @@ class MainScene(ThreeDScene):
                 array=t,
                 mode='cube',
                 style='horizontal',
+                **MEDIUM_TENSOR_CONFIG,
             ).shift(UP*TENSOR_VGAP_1D)
             for t in [t_i1, t_i2]
         ).arrange(
             RIGHT,
             buff=TENSOR_HGAP_1D,
-        ).align_to(
+        ).shift(
             UP*TENSOR_VGAP_1D,
-            DOWN,
         )
         tensor_o1 = MTensor1D(
             array=t_o1,
             mode='cube',
             style='horizontal',
-        ).align_to(
+            **MEDIUM_TENSOR_CONFIG,
+        ).shift(
             DOWN*TENSOR_VGAP_1D,
-            UP,
         )
 
         # show input tensor
@@ -253,7 +254,6 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         self.replace(tensor_is_copy, tensor_o1)
-        self.wait(wt)
 
         # expand output summary
         self.play(card_o1.expand_summary(
@@ -281,149 +281,140 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     '(4)(3)(6) -[0]- (13)',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # raw tensor
-        # t_i1 = torch.randn(4)
-        # t_i2 = torch.randn(3)
-        # t_i3 = torch.randn(6)
-        # t_o1 = torch.cat([t_i1, t_i2, t_i3], dim=0)
+        # ************************************************************
+        self.next_section(
+            '(4)(3)(6) -[0]- (13)',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # raw tensor
+        t_i1 = torch.randn(4)
+        t_i2 = torch.randn(3)
+        t_i3 = torch.randn(6)
+        t_o1 = torch.cat([t_i1, t_i2, t_i3], dim=0)
 
-        # # input tensor mob
-        # tensor_is = VGroup(
-        #     MTensor1D(
-        #         array=t,
-        #         **MEDIUM_CUBE_CONFIG,
-        #     ).shift(UP*TENSOR_VGAP_1D)
-        #     for t in [t_i1, t_i2, t_i3]
-        # ).arrange(
-        #     RIGHT,
-        #     buff=TENSOR_HGAP_1D,
-        # ).align_to(
-        #     UP*TENSOR_VGAP_1D,
-        #     DOWN,
-        # )
+        # tensor mob
+        tensor_is = VGroup(
+            MTensor1D(
+                array=t,
+                mode='cube',
+                style='horizontal',
+                **MEDIUM_TENSOR_CONFIG,
+            ).shift(UP*TENSOR_VGAP_1D)
+            for t in [t_i1, t_i2, t_i3]
+        ).arrange(
+            RIGHT,
+            buff=TENSOR_HGAP_1D,
+        ).shift(
+            UP*TENSOR_VGAP_1D,
+        )
+        tensor_o1 = MTensor1D(
+            array=t_o1,
+            mode='cube',
+            style='horizontal',
+            **MEDIUM_TENSOR_CONFIG,
+        ).shift(
+            DOWN*TENSOR_VGAP_1D,
+        )
 
-        # # output tensor mob
-        # tensor_o1 = MTensor1D(
-        #     array=t_o1,
-        #     **MEDIUM_CUBE_CONFIG,
-        # ).align_to(
-        #     DOWN*TENSOR_VGAP_1D,
-        #     UP,
-        # )
+        # show input tensor
+        self.play(AnimationGroup(
+            *(tmob.create(
+                style='series',
+                direction=RIGHT,
+            ) for tmob in tensor_is),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
 
-        # # show input tensor
-        # self.play(AnimationGroup(
-        #     *(tmob.create(
-        #         direction=RIGHT,
-        #         anim=GrowFromCenter,
-        #         aargs={'rate_func': rate_functions.ease_out_back},
-        #         gargs={'lag_ratio': 0.5},
-        #     ) for tmob in tensor_is),
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
+        # new input card
+        card_i3 = InfoCard('in_3').hide_to_corner(LEFT).align_to(
+            card_i2,
+            DOWN,
+        )
+        self.add_fixed_in_frame_mobjects(card_i3)
+        self.play(AnimationGroup(
+            attach_to_ref(
+                card_i3,
+                card_m,
+                UP,
+            ),
+            attach_to_ref(
+                VGroup(card_i1, card_i2),
+                card_i2,
+                UP,
+                run_time=wt,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
 
-        # # show input summary
-        # card_i3 = InfoCard('in_3').hide_to_corner(LEFT).align_to(
-        #     card_i2,
-        #     DOWN,
-        # )
-        # self.add_fixed_in_frame_mobjects(card_i3)
-        # self.play(AnimationGroup(
-        #     attach_to_ref(
-        #         card_i3,
-        #         card_m,
-        #         UP,
-        #     ),
-        #     attach_to_ref(
-        #         VGroup(card_i1, card_i2),
-        #         card_i2,
-        #         UP,
-        #         run_time=wt,
-        #     ),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.play(AnimationGroup(
-        #     *(cmob.expand_summary(t2s(t))
-        #       for cmob, t in zip(
-        #         [card_i1, card_i2, card_i3],
-        #         [t_i1, t_i2, t_i3]
-        #     )),
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # expand input cards summary
+        self.play(AnimationGroup(
+            *(cmob.expand_summary(t2s(t))
+              for cmob, t in zip(
+                [card_i1, card_i2, card_i3],
+                [t_i1, t_i2, t_i3]
+            )),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # show compute output
-        # tensor_is_copy = tensor_is.copy()
-        # self.play(FadeIn(
-        #     tensor_is_copy,
-        #     run_time=wt*0.1,
-        # ))
-        # tensor_is_copy.generate_target()
-        # for tmob, idx in zip(tensor_is_copy.target, [0, 4, 7]):
-        #     tmob.align_to(
-        #         tensor_o1[idx:],
-        #         UL+OUT
-        #     )
-        # self.play(MoveToTarget(
-        #     tensor_is_copy,
-        #     run_time=wt,
-        # ))
-        # self.remove(tensor_is_copy)
-        # self.add(tensor_o1)
-        # self.wait(wt)
+        # concat animation
+        tensor_is_copy = tensor_is.copy()
+        self.play(FadeIn(
+            tensor_is_copy,
+            run_time=wt*0.1,
+        ))
+        tensor_is_copy.generate_target()
+        for tmob, idx in zip(
+            tensor_is_copy.target,
+            [0, 4, 7],
+        ):
+            tmob.align_to(
+                tensor_o1[idx:],
+                UL+OUT
+            )
+        self.play(MoveToTarget(
+            tensor_is_copy,
+            run_time=wt,
+        ))
+        self.replace(tensor_is_copy, tensor_o1)
 
-        # # show output summary
-        # self.play(card_o1.expand_summary(
-        #     t2s(t_o1),
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # expand output summary
+        self.play(card_o1.expand_summary(
+            t2s(t_o1),
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # clean merged
+        # ************************************************************
+        self.next_section(
+            'clean',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # remove tensors
+        self.play(AnimationGroup(
+            *(tmob.uncreate(
+                style='series',
+                direction=RIGHT,
+                anim=Unwrite,
+            ) for tmob in [*tensor_is, tensor_o1]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
 
-        # # ************************************************************
-        # self.next_section(
-        #     'clean everything',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # self.play(AnimationGroup(
-        #     *(AnimationGroup(
-        #         tmob.uncreate(
-        #             direction=RIGHT,
-        #             anim=ShrinkToCenter,
-        #             gargs={'lag_ratio': 0.5},
-        #         ),
-        #         cmob.shrink_summary(),
-        #         lag_ratio=0.5,
-        #     ) for tmob, cmob in zip(
-        #         list(tensor_is) + [tensor_o1],
-        #         [card_i1, card_i2, card_i3, card_o1]
-        #     )),
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
+        # shrink tensor cards
+        self.play(AnimationGroup(
+            *(cmob.shrink_summary()
+              for cmob in [card_i1, card_i2, card_i3, card_o1]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
 
-        # self.play(AnimationGroup(
-        #     detach_to_ref(card_i1, UP),
-        #     detach_to_ref(card_i2, UP),
-        #     detach_to_ref(card_i3, UP),
-        #     detach_to_ref(card_o1, DOWN),
-        #     card_m.update_params(
-        #         {
-        #             'dim': UNKNOWN,
-        #         },
-        #     ),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # export
+        mobs = VGroup(card_i1, card_i2, card_i3, card_m, card_o1)
+        export_mobs(__file__, mobs)     # NOTE: used by next
+        self.wait(wt)

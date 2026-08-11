@@ -405,7 +405,14 @@ def detach_to_ref(
     """
     if not isinstance(mobs, VGroup):
         mobs = VGroup(mobs)
-    return AnimationGroup(
+    if direction is LEFT:
+        return AnimationGroup(
+            *(mob.animate.set_x(-CARD_HIDE_X)
+              for mob in mobs),
+            **aargs,
+        )
+    else:
+        return AnimationGroup(
         *(mob.animate.set_y(CARD_HIDE_Y*direction[1])
           for mob in mobs),
         **aargs,
