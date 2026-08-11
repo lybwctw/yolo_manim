@@ -5,10 +5,6 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-MODULE_PARAMS = {
-    'dim': UNKNOWN,
-}
-
 wt = 0.5
 class MainScene(ThreeDScene):
     def construct(self):
@@ -42,14 +38,6 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # expand
-        self.play(card_focus.expand_params(
-            params=MODULE_PARAMS,
-            run_time=wt,
-        ))
-        card_focus.add(card_focus.line_mobs)    # FIXME
-        self.wait(wt)
-
         # export
-        mobs = VGroup(card_focus, cards_module)     # NOTE: used by b/c/d/e...
+        mobs = VGroup(card_focus, cards_module)     # NOTE: used by next
         export_mobs(__file__, mobs)
