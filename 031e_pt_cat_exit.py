@@ -17,9 +17,7 @@ class MainScene(ThreeDScene):
         # cards
         card_focus, cards_module = import_mobs('031a')
 
-        self.add_fixed_in_frame_mobjects(
-            cards_module
-        )
+        self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)
 
         # ************************************************************
@@ -28,11 +26,6 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # shrink params
-        self.play(card_focus.shrink_params(
-            run_time=wt,
-        ))
-
         # module list
         self.play(cards_module.animate(
             run_time=wt,

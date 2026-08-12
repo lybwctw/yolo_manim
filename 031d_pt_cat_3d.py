@@ -29,6 +29,7 @@ class MainScene(ThreeDScene):
 
         # show initial mobs
         self.set_camera_orientation(
+            zoom=0.8,                   # a little bit farther
             **VIEW_COMPUTE,
         )
         self.add_fixed_in_frame_mobjects(cards)
@@ -555,7 +556,7 @@ class MainScene(ThreeDScene):
                 style='beam',
                 direction=RIGHT,
                 anim=Unwrite,
-            ) for tmob in [*tensor_i1, tensor_o1]),
+            ) for tmob in [*tensor_is, tensor_o1]),
             lag_ratio=0.0,
             run_time=wt,
         ))
