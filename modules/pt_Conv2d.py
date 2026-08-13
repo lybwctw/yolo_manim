@@ -22,8 +22,15 @@ import numpy as np
 # 'padding_mode': UNKNOWN,
 # ---------------------------------------------
 
-DEFAULT_WEIGHT_CONFIG = SMALL_4D_CUBE_CONFIG
-DEFAULT_BIAS_CONFIG = SMALL_1D_CUBE_CONFIG
+DEFAULT_WEIGHT_CREATE_ARGS = {
+    'style': 'beam',
+    'direction': OUT,
+    'lag_ratio': 0.5,
+}
+DEFAULT_BIAS_CREATE_ARGS = {
+    'style': 'series',
+    'direction': RIGHT,
+}
 
 class PT_Conv2d(VMobject):
     def __init__(
@@ -32,6 +39,7 @@ class PT_Conv2d(VMobject):
         module_config: dict = {},       # torch module config
         weight_config: dict = {},       # weight, 4d
         bias_config: dict = {},         # bias, 1d
+        block_gap: float = 1.0,         # weight block gap
         bias_offset: float = 1.0,       # bias offset to weight
     ):
         super().__init__()
@@ -39,222 +47,85 @@ class PT_Conv2d(VMobject):
         self.module_config = module_config
         self.weight_config = weight_config
         self.bias_config = bias_config
+        self.block_gap = block_gap
         self.bias_offset = bias_offset
 
-        # init weight mobs
-        mobs_weight = MTensor4D(
-            array=self.module.weight.detach().numpy(),
-            **{**DEFAULT_WEIGHT_CONFIG, **weight_config},
+        # init weight
+        rt_weight = self.module.weight.detach()
+        mt_weight = MTensor4D(
+            block_gap=self.block_gap,
+            array=rt_weight,
+            mode='cube',
+            style='horizontal',
+            **{**SMALL_TENSOR_CONFIG, **self.weight_config},
         )
-        self.mobs_weight = mobs_weight
-        self.add(self.mobs_weight)
+        self.rt_weight = rt_weight
+        self.mt_weight = mt_weight
+        self.add(self.mt_weight)
 
-        # maybe init bias mobs
+        # init bias (maybe)
         if self.module_config['bias']:
-            mobs_bias = MTensor1D(
-                array=self.module.bias.detach().numpy(),
-                **{**DEFAULT_BIAS_CONFIG, **bias_config},
+            rt_bias = self.module.bias.detach()
+            mt_bias = MTensor1D(
+                array=rt_bias,
+                mode='cube',
+                style='horizontal',
+                **{**SMALL_TENSOR_CONFIG, **self.bias_config},
             )
             # align bias to weight
-            for i, mob in enumerate(mobs_bias.get_mobs()):
-                mob.next_to(self.mobs_weight[i], DOWN, self.bias_offset)
-            self.mobs_bias = mobs_bias
-            self.add(self.mobs_bias)
+            for i, mob in enumerate(mt_bias.mobs):
+                mob.next_to(self.mt_weight[i], DOWN, self.bias_offset)
+            self.mt_bias = mt_bias
+            self.add(self.mt_bias)
     
     def create(
         self,
-        style='layer',
-        direction=OUT,
-        anim=Create,
-        aargs: dict = {},
-        gargs: dict = {},
-        ggargs: dict = {},
+        wargs: dict = {},       # 4d weight mtensor create args
+        bargs: dict = {},       # 1d bias mtensor create args
+        **aargs,                # lag_ratio, run_time
     ) -> AnimationGroup:
         anims = []
-        anims.append(self.mobs_weight.create(
-            style=style,
-            direction=direction,
-            anim=anim,
-            aargs=aargs,
-            gargs=gargs,
-            ggargs=ggargs,
+        anims.append(self.mt_weight.create(
+            **{**DEFAULT_WEIGHT_CREATE_ARGS, **wargs},
         ))
         if self.module_config['bias']:
-            anims.append(self.mobs_bias.create(
-                direction=RIGHT,        # always right direction
-                anim=anim,
-                aargs=aargs,
-                gargs=ggargs,
+            anims.append(self.mt_bias.create(
+                **{**DEFAULT_BIAS_CREATE_ARGS, **bargs},
             ))
-        return Succession(*anims)
+        return AnimationGroup(
+            *anims,
+            **aargs,
+        )
     
-    # def switch_mode(
-    #     self,
-    #     style: str = 'layer',
-    #     direction: np.ndarray = OUT,
-    #     aargs: dict = {},
-    #     gargs: dict = {},
-    #     ggargs: dict = {},
-    # ) -> Animation:
-    #     anims = []
-    #     anims.append(AnimationGroup(
-    #         *(tensor.switch_mode(
-    #             style=style,
-    #             direction=direction,
-    #             aargs=aargs,
-    #             gargs=gargs,
-    #         ) for tensor in self.mobs_weight),
-    #         **ggargs,
-    #     ))
-
-    #     if self.module_config['bias']:
-    #         anims.append(AnimationGroup(
-    #             *(tensor.switch_mode(
-    #                 style=style,
-    #                 direction=direction,
-    #                 aargs=aargs,
-    #                 gargs=gargs,
-    #             ) for tensor in self.mobs_bias),
-    #             **ggargs,
-    #         ))
-    #     return Succession(*anims)
-    
-    # def get_shape_path(
-    #     self,
-    #     **path_config,
-    # ) -> VMobject:
-    #     path = VMobject().set_z_index(self.shape[0])
-    #     path.set_points_as_corners([
-    #         self.mobs[-1].get_corner(DOWN + RIGHT + IN),
-    #         self.mobs[0].get_corner(DOWN + LEFT + IN),
-    #         self.mobs[0].get_corner(DOWN + LEFT + OUT),
-    #         self.mobs[0].get_corner(UP + LEFT + OUT),
-    #         self.mobs[0].get_corner(UP + RIGHT + OUT),
-    #     ]).set_stroke(**path_config)
-    #     return path
-
-    # def get_shape_text(
-    #     self,
-    #     **text_config,
-    # ) -> VGroup:
-    #     buff = text_config.pop('buff', 0.25)
-
-    #     texts = VGroup()
-    #     for i in range(4):
-    #         text = Text(
-    #             str(self.shape[i]),
-    #             **text_config,
-    #         ).next_to(
-    #             self.ref_point(i),
-    #             self.ref_direction(i),
-    #             buff=self.ref_buff(i, buff),
-    #         )
-    #         self.rotate_shape(text, i)
-    #         texts.add(text)
-    #     return texts
-    
-    # def ref_point(
-    #     self,
-    #     index: int,     # 0/1/2/3
-    # ) -> Point:
-    #     if index == 0:
-    #         p1 = self.mobs[0].get_corner(DL + IN)
-    #         p2 = self.mobs[-1].get_corner(DR + IN)
-    #         pm = (p1 + p2) / 2
-    #     elif index == 1:
-    #         pm = self.mobs[0].get_corner(DL)
-    #     elif index == 2:
-    #         pm = self.mobs[0].get_corner(LEFT + OUT)
-    #     elif index == 3:
-    #         pm = self.mobs[0].get_corner(UP + OUT)
-    #     return pm
-
-    # def ref_direction(
-    #     self,
-    #     index: int,     # 0/1/2/3
-    # ):
-    #     if index == 0:
-    #         direction = DOWN
-    #     elif index == 1:
-    #         direction = LEFT
-    #     elif index == 2:
-    #         direction = OUT + LEFT
-    #     elif index == 3:
-    #         direction = OUT + UP
-    #     return direction
-    
-    # def ref_buff(
-    #     self,
-    #     index: int,     # 0/1/2/3
-    #     buff: float,
-    # ) -> float:
-    #     if index == 0:
-    #         return buff
-    #     elif index == 1:
-    #         return buff
-    #     elif index == 2:
-    #         return buff*.8
-    #     elif index == 3:
-    #         return buff*.8
-
-    # def rotate_shape(
-    #     self,
-    #     mob,
-    #     index: int,     # 0/1/2/3
-    # ):
-    #     if index == 1:
-    #         mob.rotate(90*DEGREES, axis=RIGHT)
-    #     elif index == 2:
-    #         mob.rotate(90*DEGREES, axis=RIGHT)
-    #         # mob.rotate(90*DEGREES, axis=OUT)
-    #     elif index == 3:
-    #         mob.rotate(90*DEGREES, axis=RIGHT)
-    
-    # @property
-    # def weight(self) -> np.ndarray:
-    #     return self.module.weight.numpy()
-    
-    # @property
-    # def bias(self) -> np.ndarray:
-    #     return self.module.bias.numpy()
-
-    # @property
-    # def weight_shape(self):
-    #     return self.weight.shape
-
-    # @property
-    # def bias_shape(self):
-    #     return self.bias.shape
-
 class Demo(ThreeDScene):
     def construct(self):
-        self.set_camera_orientation(
-            phi=75*DEGREES,
-            theta=-75*DEGREES,
-        )
-        # self.begin_ambient_camera_rotation(
-        #     rate=0.1,
-        # )
+        conv2d_config = {
+            'in_channels': 5,
+            'out_channels': 4,
+            'kernel_size': 3,
+            'stride': 1,
+            'padding': 1,
+            'bias': True,
+        }
 
-        pt_conv2d = PT_Conv2d(
-            array=np.random.rand(5, 4, 3, 3),
-            size=0.3,
-            mode='cube',
-            padding=0.0,
+        self.set_camera_orientation(
+            **VIEW_INTRO,
         )
-        self.play(pt_conv2d.create(
-            style='beam',
-            direction=OUT,
-            anim=GrowFromCenter,
-            aargs={'rate_func': rate_functions.ease_out_back},
-            gargs={},
-            ggargs={
-                'lag_ratio': 0.1,
-                'run_time': 1.0,
-            },
+
+        rm_conv2d = torch.nn.Conv2d(**conv2d_config)
+        mm_conv2d = PT_Conv2d(
+            module=rm_conv2d,
+            module_config=conv2d_config,
+            block_gap=0.5,
+            bias_offset=0.5,
+        )
+
+        self.play(mm_conv2d.create(
+            lag_ratio=0.5,
+            run_time=1.0,
         ))
-        self.add(pt_conv2d)     # FIXME, manual add after creation
-        pt_conv2d.add_updater(
-            lambda m, dt: m.rotate(5 * DEGREES * dt)
+
+        self.move_camera(
+            **VIEW_COMPUTE,
         )
-        self.wait(1.0)
+        self.wait()

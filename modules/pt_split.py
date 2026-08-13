@@ -6,6 +6,7 @@ from manim import *
 
 from utils.info_card import *
 
-# ------------- info card ---------------------
+# ----------------- config --------------------
 # 'split_size': UNKNOWN,
 # 'dim': UNKNOWN,
+# ---------------------------------------------
