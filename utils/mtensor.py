@@ -147,7 +147,7 @@ class MTensorGeneral(VMobject):
 
         return Succession(
             *anims_loop,
-            rate_func=smooth,
+            # rate_func=smooth,
             **aargs,
         )
 
