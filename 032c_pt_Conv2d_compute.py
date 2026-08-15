@@ -56,9 +56,7 @@ class MainScene(ThreeDScene):
         )
 
         # show initial mobs
-        self.set_camera_orientation(
-            **VIEW_COMPUTE,
-        )
+        self.set_camera_orientation(**VIEW_COMPUTE)
         self.add_fixed_in_frame_mobjects(card_module)
         self.add(mob_module)
         self.wait(wt)
@@ -179,7 +177,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'the rest of compute loop for other layers',
+            'compute loop for other layers',
             skip_animations=True,
         )
         # ************************************************************
@@ -218,7 +216,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'restore output / module / input',
+            'restore output / weight / input',
             skip_animations=True,
         )
         # ************************************************************
@@ -312,51 +310,50 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # hide shapes
-        # self.play(AnimationGroup(
-        #     *(HideShape3D(
-        #         mob=mob,
-        #         aargs={'lag_ratio': 0.5},
-        #     ) for mob in [
-        #         mob_i1,
-        #         mob_module.mobs_weight,
-        #         mob_o1,
-        #     ]),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # hide shapes
+        self.play(AnimationGroup(
+            *(HideShape3D(
+                mob=mob,
+                lag_ratio=0.0,
+            ) for mob in [
+                mob_i1,
+                mob_weight,
+                mob_o1,
+            ]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'clean input/output',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # self.play(AnimationGroup(
-        #     *(AnimationGroup(
-        #         tmob.uncreate(
-        #             style='beam',
-        #             direction=IN,
-        #             anim=ShrinkToCenter,
-        #             gargs={},
-        #         ),
-        #         cmob.shrink_summary(),
-        #         lag_ratio=0.5,
-        #     ) for tmob, cmob in zip(
-        #         [mob_i1, mob_o1],
-        #         [card_i1, card_o1],
-        #     )),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # ************************************************************
+        self.next_section(
+            'clean input/output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            *(AnimationGroup(
+                tmob.uncreate(
+                    style='beam',
+                    direction=IN,
+                    anim=Unwrite,
+                ),
+                cmob.shrink_summary(),
+                lag_ratio=0.5,
+            ) for tmob, cmob in zip(
+                [mob_i1, mob_o1],
+                [card_i1, card_o1],
+            )),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # export for next
-        # mobs = VGroup(
-        #     card_i1,
-        #     card_module,
-        #     card_o1,
-        #     mob_module,
-        # )
-        # export_mobs(__file__, mobs)     # used by 032c
+        # export
+        mobs = VGroup(
+            card_i1,
+            card_module,
+            card_o1,
+            mob_module,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by next
