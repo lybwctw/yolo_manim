@@ -28,14 +28,27 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
             mob_module,
-        ) = import_mobs('032b')
+        ) = import_mobs('032e')
+        mob_weight = mob_module.mt_weight
         torch_module = mob_module.module
         module_config = mob_module.module_config
 
-        # show initial mobs
-        self.set_camera_orientation(
-            **VIEW_COMPUTE,
+        # raw tensor
+        t_i1 = torch.randn(1, 3, 5, 6)
+
+        # input tensor mob
+        mob_i1 = MTensor3D(
+            array=t_i1.detach()[0],
+            mode='cube',
+            **SMALL_TENSOR_CONFIG,
+        ).next_to(
+            mob_module,
+            UP,
+            TENSOR_VGAP_3D,
         )
+
+        # show initial mobs
+        self.set_camera_orientation(**VIEW_COMPUTE)
         self.add_fixed_in_frame_mobjects(
             card_i1,
             card_module,
@@ -50,26 +63,11 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # raw tensor
-        t_i1 = torch.randn(1, 3, 5, 6)
-
-        # input tensor mob
-        mob_i1 = MTensor3D(
-            array=t_i1.detach()[0],
-            **SMALL_3D_CUBE_CONFIG,
-        ).next_to(
-            mob_module,
-            UP,
-            TENSOR_VGAP_3D,
-        )
-
         # show input tensor
         self.play(mob_i1.create(
             style='beam',
             direction=OUT,
-            anim=GrowFromCenter,
-            aargs={'rate_func': rate_functions.ease_out_back},
-            gargs={'run_time': wt},
+            run_time=wt,
         ))
         self.wait(wt)
 
@@ -87,43 +85,38 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         self.play(AnimationGroup(
-            AnimationGroup(
-                *(mob.animate(
-                    rate_func=rate_functions.there_and_back,
-                ).scale(0.8)
-                for mob in mob_i1.mobs),
+            mob_weight.breath(
+                style='whole',
                 lag_ratio=0.0,
             ),
             card_module.suggest_failure(),
             lag_ratio=0.0,
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'clean module weights',
+            'i want another in_channels for module',
             skip_animations=False,
         )
         # ************************************************************
-        self.play(mob_module.mobs_weight.uncreate(
+        # clean module weight
+        # FIXME: or uncreate whole module?
+        self.play(mob_weight.uncreate(
             style='beam',
             direction=IN,
             anim=Unwrite,
-            gargs={},
-            ggargs={
-                'lag_ratio': 0.5,
-                'run_time': wt,
-            },
+            lag_ratio=0.0,
+            run_time=wt,
         ))
         self.wait(wt)
 
-        card_i1.add(card_i1.smob)       # FIXME
-
+        # export
         mobs = VGroup(
             card_i1,
             card_module,
             card_o1,
             mob_i1,
         )
-        export_mobs(__file__, mobs)     # NOTE: used by 032f
+        export_mobs(__file__, mobs)     # NOTE: used by next

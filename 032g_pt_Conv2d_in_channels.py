@@ -7,11 +7,26 @@ from utils.info_card import *
 from utils.constants_3d import *
 from utils.constants import *
 from utils.general import *
+
+from modules.pt_Conv2d import *
+
 import torch
 
 TENSOR_VGAP_3D = 2.0
 # TENSOR_HGAP_3D = 1.0
 # TENSOR_EGAP_3D = 1.0
+
+NEW_CONFIG = {
+    'in_channels': 3,
+    'out_channels': 5,
+    'kernel_size': 3,
+    'stride': 1,
+    'padding': 1,
+    'bias': False,
+    'dilation': 1,
+    'groups': 1,
+    'padding_mode': 'zeros',
+}
 
 wt = 0.5
 class MainScene(ThreeDScene):
@@ -19,36 +34,33 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        # load mobs and torch module
+        # load cards and input
         (
             card_i1,
             card_module,
             card_o1,
-            mob_module,
-        ) = import_mobs('032c')
-        mob_weight = mob_module.mt_weight
-        torch_module = mob_module.module
-        module_config = mob_module.module_config
+            mob_i1,
+        ) = import_mobs('032f')
 
-        # raw tensor
-        t_i1 = torch.randn(1, 6, 5, 8)
+        # raw module and manim module
+        module_config = NEW_CONFIG
+        torch_module = torch.nn.Conv2d(**module_config)
+        mob_module = PT_Conv2d(
+            module=torch_module,
+            module_config=module_config,
+            block_gap=0.5,
+            bias_offset=0.5,
+        )
+        mob_weight = mob_module.mt_weight
+
+        # new raw output tensor
+        t_i1 = mob_i1.tensor[None,:]    # FIXME: manual new dim
         t_o1 = torch_module(t_i1)
 
-        # input tensor mob
-        mob_i1 = MTensor3D(
-            array=t_i1.detach()[0],
-            mode='cube',
-            **SMALL_TENSOR_CONFIG,
-        ).next_to(
-            mob_weight,
-            UP,
-            TENSOR_VGAP_3D,
-        )
-
-        # output tensor mob
+        # new output tensor mob
         mob_o1 = MTensor3D(
             array=t_o1.detach()[0],
             mode='cube',
@@ -66,26 +78,26 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
         )
-        self.add(mob_module)
+        self.add(mob_i1)
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            '(6,5,8) -[Conv2d]- (5,5,8)',
-            skip_animations=True,
+            'show new module weight and card',
+            skip_animations=False,
         )
         # ************************************************************
-        # show input tensor
-        self.play(mob_i1.create(
-            style='beam',
-            direction=OUT,
+        # new module params
+        # NOTE: assert that only in_channels changes
+        self.play(card_module.update_params(
+            params={
+                'in_channels': module_config['in_channels'],
+            },
             run_time=wt,
         ))
-        self.wait(wt)
 
-        # show input summary
-        self.play(card_i1.expand_summary(
-            t2s(t_i1.detach()[0]),
+        # show new weight
+        self.play(mob_module.create(
             run_time=wt,
         ))
         self.wait(wt)
@@ -93,7 +105,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'pad before compute',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(mob_i1.pad(
@@ -109,52 +121,28 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'layer compute loop',
-            skip_animations=True,
+            'layer compute loop (breath style)',
+            skip_animations=False,
         )
         # ************************************************************
-        b, c, h, w = mob_weight.shape
-        masks_weight = np.tile(
-            np.eye(b, dtype=bool)[:, :, None, None, None],
-            (1, c, h, w),
-        )
-        layers_output = mob_o1.get_layers(
-            direction=IN,
-        )
-
         self.play(AnimationGroup(
-            mob_weight.highlight_loop(
-                masks=masks_weight,
-                back=False,
-                rate_func=smooth,
+            mob_weight.breath(
+                style='whole',
+                rate_func=smooth,           # sync with default
+                lag_ratio=0.5,              # sync with default
             ),
-            Succession(
-                *(AnimationGroup(
-                    *(GrowFromCenter(
-                        mob,
-                        rate_func=rate_functions.ease_out_back,
-                    ) for mob in layer),
-                    lag_ratio=0.0,
-                ) for layer in layers_output),
-                rate_func=smooth,
+            mob_o1.create(
+                style='layer',
+                direction=IN,
+                # rate_func=smooth,         # smooth by default
+                # lag_ratio=1.0,            # 0.5 by default
             ),
-            lag_ratio=0.0,
+            lag_ratio=0.1,
             run_time=wt*3,
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'restore weight / input',
-            skip_animations=True,
-        )
-        # ************************************************************
-        # restore weight
-        self.play(mob_weight.highlight(
-            run_time=wt,
-        ))
-
-        # unpad input
+        # unpad input tensor
         self.play(mob_i1.unpad(
             run_time=wt,
         ))
@@ -169,23 +157,47 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'clean input/output',
+            'i want another out_channels for module',
             skip_animations=False,
         )
         # ************************************************************
+        orig_center = mob_o1.get_center()
+        o1_layers = mob_o1.get_layers(direction=IN)
+        self.play(o1_layers.animate(
+            run_time=wt,
+            rate_func=rate_functions.there_and_back,
+        ).arrange(
+            IN,
+            buff=0.2,
+        ).move_to(
+            orig_center,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'clean module weight and output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # clean output and summary
         self.play(AnimationGroup(
-            *(AnimationGroup(
-                tmob.uncreate(
-                    style='beam',
-                    direction=IN,
-                    anim=Unwrite,
-                ),
-                cmob.shrink_summary(),
-                lag_ratio=0.5,
-            ) for tmob, cmob in zip(
-                [mob_i1, mob_o1],
-                [card_i1, card_o1],
-            )),
+            mob_o1.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+            ),
+            card_o1.shrink_summary(),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # clean module weight
+        self.play(mob_weight.uncreate(
+            style='beam',
+            direction=IN,
+            anim=Unwrite,
             lag_ratio=0.0,
             run_time=wt,
         ))
@@ -196,6 +208,6 @@ class MainScene(ThreeDScene):
             card_i1,
             card_module,
             card_o1,
-            mob_module,
+            mob_i1,
         )
         export_mobs(__file__, mobs)     # NOTE: used by next

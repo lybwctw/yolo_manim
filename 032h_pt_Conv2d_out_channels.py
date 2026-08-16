@@ -7,11 +7,26 @@ from utils.info_card import *
 from utils.constants_3d import *
 from utils.constants import *
 from utils.general import *
+
+from modules.pt_Conv2d import *
+
 import torch
 
 TENSOR_VGAP_3D = 2.0
 # TENSOR_HGAP_3D = 1.0
 # TENSOR_EGAP_3D = 1.0
+
+NEW_CONFIG = {
+    'in_channels': 3,
+    'out_channels': 7,
+    'kernel_size': 3,
+    'stride': 1,
+    'padding': 1,
+    'bias': False,
+    'dilation': 1,
+    'groups': 1,
+    'padding_mode': 'zeros',
+}
 
 wt = 0.5
 class MainScene(ThreeDScene):
@@ -19,36 +34,33 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        # load mobs and torch module
+        # load cards and input
         (
             card_i1,
             card_module,
             card_o1,
-            mob_module,
-        ) = import_mobs('032d')
-        mob_weight = mob_module.mt_weight
-        torch_module = mob_module.module
-        module_config = mob_module.module_config
+            mob_i1,
+        ) = import_mobs('032g')
 
-        # raw tensor
-        t_i1 = torch.randn(1, 6, 7, 5)
+        # raw module and manim module
+        module_config = NEW_CONFIG
+        torch_module = torch.nn.Conv2d(**module_config)
+        mob_module = PT_Conv2d(
+            module=torch_module,
+            module_config=module_config,
+            block_gap=0.5,
+            bias_offset=0.5,
+        )
+        mob_weight = mob_module.mt_weight
+
+        # new raw output tensor
+        t_i1 = mob_i1.tensor[None,:]    # FIXME: manual new dim
         t_o1 = torch_module(t_i1)
 
-        # input tensor mob
-        mob_i1 = MTensor3D(
-            array=t_i1.detach()[0],
-            mode='cube',
-            **SMALL_TENSOR_CONFIG,
-        ).next_to(
-            mob_weight,
-            UP,
-            TENSOR_VGAP_3D,
-        )
-
-        # output tensor mob
+        # new output tensor mob
         mob_o1 = MTensor3D(
             array=t_o1.detach()[0],
             mode='cube',
@@ -66,26 +78,26 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
         )
-        self.add(mob_module)
+        self.add(mob_i1)
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            '(6,7,5) -[Conv2d]- (5,7,5)',
-            skip_animations=True,
+            'show new module weight and card',
+            skip_animations=False,
         )
         # ************************************************************
-        # show input tensor
-        self.play(mob_i1.create(
-            style='beam',
-            direction=OUT,
+        # new module params
+        # NOTE: assert that only in_channels changes
+        self.play(card_module.update_params(
+            params={
+                'out_channels': module_config['out_channels'],
+            },
             run_time=wt,
         ))
-        self.wait(wt)
 
-        # show input summary
-        self.play(card_i1.expand_summary(
-            t2s(t_i1.detach()[0]),
+        # show new weight
+        self.play(mob_module.create(
             run_time=wt,
         ))
         self.wait(wt)
@@ -93,7 +105,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'pad before compute',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(mob_i1.pad(
@@ -145,33 +157,77 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'clean input/output',
+            'prepare for next scene',
             skip_animations=False,
         )
         # ************************************************************
-        self.play(AnimationGroup(
-            *(AnimationGroup(
-                tmob.uncreate(
-                    style='beam',
-                    direction=IN,
-                    anim=Unwrite,
-                ),
-                cmob.shrink_summary(),
-                lag_ratio=0.5,
-            ) for tmob, cmob in zip(
-                [mob_i1, mob_o1],
-                [card_i1, card_o1],
-            )),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
         # export
         mobs = VGroup(
             card_i1,
             card_module,
             card_o1,
+            mob_i1,
             mob_module,
+            mob_o1,
         )
-        export_mobs(__file__, mobs)     # NOTE: used by next
+        export_mobs(__file__, mobs)         # NOTE: used by next
+
+        # # ************************************************************
+        # self.next_section(
+        #     'highlight sample output beam and input block',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # mob_i1.prepare_for_highlight()
+        # mob_o1.prepare_for_highlight()
+
+        # mask_o = np.zeros(mob_o1.shape, dtype=bool)
+        # mask_o[:, 1, 2] = True
+        # mask_i = np.zeros(mob_i1.shape, dtype=bool)
+        # mask_i[:, 0:3, 1:4] = True
+
+        # # highlight sample beam in output
+        # self.play(mob_o1.highlight(
+        #     mask=mask_o,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # highlight receptive field in input
+        # self.play(mob_i1.highlight(
+        #     mask=mask_i,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # highlight back
+        # self.play(AnimationGroup(
+        #     mob_i1.highlight(),
+        #     mob_o1.highlight(),
+        #     lag_ratio=0.0,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # ************************************************************
+        # self.next_section(
+        #     'switch mode and highlight again',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # self.play(AnimationGroup(
+        #     mob_i1.switch_mode(
+        #         style='beam',
+        #         direction=IN,
+        #     ),
+        #     mob_o1.switch_mode(
+        #         style='beam',
+        #         direction=IN,
+        #     ),
+        #     lag_ratio=0.0,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # mob_i1.prepare_for_highlight()
+        # mob_o1.prepare_for_highlight()
