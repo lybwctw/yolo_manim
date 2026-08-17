@@ -243,12 +243,7 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'output summary',
-            skip_animations=True,
-        )
-        # ************************************************************
+        # show output summary
         card_o1 = InfoCard('out_1').hide_to_corner(DOWN)
         self.add_fixed_in_frame_mobjects(card_o1)
         self.play(attach_to_ref(

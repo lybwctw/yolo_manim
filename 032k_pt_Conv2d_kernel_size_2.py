@@ -19,7 +19,7 @@ TENSOR_VGAP_3D = 2.0
 NEW_CONFIG = {
     'in_channels': 3,
     'out_channels': 7,
-    'kernel_size': 3,
+    'kernel_size': 4,
     'stride': 1,
     'padding': 1,
     'bias': False,
@@ -43,7 +43,7 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
             mob_i1,
-        ) = import_mobs('032g')
+        ) = import_mobs('032j')
 
         # raw module and manim module
         module_config = NEW_CONFIG
@@ -88,10 +88,10 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # new module params
-        # NOTE: assert that only out_channels changes
+        # NOTE: assert that only kernel_size changes
         self.play(card_module.update_params(
             params={
-                'out_channels': module_config['out_channels'],
+                'kernel_size': module_config['kernel_size'],
             },
             run_time=wt,
         ))
@@ -157,17 +157,38 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'prepare for next scene',
+            'clean module weight and output',
             skip_animations=False,
         )
         # ************************************************************
+        # clean output and summary
+        self.play(AnimationGroup(
+            mob_o1.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+            ),
+            card_o1.shrink_summary(),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # clean module weight
+        self.play(mob_weight.uncreate(
+            style='beam',
+            direction=IN,
+            anim=Unwrite,
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
         # export
         mobs = VGroup(
             card_i1,
             card_module,
             card_o1,
             mob_i1,
-            mob_module,
-            mob_o1,
         )
-        export_mobs(__file__, mobs)         # NOTE: used by next
+        export_mobs(__file__, mobs)     # NOTE: used by next

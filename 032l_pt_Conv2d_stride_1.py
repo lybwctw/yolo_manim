@@ -18,9 +18,9 @@ TENSOR_VGAP_3D = 2.0
 
 NEW_CONFIG = {
     'in_channels': 3,
-    'out_channels': 7,
+    'out_channels': 5,
     'kernel_size': 3,
-    'stride': 1,
+    'stride': 2,
     'padding': 1,
     'bias': False,
     'dilation': 1,
@@ -43,7 +43,7 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
             mob_i1,
-        ) = import_mobs('032g')
+        ) = import_mobs('032k')
 
         # raw module and manim module
         module_config = NEW_CONFIG
@@ -88,10 +88,12 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # new module params
-        # NOTE: assert that only out_channels changes
+        # NOTE: assert that out_channels/kernel_size/stride change
         self.play(card_module.update_params(
             params={
                 'out_channels': module_config['out_channels'],
+                'kernel_size': module_config['kernel_size'],
+                'stride': module_config['stride'],
             },
             run_time=wt,
         ))
@@ -121,34 +123,72 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'layer compute loop (breath style)',
+            'detailed compute loop',
             skip_animations=False,
         )
         # ************************************************************
-        self.play(AnimationGroup(
-            mob_weight.breath(
-                style='whole',
-                rate_func=smooth,           # sync with default
-                lag_ratio=0.5,              # sync with default
-            ),
-            mob_o1.create(
-                style='layer',
-                direction=IN,
-                # rate_func=smooth,         # smooth by default
-                # lag_ratio=1.0,            # 0.5 by default
-            ),
-            lag_ratio=0.1,
-            run_time=wt*3,
-        ))
-        self.wait(wt)
+        b, c, h, w = mob_weight.shape
+        masks_weight = np.tile(
+            np.eye(b, dtype=bool)[:, :, None, None, None],
+            (1, c, h, w),
+        )
+        masks_input = mob_i1.conv2d_masks(
+            kh=module_config['kernel_size'],
+            kw=module_config['kernel_size'],
+            sh=module_config['stride'],
+            sw=module_config['stride'],
+        )
+        layers_output = mob_o1.get_layers(
+            direction=IN,
+        )
 
-        # unpad input tensor
+        for b_idx in range(b):
+            # highlight current weights block
+            self.play(mob_weight.highlight(
+                mask=masks_weight[b_idx],
+                run_time=wt,
+            ))
+            # generation loop
+            self.play(AnimationGroup(
+                mob_i1.highlight_loop(
+                    masks=masks_input,
+                    rate_func=smooth,
+                ),
+                Succession(
+                    *(GrowFromCenter(
+                        mob,
+                        rate_func=rate_functions.ease_out_back,
+                    ) for mob in layers_output[b_idx]),
+                    rate_func=smooth,
+                ),
+                lag_ratio=0.0,
+                run_time=wt*3,
+            ))
+            # self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'restore weight / input',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # restore weight
+        self.play(mob_weight.highlight(
+            run_time=wt,
+        ))
+
+        # restore input
+        self.play(mob_i1.highlight(
+            run_time=wt,
+        ))
+
+        # unpad input
         self.play(mob_i1.unpad(
             run_time=wt,
         ))
         self.wait(wt)
 
-        # output summary
+        # show output summary
         self.play(card_o1.expand_summary(
             t2s(t_o1.detach()[0]),
             run_time=wt,
@@ -157,17 +197,29 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'prepare for next scene',
+            'clean output',
             skip_animations=False,
         )
         # ************************************************************
+        # clean output and summary
+        self.play(AnimationGroup(
+            mob_o1.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+            ),
+            card_o1.shrink_summary(),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
         # export
         mobs = VGroup(
             card_i1,
             card_module,
             card_o1,
             mob_i1,
-            mob_module,
-            mob_o1,
+            mob_module,     # reuse module mob
         )
-        export_mobs(__file__, mobs)         # NOTE: used by next
+        export_mobs(__file__, mobs)     # NOTE: used by next
