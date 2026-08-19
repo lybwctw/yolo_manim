@@ -20,8 +20,8 @@ NEW_CONFIG = {
     'in_channels': 3,
     'out_channels': 5,
     'kernel_size': 3,
-    'stride': 2,
-    'padding': 1,
+    'stride': 1,
+    'padding': 0,
     'bias': False,
     'dilation': 1,
     'groups': 1,
@@ -44,10 +44,9 @@ class MainScene(ThreeDScene):
             card_o1,
             mob_i1,
             mob_module,     # reuse module mob
-        ) = import_mobs('032k')
+        ) = import_mobs('032m')
 
         # raw module and manim module
-        # NOTE: assert that only stride changes
         module_config = NEW_CONFIG
         torch_module = torch.nn.Conv2d(**module_config)
         mob_module.module_config = module_config
@@ -75,7 +74,10 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
         )
-        self.add(mob_i1)
+        self.add(
+            mob_i1,
+            mob_module,
+        )
         self.wait(wt)
 
         # ************************************************************
@@ -85,97 +87,93 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # new module params
-        # NOTE: assert that only stride changes
+        # NOTE: assert that only stride/padding changes
         self.play(card_module.update_params(
             params={
                 'stride': module_config['stride'],
+                'padding': module_config['padding'],
             },
             run_time=wt,
         ))
 
-        # ************************************************************
-        self.next_section(
-            'pad before compute',
-            skip_animations=False,
-        )
-        # ************************************************************
-        self.play(mob_i1.pad(
-            pad_width=(
-                0,
-                module_config['padding'],
-                module_config['padding'],
-            ),
-            pad_value=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
+        # # ************************************************************
+        # self.next_section(
+        #     'pad before compute',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # self.play(mob_i1.pad(
+        #     pad_width=(
+        #         0,
+        #         module_config['padding'],
+        #         module_config['padding'],
+        #     ),
+        #     pad_value=0.0,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'detailed compute loop',
+            'beam compute loop',
             skip_animations=False,
         )
         # ************************************************************
-        b, c, h, w = mob_weight.shape
-        masks_weight = np.tile(
-            np.eye(b, dtype=bool)[:, :, None, None, None],
-            (1, c, h, w),
-        )
         masks_input = mob_i1.conv2d_masks(
             kh=module_config['kernel_size'],
             kw=module_config['kernel_size'],
             sh=module_config['stride'],
             sw=module_config['stride'],
         )
-        layers_output = mob_o1.get_layers(
-            direction=IN,
+        c, h, w = mob_o1.shape
+        masks_output = np.eye(
+            h*w,
+            dtype=bool,
+        ).reshape(
+            h*w,
+            h,
+            w,
+        )[:,None,...].repeat(
+            c,
+            1,
         )
+        beams_output = mob_o1.get_vgs(masks_output)
 
-        for b_idx in range(b):
-            # highlight current weights block
-            self.play(mob_weight.highlight(
-                mask=masks_weight[b_idx],
-                run_time=wt,
-            ))
-            # generation loop
-            self.play(AnimationGroup(
-                mob_i1.highlight_loop(
-                    masks=masks_input,
-                    rate_func=smooth,
-                ),
-                Succession(
+        self.play(AnimationGroup(
+            mob_i1.highlight_loop(
+                masks=masks_input,
+                rate_func=smooth,
+            ),
+            Succession(
+                *(AnimationGroup(
                     *(GrowFromCenter(
                         mob,
                         rate_func=rate_functions.ease_out_back,
-                    ) for mob in layers_output[b_idx]),
-                    rate_func=smooth,
-                ),
-                lag_ratio=0.0,
-                run_time=wt*3,
-            ))
-            # self.wait(wt)
+                    ) for mob in beam),
+                    lag_ratio=0.0,
+                ) for beam in beams_output),
+                rate_func=smooth,
+            ),
+            lag_ratio=0.0,
+            run_time=wt*5,
+        ))
 
         # ************************************************************
         self.next_section(
-            'restore weight / input',
+            'restore input',
             skip_animations=False,
         )
         # ************************************************************
-        # restore weight
-        self.play(mob_weight.highlight(
-            run_time=wt,
-        ))
-
         # restore input
         self.play(mob_i1.highlight(
             run_time=wt,
         ))
 
-        # unpad input
-        self.play(mob_i1.unpad(
-            run_time=wt,
-        ))
-        self.wait(wt)
+        # # unpad input
+        # self.play(mob_i1.unpad(
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
 
         # show output summary
         self.play(card_o1.expand_summary(
@@ -183,3 +181,46 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'clean input/module/output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # clean output and summary
+        self.play(AnimationGroup(
+            mob_i1.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+            ),
+            mob_o1.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+            ),
+            card_o1.shrink_summary(),
+            card_i1.shrink_summary(),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # clean module weight
+        self.play(mob_weight.uncreate(
+            style='beam',
+            direction=IN,
+            anim=Unwrite,
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            card_i1,
+            card_module,
+            card_o1,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by next

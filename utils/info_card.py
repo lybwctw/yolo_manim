@@ -67,7 +67,7 @@ class InfoCard(VMobject):
             width=self.head_mob.width,
             height=self.line_height + self.buff_height*2,
             **self.frame_config,
-        )
+        ).set_z_index(998)          # FIXME: not verifid
         self.attach_to_frame_index(self.head_mob, 0)
 
         self.add(self.frame_mob, self.head_mob)

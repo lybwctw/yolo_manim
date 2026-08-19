@@ -21,7 +21,7 @@ NEW_CONFIG = {
     'out_channels': 5,
     'kernel_size': 3,
     'stride': 2,
-    'padding': 1,
+    'padding': 2,
     'bias': False,
     'dilation': 1,
     'groups': 1,
@@ -43,17 +43,13 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
             mob_i1,
-        ) = import_mobs('032k')
+            mob_module,     # reuse module mob
+        ) = import_mobs('032l')
 
         # raw module and manim module
         module_config = NEW_CONFIG
         torch_module = torch.nn.Conv2d(**module_config)
-        mob_module = PT_Conv2d(
-            module=torch_module,
-            module_config=module_config,
-            block_gap=0.5,
-            bias_offset=0.5,
-        )
+        mob_module.module_config = module_config
         mob_weight = mob_module.mt_weight
 
         # new raw output tensor
@@ -78,31 +74,26 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
         )
-        self.add(mob_i1)
+        self.add(
+            mob_i1,
+            mob_module,
+        )
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'show new module weight and card',
+            'new module card',
             skip_animations=False,
         )
         # ************************************************************
         # new module params
-        # NOTE: assert that out_channels/kernel_size/stride change
+        # NOTE: assert that only padding changes
         self.play(card_module.update_params(
             params={
-                'out_channels': module_config['out_channels'],
-                'kernel_size': module_config['kernel_size'],
-                'stride': module_config['stride'],
+                'padding': module_config['padding'],
             },
             run_time=wt,
         ))
-
-        # show new weight
-        self.play(mob_module.create(
-            run_time=wt,
-        ))
-        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -123,60 +114,55 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'detailed compute loop',
+            'beam compute loop',
             skip_animations=False,
         )
         # ************************************************************
-        b, c, h, w = mob_weight.shape
-        masks_weight = np.tile(
-            np.eye(b, dtype=bool)[:, :, None, None, None],
-            (1, c, h, w),
-        )
         masks_input = mob_i1.conv2d_masks(
             kh=module_config['kernel_size'],
             kw=module_config['kernel_size'],
             sh=module_config['stride'],
             sw=module_config['stride'],
         )
-        layers_output = mob_o1.get_layers(
-            direction=IN,
+        c, h, w = mob_o1.shape
+        masks_output = np.eye(
+            h*w,
+            dtype=bool,
+        ).reshape(
+            h*w,
+            h,
+            w,
+        )[:,None,...].repeat(
+            c,
+            1,
         )
+        beams_output = mob_o1.get_vgs(masks_output)
 
-        for b_idx in range(b):
-            # highlight current weights block
-            self.play(mob_weight.highlight(
-                mask=masks_weight[b_idx],
-                run_time=wt,
-            ))
-            # generation loop
-            self.play(AnimationGroup(
-                mob_i1.highlight_loop(
-                    masks=masks_input,
-                    rate_func=smooth,
-                ),
-                Succession(
+        self.play(AnimationGroup(
+            mob_i1.highlight_loop(
+                masks=masks_input,
+                rate_func=smooth,
+            ),
+            Succession(
+                *(AnimationGroup(
                     *(GrowFromCenter(
                         mob,
                         rate_func=rate_functions.ease_out_back,
-                    ) for mob in layers_output[b_idx]),
-                    rate_func=smooth,
-                ),
-                lag_ratio=0.0,
-                run_time=wt*3,
-            ))
-            # self.wait(wt)
+                    ) for mob in beam),
+                    lag_ratio=0.0,
+                ) for beam in beams_output),
+                rate_func=smooth,
+            ),
+            lag_ratio=0.0,
+            run_time=wt*5,
+        ))
 
         # ************************************************************
         self.next_section(
-            'restore weight / input',
+            'restore input',
             skip_animations=False,
         )
         # ************************************************************
-        # restore weight
-        self.play(mob_weight.highlight(
-            run_time=wt,
-        ))
-
         # restore input
         self.play(mob_i1.highlight(
             run_time=wt,
@@ -220,6 +206,6 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
             mob_i1,
-            mob_module,     # reuse module mob
+            mob_module,         # reuse
         )
         export_mobs(__file__, mobs)     # NOTE: used by next
