@@ -34,7 +34,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # load cards and input
@@ -84,7 +84,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show new module weight and card',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # new module params
@@ -107,7 +107,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'pad before compute',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(mob_i1.pad(
@@ -124,7 +124,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'beam compute loop',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         masks_input = mob_i1.conv2d_masks(
@@ -169,7 +169,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'restore input',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # restore input

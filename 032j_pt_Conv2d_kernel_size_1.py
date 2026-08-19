@@ -34,7 +34,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # load cards and input
@@ -84,7 +84,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show new module weight and card',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # new module params
@@ -105,7 +105,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'pad before compute',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(mob_i1.pad(
@@ -122,7 +122,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'detailed compute loop',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         b, c, h, w = mob_weight.shape
@@ -167,7 +167,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'restore weight / input',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # restore weight

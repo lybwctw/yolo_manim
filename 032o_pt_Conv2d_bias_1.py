@@ -20,12 +20,12 @@ BIAS_GAP_BIG = 2.0
 BIAS_GAP_SMALL = 0.8
 
 NEW_CONFIG = {
-    'in_channels': 4,
+    'in_channels': 4,           # updated
     'out_channels': 5,
     'kernel_size': 3,
     'stride': 1,
-    'padding': 1,
-    'bias': True,
+    'padding': 1,               # updated
+    'bias': True,               # updated
     'dilation': 1,
     'groups': 1,
     'padding_mode': 'zeros',
@@ -100,6 +100,7 @@ class MainScene(ThreeDScene):
         # NOTE: assert that only padding/bias changes
         self.play(card_module.update_params(
             params={
+                'in_channels': module_config['in_channels'],
                 'padding': module_config['padding'],
                 'bias': module_config['bias'],
             },
@@ -534,7 +535,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'simplified layer compute loop, breath style',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # apply weight
@@ -593,7 +594,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'even simpler, breath style',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # apply weight and bias
