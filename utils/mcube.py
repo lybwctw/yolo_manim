@@ -1,6 +1,4 @@
 from __future__ import annotations
-import sys
-sys.path.append('..')
 
 from manim import *
 
@@ -37,6 +35,10 @@ DEFAULT_DECIMAL_CONFIG = {
     'include_sign': True,
     'align_to_dot': True,
 }
+DEFAULT_INFINITY_CONFIG = {
+    'fill_opacity': 1.0,
+}
+
 TARNISH_DECIMAL_CONFIG = {
     'fill_opacity': 0.3,
 }
@@ -55,6 +57,7 @@ class MCube(VMobject):
         cube_config: dict = {},
         square_config: dict = {},
         decimal_config: dict = {},
+        infinity_config: dict = {},
     ):
         super().__init__()
         self.value = value
@@ -67,6 +70,7 @@ class MCube(VMobject):
         self.cube_config = {**DEFAULT_CUBE_CONFIG, **cube_config}
         self.square_config = {**DEFAULT_SQUARE_CONFIG, **square_config}
         self.decimal_config = {**DEFAULT_DECIMAL_CONFIG, **decimal_config}
+        self.infinity_config = {**DEFAULT_INFINITY_CONFIG, **infinity_config}
 
         self.tarnished = False
 
@@ -77,45 +81,87 @@ class MCube(VMobject):
         elif mode == 'card':
             square_config = {**self.square_config, 'side_length': self.side_length}
             decimal_config = {**self.decimal_config, 'font_size': self.font_size}
+            infinity_config = {**self.infinity_config, 'font_size': self.font_size}
+
+            mob_square = Square(**square_config)
+            if np.isposinf(self.value):
+                mob_value = MathTex(r"\infty", **infinity_config)
+            elif np.isneginf(self.value):
+                mob_value = MathTex(r"-\infty", **infinity_config)
+            else:
+                mob_value = DecimalNumber(self.value, **decimal_config),
             mob = VGroup(
-                Square(**square_config),
-                DecimalNumber(self.value, **decimal_config),
+                mob_square,
+                mob_value,
             )
+
             mob[0].set_z_index(self.z_index)
             mob[1].set_z_index(self.z_index+0.1)
 
         self.mob = mob
         self.add(self.mob)
-    
-    def switch(
+
+    def _switch(
         self,
-        **aargs,
-    ) -> Animation:
+    ):
+        """Instant switch without animation.
+        """
         if self.mode == 'card':
             self.mode = 'cube'
-            cube_config = {**self.cube_config, 'side_length': self.mob.width}
+            stroke_color = self.mob[0].stroke_color # stroke color from square
+            cube_config = {
+                **self.cube_config,
+                'side_length': self.mob.width,
+                'stroke_color': stroke_color,       # keep stroke color
+            }
             new_mob = Cube(**cube_config).move_to(self.mob)
             new_mob.set_z_index(self.z_index)
             if self.tarnished:
                 new_mob.set_style(**TARNISH_CUBE_CONFIG)
         elif self.mode == 'cube':
             self.mode = 'card'
-            square_config = {**self.square_config, 'side_length': self.mob.width}
+            stroke_color = self.mob.stroke_color   # stroke color from cube
+            square_config = {
+                **self.square_config,
+                'side_length': self.side_length,
+                'stroke_color': stroke_color,      # keep stroke color
+            }
             decimal_config = {**self.decimal_config, 'font_size': self.font_size}
+            infinity_config = {**self.infinity_config, 'font_size': self.font_size}
+
+            mob_square = Square(**square_config)
+            if np.isposinf(self.value):
+                mob_value = MathTex(r"\infty", **infinity_config)
+            elif np.isneginf(self.value):
+                mob_value = MathTex(r"-\infty", **infinity_config)
+            else:
+                mob_value = DecimalNumber(self.value, **decimal_config),
             new_mob = VGroup(
-                Square(**square_config),
-                DecimalNumber(self.value, **decimal_config),
+                mob_square,
+                mob_value,
             ).move_to(self.mob)
+
             new_mob[0].set_z_index(self.z_index)
             new_mob[1].set_z_index(self.z_index+0.1)
             if self.tarnished:
                 new_mob[0].set_style(**TARNISH_SQUARE_CONFIG)
                 new_mob[1].set_style(**TARNISH_DECIMAL_CONFIG)
-
         old_mob = self.mob
         self.mob = new_mob
         self.remove(old_mob)
+        return old_mob
 
+    def switch_instant(
+        self,
+    ):
+        self._switch()
+        self.add(self.mob)
+    
+    def switch(
+        self,
+        **aargs,
+    ) -> Animation:
+        old_mob = self._switch()
         return AnimationGroup(
             Unwrite(old_mob),
             Write(self.mob),

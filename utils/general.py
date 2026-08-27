@@ -183,11 +183,29 @@ def random_path(
 def t2s(
     tensor: torch.Tensor | np.ndarray,
 ) -> str:
-    """From torch tensor to shape str.
+    """From torch tensor (or numpy array) to shape str.
+       (3,4,5) better than (3, 4, 5)?
     """
     if isinstance(tensor, torch.Tensor):
         tensor = tensor.numpy()
     shape = str(tensor.shape)
     if shape[-2] == ',':
         shape = shape[:-2] + ')'
+
+    shape = shape.replace(' ', '')      # NOTE: remove this?
+
     return shape
+
+def increase_z_index_in_batch(
+    mtensors: list,
+):
+    """With mtensors of size [s1, s2, s3, ...]
+       Increate cubes by [0, s1, s1+s2, ...]
+    """
+    sizes = [len(mt.mobs) for mt in mtensors]
+    offsets = [0] + list(np.cumsum(sizes[:-1]))
+    for mt in mtensors:
+        for cube in mt.mobs:
+            z_index = cube.z_index
+            cube.z_index = z_index
+            cube.set_z_index(z_index)

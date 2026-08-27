@@ -41,6 +41,7 @@ class PT_Conv2d(VMobject):
         bias_config: dict = {},         # bias, 1d
         block_gap: float = 1.0,         # weight block gap
         bias_offset: float = 1.0,       # bias offset to weight
+        init_mode: str = 'cube',
     ):
         super().__init__()
         self.module = module
@@ -55,7 +56,7 @@ class PT_Conv2d(VMobject):
         mt_weight = MTensor4D(
             block_gap=self.block_gap,
             array=rt_weight,
-            mode='cube',
+            mode=init_mode,
             style='horizontal',
             **{**SMALL_TENSOR_CONFIG, **self.weight_config},
         )
@@ -68,7 +69,7 @@ class PT_Conv2d(VMobject):
             rt_bias = self.module.bias.detach()
             mt_bias = MTensor1D(
                 array=rt_bias,
-                mode='cube',
+                mode=init_mode,
                 style='horizontal',
                 **{**SMALL_TENSOR_CONFIG, **self.bias_config},
             )

@@ -59,7 +59,8 @@ class MTensorGeneral(VMobject):
         decimal_config: dict = {},  # override internal
     ):
         return MCube(
-            value=float(value),
+            # value=float(value),
+            value=value,
             mode=self.mode,
             z_index=z_index,
             side_length=self.side_length,
@@ -498,7 +499,8 @@ class MTensor3D(MTensorGeneral):
         for i, j, k in np.ndindex(self.shape):
             cube = self._make_cube(
                 value=self.array[i, j, k],
-                z_index=(c-i)*h+j,          # z_index
+                # z_index=(c-i)*h+j,          # z_index
+                z_index=(c-i)*h*w + j*w + (w-k)     # NOTE: not fully verified yet
             )
             cube.shift(xs[k] + ys[j] + zs[i])
             objs[i, j, k] = cube
@@ -613,6 +615,7 @@ class MTensor3D(MTensorGeneral):
         self,
         pad_width: list | tuple,    # (c, h, w)
         pad_value: float = 0.0,
+        stroke_color: ManimColor = TEAL,
         **aargs,
     ) -> AnimationGroup:
         pad_c, pad_h, pad_w = pad_width
@@ -650,7 +653,7 @@ class MTensor3D(MTensorGeneral):
                 mob = self._make_cube(
                     array_new[i,j,k],
                     (c_new-i)*h_new+j,      # z_index
-                    cube_config={**self.cube_config, 'stroke_color': TEAL},
+                    cube_config={**self.cube_config, 'stroke_color': stroke_color},
                     square_config={**self.square_config},
                     decimal_config={**self.decimal_config},
                 ).center()
@@ -767,7 +770,8 @@ class MTensor4D(MTensorGeneral):
             for j, k, l in np.ndindex((c, h, w)):
                 cube = self._make_cube(
                     value=self.array[i, j, k, l],
-                    z_index=(c-j) * h + k,        # z_index
+                    # z_index=(c-j) * h + k,        # z_index
+                    z_index=(c-j)*h*w + k*w + (w-l)     # NOTE: not fully verified yet
                 )
                 cube.shift(xs[l] + ys[k] + zs[j])
                 objs[i, j, k, l] = cube

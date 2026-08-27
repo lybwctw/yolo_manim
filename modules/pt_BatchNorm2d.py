@@ -30,7 +30,7 @@ class PT_BatchNorm2d(VMobject):
         running_var_config: dict = {},  # running_var, 1d
         weight_config: dict = {},       # weight, 1d
         bias_config: dict = {},         # bias, 1d
-        mtensor_dir: np.ndarray = DOWN, # arrange direction
+        mtensor_dir: np.ndarray = RIGHT,# arrange direction
         mtensor_gap: float = 0.5,       # arrange buff
     ):
         super().__init__()
@@ -49,13 +49,13 @@ class PT_BatchNorm2d(VMobject):
         mt_running_mean = MTensor1D(
             array=rt_running_mean,
             mode='cube',
-            style='horizontal',
+            style='erect',
             **{**SMALL_TENSOR_CONFIG, **self.running_mean_config},
         )
         mt_running_var = MTensor1D(
             array=rt_running_var,
             mode='cube',
-            style='horizontal',
+            style='erect',
             **{**SMALL_TENSOR_CONFIG, **self.running_var_config},
         )
         self.rt_running_mean = rt_running_mean
@@ -71,13 +71,13 @@ class PT_BatchNorm2d(VMobject):
         mt_weight = MTensor1D(
             array=rt_weight,
             mode='cube',
-            style='horizontal',
+            style='erect',
             **{**SMALL_TENSOR_CONFIG, **self.weight_config},
         )
         mt_bias = MTensor1D(
             array=rt_bias,
             mode='cube',
-            style='horizontal',
+            style='erect',
             **{**SMALL_TENSOR_CONFIG, **self.bias_config},
         )
         self.rt_weight = rt_weight
@@ -134,7 +134,7 @@ class Demo(ThreeDScene):
         mm_bn2 = PT_BatchNorm2d(
             module=rm_bn2,
             module_config=bn2_config,
-            mtensor_dir=IN,
+            mtensor_dir=RIGHT,
         )
 
         self.play(mm_bn2.create(

@@ -67,54 +67,18 @@ class AlignedText(VMobject):
         # offset = ref - self.mob[0].get_corner(LEFT)
         offset = self.attach_offset(ref)
         self.shift(offset)
+
+    def tarnish(
+        self,
+        opacity: float = 0.5,
+    ) -> Animation:
+        return self.mob[1:-1].animate.set_opacity(opacity)
+
+    def lightup(
+        self,
+    ) -> Animation:
+        return self.mob[1:-1].animate.set_opacity(1.0)
     
-    # def get_center(
-    #     self,
-    # ) -> np.ndarray:
-    #     """Center based on colon.
-    #     """
-    #     return np.array([
-    #         self.get_x(),
-    #         self.mob[0].get_y(),
-    #         0,
-    #     ])
-    
-    # def offset_to_corner(
-    #     self,
-    #     corner,
-    #     buff_w: float = 0.0,
-    #     buff_h: float = 0.0,
-    # ) -> np.ndarray:
-    #     tpos = corner + buff_w*RIGHT + buff_h*DOWN
-    #     spos = self.mob[0].get_corner(UL)
-    #     offset = tpos - spos
-    #     return offset
-    
-    # def align_to_corner(
-    #     self,
-    #     corner,
-    #     buff_w: float = 0.0,
-    #     buff_h: float = 0.0,
-    # ):
-    #     offset = self.offset_to_corner(
-    #         corner,
-    #         buff_w,
-    #         buff_h,
-    #     )
-    #     self.shift(offset)
-    
-    # def concat_to_atext(
-    #     self,
-    #     ref,
-    #     closer: bool = False,       # ignore the first colon?
-    # ):
-    #     self.next_to(ref, RIGHT, buff=0.0)
-    #     if closer:
-    #         self.shift(self.mob[0].get_width() * LEFT)
-    #     tbot = ref.mob[0].get_bottom()[1]
-    #     sbot = self.mob[0].get_bottom()[1]
-    #     offset = (tbot - sbot) * UP
-    #     self.shift(offset)
 
 class Demo(Scene):
     def construct(self):

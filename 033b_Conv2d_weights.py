@@ -56,12 +56,6 @@ class MainScene(ThreeDScene):
             bias_offset=0.5,
         )
 
-        # ************************************************************
-        self.next_section(
-            'empty module card',
-            skip_animations=True,
-        )
-        # ************************************************************
         # show initial mobs
         self.set_camera_orientation(
             **VIEW_INTRO,
@@ -69,6 +63,12 @@ class MainScene(ThreeDScene):
         self.add_fixed_in_frame_mobjects(card_module)
         self.wait(wt)
 
+        # ************************************************************
+        self.next_section(
+            'starting module card',
+            skip_animations=True,
+        )
+        # ************************************************************
         # expand empty module card
         self.play(card_module.expand_params(
             params=EMPTY_CONFIG,
@@ -76,12 +76,6 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'init with concrete module',
-            skip_animations=True,
-        )
-        # ************************************************************
         # update module card config
         self.play(card_module.update_params(
             INIT_CONFIG,

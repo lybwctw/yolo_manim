@@ -108,6 +108,7 @@ class MainScene(ThreeDScene):
         self.wait(wt)
 
         # NOTE: switch mode to show exact pad value?
+        # TODO: repeat pattern from 033b's padding
 
         # ************************************************************
         self.next_section(
@@ -322,10 +323,11 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'clean input/output',
+            'clean',
             skip_animations=False,
         )
         # ************************************************************
+        # remove input/output
         self.play(AnimationGroup(
             *(AnimationGroup(
                 tmob.uncreate(

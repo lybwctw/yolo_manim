@@ -113,8 +113,8 @@ class NameTag(VMobject):
             MAP_DIR_2_LABEL_SHIFT_DIR[tuple(self.leader_direction)] * 0.05,
         )
 
-        self.mob_leader = mob_leader
-        self.mob_label = mob_label
+        self.mob_leader = mob_leader.set_z_index(999)
+        self.mob_label = mob_label.set_z_index(999)
         self.add(self.mob_leader, self.mob_label)
 
     def create(

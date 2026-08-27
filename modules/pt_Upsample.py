@@ -10,7 +10,5 @@ from utils.info_card import *
 
 # ------------- info card ---------------------
 # 'scale_factor': UNKNOWN,
-# 'size': UNKNOWN,
 # 'mode': UNKNOWN,
 # 'align_corners': UNKNOWN,
-# 'recompute_scale_factor': UNKNOWN,

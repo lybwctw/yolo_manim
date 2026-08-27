@@ -152,7 +152,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'clean input/module/output',
+            'clean input/output',
             skip_animations=False,
         )
         # ************************************************************
@@ -175,28 +175,11 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # clean module weight and bias
-        self.play(AnimationGroup(
-            mob_weight.uncreate(
-                style='beam',
-                direction=IN,
-                anim=Unwrite,
-                run_time=wt,
-            ),
-            mob_bias.uncreate(
-                style='series',
-                direction=RIGHT,
-                anim=Unwrite,
-                run_time=wt,
-            ),
-            lag_ratio=0.0,
-        ))
-        self.wait(wt)
-
         # export
         mobs = VGroup(
             card_i1,
             card_module,
             card_o1,
+            mob_module,
         )
         export_mobs(__file__, mobs)     # NOTE: used by next
