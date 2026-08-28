@@ -33,6 +33,8 @@ DEFAULT_BIAS_CREATE_ARGS = {
 }
 
 class PT_Conv2d(VMobject):
+    """Visualization of torch.nn.Conv2d.
+    """
     def __init__(
         self,
         module,                         # torch module

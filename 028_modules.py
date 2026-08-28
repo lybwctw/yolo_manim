@@ -83,7 +83,7 @@ class MainScene(ThreeDScene):
         self.play(ics_all.animate(
             lag_ratio=0.0,
             run_time=wt,
-            rate_func=rate_functions.exponential_decay,
+            # rate_func=rate_functions.exponential_decay,
         ).arrange(
             DOWN,
             buff=CARD_VGAP,

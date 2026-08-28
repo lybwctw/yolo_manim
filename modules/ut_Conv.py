@@ -16,6 +16,15 @@ from utils.mgraph import *
 # 's': UNKNOWN,
 # 'p': UNKNOWN,
 
+class UT_Conv(VMobject):
+    """Visualization of ultralytics.nn.modules.Conv.
+    """
+    def __init__(
+        self,
+    ):
+        super().__init__()
+
+
 class MGraph_Conv(MGraph):
     def __init__(
         self,

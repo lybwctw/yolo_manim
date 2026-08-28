@@ -66,7 +66,7 @@ class MainScene(ThreeDScene):
         self.add(
             mt_i, mm_conv, mm_bn, mt_o,
         )
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -294,7 +294,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply act',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(mg.highlight(
@@ -323,3 +323,11 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            tc_i, mc, tc_o,
+            mt_i, mm_conv, vgs_bn, mt_o,
+            mg,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by next
