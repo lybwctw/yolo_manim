@@ -209,3 +209,25 @@ def increase_z_index_in_batch(
             z_index = cube.z_index
             cube.z_index = z_index
             cube.set_z_index(z_index)
+
+def Conv_2_conv_config(
+    module_config: dict,
+) -> dict:
+    return {
+        'in_channels': module_config['c1'],
+        'out_channels': module_config['c2'],
+        'kernel_size': module_config['k'],
+        'stride': module_config['s'],
+        'padding': module_config['p'],
+        'bias': False,
+        'dilation': 1,
+        'groups': 1,
+        'padding_mode': 'zeros',
+    }
+
+def Conv_2_bn_config(
+    module_config: dict,
+) -> dict:
+    return {
+        'num_features': module_config['c2'],
+    }

@@ -46,7 +46,7 @@ class MainScene(ThreeDScene):
         module_config = mg.module_config
 
         # raw modules
-        m_module = Conv(**module_config)   # not used
+        m_module = Conv(**module_config)
         m_conv = m_module.conv
         m_bn = m_module.bn
         m_bn.eval()
@@ -59,6 +59,7 @@ class MainScene(ThreeDScene):
         t_o = m_act(t_m2)
 
         # module mobs (conv and bn)
+        # TODO: use general func to generate sub config
         mm_conv = PT_Conv2d(
             module=m_conv,
             module_config=mg.config_conv,
