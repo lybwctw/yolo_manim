@@ -25,6 +25,63 @@ DEFAULT_SIZE_CONFIG = {
     'depth': 0.4,
 }
 
+def _stretch_direction_3d(
+    mob,
+    direction: str = 'erect',               # horizontal/erect
+    size_scale: float | None = None,        # overrides size_target
+    size_target: float | None = 2.0,
+):
+    """Assume that width==height and both scaled when horizontal.
+    """
+    if size_scale is not None:
+        if direction == 'horizontal':
+            size_target = mob.width * size_scale
+        elif direction == 'erect':
+            size_target = mob.depth * size_scale
+
+    if direction == 'horizontal':
+        mob.stretch_to_fit_width(
+            size_target
+        ).stretch_to_fit_height(
+            size_target
+        )
+    elif direction == 'erect':
+        mob.stretch_to_fit_depth(
+            size_target
+        )
+
+def _stretch_direction_4d(
+    mobs,
+    direction: str = 'erect',               # horizontal/erect
+    size_scale: float | None = None,        # overrides size_target
+    size_target: float | None = 2.0,
+):
+    """Assume that width==height and both scaled when horizontal.
+    """
+    if len(mobs) > 1:
+        orig_gap = mobs[1].get_left()[0] - mobs[0].get_right()[0]
+    else:
+        orig_gap = 0.0
+    orig_center = mobs.get_center()
+
+    # create targets
+    for mob in mobs:
+        mob.generate_target()
+        _stretch_direction_3d(
+            mob=mob.target,
+            direction=direction,
+            size_scale=size_scale,
+            size_target=size_target,
+        )
+
+    # arrange targets
+    vg = VGroup(mob.target for mob in mobs)
+    vg.arrange(
+        RIGHT, buff=orig_gap
+    ).move_to(
+        orig_center
+    )
+
 class FTensor3D(VMobject):
     def __init__(
         self,
@@ -98,6 +155,29 @@ class FTensor3D(VMobject):
             **aargs,
         )
 
+
+    def stretch_direction(
+        self,
+        direction: str = 'erect',               # horizontal/erect
+        size_scale: float | None = None,        # overrides size_target
+        size_target: float | None = 2.0,
+        **aargs,
+    ) -> Animation:
+        target = self.mob.copy()
+        _stretch_direction_3d(
+            mob=target,
+            direction=direction,
+            size_scale=size_scale,
+            size_target=size_target,
+        )
+        return Transform(
+            self.mob,
+            target,
+            rate_func=rate_functions.ease_out_back,
+            **aargs,
+        )
+
+
     def uncreate(
         self,
         direction: str = 'center',      # top/center/bottom
@@ -117,7 +197,6 @@ class FTensor3D(VMobject):
             _on_finish=lambda s: s.remove(self),
             **aargs,
         )
-
 
 class FTensor4D(VMobject):
     def __init__(
@@ -193,6 +272,79 @@ class FTensor4D(VMobject):
             **aargs,
         )
 
+    def stretch_direction(
+        self,
+        direction: str = 'erect',           # horizontal/erect
+        size_scale: float | None = None,    # overrides size_target
+        size_target: float | None = 2.0,
+        **aargs,
+    ) -> AnimationGroup:
+        _stretch_direction_4d(
+            self.mobs,
+            direction=direction,
+            size_scale=size_scale,
+            size_target=size_target,
+        )
+
+        return AnimationGroup(
+            *(MoveToTarget(
+                mob,
+                rate_func=rate_functions.ease_out_back,
+            ) for mob in self.mobs),
+            **aargs,
+        )
+
+    def stretch_blocks(
+        self,
+        diff: int = 1,                  # -n / n
+        direction: str = 'center',      # top/center/bottom
+        **aargs,
+    ) -> AnimationGroup:
+        if diff > 0:
+            orig_center = self.get_center()
+            orig_gap = self.mobs[1].get_left()[0] - self.mobs[0].get_right()[0]
+
+            objs_new = np.empty(self.n + diff*2, dtype=object)
+            for idx in range(len(objs_new)):
+                if idx < diff or idx > self.n+diff:
+                    objs_new[idx] = self.objs[0].copy()
+                else:
+                    objs_new[idx] = self.objs[idx-self.n]
+            mobs_new = VGroup(*objs_new.flat).arrange(
+                RIGHT,
+                buff=orig_gap,
+            )
+            mobs_new.move_to(orig_center)
+
+            # reset z_index
+            for i, mob in enumerate(mobs_new):
+                mob.z_index = i + self.z_index_start
+                mob.set_z_index(mob.z_index)
+            self.objs = objs_new
+            self.mobs = mobs_new
+            # self.add(self.mobs_new)
+            vgs_left = self.mobs[:diff][::-1]
+            vgs_right = self.mobs[-diff:]
+            return AnimationGroup(
+                AnimationGroup(
+                    *(mob.create(direction=direction)
+                    for mob in vgs_left),
+                    **aargs,
+                ),
+                AnimationGroup(
+                    *(mob.create(direction=direction)
+                    for mob in vgs_right),
+                    **aargs,
+                ),
+                lag_ratio=0.0,
+                _on_finish=lambda _: self.add(self.mobs),
+            )
+
+        elif diff < 0:
+            pass
+        else:
+            raise NotImplementedError('diff should not be zero')
+
     def uncreate(
         self,
         direction: str = 'center',      # top/center/bottom
@@ -223,67 +375,97 @@ class FTensor4D(VMobject):
     def z_index_end(self):
         return self.z_index + self.n
 
-wt = 1.0
+wt = 0.5
 class Demo(ThreeDScene):
     def construct(self):
         self.set_camera_orientation(
             **VIEW_COMPUTE,
         )
 
-        # cubes = FTensor4D(
-        #     n=16,
+        # cube = FTensor3D(
+        #     shape=(3, 4, 5),
+        #     size_config={
+        #         'width': 0.3,
+        #         'height': 0.3,
+        #         'depth': 1.0,
+        #     },
         # )
-
         # self.wait(wt)
-        # self.play(cubes.create(
+
+        # self.play(cube.create(
         #     direction='bottom',
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # # self.play(Write(cubes, run_time=wt))
-        # self.wait(wt)
-
-        # self.play(cubes.breath(
-        #     lag_ratio=0.5,
         #     run_time=wt,
         # ))
         # self.wait(wt)
 
-        # self.play(cubes.uncreate(
+        # self.play(cube.stretch_direction(
+        #     direction='horizontal',
+        #     size_scale=1.5,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # self.play(cube.breath(
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # self.play(cube.uncreate(
         #     direction='bottom',
-        #     lag_ratio=0.5,
         #     run_time=wt,
         # ))
         # self.wait(wt)
 
-        mt = MTensor4D(
-            array=np.random.randn(6, 9, 3, 3),
-            mode='cube',
-            style='horizontal',
-            side_length=0.3,
+        ft4 = FTensor4D(
+            shape=(3,4,5),
+            size_config={
+                'width': 0.2,
+                'height': 0.2,
+                'depth': 1.0,
+            },
+            n=6,
+            block_gap=0.3,
         )
-        ft = FTensor4D(
-            ref_4d=mt,
-        )
-        self.play(mt.create(
-            style='beam',
-            direction=OUT,
+        self.play(ft4.create(
+            direction='bottom',
             lag_ratio=0.5,
             run_time=wt,
         ))
         self.wait(wt)
 
-        self.play(AnimationGroup(
-            mt.uncreate(
-                style='beam',
-                direction=OUT,
-                anim=Unwrite,
-                run_time=wt,
-            ),
-            ft.create(
-                direction='bottom',
-                run_time=wt,
-            ),
-            lag_ratio=0.0,
+        self.play(ft4.stretch_direction(
+            direction='erect',
+            size_scale=2.0,
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(ft4.stretch_blocks(
+            diff=3,
+            direction='bottom',
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # self.play(ft4.stretch_direction(
+        #     direction='horizontal',
+        #     size_scale=2.0,
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        self.play(ft4.breath(
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(ft4.uncreate(
+            direction='bottom',
+            lag_ratio=0.5,
+            run_time=wt,
         ))
         self.wait(wt)
