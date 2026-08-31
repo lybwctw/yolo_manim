@@ -5,11 +5,12 @@ sys.path.append('..')
 from manim import *
 from utils.mtensor import *
 from utils.layers_fake import LayersFake
+from utils.ftensor import *
 
 DEFAULT_SHAPE_PATH_CONFIG = {
     'stroke_color': ORANGE,
     'stroke_width': 3,
-    'stroke_opacity': 0.5,
+    'stroke_opacity': 1.0,
 }
 
 DEFAULT_SHAPE_TEXT_CONFIG = {
@@ -159,7 +160,6 @@ SHAPE_MAPPING = {
             [3, UP+OUT],
         ],
     },
-    (MTensor4D, 'intro', 'vertical'): {},
     (MTensor4D, 'compute', 'horizontal'): {
         'path_info': [
             [[(0,0,0,0), UL+OUT], [(-1,0,0,-1), UR+OUT]],
@@ -174,7 +174,32 @@ SHAPE_MAPPING = {
             [3, DOWN+IN],
         ],
     },
-    (MTensor4D, 'compute', 'vertical'): {},
+    (FTensor3D, 'compute', None): {
+        'path_info': [
+            [[None, UL+OUT], [None, UL+IN]],
+            [[None, UR+OUT], [None, DR+OUT]],
+            [[None, UL+OUT], [None, UR+OUT]],
+        ],
+        'text_info': [
+            [0, UL],
+            [1, RIGHT+OUT],
+            [2, UP+OUT],
+        ],
+    },   # TODO
+    (FTensor4D, 'compute', None): {
+        'path_info': [
+            [[(0,), UL+OUT], [(-1,), UR+OUT]],
+            [[(0,), UL+OUT], [(0,), UL+IN]],
+            [[(0,), UL+IN], [(0,), DL+IN]],
+            [[(0,), DL+IN], [(0,), DR+IN]],
+        ],
+        'text_info': [
+            [0, UP+OUT],
+            [1, UL],
+            [2, LEFT+IN],
+            [3, DOWN+IN],
+        ],
+    },
     (LayersFake, 'intro', None): {
         'path_info': [
             [[0, DL], [-1, DL]],        # VGroup indexing
@@ -189,6 +214,7 @@ SHAPE_MAPPING = {
     },
 }
 
+# TODO: use fixed in frame instead of fixed in orientation?
 class ShowShape3D(AnimationGroup):
     def __init__(
         self,
@@ -206,29 +232,46 @@ class ShowShape3D(AnimationGroup):
         pmobs = VGroup()
         tmobs = VGroup()
         for pinfo, tinfo in zip(
-            SHAPE_MAPPING[type(mob), view, mob.style]['path_info'],
-            SHAPE_MAPPING[type(mob), view, mob.style]['text_info'],
+            SHAPE_MAPPING[type(mob), view, mob.style if hasattr(mob,'style') else None]['path_info'],
+            SHAPE_MAPPING[type(mob), view, mob.style if hasattr(mob,'style') else None]['text_info'],
         ):
             (p1_idx, p1_corner), (p2_idx, p2_corner) = pinfo
             t_idx, t_dir = tinfo
-            pmob = Line(
-                start=mob[p1_idx].get_corner(p1_corner),
-                end=mob[p2_idx].get_corner(p2_corner),
-                **path_config,
-            )
-            tmob = Text(
-                text=str(mob.shape[t_idx]),
-                **text_config,
-            ).next_to(
-                pmob,
-                t_dir,
-                buff=text_buff,
-            )
+            if p1_idx is None and p2_idx is None:
+                # for FTensor3D
+                pmob = Line(
+                    start=mob.get_corner(p1_corner),
+                    end=mob.get_corner(p2_corner),
+                    **path_config,
+                )
+                tmob = Text(
+                    text=str(mob.shape[t_idx]),
+                    **text_config,
+                ).next_to(
+                    pmob,
+                    t_dir,
+                    buff=text_buff,
+                )
+            else:
+                # for MTensor(1/2/3/4)D, LayersFake(FIXME), FTensor4D
+                pmob = Line(
+                    start=mob[p1_idx].get_corner(p1_corner),
+                    end=mob[p2_idx].get_corner(p2_corner),
+                    **path_config,
+                )
+                tmob = Text(
+                    text=str(mob.shape[t_idx]),
+                    **text_config,
+                ).next_to(
+                    pmob,
+                    t_dir,
+                    buff=text_buff,
+                )
 
             pmobs.add(pmob)
             tmobs.add(tmob)
 
-        # make path and text always visible
+        # make path and text always in front of others
         pmobs.set_z_index(998)
         tmobs.set_z_index(999)
 

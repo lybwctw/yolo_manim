@@ -8,6 +8,8 @@ from utils.constants import *
 from utils.constants_3d import *
 from utils.info_card import *
 from utils.mgraph import *
+from utils.ftensor import *
+from utils.show_shape_3d import *
 
 # ------------- info card ---------------------
 # 'c1': UNKNOWN,
@@ -15,15 +17,114 @@ from utils.mgraph import *
 # 'k': UNKNOWN,
 # 's': UNKNOWN,
 # 'p': UNKNOWN,
+# ---------------------------------------------
+
+DEFAULT_N = 8
+DEFAULT_BLOCK_GAP = 0.3,
+DEFAULT_TENSOR_GAP = 0.8
+
+DEFAULT_CUBE_CONFIG_CONV = {
+    'fill_color': GRAY,
+    'fill_opacity': 1.0,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'stroke_color': WHITE,
+}
+DEFAULT_CUBE_CONFIG_BN = {
+    'fill_color': GRAY,
+    'fill_opacity': 1.0,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'stroke_color': WHITE,
+}
+DEFAULT_SIZE_CONFIG_CONV = {
+    'width': 0.2,
+    'height': 0.2,
+    'depth': 0.8,
+}
+DEFAULT_SIZE_CONFIG_BN = {
+    'width': 0.1,
+    'height': 0.1,
+    'depth': 0.4,
+}
 
 class UT_Conv(VMobject):
     """Visualization of ultralytics.nn.modules.Conv.
     """
     def __init__(
         self,
+        module_config: dict = {},                   # c1, c2, k
+        z_index: float = 0.0,                       # used by conv directly
+        cube_config_conv: dict = {},
+        cube_config_bn: dict = {},
+        ref_conv: MTensor4D | None = None,
+        ref_bn: MTensor4D | None = None,
+        size_config_conv: dict = {},
+        size_config_bn: dict = {},
+        n: int = DEFAULT_N,                         # shared by conv and bn
+        block_gap: float = DEFAULT_BLOCK_GAP,       # used by conv directly
+        tensor_gap: float = DEFAULT_TENSOR_GAP,     # gap between conv and bn
     ):
         super().__init__()
+        self.module_config = module_config
+        self.z_index = z_index
+        self.cube_config_conv = {**DEFAULT_CUBE_CONFIG_CONV, **cube_config_conv}
+        self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BN, **cube_config_bn}
+        self.size_config_conv = {**DEFAULT_SIZE_CONFIG_CONV, **size_config_conv}
+        self.size_config_bn = {**DEFAULT_SIZE_CONFIG_BN, **size_config_bn}
+        self.n = n          # visual number of blocks (instead of nominal)
+        self.block_gap = block_gap
+        self.tensor_gap = tensor_gap
 
+        mobs_conv = FTensor4D(
+            ref_4d=ref_conv,
+            shape=(
+                self.module_config['c2'],
+                self.module_config['c1'],
+                self.module_config['k'],
+                self.module_config['k'],
+            ),
+            z_index=self.z_index,
+            cube_config=self.cube_config_conv,
+            size_config=self.size_config_conv,
+            n=self.n,
+            block_gap=self.block_gap,
+        )
+        mobs_bn = FTensor4D(
+            ref_4d=ref_bn,
+            shape=(
+                self.module_config['c2'],
+                4,
+                1,
+                1,
+            ),
+            z_index=mobs_conv.z_index_end,
+            cube_config=self.cube_config_bn,
+            size_config=self.size_config_bn,
+            n=self.n,
+        )
+        if ref_conv is None and ref_bn is None:
+            for mb, mc in zip(mobs_bn.mobs, mobs_conv.mobs):
+                mb.next_to(mc, DOWN, buff=self.tensor_gap)
+        self.mobs_conv = mobs_conv
+        self.mobs_bn = mobs_bn
+        self.add(self.mobs_conv, self.mobs_bn)
+        self.center()
+
+    def create(
+        self,
+        direction: str = 'center',
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.mobs_conv.create(direction=direction, **aargs),
+            self.mobs_bn.create(direction=direction, **aargs),
+            lag_ratio=0.0,
+        )
+
+    @property
+    def conv_bn(self):
+        return VGroup(self.mobs_conv, self.mobs_bn)
 
 class MGraph_Conv(MGraph):
     def __init__(
@@ -156,92 +257,161 @@ class MGraph_Conv(MGraph):
             'track_running_stats': True,
         }
 
+wt = 1.0
 class Demo(ThreeDScene):
     def construct(self):
-        graph = MGraph_Conv(
-            module_config = {
-                'c1': 10,
-                'c2': 20,
-                'k': 3,
-                's': 1,
-                'p': 1,
-            },
+        # graph = MGraph_Conv(
+        #     module_config = {
+        #         'c1': 10,
+        #         'c2': 20,
+        #         'k': 3,
+        #         's': 1,
+        #         'p': 1,
+        #     },
+        # )
+        # self.play(graph.create(
+        #     lag_ratio=0.0,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(graph.animate(
+        #     run_time=1.0,
+        # ).shift(RIGHT*3))
+
+        # cube = Cube(
+        #     stroke_width=3,
+        #     stroke_color=WHITE,
+        #     stroke_opacity=1.0,
+        #     fill_color=GRAY,
+        #     fill_opacity=0.6,
+        # )
+        # self.move_camera(
+        #     phi=60*DEGREES,
+        #     theta=-75*DEGREES,
+        #     added_anims=[
+        #         Write(cube),
+        #     ],
+        #     run_time=1.0,
+        # )
+        # self.wait()
+
+        # self.play(graph.expand(run_time=0.5))
+        # self.play(graph.connect(lag_ratio=0.0, run_time=0.5))
+        # self.wait()
+
+        # self.play(AnimationGroup(
+        #     Unwrite(cube),
+        #     graph.animate.center(),
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(graph.show_shape(
+        #     '(12,3,4)',
+        #     index=0,
+        #     direction=RIGHT,
+        #     buff=0.1,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(graph.show_shape(
+        #     '(12,3,4)',
+        #     index=1,
+        #     direction=RIGHT,
+        #     buff=0.1,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(graph.show_shape(
+        #     '(12,4,5)',
+        #     index=2,
+        #     direction=RIGHT,
+        #     buff=0.1,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(graph.show_shape(
+        #     '(12,5,6)',
+        #     index=3,
+        #     direction=RIGHT,
+        #     buff=0.1,
+        #     run_time=1.0,
+        # ))
+        # self.wait()
+
+        # self.play(graph.animate(
+        #     run_time=1.0,
+        # ).shift(RIGHT*3))
+        # self.wait()
+
+        self.set_camera_orientation(
+            **VIEW_COMPUTE,
         )
-        self.play(graph.create(
-            lag_ratio=0.0,
+
+        uconv = UT_Conv(
+            module_config={
+                'c1': 128,
+                'c2': 256,
+                'k': 3,
+            },
+            n=8,
+        )
+        self.play(uconv.create(
+            direction='bottom',
+            lag_ratio=0.5,
             run_time=1.0,
         ))
         self.wait()
 
-        self.play(graph.animate(
-            run_time=1.0,
-        ).shift(RIGHT*3))
+        # self.move_camera(
+        #     **VIEW_INTRO,
+        # )
+        # self.wait()
 
-        cube = Cube(
-            stroke_width=3,
-            stroke_color=WHITE,
-            stroke_opacity=1.0,
-            fill_color=GRAY,
-            fill_opacity=0.6,
-        )
-        self.move_camera(
-            phi=60*DEGREES,
-            theta=-75*DEGREES,
-            added_anims=[
-                Write(cube),
-            ],
-            run_time=1.0,
-        )
-        self.wait()
-
-        self.play(graph.expand(run_time=0.5))
-        self.play(graph.connect(lag_ratio=0.0, run_time=0.5))
-        self.wait()
+        self.play(uconv.conv_bn.animate(
+            run_time=0.5,
+        ).arrange(DOWN, buff=3.0))
+        self.wait(wt)
 
         self.play(AnimationGroup(
-            Unwrite(cube),
-            graph.animate.center(),
-            run_time=1.0,
+            ShowShape3D(
+                self,
+                uconv.mobs_conv,
+                view='compute',
+                lag_ratio=0.5,
+                run_time=wt*3,
+            ),
+            ShowShape3D(
+                self,
+                uconv.mobs_bn,
+                view='compute',
+                lag_ratio=0.3,
+                run_time=wt*3,
+            ),
+            lag_ratio=0.0,
         ))
-        self.wait()
+        self.wait(wt)
 
-        self.play(graph.show_shape(
-            '(12,3,4)',
-            index=0,
-            direction=RIGHT,
-            buff=0.1,
-            run_time=1.0,
+        self.play(AnimationGroup(
+            HideShape3D(
+                uconv.mobs_conv,
+                lag_ratio=0.0,
+                run_time=wt,
+            ),
+            HideShape3D(
+                uconv.mobs_bn,
+                lag_ratio=0.0,
+                run_time=wt,
+            ),
+            lag_ratio=0.0,
         ))
-        self.wait()
+        self.wait(wt)
 
-        self.play(graph.show_shape(
-            '(12,3,4)',
-            index=1,
-            direction=RIGHT,
-            buff=0.1,
-            run_time=1.0,
-        ))
-        self.wait()
-
-        self.play(graph.show_shape(
-            '(12,4,5)',
-            index=2,
-            direction=RIGHT,
-            buff=0.1,
-            run_time=1.0,
-        ))
-        self.wait()
-
-        self.play(graph.show_shape(
-            '(12,5,6)',
-            index=3,
-            direction=RIGHT,
-            buff=0.1,
-            run_time=1.0,
-        ))
-        self.wait()
-
-        self.play(graph.animate(
-            run_time=1.0,
-        ).shift(RIGHT*3))
-        self.wait()
+        self.play(uconv.conv_bn.animate(
+            run_time=0.5,
+        ).arrange(DOWN, buff=uconv.tensor_gap))
+        self.wait(wt)

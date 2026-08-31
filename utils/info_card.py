@@ -565,6 +565,39 @@ def detach_to_ref(
           for mob in mobs),
         **aargs,
     )
+
+def highlight_card_index(
+    cards: VGroup,
+    mask: np.ndarray | None = None,
+    **aargs,
+) -> AnimationGroup:
+    """Manual highlight specific card in a VGroup of cards.
+    """
+    nc = len(cards)
+    if not hasattr(cards, 'hl_state'):
+        cards.hl_state = np.ones(nc, dtype=bool)
+
+    if mask is None:
+        mask = np.ones(nc, dtype=bool)
+
+    mask_start = cards.hl_state
+    mask_end = mask
+
+    mask_hl = ~mask_start & mask_end
+    mask_dm = ~mask_end & mask_start
+
+    anims_hl = [
+        cards[idx].lightup() for idx in range(nc) if mask_hl[idx]
+    ]
+    anims_dm = [
+        cards[idx].tarnish() for idx in range(nc) if mask_dm[idx]
+    ]
+    cards.hl_state = mask
+    return AnimationGroup(
+        *anims_hl,
+        *anims_dm,
+        **aargs,
+    )
     
 class Demo(ThreeDScene):
     def construct(self):
