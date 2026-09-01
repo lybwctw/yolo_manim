@@ -101,12 +101,14 @@ class MGraph(VMobject):
         mask_dm = ~mask_end & mask_start
 
         anims_hl = [
-            mob.lightup()
-            for mob in np.array(self.mobs_card,dtype=object)[mask_hl]
+            self.mobs_card[idx].lightup() for idx in range(self.ncards) if mask_hl[idx]
+            # mob.lightup()
+            # for mob in np.array(self.mobs_card,dtype=object)[mask_hl]
         ]
         anims_dm = [
-            mob.tarnish()
-            for mob in np.array(self.mobs_card,dtype=object)[mask_dm]
+            self.mobs_card[idx].tarnish() for idx in range(self.ncards) if mask_dm[idx]
+            # mob.tarnish()
+            # for mob in np.array(self.mobs_card,dtype=object)[mask_dm]
         ]
 
         self.hl_state = mask
@@ -139,12 +141,14 @@ class MGraph(VMobject):
             mask_hl = ~start & end
             mask_dm = ~end & start
             anims_hl = [
-                mob.lightup()
-                for mob in np.array(self.mobs_card,dtype=object)[mask_hl]
+                self.mobs_card[idx].lightup() for idx in range(self.ncards) if mask_hl[idx]
+                # mob.lightup()
+                # for mob in np.array(self.mobs_card,dtype=object)[mask_hl]
             ]
             anims_dm = [
-                mob.tarnish()
-                for mob in np.array(self.mobs_card,dtype=object)[mask_dm]
+                self.mobs_card[idx].tarnish() for idx in range(self.ncards) if mask_dm[idx]
+                # mob.tarnish()
+                # for mob in np.array(self.mobs_card,dtype=object)[mask_dm]
             ]
             # anims_hl = [mob.lightup() for mob in self[mask_hl]]
             # anims_dm = [mob.tarnish() for mob in self[mask_dm]]

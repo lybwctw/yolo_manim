@@ -58,7 +58,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # create simple graph
+        # create unexpanded graph
         self.play(graph_module.create(
             run_time=wt,
         ))
@@ -92,7 +92,6 @@ class MainScene(ThreeDScene):
         self.play(graph_module.animate(
             run_time=wt,
         ).to_edge(RIGHT, buff=MGRAPH_EDGE_BUFF))
-        VMobject.to_edge
         self.wait(wt)
 
 

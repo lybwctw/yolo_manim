@@ -231,3 +231,25 @@ def Conv_2_bn_config(
     return {
         'num_features': module_config['c2'],
     }
+
+def Bottleneck_2_cv1_config(
+    module_config: dict,
+) -> dict:
+    return {
+        'c1': module_config['c1'],
+        'c2': int(module_config['c2'] * module_config['e']),
+        'k': module_config['k'][0],
+        's': 1,
+        'p': int((module_config['k'][0]-1)/2),
+    }
+
+def Bottleneck_2_cv2_config(
+    module_config: dict,
+) -> dict:
+    return {
+        'c1': int(module_config['c2'] * module_config['e']),
+        'c2': module_config['c2'],
+        'k': module_config['k'][1],
+        's': 1,
+        'p': int((module_config['k'][1]-1)/2),
+    }

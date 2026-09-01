@@ -62,7 +62,7 @@ class UT_Conv(VMobject):
         ref_bn: MTensor4D | None = None,
         size_config_conv: dict = {},
         size_config_bn: dict = {},
-        n: int = DEFAULT_N,                         # shared by conv and bn
+        n: int | None = None,                       # shared by conv and bn
         block_gap: float = DEFAULT_BLOCK_GAP,       # used by conv directly
         tensor_gap: float = DEFAULT_TENSOR_GAP,     # gap between conv and bn
     ):
@@ -73,7 +73,10 @@ class UT_Conv(VMobject):
         self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BN, **cube_config_bn}
         self.size_config_conv = {**DEFAULT_SIZE_CONFIG_CONV, **size_config_conv}
         self.size_config_bn = {**DEFAULT_SIZE_CONFIG_BN, **size_config_bn}
-        self.n = n          # visual number of blocks (instead of nominal)
+        if n is not None:
+            self.n = n                              # explicit visual blocks
+        else:
+            self.n = module_config['c2']            # implicit visual blocks
         self.block_gap = block_gap
         # self.tensor_gap = tensor_gap
 
