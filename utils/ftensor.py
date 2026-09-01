@@ -25,7 +25,7 @@ DEFAULT_SIZE_CONFIG = {
     'depth': 0.4,
 }
 
-def _stretch_direction_3d(
+def stretch_inplace_3d(
     mob,
     direction: str = 'erect',               # horizontal/erect
     size_scale: float | None = None,        # overrides size_target
@@ -50,13 +50,15 @@ def _stretch_direction_3d(
             size_target
         )
 
-def _stretch_direction_4d(
-    mobs,
+def stretch_target_4d(
+    mobs: VGroup,                           # a group of FTensor3D
     direction: str = 'erect',               # horizontal/erect
     size_scale: float | None = None,        # overrides size_target
     size_target: float | None = 2.0,
+    keep_gap: bool = False,                 # use original gap?
 ):
-    """Assume that width==height and both scaled when horizontal.
+    """Create target for each mob and stretch accordingly.
+       Assume that width==height and both scaled when horizontal.
     """
     if len(mobs) > 1:
         orig_gap = mobs[1].get_left()[0] - mobs[0].get_right()[0]
@@ -67,7 +69,7 @@ def _stretch_direction_4d(
     # create targets
     for mob in mobs:
         mob.generate_target()
-        _stretch_direction_3d(
+        stretch_inplace_3d(
             mob=mob.target,
             direction=direction,
             size_scale=size_scale,
@@ -76,9 +78,9 @@ def _stretch_direction_4d(
 
     # arrange targets
     vg = VGroup(mob.target for mob in mobs)
-    vg.arrange(
-        RIGHT, buff=orig_gap
-    ).move_to(
+    if keep_gap:
+        vg.arrange(RIGHT, buff=orig_gap)
+    vg.move_to(
         orig_center
     )
 
@@ -93,7 +95,7 @@ class FTensor3D(VMobject):
     ):
         super().__init__()
 
-        self.z_index = z_index
+        # self.z_index = z_index
         self.cube_config = {**DEFAULT_CUBE_CONFIG, **cube_config}
         if ref_3d is not None:
             shape = ref_3d.shape
@@ -109,7 +111,8 @@ class FTensor3D(VMobject):
         mob.stretch_to_fit_width(self.size_config['width'])
         mob.stretch_to_fit_height(self.size_config['height'])
         mob.stretch_to_fit_depth(self.size_config['depth'])
-        mob.set_z_index(self.z_index)
+        # mob.set_z_index(z_index)
+        self.set_z_index(z_index)
 
         self.mob = mob
         self.add(self.mob)
@@ -161,15 +164,20 @@ class FTensor3D(VMobject):
         direction: str = 'erect',               # horizontal/erect
         size_scale: float | None = None,        # overrides size_target
         size_target: float | None = 2.0,
+        shape: tuple | None = None,             # manual new shape
         **aargs,
     ) -> Animation:
         target = self.mob.copy()
-        _stretch_direction_3d(
+        stretch_inplace_3d(
             mob=target,
             direction=direction,
             size_scale=size_scale,
             size_target=size_target,
         )
+
+        # manual setup shape
+        self.shape = shape
+
         return Transform(
             self.mob,
             target,
@@ -203,7 +211,7 @@ class FTensor4D(VMobject):
         self,
         shape: tuple | None = None,         # nominal shape like (64, 128, 320, 320)
         ref_4d: MTensor4D | None = None,    # override size_config, n, block_gap
-        z_index: float = 0.0,
+        z_index: float = 0.0,               # starting z_index for 3ds
         cube_config: dict = {},
         size_config: dict = {},
         n: int = 8,
@@ -277,14 +285,22 @@ class FTensor4D(VMobject):
         direction: str = 'erect',           # horizontal/erect
         size_scale: float | None = None,    # overrides size_target
         size_target: float | None = 2.0,
+        keep_gap: bool = False,
+        shape: tuple | None = None,         # manual new shape
         **aargs,
     ) -> AnimationGroup:
-        _stretch_direction_4d(
+        stretch_target_4d(
             self.mobs,
             direction=direction,
             size_scale=size_scale,
             size_target=size_target,
+            keep_gap=keep_gap,
         )
+
+        # manual setup shape and child shapes
+        self.shape = shape
+        for mob in self.mobs:
+            mob.shape = shape[1:]
 
         return AnimationGroup(
             *(MoveToTarget(
@@ -298,18 +314,21 @@ class FTensor4D(VMobject):
         self,
         diff: int = 1,                  # -n / n
         direction: str = 'center',      # top/center/bottom
+        shape: tuple | None = None,     # manual new shape
         **aargs,
     ) -> AnimationGroup:
         if diff > 0:
             orig_center = self.get_center()
             orig_gap = self.mobs[1].get_left()[0] - self.mobs[0].get_right()[0]
+            orig_n = self.n
+            new_n = orig_n + diff * 2
 
-            objs_new = np.empty(self.n + diff*2, dtype=object)
+            objs_new = np.empty(new_n, dtype=object)
             for idx in range(len(objs_new)):
-                if idx < diff or idx > self.n+diff:
+                if idx < diff or idx >= self.n+diff:
                     objs_new[idx] = self.objs[0].copy()
                 else:
-                    objs_new[idx] = self.objs[idx-self.n]
+                    objs_new[idx] = self.objs[idx-diff]
             mobs_new = VGroup(*objs_new.flat).arrange(
                 RIGHT,
                 buff=orig_gap,
@@ -317,12 +336,15 @@ class FTensor4D(VMobject):
             mobs_new.move_to(orig_center)
 
             # reset z_index
-            for i, mob in enumerate(mobs_new):
-                mob.z_index = i + self.z_index_start
-                mob.set_z_index(mob.z_index)
+            for idx, mob in enumerate(mobs_new):
+                mob.z_index = self.z_index + new_n - idx + 1
+                
             self.objs = objs_new
             self.mobs = mobs_new
+            self.n = new_n
+            self.shape = shape      # manual setup shape
             # self.add(self.mobs_new)
+
             vgs_left = self.mobs[:diff][::-1]
             vgs_right = self.mobs[-diff:]
             return AnimationGroup(
@@ -341,7 +363,41 @@ class FTensor4D(VMobject):
             )
 
         elif diff < 0:
-            pass
+            diff = -diff
+            orig_n = self.n
+            new_n = orig_n - diff * 2
+
+            objs_new = self.objs[diff:diff+new_n]
+            mobs_new = VGroup(*objs_new.flat)
+
+            # skip z_index reset?
+
+            objs_old = self.objs
+            mobs_old = self.mobs
+
+            self.objs = objs_new
+            self.mobs = mobs_new
+            self.n = new_n
+            self.shape = shape
+
+            vgs_left = mobs_old[:diff]
+            vgs_right = mobs_old[-diff:][::-1]
+
+            return AnimationGroup(
+                AnimationGroup(
+                    *(mob.uncreate(direction=direction)
+                    for mob in vgs_left),
+                    **aargs,
+                ),
+                AnimationGroup(
+                    *(mob.uncreate(direction=direction)
+                    for mob in vgs_right),
+                    **aargs,
+                ),
+                lag_ratio=0.0,
+                _on_finish=lambda _: mobs_old.remove(*vgs_left, *vgs_right),
+            )
+
         else:
             raise NotImplementedError('diff should not be zero')
 
@@ -434,8 +490,9 @@ class Demo(ThreeDScene):
         self.wait(wt)
 
         self.play(ft4.stretch_direction(
-            direction='erect',
+            direction='horizontal',
             size_scale=2.0,
+            shape=(3,5,5),
             lag_ratio=0.5,
             run_time=wt,
         ))
@@ -444,6 +501,7 @@ class Demo(ThreeDScene):
         self.play(ft4.stretch_blocks(
             diff=3,
             direction='bottom',
+            shape=(2,3,5,5),
             lag_ratio=0.5,
             run_time=wt,
         ))
@@ -462,6 +520,11 @@ class Demo(ThreeDScene):
             run_time=wt,
         ))
         self.wait(wt)
+
+        # self.play(ft4.animate(
+        #     run_time=wt,
+        # ).shift(DOWN*3))
+        # self.wait(wt)
 
         self.play(ft4.uncreate(
             direction='bottom',

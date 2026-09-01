@@ -10,6 +10,7 @@ from utils.info_card import *
 from utils.mgraph import *
 from utils.ftensor import *
 from utils.show_shape_3d import *
+from utils.general import *
 
 # ------------- info card ---------------------
 # 'c1': UNKNOWN,
@@ -74,7 +75,7 @@ class UT_Conv(VMobject):
         self.size_config_bn = {**DEFAULT_SIZE_CONFIG_BN, **size_config_bn}
         self.n = n          # visual number of blocks (instead of nominal)
         self.block_gap = block_gap
-        self.tensor_gap = tensor_gap
+        # self.tensor_gap = tensor_gap
 
         mobs_conv = FTensor4D(
             ref_4d=ref_conv,
@@ -105,7 +106,7 @@ class UT_Conv(VMobject):
         )
         if ref_conv is None and ref_bn is None:
             for mb, mc in zip(mobs_bn.mobs, mobs_conv.mobs):
-                mb.next_to(mc, DOWN, buff=self.tensor_gap)
+                mb.next_to(mc, DOWN, buff=tensor_gap)
         self.mobs_conv = mobs_conv
         self.mobs_bn = mobs_bn
         self.add(self.mobs_conv, self.mobs_bn)
@@ -120,11 +121,75 @@ class UT_Conv(VMobject):
             self.mobs_conv.create(direction=direction, **aargs),
             self.mobs_bn.create(direction=direction, **aargs),
             lag_ratio=0.0,
+            _on_finish=lambda s: s.add(self),
         )
+
+    def uncreate(
+        self,
+        direction: str = 'center',
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.mobs_conv.uncreate(direction=direction, **aargs),
+            self.mobs_bn.uncreate(direction=direction, **aargs),
+            lag_ratio=0.0,
+            _on_finish=lambda s: s.remove(self),
+        )
+    
+    def stretch_direction(
+        self,
+        direction: str = 'erect',           # horizontal/erect
+        size_scale: float | None = None,    # for mobs_conv
+        size_target: float | None = 2.0,    # for mobs_conv
+        shape: tuple | None = None,         # for mobs_conv
+        **aargs,
+    ) -> AnimationGroup:
+        """Apply stretch_direction on mobs_conv.
+           Regap mobs_bn if kernel_size is changed.
+        """
+        return self.mobs_conv.stretch_direction(
+            direction=direction,
+            size_scale=size_scale,
+            size_target=size_target,
+            keep_gap=False,
+            shape=shape,
+            rate_func=smooth,
+            **aargs,
+        )
+
+    def stretch_blocks(
+        self,
+        diff: int = 1,                      # -n / n
+        direction: str = 'center',          # top/center/bottom
+        shape: tuple | None = None,         # for mobs_conv
+        **aargs,
+    ) -> AnimationGroup:
+        """Apply stretch_blocks on mobs_conv and mobs_bn.
+        """
+        return AnimationGroup(
+            self.mobs_conv.stretch_blocks(
+                diff=diff,
+                direction=direction,
+                shape=shape,
+                **aargs,
+            ),
+            self.mobs_bn.stretch_blocks(
+                diff=diff,
+                direction=direction,
+                shape=shape[:1]+self.mobs_bn.shape[1:],
+                **aargs,
+            ),
+            lag_ratio=0.0,
+        )
+
 
     @property
     def conv_bn(self):
         return VGroup(self.mobs_conv, self.mobs_bn)
+
+    @property
+    def tensor_gap(self):
+        return self.mobs_conv[0].get_bottom()[1] - self.mobs_bn[0].get_top()[1]
 
 class MGraph_Conv(MGraph):
     def __init__(

@@ -1,5 +1,5 @@
 # ************************************************************
-# Visualize several Conv samples from yolov8 series (3 classes).
+# Visualize first Conv sample from yolov8 series (3 classes).
 # ************************************************************
 from manim import *
 import csv
@@ -36,10 +36,10 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        # load card and graph
+        # load sample cards
         cards = import_mobs('040f')
 
         # show initial reference card
@@ -54,7 +54,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'start with [3 16 3 2 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO: highlight current card
@@ -217,3 +217,30 @@ class MainScene(ThreeDScene):
             run_time=wt,
         )
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'export',
+            skip_animations=False,
+        )
+        # ************************************************************
+        mobs = VGroup(cards, ut_conv)
+        export_mobs(__file__, mobs)     # NOTE: used by next
+        # self.wait(wt)
+        # self.play(ut_conv.stretch_direction(
+        #     direction='erect',
+        #     size_scale=2.0,
+        #     shape=(6, 16, 3, 3),
+        #     lag_ratio=0.5,
+        #     run_time=wt*4,
+        # ))
+        # self.wait(wt)
+
+        # self.play(ut_conv.stretch_direction(
+        #     direction='horizontal',
+        #     size_scale=1/3,
+        #     shape=(6, 16, 1, 1),
+        #     lag_ratio=0.5,
+        #     run_time=wt*4,
+        # ))
+        # self.wait(wt)
