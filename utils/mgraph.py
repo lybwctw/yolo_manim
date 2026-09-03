@@ -196,6 +196,40 @@ class MGraph(VMobject):
             _on_finish=lambda _: self.add(tmob),
         )
 
+    def update_shape(
+        self,
+        text: str = 'None',
+        index: int = 0,
+        direction: np.ndarray = LEFT,
+        buff: float | None = 0.1,
+        **aargs,
+    ) -> Animation:
+        """User's responsiblity to ensure the index is valid.
+        """
+        if not hasattr(self, 'objs_shape'):
+            self.objs_shape = {}
+
+        nmob = Text(
+            text,
+            **SHAPE_CONFIG_DEFAULT,
+        ).next_to(
+            self.lines[index],
+            direction,
+            buff=buff,
+        )
+
+        smob_old = self.objs_shape[index]
+        self.remove(smob_old)
+        self.objs_shape[index] = nmob
+
+        return AnimationGroup(
+            Uncreate(smob_old),
+            Create(self.objs_shape[index], fixed=True),
+            lag_ratio=0.0,
+            _on_finish=lambda _: self.add(self.objs_shape[index]),
+            **aargs,
+        )
+
     def show_shapes(
         self,
         texts: list,
@@ -212,6 +246,7 @@ class MGraph(VMobject):
         if isinstance(buff, float):
             buff = [buff] * len(texts)
 
+        smobs = VGroup()
         for text, index, direction, bf in zip(
             texts, indices, directions, buff
         ):
@@ -221,26 +256,34 @@ class MGraph(VMobject):
             ).next_to(
                 self.lines[index],
                 direction,
-                buff=buff,
+                buff=bf,
             )
 
             self.objs_shape[index] = tmob
+            smobs.add(tmob)
 
         return AnimationGroup(
             *(Create(
                 smob,
                 fixed=True,
-                _on_finish=lambda _: self.add(smob)
-            ) for smob in self.objs_shape.values()),
+            ) for smob in smobs),
+            _on_finish=lambda _: self.add(*smobs),
             **aargs,
         )
 
-        # return Create(
-        #     tmob,
-        #     fixed=True,
-        #     **aargs,
-        #     _on_finish=lambda _: self.add(tmob),
-        # )
+    def hide_shapes(
+        self,
+        **aargs,
+    ) -> Animation:
+        smobs = VGroup(smob for smob in self.objs_shape.values())
+        del self.objs_shape
+        return AnimationGroup(
+            *(Uncreate(
+                smob,
+            ) for smob in smobs),
+            _on_finish=lambda _: self.remove(*smobs)
+            **aargs,
+        )
 
     @property
     def ncards(self):

@@ -7,6 +7,9 @@ from utils.constants_3d import *
 
 import numpy as np
 
+UNIT_LEADER_LENGTH = 0.4
+DEFAULT_LEADER_LENGTH = UNIT_LEADER_LENGTH * 2
+
 DEFAULT_LEADER_CONFIG = {
     'stroke_color': WHITE,
     'stroke_width': 2,
@@ -57,7 +60,7 @@ class NameTag(VMobject):
         ref: np.ndarray = ORIGIN,
         text: str = 'None',
         leader_direction: np.ndarray = UR,
-        leader_length: float = 0.8,
+        leader_length: float = DEFAULT_LEADER_LENGTH,
         leader_buff: float = 0.05,
         label_buff: float = 0.05,
         leader_config: dict = {},
@@ -167,12 +170,14 @@ class Demo(ThreeDScene):
             ref=p2f(self, cube.get_corner(DR+IN)),
             text="weight",
             leader_direction=DR,
+            leader_length=0.3,
             fixed_in_3d=True,
         )
         tag2 = NameTag(
             ref=p2f(self, cube.get_corner(DR+OUT)),
             text="bias",
             leader_direction=UR,
+            leader_length=1.3,
             fixed_in_3d=True,
         )
 

@@ -9,6 +9,7 @@ import torch
 import numpy as np
 import random
 
+from utils.ftensor import FTensor3D
 from utils.color_cell import ColorCell
 from utils.line_matrix import LineMatrix
 from utils.constants import DIR_PICKLE
@@ -202,13 +203,22 @@ def increase_z_index_in_batch(
     """With mtensors of size [s1, s2, s3, ...]
        Increate cubes by [0, s1, s1+s2, ...]
     """
-    sizes = [len(mt.mobs) for mt in mtensors]
-    offsets = [0] + list(np.cumsum(sizes[:-1]))
+    sizes = []
     for mt in mtensors:
-        for cube in mt.mobs:
-            z_index = cube.z_index
-            cube.z_index = z_index
-            cube.set_z_index(z_index)
+        if isinstance(mt, FTensor3D):
+            sizes.append(1)
+        else:
+            sizes.append(len(mt.mobs))
+    offsets = [0] + list(np.cumsum(sizes[:-1]))
+    for mt, offset in zip(mtensors, offsets):
+        if isinstance(mt, FTensor3D):
+            mt.set_z_index(mt.z_index + offset)
+        else:
+            for cube in mt.mobs:
+                cube.set_z_index(cube.z_index + offset)
+                # z_index = cube.z_index
+                # cube.z_index = z_index
+                # cube.set_z_index(z_index)
 
 def Conv_2_conv_config(
     module_config: dict,
@@ -231,6 +241,16 @@ def Conv_2_bn_config(
     return {
         'num_features': module_config['c2'],
     }
+
+def Conv_2_conv_shape(
+    module_config: dict,
+) -> dict:
+    return (
+        module_config['c2'],
+        module_config['c1'],
+        module_config['k'],
+        module_config['k'],
+    )
 
 def Bottleneck_2_cv1_config(
     module_config: dict,

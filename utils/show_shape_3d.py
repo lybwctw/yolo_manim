@@ -185,7 +185,7 @@ SHAPE_MAPPING = {
             [1, RIGHT+OUT],
             [2, UP+OUT],
         ],
-    },   # TODO
+    },
     (FTensor4D, 'compute', None): {
         'path_info': [
             [[(0,), UL+OUT], [(-1,), UR+OUT]],

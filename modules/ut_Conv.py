@@ -20,33 +20,23 @@ from utils.general import *
 # 'p': UNKNOWN,
 # ---------------------------------------------
 
-DEFAULT_N = 8
-DEFAULT_BLOCK_GAP = 0.3,
-DEFAULT_TENSOR_GAP = 0.8
+# DEFAULT_N = 8
+# DEFAULT_BLOCK_GAP = 0.3,
+# DEFAULT_TENSOR_GAP = 0.8
 
 DEFAULT_CUBE_CONFIG_CONV = {
-    'fill_color': GRAY,
-    'fill_opacity': 1.0,
+    'fill_color': ORANGE,
+    'fill_opacity': 0.8,
     'stroke_width': 2.0,
     'stroke_opacity': 1.0,
     'stroke_color': WHITE,
 }
 DEFAULT_CUBE_CONFIG_BN = {
-    'fill_color': GRAY,
-    'fill_opacity': 1.0,
+    'fill_color': RED_C,
+    'fill_opacity': 0.8,
     'stroke_width': 2.0,
     'stroke_opacity': 1.0,
     'stroke_color': WHITE,
-}
-DEFAULT_SIZE_CONFIG_CONV = {
-    'width': 0.2,
-    'height': 0.2,
-    'depth': 0.8,
-}
-DEFAULT_SIZE_CONFIG_BN = {
-    'width': 0.1,
-    'height': 0.1,
-    'depth': 0.4,
 }
 
 class UT_Conv(VMobject):
@@ -54,145 +44,165 @@ class UT_Conv(VMobject):
     """
     def __init__(
         self,
-        module_config: dict = {},                   # c1, c2, k
+        ref_conv: MTensor4D | None = None,
+        ref_bn: MTensor4D | None = None,
+        module_config: dict = {},                   # c1, c2, k, (s, p)
         z_index: float = 0.0,                       # used by conv directly
         cube_config_conv: dict = {},
         cube_config_bn: dict = {},
-        ref_conv: MTensor4D | None = None,
-        ref_bn: MTensor4D | None = None,
-        size_config_conv: dict = {},
-        size_config_bn: dict = {},
-        n: int | None = None,                       # shared by conv and bn
-        block_gap: float = DEFAULT_BLOCK_GAP,       # used by conv directly
-        tensor_gap: float = DEFAULT_TENSOR_GAP,     # gap between conv and bn
+        size_config_conv: dict = {},                # override that from module_config
+        size_config_bn: dict = {},                  # override that from module_config
+        n: int | None = None,                       # override that from module_config
+        block_gap: float = UNIT_FTENSOR_SIZE,       # for conv
+        tensor_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between conv and bn
     ):
         super().__init__()
         self.module_config = module_config
         self.z_index = z_index
         self.cube_config_conv = {**DEFAULT_CUBE_CONFIG_CONV, **cube_config_conv}
         self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BN, **cube_config_bn}
-        self.size_config_conv = {**DEFAULT_SIZE_CONFIG_CONV, **size_config_conv}
-        self.size_config_bn = {**DEFAULT_SIZE_CONFIG_BN, **size_config_bn}
-        if n is not None:
-            self.n = n                              # explicit visual blocks
-        else:
-            self.n = module_config['c2']            # implicit visual blocks
+        self.size_config_conv = size_config_conv
+        self.size_config_bn = size_config_bn
+        self.n = n if n is not None else self.module_config['c2']
         self.block_gap = block_gap
         # self.tensor_gap = tensor_gap
 
-        mobs_conv = FTensor4D(
+        ft_conv = FTensor4D(
             ref_4d=ref_conv,
-            shape=(
-                self.module_config['c2'],
-                self.module_config['c1'],
-                self.module_config['k'],
-                self.module_config['k'],
-            ),
+            shape=Conv_2_conv_shape(self.module_config),
             z_index=self.z_index,
             cube_config=self.cube_config_conv,
             size_config=self.size_config_conv,
             n=self.n,
             block_gap=self.block_gap,
         )
-        mobs_bn = FTensor4D(
+        ft_bn = FTensor4D(
             ref_4d=ref_bn,
-            shape=(
-                self.module_config['c2'],
-                4,
-                1,
-                1,
-            ),
-            z_index=mobs_conv.z_index_end,
+            shape=(self.module_config['c2'], 4, 1, 1),
+            z_index=ft_conv.z_index_end,
             cube_config=self.cube_config_bn,
             size_config=self.size_config_bn,
             n=self.n,
         )
         if ref_conv is None and ref_bn is None:
-            for mb, mc in zip(mobs_bn.mobs, mobs_conv.mobs):
+            for mb, mc in zip(ft_bn.mobs, ft_conv.mobs):
                 mb.next_to(mc, DOWN, buff=tensor_gap)
-        self.mobs_conv = mobs_conv
-        self.mobs_bn = mobs_bn
-        self.add(self.mobs_conv, self.mobs_bn)
+        self.ft_conv = ft_conv
+        self.ft_bn = ft_bn
+        self.add(self.ft_conv, self.ft_bn)
         self.center()
 
     def create(
         self,
-        direction: str = 'center',
+        ref: str = 'center',
         **aargs,
     ) -> AnimationGroup:
         return AnimationGroup(
-            self.mobs_conv.create(direction=direction, **aargs),
-            self.mobs_bn.create(direction=direction, **aargs),
+            self.ft_conv.create(ref=ref, **aargs),
+            self.ft_bn.create(ref=ref, **aargs),
             lag_ratio=0.0,
             _on_finish=lambda s: s.add(self),
         )
 
-    def uncreate(
+    def breath(
         self,
-        direction: str = 'center',
+        **aargs,
+    ):
+        return AnimationGroup(
+            self.ft_conv.breath(**aargs),
+            self.ft_bn.breath(**aargs),
+            lag_ratio=0.0,
+        )
+
+    def tarnish(
+        self,
         **aargs,
     ) -> AnimationGroup:
         return AnimationGroup(
-            self.mobs_conv.uncreate(direction=direction, **aargs),
-            self.mobs_bn.uncreate(direction=direction, **aargs),
+            self.ft_conv.tarnish(),
+            self.ft_bn.tarnish(),
+            **aargs,
+        )
+
+    def lightup(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ft_conv.lightup(),
+            self.ft_bn.lightup(),
+            **aargs,
+        )
+    
+    def uncreate(
+        self,
+        ref: str = 'center',
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ft_conv.uncreate(ref=ref, **aargs),
+            self.ft_bn.uncreate(ref=ref, **aargs),
             lag_ratio=0.0,
             _on_finish=lambda s: s.remove(self),
         )
     
-    def stretch_direction(
-        self,
-        direction: str = 'erect',           # horizontal/erect
-        size_scale: float | None = None,    # for mobs_conv
-        size_target: float | None = 2.0,    # for mobs_conv
-        shape: tuple | None = None,         # for mobs_conv
-        **aargs,
-    ) -> AnimationGroup:
-        """Apply stretch_direction on mobs_conv.
-           Regap mobs_bn if kernel_size is changed.
-        """
-        return self.mobs_conv.stretch_direction(
-            direction=direction,
-            size_scale=size_scale,
-            size_target=size_target,
-            keep_gap=False,
-            shape=shape,
-            rate_func=smooth,
-            **aargs,
-        )
+    # def stretch_direction(
+    #     self,
+    #     direction: str = 'erect',           # horizontal/erect
+    #     size_scale: float | None = None,    # for mobs_conv
+    #     size_target: float | None = 2.0,    # for mobs_conv
+    #     shape: tuple | None = None,         # for mobs_conv
+    #     **aargs,
+    # ) -> AnimationGroup:
+    #     """Apply stretch_direction on mobs_conv.
+    #        Regap mobs_bn if kernel_size is changed.
+    #     """
+    #     return self.mobs_conv.stretch_direction(
+    #         direction=direction,
+    #         size_scale=size_scale,
+    #         size_target=size_target,
+    #         keep_gap=False,
+    #         shape=shape,
+    #         rate_func=smooth,
+    #         **aargs,
+    #     )
 
-    def stretch_blocks(
-        self,
-        diff: int = 1,                      # -n / n
-        direction: str = 'center',          # top/center/bottom
-        shape: tuple | None = None,         # for mobs_conv
-        **aargs,
-    ) -> AnimationGroup:
-        """Apply stretch_blocks on mobs_conv and mobs_bn.
-        """
-        return AnimationGroup(
-            self.mobs_conv.stretch_blocks(
-                diff=diff,
-                direction=direction,
-                shape=shape,
-                **aargs,
-            ),
-            self.mobs_bn.stretch_blocks(
-                diff=diff,
-                direction=direction,
-                shape=shape[:1]+self.mobs_bn.shape[1:],
-                **aargs,
-            ),
-            lag_ratio=0.0,
-        )
-
+    # def stretch_blocks(
+    #     self,
+    #     diff: int = 1,                      # -n / n
+    #     direction: str = 'center',          # top/center/bottom
+    #     shape: tuple | None = None,         # for mobs_conv
+    #     **aargs,
+    # ) -> AnimationGroup:
+    #     """Apply stretch_blocks on mobs_conv and mobs_bn.
+    #     """
+    #     return AnimationGroup(
+    #         self.mobs_conv.stretch_blocks(
+    #             diff=diff,
+    #             direction=direction,
+    #             shape=shape,
+    #             **aargs,
+    #         ),
+    #         self.mobs_bn.stretch_blocks(
+    #             diff=diff,
+    #             direction=direction,
+    #             shape=shape[:1]+self.mobs_bn.shape[1:],
+    #             **aargs,
+    #         ),
+    #         lag_ratio=0.0,
+    #     )
 
     @property
     def conv_bn(self):
-        return VGroup(self.mobs_conv, self.mobs_bn)
+        return VGroup(self.ft_conv, self.ft_bn)
+
+    @property
+    def mobs(self):
+        return VGroup(*self.ft_conv.mobs, *self.ft_bn.mobs)
 
     @property
     def tensor_gap(self):
-        return self.mobs_conv[0].get_bottom()[1] - self.mobs_bn[0].get_top()[1]
+        return self.ft_conv[0].get_bottom()[1] - self.ft_bn[0].get_top()[1]
 
 class MGraph_Conv(MGraph):
     def __init__(
@@ -325,161 +335,34 @@ class MGraph_Conv(MGraph):
             'track_running_stats': True,
         }
 
-wt = 1.0
+wt = 0.5
 class Demo(ThreeDScene):
     def construct(self):
-        # graph = MGraph_Conv(
-        #     module_config = {
-        #         'c1': 10,
-        #         'c2': 20,
-        #         'k': 3,
-        #         's': 1,
-        #         'p': 1,
-        #     },
-        # )
-        # self.play(graph.create(
-        #     lag_ratio=0.0,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(graph.animate(
-        #     run_time=1.0,
-        # ).shift(RIGHT*3))
-
-        # cube = Cube(
-        #     stroke_width=3,
-        #     stroke_color=WHITE,
-        #     stroke_opacity=1.0,
-        #     fill_color=GRAY,
-        #     fill_opacity=0.6,
-        # )
-        # self.move_camera(
-        #     phi=60*DEGREES,
-        #     theta=-75*DEGREES,
-        #     added_anims=[
-        #         Write(cube),
-        #     ],
-        #     run_time=1.0,
-        # )
-        # self.wait()
-
-        # self.play(graph.expand(run_time=0.5))
-        # self.play(graph.connect(lag_ratio=0.0, run_time=0.5))
-        # self.wait()
-
-        # self.play(AnimationGroup(
-        #     Unwrite(cube),
-        #     graph.animate.center(),
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(graph.show_shape(
-        #     '(12,3,4)',
-        #     index=0,
-        #     direction=RIGHT,
-        #     buff=0.1,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(graph.show_shape(
-        #     '(12,3,4)',
-        #     index=1,
-        #     direction=RIGHT,
-        #     buff=0.1,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(graph.show_shape(
-        #     '(12,4,5)',
-        #     index=2,
-        #     direction=RIGHT,
-        #     buff=0.1,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(graph.show_shape(
-        #     '(12,5,6)',
-        #     index=3,
-        #     direction=RIGHT,
-        #     buff=0.1,
-        #     run_time=1.0,
-        # ))
-        # self.wait()
-
-        # self.play(graph.animate(
-        #     run_time=1.0,
-        # ).shift(RIGHT*3))
-        # self.wait()
-
         self.set_camera_orientation(
             **VIEW_COMPUTE,
         )
 
         uconv = UT_Conv(
             module_config={
-                'c1': 128,
-                'c2': 256,
+                'c1': 16,
+                'c2': 16,
                 'k': 3,
             },
-            n=8,
+            size_config_conv={
+                'depth': 8*UNIT_FTENSOR_SIZE,
+            },
         )
         self.play(uconv.create(
-            direction='bottom',
+            ref='bottom',
+            rate_func=smooth,
             lag_ratio=0.5,
             run_time=1.0,
         ))
         self.wait()
 
-        # self.move_camera(
-        #     **VIEW_INTRO,
-        # )
-        # self.wait()
-
-        self.play(uconv.conv_bn.animate(
-            run_time=0.5,
-        ).arrange(DOWN, buff=3.0))
-        self.wait(wt)
-
-        self.play(AnimationGroup(
-            ShowShape3D(
-                self,
-                uconv.mobs_conv,
-                view='compute',
-                lag_ratio=0.5,
-                run_time=wt*3,
-            ),
-            ShowShape3D(
-                self,
-                uconv.mobs_bn,
-                view='compute',
-                lag_ratio=0.3,
-                run_time=wt*3,
-            ),
-            lag_ratio=0.0,
+        self.play(uconv.breath(
+            rate_func=smooth,
+            lag_ratio=0.5,
+            run_time=1.0,
         ))
-        self.wait(wt)
-
-        self.play(AnimationGroup(
-            HideShape3D(
-                uconv.mobs_conv,
-                lag_ratio=0.0,
-                run_time=wt,
-            ),
-            HideShape3D(
-                uconv.mobs_bn,
-                lag_ratio=0.0,
-                run_time=wt,
-            ),
-            lag_ratio=0.0,
-        ))
-        self.wait(wt)
-
-        self.play(uconv.conv_bn.animate(
-            run_time=0.5,
-        ).arrange(DOWN, buff=uconv.tensor_gap))
-        self.wait(wt)
+        self.wait()
