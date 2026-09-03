@@ -352,9 +352,9 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         self.play(AnimationGroup(
-            mt_1.tarnish(),
-            mt_2.tarnish(),
-            mt_3.tarnish(),
+            # mt_1.tarnish(),
+            # mt_2.tarnish(),
+            # mt_3.tarnish(),
             mm_cv1.ft_conv.lightup(),
             mm_cv1.ft_bn.lightup(),
             mm_cv2.ft_conv.lightup(),
@@ -363,3 +363,11 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ))
         self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            tc_i, mc, tc_o,
+            mts[0], mm_cv1, mts[1], mm_cv2, mts[2],
+            mg,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by next
