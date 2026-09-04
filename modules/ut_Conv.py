@@ -37,7 +37,7 @@ DEFAULT_CUBE_CONFIG_CONV = {
     'stroke_color': WHITE,
 }
 DEFAULT_CUBE_CONFIG_BN = {
-    'fill_color': RED_C,
+    'fill_color': PURE_RED,
     'fill_opacity': 0.8,
     'stroke_width': 2.0,
     'stroke_opacity': 1.0,

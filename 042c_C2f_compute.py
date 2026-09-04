@@ -19,7 +19,7 @@ from modules.ut_Bottleneck import *
 
 from ultralytics.nn.modules import C2f
 
-TENSOR_VGAP_SMALL = 1.0
+TENSOR_VGAP_SMALL = 0.6
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
@@ -118,7 +118,6 @@ class MainScene(ThreeDScene):
         self.play(Succession(
             *(mb.create(
                 ref='center',
-                run_time=wt,
             ) for mb in mm_m),
             run_time=wt*3,
         ))
