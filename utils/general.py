@@ -273,3 +273,54 @@ def Bottleneck_2_cv2_config(
         's': 1,
         'p': int((module_config['k'][1]-1)/2),
     }
+
+def C2f_2_cv1_config(
+    module_config: dict,
+) -> dict:
+    c1 = module_config['c1']
+    c2 = module_config['c2']
+    n = module_config['n']
+    shortcut = module_config['shortcut']
+    e = module_config['e']
+    _c = int(c2*e)
+    return {
+        'c1': c1,
+        'c2': 2 * _c,
+        'k': 1,
+        's': 1,
+        'p': 0,
+    }
+
+def C2f_2_cv2_config(
+    module_config: dict,
+) -> dict:
+    c1 = module_config['c1']
+    c2 = module_config['c2']
+    n = module_config['n']
+    shortcut = module_config['shortcut']
+    e = module_config['e']
+    _c = int(c2*e)
+    return {
+        'c1': (n+2)*_c,
+        'c2': c2,
+        'k': 1,
+        's': 1,
+        'p': 0,
+    }
+
+def C2f_2_bottleneck_config(
+    module_config: dict,
+) -> dict:
+    c1 = module_config['c1']
+    c2 = module_config['c2']
+    n = module_config['n']
+    shortcut = module_config['shortcut']
+    e = module_config['e']
+    _c = int(c2*e)
+    return {
+        'c1': _c,
+        'c2': _c,
+        'shortcut': shortcut,
+        'k': (3,3),
+        'e': 1.0,
+    }

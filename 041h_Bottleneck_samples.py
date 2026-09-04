@@ -1,5 +1,5 @@
 # ************************************************************
-# Conv samples from yolov8 series for 3 classes.
+# Bottleneck samples from yolov8 series for 3 classes.
 # ************************************************************
 from manim import *
 import csv
@@ -28,11 +28,12 @@ TENSOR_VGAP_LARGE = 3.0
 
 wt = 0.5
 
-SCALE_FACTOR = 0.73
+SCALE_FACTOR = 1.0
 
-with open(Path(__file__).with_name('yolov8_unique_3.csv'), newline='') as csv_file:
+with open(Path(__file__).with_name('yolov8_Bottleneck_3.csv'), newline='') as csv_file:
     args = [
-        f"{row['c1']} {row['c2']} {row['k']} {row['s']} {row['p']}"
+        # f"{row['c1']} {row['c2']} {row['shortcut']} {row['k']} {row['e']}"
+        f"{row['c1']} {row['c2']} {row['shortcut'][0]}"
         for row in csv.DictReader(csv_file)
     ]
 
@@ -45,8 +46,8 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        card_ref = import_mobs('040e')
-        cards = VGroup(card_ref.copy() for _ in range(99))
+        card_ref = import_mobs('041g')
+        cards = VGroup(card_ref.copy() for _ in range(21))
 
         # show initial reference card
         self.set_camera_orientation(
@@ -57,7 +58,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'arrange 99 copies of card',
+            'arrange 21 copies of card',
             skip_animations=False,
         )
         # ************************************************************
@@ -70,13 +71,14 @@ class MainScene(ThreeDScene):
         ).scale(
             SCALE_FACTOR
         ).arrange_in_grid(
-            rows=11,
-            cols=9,
-            buff=(1.1, 0.3),
+            rows=7,
+            cols=3,
+            buff=(1.0, 0.1),
             flow_order='dr',
         ).center())
+        # self.wait(wt)
 
-        # all possible Conv summaries for yolov8 series
+        # all possible Bottleneck summaries for yolov8 series
         self.play(AnimationGroup(
             *(card.expand_summary(
                 arg,
@@ -91,30 +93,6 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'arrange 99 copies of card',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # keep first column (11)
-        self.play(AnimationGroup(
-            *(ShrinkToCenter(card) for card in cards[11:]),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-
-        # scale back first column
-        self.play(AnimationGroup(
-            *(card.animate(
-                rate_func=rate_functions.ease_out_back,
-            ).scale(1/SCALE_FACTOR)
-            for card in cards[:11]),
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
         # export
-        mobs = cards[:11]
+        mobs = cards
         export_mobs(__file__, mobs)

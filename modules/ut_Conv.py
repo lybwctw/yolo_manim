@@ -24,6 +24,11 @@ from utils.general import *
 # DEFAULT_BLOCK_GAP = 0.3,
 # DEFAULT_TENSOR_GAP = 0.8
 
+CONFIG_OPAQUE = {
+    'fill_opacity': 1.0,
+    'stroke_width': 1.0,
+}
+
 DEFAULT_CUBE_CONFIG_CONV = {
     'fill_color': ORANGE,
     'fill_opacity': 0.8,
@@ -55,12 +60,15 @@ class UT_Conv(VMobject):
         n: int | None = None,                       # override that from module_config
         block_gap: float = UNIT_FTENSOR_SIZE,       # for conv
         tensor_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between conv and bn
+        init_scale: float = 1.0,
+        opaque: bool = False,
     ):
         super().__init__()
         self.module_config = module_config
         self.z_index = z_index
-        self.cube_config_conv = {**DEFAULT_CUBE_CONFIG_CONV, **cube_config_conv}
-        self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BN, **cube_config_bn}
+        config_opaque = CONFIG_OPAQUE if opaque else {}
+        self.cube_config_conv = {**DEFAULT_CUBE_CONFIG_CONV, **config_opaque, **cube_config_conv}
+        self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BN, **config_opaque, **cube_config_bn}
         self.size_config_conv = size_config_conv
         self.size_config_bn = size_config_bn
         self.n = n if n is not None else self.module_config['c2']
@@ -90,6 +98,7 @@ class UT_Conv(VMobject):
         self.ft_conv = ft_conv
         self.ft_bn = ft_bn
         self.add(self.ft_conv, self.ft_bn)
+        self.scale(init_scale)
         self.center()
 
     def create(
@@ -344,25 +353,24 @@ class Demo(ThreeDScene):
 
         uconv = UT_Conv(
             module_config={
-                'c1': 16,
-                'c2': 16,
+                'c1': 8,
+                'c2': 8,
                 'k': 3,
             },
-            size_config_conv={
-                'depth': 8*UNIT_FTENSOR_SIZE,
-            },
+            opaque=True,
+            init_scale=0.8,
         )
         self.play(uconv.create(
-            ref='bottom',
+            ref='center',
             rate_func=smooth,
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=1.0,
         ))
         self.wait()
 
-        self.play(uconv.breath(
-            rate_func=smooth,
-            lag_ratio=0.5,
-            run_time=1.0,
-        ))
-        self.wait()
+        # self.play(uconv.breath(
+        #     rate_func=smooth,
+        #     lag_ratio=0.5,
+        #     run_time=1.0,
+        # ))
+        # self.wait()

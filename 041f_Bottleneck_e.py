@@ -347,14 +347,11 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'fade tensors and highlight modules',
+            'highlight modules',
             skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
-            # mt_1.tarnish(),
-            # mt_2.tarnish(),
-            # mt_3.tarnish(),
             mm_cv1.ft_conv.lightup(),
             mm_cv1.ft_bn.lightup(),
             mm_cv2.ft_conv.lightup(),

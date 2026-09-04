@@ -94,7 +94,7 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # TODO
+        # TODO, in previous script, when graph is in the center
 
         # ************************************************************
         self.next_section(
