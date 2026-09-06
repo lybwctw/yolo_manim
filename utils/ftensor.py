@@ -14,6 +14,10 @@ from utils.constants_3d import *
 
 UNIT_FTENSOR_SIZE = 0.15
 
+CONFIG_OPAQUE = {
+    'fill_opacity': 1.0,
+    'stroke_width': 1.0,
+}
 DEFAULT_CUBE_CONFIG = {
     'fill_color': GRAY,
     'fill_opacity': 0.8,
@@ -92,11 +96,14 @@ class FTensor3D(VMobject):
         z_index: float = 0.0,
         cube_config: dict = {},
         size_config: dict = {},             # override that from shape
+        init_scale: float = 1.0,
+        opaque: bool = False,
     ):
         super().__init__()
 
         # self.z_index = z_index
-        self.cube_config = {**DEFAULT_CUBE_CONFIG, **cube_config}
+        config_opaque = CONFIG_OPAQUE if opaque else {}
+        self.cube_config = {**DEFAULT_CUBE_CONFIG, **config_opaque, **cube_config}
         if ref_3d is not None:
             shape = ref_3d.shape
             size_config = {
@@ -133,6 +140,7 @@ class FTensor3D(VMobject):
         if ref_3d is not None:
             self.align_to(ref_3d, UL+OUT)
         else:
+            self.scale(init_scale)
             self.center()
 
     def create(

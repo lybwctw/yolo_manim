@@ -281,7 +281,7 @@ class MGraph(VMobject):
             *(Uncreate(
                 smob,
             ) for smob in smobs),
-            _on_finish=lambda _: self.remove(*smobs)
+            _on_finish=lambda _: self.remove(*smobs),
             **aargs,
         )
 

@@ -193,6 +193,57 @@ class MGraph_C2f(MGraph):
             _on_finish=finish_connect,
         )
 
+    def pop_bottleneck(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        n = self.module_config['n']
+        card_pop = self.mobs_card[n+1]
+        line_pop1 = self.lines[n+1]
+        line_pop2 = self.lines[2*n+5]
+
+        self.mobs_card.remove(card_pop)
+        self.objs_card['m'].remove(card_pop)
+        self.lines.remove(line_pop1)
+        self.lines.remove(line_pop2)
+
+        mobs_tail = VGroup(
+            self.mobs_card[n+1:],
+            self.lines[n+1:n+4],
+        )
+        mobs_tail.generate_target()
+        mobs_tail.target.next_to(self.mobs_card[n], DOWN, buff=0.0)
+
+        # new multi-segment path
+        path = self.lines[n+4]
+        x_left = path.get_left()[0]
+        p1 = self.card_split.get_left()
+        p2 = p1.copy()
+        p2[0] = x_left
+        # p4 = self.card_concat.get_left()
+        p4 = mobs_tail.target[0][0].get_left()
+        p3 = p4.copy()
+        p3[0] = x_left
+        path_new = VMobject(**LINE_CONFIG_DEFAULT).set_points_as_corners([
+            p1, p2, p3, p4,
+        ])
+
+        # update module_config
+        self.module_config['n'] = self.module_config['n'] - 1
+
+        return Succession(
+            Unwrite(card_pop),
+            Unwrite(line_pop1),
+            Unwrite(line_pop2),
+            AnimationGroup(
+                MoveToTarget(mobs_tail),
+                Transform(path, path_new),
+                lag_ratio=0.0,
+            ),
+            **aargs,
+        )
+
+
     @property
     def card_cv1(self):
         return self.objs_card['cv1']

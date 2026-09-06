@@ -37,7 +37,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load cards, modules, tensors, graph
@@ -65,7 +65,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[8 8] -> [16 8]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # update module card
@@ -96,7 +96,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[8 8] -> [16 16]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # update module card

@@ -154,53 +154,49 @@ class UT_Conv(VMobject):
             lag_ratio=0.0,
             _on_finish=lambda s: s.remove(self),
         )
+
+    def stretch_blocks(
+        self,
+        direction: str = 'out',
+        diff: int = 1,
+        ref: str = 'center',
+        new_shape: tuple | None = None,     # for ft_conv
+        **aargs,
+    ) -> Animation:
+        anims = AnimationGroup(
+            self.ft_conv.stretch_blocks(
+                direction=direction,
+                diff=diff,
+                ref=ref,
+                new_shape=new_shape,
+                **aargs,
+            ),
+            self.ft_bn.stretch_blocks(
+                direction=direction,
+                diff=diff,
+                ref=ref,
+                new_shape=new_shape[:1] + self.ft_bn.shape[1:],
+                **aargs,
+            ),
+            lag_ratio=0.0,
+        )
+        return anims
+
+    def stretch_3d(
+        self,
+        new_shape: tuple,                   # for ft_conv
+        scale_factor: tuple | None = None,
+        target_size: tuple | None = None,
+        **aargs,
+    ) -> Animation:
+        anims = self.ft_conv.stretch_3d(
+            new_shape=new_shape,
+            scale_factor=scale_factor,
+            target_size=target_size,
+            **aargs,
+        )
+        return anims
     
-    # def stretch_direction(
-    #     self,
-    #     direction: str = 'erect',           # horizontal/erect
-    #     size_scale: float | None = None,    # for mobs_conv
-    #     size_target: float | None = 2.0,    # for mobs_conv
-    #     shape: tuple | None = None,         # for mobs_conv
-    #     **aargs,
-    # ) -> AnimationGroup:
-    #     """Apply stretch_direction on mobs_conv.
-    #        Regap mobs_bn if kernel_size is changed.
-    #     """
-    #     return self.mobs_conv.stretch_direction(
-    #         direction=direction,
-    #         size_scale=size_scale,
-    #         size_target=size_target,
-    #         keep_gap=False,
-    #         shape=shape,
-    #         rate_func=smooth,
-    #         **aargs,
-    #     )
-
-    # def stretch_blocks(
-    #     self,
-    #     diff: int = 1,                      # -n / n
-    #     direction: str = 'center',          # top/center/bottom
-    #     shape: tuple | None = None,         # for mobs_conv
-    #     **aargs,
-    # ) -> AnimationGroup:
-    #     """Apply stretch_blocks on mobs_conv and mobs_bn.
-    #     """
-    #     return AnimationGroup(
-    #         self.mobs_conv.stretch_blocks(
-    #             diff=diff,
-    #             direction=direction,
-    #             shape=shape,
-    #             **aargs,
-    #         ),
-    #         self.mobs_bn.stretch_blocks(
-    #             diff=diff,
-    #             direction=direction,
-    #             shape=shape[:1]+self.mobs_bn.shape[1:],
-    #             **aargs,
-    #         ),
-    #         lag_ratio=0.0,
-    #     )
-
     @property
     def conv_bn(self):
         return VGroup(self.ft_conv, self.ft_bn)

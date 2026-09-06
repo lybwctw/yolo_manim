@@ -37,7 +37,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load cards, modules, tensors, graph
@@ -59,7 +59,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'bottleneck curves',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         ps1 = [mt_1.get_corner(OUT), mt_2.get_corner(OUT), mt_3.get_corner(OUT)]
@@ -104,7 +104,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'e=0.25',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # update module card

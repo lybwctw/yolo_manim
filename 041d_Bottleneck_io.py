@@ -37,7 +37,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load cards, modules, tensors, graph
@@ -65,7 +65,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '856 -> 456 -> 856',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # fade modules
@@ -80,7 +80,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '896 -> 496 -> 896',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # tensors stretch
@@ -133,7 +133,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '8912 -> 4912 -> 8912',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # tensors stretch
@@ -247,7 +247,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'clean tensors',
+            'fade tensors, focus on modules',
             skip_animations=False,
         )
         # ************************************************************

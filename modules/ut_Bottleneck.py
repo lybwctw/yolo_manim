@@ -116,7 +116,64 @@ class UT_Bottleneck(VMobject):
             lag_ratio=0.0,
             _on_finish=lambda s: s.remove(self),
         )
-    
+
+    def stretch_blocks(
+        self,
+        direction: str = 'out',
+        diff: int = 1,
+        ref: str = 'center',
+        new_shape: tuple | None = None,     # for ft_conv
+        **aargs,
+    ) -> Animation:
+        anims = AnimationGroup(
+            self.ut_cv1.stretch_blocks(
+                direction=direction,
+                diff=diff,
+                ref=ref,
+                new_shape=new_shape,
+                **aargs,
+            ),
+            self.ut_cv2.stretch_blocks(
+                direction=direction,
+                diff=diff,
+                ref=ref,
+                new_shape=new_shape,
+                **aargs,
+            ),
+            lag_ratio=0.0,
+        )
+        return anims
+
+    def stretch_3d(
+        self,
+        new_shape: tuple,                   # for ft_conv
+        scale_factor: tuple | None = None,
+        target_size: tuple | None = None,
+        **aargs,
+    ) -> Animation:
+        anims = AnimationGroup(
+            self.ut_cv1.stretch_3d(
+                new_shape=new_shape,
+                scale_factor=scale_factor,
+                target_size=target_size,
+                **aargs,
+            ),
+            self.ut_cv2.stretch_3d(
+                new_shape=new_shape,
+                scale_factor=scale_factor,
+                target_size=target_size,
+                **aargs,
+            ),
+            lag_ratio=0.0,
+        )
+        return anims
+
+    @property
+    def mobs(self):
+        return VGroup(
+            *self.ut_cv1.mobs,
+            *self.ut_cv2.mobs,
+        )
 
 class MGraph_Bottleneck(MGraph):
     def __init__(
