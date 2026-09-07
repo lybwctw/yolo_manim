@@ -324,3 +324,46 @@ def C2f_2_bottleneck_config(
         'k': (3,3),
         'e': 1.0,
     }
+
+def SPPF_2_cv1_config(
+    module_config: dict,
+) -> dict:
+    c1 = module_config['c1']
+    c2 = module_config['c2']
+    k = module_config['k']
+    _c = int(c2//2)
+    return {
+        'c1': c1,
+        'c2': _c,
+        'k': 1,
+        's': 1,
+        'p': 0,
+    }
+
+def SPPF_2_cv2_config(
+    module_config: dict,
+) -> dict:
+    c1 = module_config['c1']
+    c2 = module_config['c2']
+    k = module_config['k']
+    _c = int(c2//2)
+    return {
+        'c1': _c*4,
+        'c2': c2,
+        'k': 1,
+        's': 1,
+        'p': 0,
+    }
+
+def SPPF_2_MaxPool2d_config(
+    module_config: dict,
+) -> dict:
+    c1 = module_config['c1']
+    c2 = module_config['c2']
+    k = module_config['k']
+    _c = int(c2//2)
+    return {
+        'kernel_size': k,
+        'stride': 1,
+        'padding': k//2,
+    }

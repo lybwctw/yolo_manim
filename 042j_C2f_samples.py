@@ -30,10 +30,9 @@ wt = 0.5
 
 SCALE_FACTOR = 1.0
 
-with open(Path(__file__).with_name('.csv'), newline='') as csv_file:
+with open(Path(__file__).with_name('yolov8_C2f_3.csv'), newline='') as csv_file:
     args = [
-        # f"{row['c1']} {row['c2']} {row['shortcut']} {row['k']} {row['e']}"
-        f"{row['c1']} {row['c2']} {row['shortcut'][0]}"
+        f"{row['c1']} {row['c2']} {row['n']} {row['shortcut'][0]}"
         for row in csv.DictReader(csv_file)
     ]
 
@@ -45,14 +44,53 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # # load card and graph
-        # card_ref = import_mobs('041g')
-        # cards = VGroup(card_ref.copy() for _ in range(21))
+        # load card and graph
+        card_ref = import_mobs('042i')
+        cards = VGroup(card_ref.copy() for _ in range(36))
 
-        # # show initial reference card
-        # self.set_camera_orientation(
-        #     **VIEW_COMPUTE,
-        # )
-        # self.add_fixed_in_frame_mobjects(cards[0])
+        # show initial reference card
+        self.set_camera_orientation(
+            **VIEW_COMPUTE,
+        )
+        self.add_fixed_in_frame_mobjects(cards[0])
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'arrange 36 copies of card',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.add_fixed_in_frame_mobjects(cards)
+
+        # generate card grid
+        self.play(cards.animate(
+            run_time=wt,
+        ).scale(
+            SCALE_FACTOR
+        ).arrange_in_grid(
+            rows=6,
+            cols=6,
+            buff=(0.5, 0.2),
+            flow_order='dr',
+        ).center())
         # self.wait(wt)
 
+        # all possible Bottleneck summaries for yolov8 series
+        self.play(AnimationGroup(
+            *(card.expand_summary(
+                arg,
+                direction='center',
+            ) for card, arg in zip(
+                cards, args
+            )),
+            rate_func=rate_functions.ease_in_out_expo,
+            lag_ratio=0.5,
+            run_time=wt*10,
+            # run_time=wt,
+        ))
+        self.wait(wt)
+
+        # export
+        mobs = cards
+        export_mobs(__file__, mobs)
