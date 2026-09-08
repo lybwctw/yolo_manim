@@ -267,15 +267,9 @@ class InfoCard(VMobject):
                 **aargs,
             )
         elif direction == 'center':
-            # smob = AlignedText(self.summary, **self.head_config).set_z_index(999)
             target_width = self.head_width + smob.get_width() - smob.colon_width()
             rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
             head_mob_new = self.head_mob.copy()
-            # head_mob_new = AlignedText(
-            #     self.head,
-            #     **self.head_config,
-            #     weight=BOLD,
-            # ).set_z_index(999).move_to(self.head_mob)
             self.attach_to_frame_index(
                 head_mob_new, 0, rect1,
             )
@@ -290,39 +284,25 @@ class InfoCard(VMobject):
                 _on_finish=lambda _: self.add(self.smob),
                 **aargs,
             )
+        elif direction == 'left':
+            target_width = self.head_width + smob.get_width() - smob.colon_width()
+            rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
+            rect1.align_to(self.frame_mob, RIGHT)
+            head_mob_new = self.head_mob.copy()
+            self.attach_to_frame_index(
+                head_mob_new, 0, rect1,
+            )
+            self.attach_to_frame_index(smob, 0, rect1)
+            smob.shift(RIGHT*(self.head_width-smob.colon_width()))
+            self.smob = smob
 
-        # elif direction == 'down':
-        #     smob = AlignedText(
-        #         self.summary,
-        #         **{**self.head_config, 'fill_opacity': 0.6},    # FIXME
-        #     ).set_z_index(999)
-        #     self.smob = smob
-
-        #     target_width = max(self.smob.width, self.head_width)
-        #     target_height = 3*self.buff_height + 2*self.line_height
-
-        #     rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
-        #     rect2 = rect1.copy().stretch_to_fit_height(target_height)
-        #     head_mob_new = self.head_mob.copy()
-        #     self.attach_to_frame_index(
-        #         head_mob_new, 0, rect2,
-        #     )
-        #     summary_offset = self.smob.attach_offset(
-        #         rect2.get_corner(UL) + (2*self.buff_height+1.5*self.line_height)*DOWN
-        #     )
-        #     self.smob.shift(summary_offset)
-
-        #     return Succession(
-        #         Transform(self.frame_mob, rect1),
-        #         AnimationGroup(
-        #             Transform(self.frame_mob, rect2),
-        #             Transform(self.head_mob, head_mob_new),
-        #             lag_ratio=0.0,
-        #         ),
-        #         Create(self.smob, fixed=self.fixed_in_3d),
-        #         _on_finish=lambda _: self.add(self.smob),
-        #         **aargs,
-        #     )
+            return Succession(
+                Transform(self.frame_mob, rect1, rate_func=rate_functions.ease_out_back),
+                Transform(self.head_mob, head_mob_new),
+                Create(self.smob, fixed=self.fixed_in_3d),
+                _on_finish=lambda _: self.add(self.smob),
+                **aargs,
+            )
 
     def update_summary(
         self,
@@ -359,6 +339,32 @@ class InfoCard(VMobject):
 
             target_width = self.head_width + smob.get_width() - smob.colon_width()
             rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
+            head_mob_new = self.head_mob.copy()
+            self.attach_to_frame_index(
+                head_mob_new, 0, rect1,
+            )
+            self.attach_to_frame_index(smob, 0, rect1)
+            smob.shift(RIGHT*(self.head_width-smob.colon_width()))
+
+            self.remove(smob_old)
+            self.smob = smob
+            return Succession(
+                Transform(self.frame_mob, rect1),
+                Transform(self.head_mob, head_mob_new),
+                AnimationGroup(
+                    Uncreate(smob_old),
+                    Create(self.smob, fixed=self.fixed_in_3d),
+                    lag_ratio=0.0,
+                ),
+                _on_finish=lambda _: self.add(self.smob),
+                **aargs,
+            )
+        elif self.summary_direction == 'left':
+            smob = AlignedText(summary, **self.head_config).set_z_index(999)
+
+            target_width = self.head_width + smob.get_width() - smob.colon_width()
+            rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
+            rect1.align_to(self.frame_mob, RIGHT)
             head_mob_new = self.head_mob.copy()
             self.attach_to_frame_index(
                 head_mob_new, 0, rect1,

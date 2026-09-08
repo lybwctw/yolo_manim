@@ -173,6 +173,7 @@ class MGraph(VMobject):
         index: int = 0,
         direction: np.ndarray = LEFT,
         buff: float | None = 0.1,
+        text_config: dict = {},     # override default text config
         **aargs,
     ) -> Animation:
         if not hasattr(self, 'objs_shape'):
@@ -180,7 +181,7 @@ class MGraph(VMobject):
 
         tmob = Text(
             text,
-            **SHAPE_CONFIG_DEFAULT,
+            **{**SHAPE_CONFIG_DEFAULT, **text_config},
         ).next_to(
             self.lines[index],
             direction,
