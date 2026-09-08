@@ -1,5 +1,5 @@
 # ************************************************************
-# Simplified view on C2f.
+# Simplified view on SPPF.
 # ************************************************************
 from manim import *
 
@@ -17,19 +17,17 @@ import numpy as np
 from modules.ut_Conv import *
 from modules.ut_Bottleneck import *
 
-from ultralytics.nn.modules import C2f
+from ultralytics.nn.modules import SPPF
 
+TENSOR_VGAP_MINI = 0.5
 TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-
 # INIT_CONFIG = {
     # 'c1': 16,
     # 'c2': 16,
-    # 'n': 1,
-    # 'shortcut': True,
-    # 'e': 0.25,
+    # 'k': 5,
 # }
 
 wt = 0.5
@@ -38,31 +36,28 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # load cards, modules, tensors, graph
         (
             tc_i, mc, tc_o,
-            mm_cv1, mm_m, mm_cv2,
+            mm_cv1, mm_cv2,
             mts,
             mg,
-        ) = import_mobs('042h')
+        ) = import_mobs('043e')
         module_config = mg.module_config
 
-        # for convenience
-        mm_m1 = mm_m[0]
-
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.9)
+        self.set_camera_orientation(**VIEW_COMPUTE)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
-        self.add(mm_m, mm_cv1, mm_cv2, mts)
+        self.add(mm_cv1, mm_cv2, mts)
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'ignore mid tensors',
-            skip_animations=False,
+            'get rid of mid tensors',
+            skip_animations=True,
         )
         # ************************************************************
         # lightup all tensors
@@ -74,12 +69,8 @@ class MainScene(ThreeDScene):
         self.wait(wt)
 
         # remove mid tensors
-        # FIXME: occlusion issue between mm_cv2 and input
-        # FIXME: due to stretch blocks z_index setup
-        mts[-2].set_z_index(0)
         self.play(AnimationGroup(
             *(mt.uncreate(ref='center') for mt in mts[1:-1]),
-            # *(FadeOut(mt) for mt in mts[1:-1]),
             lag_ratio=0.0,
             run_time=wt,
         ))
@@ -91,93 +82,124 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        mobs = VGroup(mts[0], mm_cv1, mm_m, mm_cv2, mts[-1])
+        mobs = VGroup(mts[0], mm_cv1, mm_cv2, mts[-1])
         mobs.generate_target()
         mobs.target.arrange(DOWN, buff=TENSOR_VGAP_SMALL)
-        self.move_camera(
-            zoom=1.0,
-            added_anims=[
-                MoveToTarget(mobs, run_time=wt),
-            ],
+        self.play(MoveToTarget(
+            mobs,
             run_time=wt,
-        )
+        ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'e: 0.25 -> 0.5 (default)',
+            '[16 16 5] -> [8 8 5]',
             skip_animations=False,
         )
         # ************************************************************
         # update module card
         self.play(
             mc.update_params(
-                params={'e': 0.5},
+                params={'c1': 8, 'c2': 8},
                 run_time=wt,
             )
         )
 
-        # update graph
-        self.play(AnimationGroup(
+        # update graph modules
+        self.play(
             mg.mobs_card[0].update_summary(
-                summary='16 16 1 1 1',
+                summary='8 4 1 1',
                 run_time=wt,
             ),
-            mg.mobs_card[1].update_summary(
-                summary='8 0',
-                run_time=wt,
-            ),
-            mg.mobs_card[2].update_summary(
-                summary='8 8 T',
-                run_time=wt,
-            ),
-            mg.mobs_card[4].update_summary(
-                summary='24 16 1 1 1',
+            mg.mobs_card[5].update_summary(
+                summary='16 8 1 1',
                 run_time=wt,
             ),
             lag_ratio=0.5,
-            run_time=wt*3,
-        ))
-        self.wait(wt)
+            run_time=wt,
+        )
 
-        # update modules: stretch blocks
+        # update module: stretch blocks
         self.play(AnimationGroup(
             mm_cv1.stretch_blocks(
-                new_shape=(16,16,1,1),
-                direction='out',
-                diff=4,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_m1.stretch_blocks(
-                new_shape=(8,4,3,3),
-                direction='out',
+                new_shape=(4,8,1,1),
+                direction='in',
                 diff=2,
                 ref='center',
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            lag_ratio=0.5,
-            run_time=wt*3,
+            mm_cv2.stretch_blocks(
+                new_shape=(8,32,1,1),
+                direction='in',
+                diff=4,
+                ref='center',
+                lag_ratio=0.5,
+                run_time=wt,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
         ))
 
-        # update modules: stretch blocks
+        # update modules: stretch 3d
         self.play(AnimationGroup(
-            mm_m1.stretch_3d(
-                new_shape=(8,8,3,3),
-                scale_factor=(2.0,1.0,1.0),
+            mm_cv1.stretch_3d(
+                new_shape=(8,1,1),
+                scale_factor=(0.5,1.0,1.0),
                 lag_ratio=0.0,
                 run_time=wt,
             ),
             mm_cv2.stretch_3d(
-                new_shape=(16,24,1,1),
-                scale_factor=(2.0,1.0,1.0),
+                new_shape=(16,1,1),
+                scale_factor=(0.5,1.0,1.0),
                 lag_ratio=0.0,
                 run_time=wt,
             ),
             lag_ratio=0.5,
+            run_time=wt,
+        ))
+
+        # update tensors
+        self.play(AnimationGroup(
+            mts[0].stretch_3d(
+                new_shape=(8,5,6),
+                scale_factor=(0.5,1.0,1.0),
+                run_time=wt,
+            ),
+            mts[-1].stretch_3d(
+                new_shape=(8,5,6),
+                scale_factor=(0.5,1.0,1.0),
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+
+        # update graph shapes
+        self.play(AnimationGroup(
+            mg.update_shape(text='(8,h,w)', index=0),
+            mg.update_shape(text='(4,h,w)', index=1),
+            mg.update_shape(text='(4,h,w)', index=2),
+            mg.update_shape(text='(4,h,w)', index=3),
+            mg.update_shape(text='(4,h,w)', index=4),
+            mg.update_shape(text='(16,h,w)', index=5),
+            mg.update_shape(text='(8,h,w)', index=6),
+            lag_ratio=0.5,
             run_time=wt*3,
+        ))
+
+        # update tensor cards
+        self.play(AnimationGroup(
+            tc_i.update_summary(
+                summary='(8,h,w)',
+                run_time=wt,
+            ),
+            tc_o.update_summary(
+                summary='(8,h,w)',
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
+            run_time=wt,
         ))
         self.wait(wt)
 
@@ -217,7 +239,7 @@ class MainScene(ThreeDScene):
 
         # expand module summary
         self.play(mc.expand_summary(
-            '16 16 1 T',
+            '8 8',
             direction='right',
             run_time=wt,
         ))
@@ -237,11 +259,6 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             ),
             mm_cv2.uncreate(
-                ref='center',
-                lag_ratio=0.0,
-                run_time=wt,
-            ),
-            mm_m1.uncreate(
                 ref='center',
                 lag_ratio=0.0,
                 run_time=wt,

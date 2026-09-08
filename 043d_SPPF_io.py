@@ -47,3 +47,118 @@ class MainScene(ThreeDScene):
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mts, mm_cv1, mm_cv2)
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'fade modules, focus on tensors',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # fade all sub modules
+        self.play(AnimationGroup(
+            mm_cv1.tarnish(),
+            mm_cv2.tarnish(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '(c,5,6) -> (c,6,9)',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            AnimationGroup(
+                *(mt.stretch_3d(
+                    new_shape=mt.shape[:1]+(6,9),
+                    scale_factor=[
+                        1.0, 6/5, 9/6,
+                    ],
+                ) for mt in mts),
+                lag_ratio=0.5,
+                run_time=wt*3,
+            ),
+            AnimationGroup(
+                mg.update_shape(text='(8,6,9)', index=0),
+                mg.update_shape(text='(4,6,9)', index=1),
+                mg.update_shape(text='(4,6,9)', index=2),
+                mg.update_shape(text='(4,6,9)', index=3),
+                mg.update_shape(text='(4,6,9)', index=4),
+                mg.update_shape(text='(16,6,9)', index=5),
+                mg.update_shape(text='(8,6,9)', index=6),
+                lag_ratio=0.5,
+                run_time=wt*3,
+            ),
+        ))
+        self.play(AnimationGroup(
+            tc_i.update_summary(summary='(8,6,9)'),
+            tc_o.update_summary(summary='(8,6,9)'),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '(c,6,9) -> (c,h,w)',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # (c, 5, 6) as template
+        self.play(AnimationGroup(
+            AnimationGroup(
+                *(mt.stretch_3d(
+                    new_shape=mt.shape[:1]+(6,9),
+                    scale_factor=[
+                        1.0, 5/6, 6/9,
+                    ],
+                ) for mt in mts),
+                lag_ratio=0.5,
+                run_time=wt*3,
+            ),
+            AnimationGroup(
+                mg.update_shape(text='(8,h,w)', index=0),
+                mg.update_shape(text='(4,h,w)', index=1),
+                mg.update_shape(text='(4,h,w)', index=2),
+                mg.update_shape(text='(4,h,w)', index=3),
+                mg.update_shape(text='(4,h,w)', index=4),
+                mg.update_shape(text='(16,h,w)', index=5),
+                mg.update_shape(text='(8,h,w)', index=6),
+                lag_ratio=0.5,
+                run_time=wt*3,
+            ),
+        ))
+        self.play(AnimationGroup(
+            tc_i.update_summary(summary='(8,h,w)'),
+            tc_o.update_summary(summary='(8,h,w)'),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'fade tensors, focus on modules',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # fade tensors
+        self.play(AnimationGroup(
+            *(mt.tarnish() for mt in mts),
+            *(mm.lightup() for mm in [
+                mm_cv1, mm_cv2,
+            ]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # export
+        mobs = VGroup(
+            tc_i, mc, tc_o,
+            mm_cv1, mm_cv2,
+            mts,
+            mg,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by next

@@ -64,7 +64,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'focus on tensors',
+            'fade modules, highlight tensors',
             skip_animations=False,
         )
         # ************************************************************
