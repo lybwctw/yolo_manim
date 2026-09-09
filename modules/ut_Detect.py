@@ -31,6 +31,22 @@ class MGraph_Detect(MGraph):
     ):
         super().__init__(module_config)
 
+    # def create(
+    #     self,
+    #     **aargs,
+    # ) -> Animation:
+    #     """Override default.
+    #     """
+    #     return AnimationGroup(
+    #         *(GrowFromCenter(
+    #             card,
+    #             rate_func=rate_functions.ease_out_back,
+    #             fixed=True,
+    #         ) for card in (*self.mobs_card[0], *self.mobs_card[1])),
+    #         **aargs,
+    #         _on_finish=lambda _: self.add(self.mobs_card),
+    #     )
+
     def create_cards(
         self,
     ) -> tuple:
@@ -63,10 +79,14 @@ class MGraph_Detect(MGraph):
         mobs_cls = VGroup(
             *objs['cls'],
         ).arrange(DOWN, buff=MCARD_BUFF_MINI, aligned_edge=LEFT)
-        mobs = VGroup(
+        _mobs = VGroup(
             mobs_box,
             mobs_cls,
         ).arrange(RIGHT, buff=MCARD_BUFF_MINI, aligned_edge=UP)
+        mobs = VGroup(
+            *mobs_box,
+            *mobs_cls,
+        )
 
         return objs, mobs
 
@@ -74,11 +94,11 @@ class MGraph_Detect(MGraph):
         self,
         **aargs,
     ) -> Animation:
-        center_box = self.mobs_card[0].get_center()
-        center_cls = self.mobs_card[1].get_center()
+        center_box = self.cards_box.get_center()
+        center_cls = self.cards_cls.get_center()
 
-        mobs_box = self.mobs_card[0]
-        mobs_cls = self.mobs_card[1]
+        mobs_box = self.cards_box
+        mobs_cls = self.cards_cls
         mobs_box.generate_target()
         mobs_cls.generate_target()
         mobs_box.target.arrange(
@@ -120,10 +140,10 @@ class MGraph_Detect(MGraph):
         return AnimationGroup(
             *(card.expand_summary(
                 direction='left',
-            ) for card in self.mobs_card[0]),
+            ) for card in self.cards_box),
             *(card.expand_summary(
                 direction='right',
-            ) for card in self.mobs_card[1]),
+            ) for card in self.cards_cls),
             **aargs,
         )
 
@@ -228,3 +248,15 @@ class MGraph_Detect(MGraph):
             **aargs,
             _on_finish=finish_connect,
         )
+
+    @property
+    def cards_box(
+        self,
+    ) -> VGroup:
+        return self.mobs_card[:6]
+
+    @property
+    def cards_cls(
+        self,
+    ) -> VGroup:
+        return self.mobs_card[6:]

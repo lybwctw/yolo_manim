@@ -43,6 +43,14 @@ DEFAULT_CUBE_CONFIG_BN = {
     'stroke_opacity': 1.0,
     'stroke_color': WHITE,
 }
+# for bias from torch.nn.Conv2d
+DEFAULT_CUBE_CONFIG_BIAS = {
+    'fill_color': ORANGE,
+    'fill_opacity': 0.8,
+    'stroke_width': 2.0,
+    'stroke_opacity': 1.0,
+    'stroke_color': WHITE,
+}
 
 class UT_Conv(VMobject):
     """Visualization of ultralytics.nn.modules.Conv.
@@ -62,13 +70,17 @@ class UT_Conv(VMobject):
         tensor_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between conv and bn
         init_scale: float = 1.0,
         opaque: bool = False,
+        Conv2d: bool = False,                       # NOTE: torch.nn.Conv2d with bias=True
     ):
         super().__init__()
         self.module_config = module_config
         self.z_index = z_index
         config_opaque = CONFIG_OPAQUE if opaque else {}
         self.cube_config_conv = {**DEFAULT_CUBE_CONFIG_CONV, **config_opaque, **cube_config_conv}
-        self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BN, **config_opaque, **cube_config_bn}
+        if Conv2d:
+            self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BIAS, **config_opaque, **cube_config_bn}
+        else:
+            self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BN, **config_opaque, **cube_config_bn}
         self.size_config_conv = size_config_conv
         self.size_config_bn = size_config_bn
         self.n = n if n is not None else self.module_config['c2']
@@ -84,9 +96,13 @@ class UT_Conv(VMobject):
             n=self.n,
             block_gap=self.block_gap,
         )
+        if Conv2d:
+            shape_bn = (self.module_config['c2'], 1, 1, 1)
+        else:
+            shape_bn = (self.module_config['c2'], 4, 1, 1)
         ft_bn = FTensor4D(
             ref_4d=ref_bn,
-            shape=(self.module_config['c2'], 4, 1, 1),
+            shape=shape_bn,
             z_index=ft_conv.z_index_end,
             cube_config=self.cube_config_bn,
             size_config=self.size_config_bn,

@@ -367,3 +367,137 @@ def SPPF_2_MaxPool2d_config(
         'stride': 1,
         'padding': k//2,
     }
+
+def Detect_2_b1_config(
+    module_config: dict,
+) -> dict:
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'c1': ch,
+        'c2': c2,
+        'k': 3,
+        's': 1,
+        'p': 1,
+    }
+
+def Detect_2_b2_config(
+    module_config: dict,
+) -> dict:
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'c1': c2,
+        'c2': c2,
+        'k': 3,
+        's': 1,
+        'p': 1,
+    }
+
+def Detect_2_b3_config(
+    module_config: dict,
+) -> dict:
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'in_channels': c2,
+        'out_channels': reg_max * 4,
+        'kernel_size': 1,
+        'stride': 1,
+        'padding': 0,
+        'bias': True,
+    }
+
+def Detect_2_b3_config_fake(
+    module_config: dict,
+) -> dict:
+    """FIXME: Used as fake config for UT_Conv.
+    """
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'c1': c2,
+        'c2': reg_max * 4,
+        'k': 1,
+        's': 1,
+        'p': 0,
+    }
+
+def Detect_2_c1_config(
+    module_config: dict,
+) -> dict:
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'c1': ch,
+        'c2': c3,
+        'k': 3,
+        's': 1,
+        'p': 1,
+    }
+
+def Detect_2_c2_config(
+    module_config: dict,
+) -> dict:
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'c1': c3,
+        'c2': c3,
+        'k': 3,
+        's': 1,
+        'p': 1,
+    }
+
+def Detect_2_c3_config(
+    module_config: dict,
+) -> dict:
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'in_channels': c2,
+        'out_channels': nc,
+        'kernel_size': 1,
+        'stride': 1,
+        'padding': 0,
+        'bias': True,
+    }
+
+def Detect_2_c3_config_fake(
+    module_config: dict,
+) -> dict:
+    """FIXME: Used as fake config for UT_Conv.
+    """
+    ch = module_config['ch']
+    c2 = module_config['c2']
+    c3 = module_config['c3']
+    reg_max = module_config['reg_max']
+    nc = module_config['nc']
+    return {
+        'c1': c2,
+        'c2': nc,
+        'k': 1,
+        's': 1,
+        'p': 0,
+    }

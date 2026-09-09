@@ -18,10 +18,10 @@ from modules.ut_Detect import *
 import torch
 
 INIT_CONFIG = {
-    'ch': 16,
-    'c2': 8,
-    'c3': 8,
-    'reg_max': 6,      # 4 probs for each direction (16 by default)
+    'ch': 8,
+    'c2': 4,
+    'c3': 4,
+    'reg_max': 5,      # 4 probs for each direction (16 by default)
     'nc': 3,           # 3 classes
 }
 
