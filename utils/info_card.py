@@ -313,8 +313,13 @@ class InfoCard(VMobject):
         """
         smob_old = self.smob
 
+        # use real-time font_size for summary mob
+        font_size = self.head_mob.mob.font_size
+        atext_config = {**self.head_config, 'font_size': font_size}
+        smob = AlignedText(summary, **atext_config).set_z_index(999)
+
         if self.summary_direction == 'right':
-            smob = AlignedText(summary, **self.head_config).set_z_index(999)
+            # smob = AlignedText(summary, **self.head_config).set_z_index(999)
             self.attach_to_frame_index(smob, 0)
             smob.shift(RIGHT*(self.head_width-smob.colon_width()))
 
@@ -335,7 +340,7 @@ class InfoCard(VMobject):
                 **aargs,
             )
         elif self.summary_direction == 'center':
-            smob = AlignedText(summary, **self.head_config).set_z_index(999)
+            # smob = AlignedText(summary, **self.head_config).set_z_index(999)
 
             target_width = self.head_width + smob.get_width() - smob.colon_width()
             rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
@@ -360,7 +365,7 @@ class InfoCard(VMobject):
                 **aargs,
             )
         elif self.summary_direction == 'left':
-            smob = AlignedText(summary, **self.head_config).set_z_index(999)
+            # smob = AlignedText(summary, **self.head_config).set_z_index(999)
 
             target_width = self.head_width + smob.get_width() - smob.colon_width()
             rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)

@@ -47,7 +47,7 @@ INIT_SCALE = 0.8
 #     'ch': 8,
 #     'c2': 4,
 #     'c3': 4,
-#     'reg_max': 5,      # 4 probs for each direction (16 by default)
+#     'reg_max': 5,      # 5 probs for each direction (16 by default)
 #     'nc': 3,           # 3 classes
 # }
 
@@ -61,7 +61,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # load card and graph
@@ -185,7 +185,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show sub modules for box prediction',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight b1 in graph
@@ -255,7 +255,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show sub modules for cls prediction',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight c1
@@ -316,7 +316,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show input',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show input tensor
@@ -356,7 +356,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'prepare for box prediction',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mask = np.zeros(mg.ncards, dtype=bool)
@@ -406,7 +406,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply b1',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mts[1].next_to(
@@ -425,12 +425,21 @@ class MainScene(ThreeDScene):
             ),
             lag_ratio=0.5,
         ))
+        # self.wait(wt)
+
+        # show shape in graph
+        self.play(mg.show_shape(
+            t2s(tb_m1.detach()[0]),
+            index=2,
+            direction=LEFT,
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'apply b2',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mts[2].next_to(
@@ -449,12 +458,21 @@ class MainScene(ThreeDScene):
             ),
             lag_ratio=0.5,
         ))
+        # self.wait(wt)
+
+        # show shape in graph
+        self.play(mg.show_shape(
+            t2s(tb_m2.detach()[0]),
+            index=3,
+            direction=LEFT,
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'apply b3',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mts[3].next_to(
@@ -473,12 +491,21 @@ class MainScene(ThreeDScene):
             ),
             lag_ratio=0.5,
         ))
+        # self.wait(wt)
+
+        # show shape in graph
+        self.play(mg.show_shape(
+            t2s(tb_m3.detach()[0]),
+            index=4,
+            direction=LEFT,
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'apply split',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # NOTE: new perspective
@@ -535,12 +562,21 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
+        # self.wait(wt)
+
+        # show shape in graph
+        self.play(mg.show_shape(
+            t2s(tb_m4.detach()[0]) + 'x4',
+            index=5,
+            direction=LEFT,
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'apply softmax in batch',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # TODO: maybe a hint for softmax's dim?
@@ -564,12 +600,21 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             ),
         ))
+        # self.wait(wt)
+
+        # show shape in graph
+        self.play(mg.show_shape(
+            t2s(tb_m8.detach()[0]) + 'x4',
+            index=9,
+            direction=LEFT,
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'apply concat',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # prepare copies
@@ -607,14 +652,40 @@ class MainScene(ThreeDScene):
             Write(mts[12]),
             run_time=wt,
         ))
+        # self.wait(wt)
+
+        # show shape in graph
+        self.play(mg.show_shape(
+            t2s(tb_o.detach()[0]),
+            index=13,
+            direction=LEFT,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show summary for box prediction
+        card_o1 = InfoCard('out_1').hide_to_corner(DOWN)
+        self.add_fixed_in_frame_mobjects(card_o1)
+        self.play(attach_to_ref(
+            card_o1,
+            mc,
+            DOWN,
+            run_time=wt,
+        ))
+        self.play(card_o1.expand_summary(
+            t2s(tb_o.detach()[0]),
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'prepare for cls prediction',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
+        # TODO: maybe align root shape to cls series?
+
         mask = np.zeros(mg.ncards, dtype=bool)
         mask[6:] = True
 
@@ -676,7 +747,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply c1, c2, c3 fast',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mts[13].next_to(
@@ -729,10 +800,26 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
+        # show shapes in graph
+        self.play(AnimationGroup(
+            mg.show_shapes(
+                texts=[
+                    t2s(tc_m1.detach()[0]),
+                    t2s(tc_m2.detach()[0]),
+                    t2s(tc_m3.detach()[0]),
+                ],
+                indices=[15, 16, 17],
+                directions=[RIGHT, RIGHT, RIGHT],
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
+        ))
+        self.wait(wt)
+
         # ************************************************************
         self.next_section(
             'apply sigmoid',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mts[16].next_to(mts[15], DOWN, buff=TENSOR_VGAP_MINI)
@@ -749,3 +836,78 @@ class MainScene(ThreeDScene):
             ),
         ))
         self.wait(wt)
+
+        # show shape in graph
+        self.play(mg.show_shape(
+            t2s(tc_o.detach()[0]),
+            index=18,
+            direction=RIGHT,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show summary for cls prediction
+        card_o2 = InfoCard('out_2').hide_to_corner(DOWN)
+        self.add_fixed_in_frame_mobjects(card_o2)
+        self.play(attach_to_ref(
+            card_o2,
+            card_o1,
+            DOWN,
+            run_time=wt,
+        ))
+        self.play(card_o2.expand_summary(
+            t2s(tc_o.detach()[0]),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'clean job',
+            skip_animations=False,
+        )
+        # ************************************************************
+        series_cls = VGroup(
+            *mm_cs,
+            *mts[13:],
+        )
+        mobs = VGroup(
+            mts[0],
+            *series_box,
+            *series_cls,
+        )
+
+        # NOTE: new perspective, final
+        self.move_camera(
+            phi=40*DEGREES,             # 50 before
+            zoom=0.6,                   # 0.7 before
+            frame_center=DOWN*1.5,      # 
+            added_anims=[
+                mobs.animate(run_time=wt).center(),
+            ],
+            run_time=wt,
+        )
+
+        # lightup everything
+        self.play(AnimationGroup(
+            mts[0].animate.set_x(
+                VGroup(mm_b1, mm_c1).get_center()[0],
+            ),  # reposition input tensor
+            mg.highlight(),
+            AnimationGroup(
+                *(m.lightup() for m in series_box),
+                lag_ratio=0.0,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            tc_i, mc, card_o1, card_o2,
+            mm_bs, mm_cs,
+            mts,
+            mg,
+        )
+        export_mobs(__file__, mobs)     # NOTE: used by next
