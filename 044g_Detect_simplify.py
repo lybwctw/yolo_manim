@@ -285,6 +285,12 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
+        # shrink module card
+        self.play(mc.shrink_summary(
+            run_time=wt,
+        ))
+        # self.wait(wt)
+
         # remove module mob
         self.play(AnimationGroup(
             *(mm.uncreate(

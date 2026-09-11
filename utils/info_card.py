@@ -181,6 +181,8 @@ class InfoCard(VMobject):
 
         rect1 = self.frame_mob.copy().stretch_to_fit_width(target_width)
         rect1.align_to(self.frame_mob, LEFT)
+
+        # !!!FIXME!!!: replace with remove + add
         return Succession(
             AnimationGroup(*anims, lag_ratio=0.0),
             Transform(self.frame_mob, rect1),
