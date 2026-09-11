@@ -1,4 +1,4 @@
-name,nc,ch0,ch1,ch2
+name,ch,c2,c3,reg_max,nc
 n,3,64,128,256
 s,3,128,256,512
 m,3,192,384,576

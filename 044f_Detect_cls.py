@@ -1,5 +1,5 @@
 # ************************************************************
-# box series args for Detect.
+# cls series args for Detect.
 # ************************************************************
 from manim import *
 
@@ -23,7 +23,7 @@ from modules.ut_Bottleneck import *
 #     'ch': 8,
 #     'c2': 4,
 #     'c3': 4,
-#     'reg_max': 5,      # 5 probs for each direction (16 by default)
+#     'reg_max': 4,      # 4 probs for each direction (16 by default)
 #     'nc': 3,           # 3 classes
 # }
 
@@ -47,7 +47,7 @@ class MainScene(ThreeDScene):
             mm_bs, mm_cs,
             mts,
             mg,
-        ) = import_mobs('044d')
+        ) = import_mobs('044e')
         module_config = mg.module_config
 
         # for convenience
@@ -80,73 +80,14 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'ch: 8 -> 16',
+            'c3: 4 -> 8',
             skip_animations=True,
         )
         # ************************************************************
         # update module card
         self.play(
             mc.update_params(
-                params={'ch': 16},
-                run_time=wt,
-            )
-        )
-
-        # update graph modules
-        self.play(AnimationGroup(
-            mg.cards_box[0].update_summary(
-                summary='16 4 3 1 1',
-                run_time=wt,
-            ),
-            mg.cards_cls[0].update_summary(
-                summary='16 4 3 1 1',
-                run_time=wt,
-            ),
-        ))
-
-        # update modules: stretch 3d
-        self.play(AnimationGroup(
-            mm_b1.stretch_3d(
-                new_shape=(16,3,3),
-                scale_factor=(2.0,1.0,1.0),
-                lag_ratio=0.0,
-                run_time=wt,
-            ),
-            mm_c1.stretch_3d(
-                new_shape=(16,3,3),
-                scale_factor=(2.0,1.0,1.0),
-                lag_ratio=0.0,
-                run_time=wt,
-            ),
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
-        # self.wait(wt)
-
-        # update tensors
-        self.play(mts[0].stretch_3d(
-            new_shape=(16,7,9),
-            scale_factor=(2.0,1.0,1.0),
-            run_time=wt,
-        ))
-
-        # update tensor cards
-        self.play(tc_i.update_summary(
-            summary='(16,h,w)',
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # ************************************************************
-        self.next_section(
-            'c2: 4 -> 8',
-            skip_animations=True,
-        )
-        # ************************************************************
-        # update module card
-        self.play(
-            mc.update_params(
-                params={'c2': 8},
+                params={'c3': 8},
                 run_time=wt,
             )
         )
@@ -155,23 +96,23 @@ class MainScene(ThreeDScene):
         # FIXME: width issue on update_summary
         # FIXME: start with scaled raw info_card?
         self.play(AnimationGroup(
-            mg.cards_box[0].update_summary(
+            mg.cards_cls[0].update_summary(
                 summary='16 8 3 1 1',
                 run_time=wt,
             ),
-            mg.cards_box[1].update_summary(
+            mg.cards_cls[1].update_summary(
                 summary='8 8 3 1 1',
                 run_time=wt,
             ),
-            mg.cards_box[2].update_summary(
-                summary='8 20 1 1 0 T',
+            mg.cards_cls[2].update_summary(
+                summary='8 3 1 1 0 T',
                 run_time=wt,
             ),
         ))
 
         # update modules: stretch blocks
         self.play(AnimationGroup(
-            mm_b1.stretch_blocks(
+            mm_c1.stretch_blocks(
                 new_shape=(8,16,3,3),
                 direction='out',
                 diff=2,
@@ -179,7 +120,7 @@ class MainScene(ThreeDScene):
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            mm_b2.stretch_blocks(
+            mm_c2.stretch_blocks(
                 new_shape=(8,4,3,3),
                 direction='out',
                 diff=2,
@@ -193,13 +134,13 @@ class MainScene(ThreeDScene):
 
         # update modules: stretch 3d
         self.play(AnimationGroup(
-            mm_b2.stretch_3d(
+            mm_c2.stretch_3d(
                 new_shape=(8,3,3),
                 scale_factor=(2.0,1.0,1.0),
                 lag_ratio=0.0,
                 run_time=wt,
             ),
-            mm_b3.stretch_3d(
+            mm_c3.stretch_3d(
                 new_shape=(8,1,1),
                 scale_factor=(2.0,1.0,1.0),
                 lag_ratio=0.0,
@@ -211,12 +152,12 @@ class MainScene(ThreeDScene):
 
         # update tensors
         self.play(AnimationGroup(
-            mts[1].stretch_3d(
+            mts[13].stretch_3d(
                 new_shape=(8,7,9),
                 scale_factor=(2.0,1.0,1.0),
                 run_time=wt,
             ),
-            mts[2].stretch_3d(
+            mts[14].stretch_3d(
                 new_shape=(8,7,9),
                 scale_factor=(2.0,1.0,1.0),
                 run_time=wt,
@@ -227,36 +168,32 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'reg_max: 5 -> 6',
-            skip_animations=True,
+            'nc: 3 -> 10(3+3+4)',
+            skip_animations=False,
         )
         # ************************************************************
         # update module card
         self.play(
             mc.update_params(
-                params={'reg_max': 6},
+                params={'nc': 10},
                 run_time=wt,
             )
         )
 
         # update graph modules
         self.play(AnimationGroup(
-            mg.cards_box[2].update_summary(
-                summary='8 24 1 1 0 T',
-                run_time=wt,
-            ),
-            mg.cards_box[3].update_summary(
-                summary='0 6',
+            mg.cards_cls[2].update_summary(
+                summary='8 10 1 1 0 T',
                 run_time=wt,
             ),
         ))
 
         # update modules: stretch blocks
         self.play(
-            mm_b3.stretch_blocks(
-                new_shape=(24,8,1,1),
+            mm_c3.stretch_blocks(
+                new_shape=(10,8,1,1),
                 direction='out',
-                diff=2,
+                diff=(3,4),
                 ref='center',
                 lag_ratio=0.5,
                 run_time=wt,
@@ -265,22 +202,14 @@ class MainScene(ThreeDScene):
 
         # update tensors
         self.play(AnimationGroup(
-            mts[3].stretch_3d(
-                new_shape=(24,7,9),
-                scale_factor=(24/20,1.0,1.0),
+            mts[15].stretch_3d(
+                new_shape=(10,7,9),
+                scale_factor=(10/3,1.0,1.0),
                 run_time=wt,
             ),
-            *(mt.stretch_3d(
-                new_shape=(6,7,9),
-                scale_factor=(6/5,1.0,1.0),
-                run_time=wt,
-            ) for mt in [
-                mts[4], mts[5], mts[6], mts[7],
-                mts[8], mts[9], mts[10], mts[11],
-            ]),
-            mts[12].stretch_3d(
-                new_shape=(24,7,9),
-                scale_factor=(24/20,1.0,1.0),
+            mts[16].stretch_3d(
+                new_shape=(10,7,9),
+                scale_factor=(10/3,1.0,1.0),
                 run_time=wt,
             ),
             lag_ratio=0.5,
@@ -288,57 +217,53 @@ class MainScene(ThreeDScene):
         # self.wait(wt)
 
         # update tensor cards
-        self.play(card_o1.update_summary(
-            summary='(24,h,w)',
+        self.play(card_o2.update_summary(
+            summary='(10,h,w)',
             run_time=wt,
         ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'back: c2->4, reg_max->4(5 initially)',
+            'back: c3->4, nc->3',
             skip_animations=False,
         )
         # ************************************************************
         # update module card
         self.play(
             mc.update_params(
-                params={'c2': 4, 'reg_max': 4},
+                params={'c3': 4, 'nc': 3},
                 run_time=wt,
             ),
         )
 
         # update graph modules
         self.play(AnimationGroup(
-            mg.cards_box[0].update_summary(
+            mg.cards_cls[0].update_summary(
                 summary='16 4 3 1 1',
                 run_time=wt,
             ),
-            mg.cards_box[1].update_summary(
+            mg.cards_cls[1].update_summary(
                 summary='4 4 3 1 1',
                 run_time=wt,
             ),
-            mg.cards_box[2].update_summary(
-                summary='4 16 1 1 0 T',
-                run_time=wt,
-            ),
-            mg.cards_box[3].update_summary(
-                summary='0 4',
+            mg.cards_cls[2].update_summary(
+                summary='4 3 1 1 0 T',
                 run_time=wt,
             ),
         ))
 
         # update modules: stretch 3d
         self.play(AnimationGroup(
-            mm_b2.stretch_3d(
+            mm_c2.stretch_3d(
                 new_shape=(4,3,3),
                 scale_factor=(0.5,1.0,1.0),
                 lag_ratio=0.0,
                 run_time=wt,
             ),
-            mm_b3.stretch_3d(
+            mm_c3.stretch_3d(
                 new_shape=(4,1,1),
-                scale_factor=(0.5,1.0,1.0),
+                scale_factor=(4/8,1.0,1.0),
                 lag_ratio=0.0,
                 run_time=wt,
             ),
@@ -348,7 +273,7 @@ class MainScene(ThreeDScene):
 
         # update modules: stretch blocks
         self.play(AnimationGroup(
-            mm_b1.stretch_blocks(
+            mm_c1.stretch_blocks(
                 new_shape=(4,16,3,3),
                 direction='in',
                 diff=2,
@@ -356,7 +281,7 @@ class MainScene(ThreeDScene):
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            mm_b2.stretch_blocks(
+            mm_c2.stretch_blocks(
                 new_shape=(4,4,3,3),
                 direction='in',
                 diff=2,
@@ -364,10 +289,10 @@ class MainScene(ThreeDScene):
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            mm_b3.stretch_blocks(
-                new_shape=(16,4,1,1),
+            mm_c3.stretch_blocks(
+                new_shape=(3,4,1,1),
                 direction='in',
-                diff=4,
+                diff=(3,4),
                 ref='center',
                 lag_ratio=0.5,
                 run_time=wt,
@@ -378,41 +303,33 @@ class MainScene(ThreeDScene):
 
         # update tensors
         self.play(AnimationGroup(
-            mts[1].stretch_3d(
+            mts[13].stretch_3d(
                 new_shape=(4,7,9),
                 scale_factor=(0.5,1.0,1.0),
                 run_time=wt,
             ),
-            mts[2].stretch_3d(
+            mts[14].stretch_3d(
                 new_shape=(4,7,9),
                 scale_factor=(0.5,1.0,1.0),
                 run_time=wt,
             ),
-            mts[3].stretch_3d(
-                new_shape=(16,7,9),
-                scale_factor=(16/24,1.0,1.0),
+            mts[15].stretch_3d(
+                new_shape=(3,7,9),
+                scale_factor=(3/10,1.0,1.0),
                 run_time=wt,
             ),
-            *(mt.stretch_3d(
-                new_shape=(4,7,9),
-                scale_factor=(2/3,1.0,1.0),
-                run_time=wt,
-            ) for mt in [
-                mts[4], mts[5], mts[6], mts[7],
-                mts[8], mts[9], mts[10], mts[11],
-            ]),
-            mts[12].stretch_3d(
-                new_shape=(16,7,9),
-                scale_factor=(16/24,1.0,1.0),
+            mts[16].stretch_3d(
+                new_shape=(3,7,9),
+                scale_factor=(3/10,1.0,1.0),
                 run_time=wt,
             ),
             lag_ratio=0.5,
         ))
-        # self.wait(wt)
+        self.wait(wt)
 
         # update tensor cards
-        self.play(card_o1.update_summary(
-            summary='(16,h,w)',
+        self.play(card_o2.update_summary(
+            summary='(3,h,w)',
             run_time=wt,
         ))
         self.wait(wt)

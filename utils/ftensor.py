@@ -372,23 +372,34 @@ class FTensor4D(VMobject):
         new_shape: tuple | None = None,     # overriding new shape
         **aargs,
     ) -> AnimationGroup:
+        if isinstance(diff, int):
+            n_left = diff
+            n_right = diff
+        elif isinstance(diff, tuple):
+            n_left, n_right = diff
+
         if direction == 'out':
-            orig_center = self.get_center()
-            new_n = self.n + diff * 2
+            # orig_center = self.get_center()
+            # new_n = self.n + diff * 2
+            orig_head = self[0].get_center()
+            new_n = self.n + n_left + n_right
             if new_shape is None:
-                new_shape = (self.shape[0]+diff*2, *self.shape[1:])
+                # new_shape = (self.shape[0]+diff*2, *self.shape[1:])
+                new_shape = (self.shape[0]+n_left+n_right, *self.shape[1:])
 
             objs_new = np.empty(new_n, dtype=object)
             for idx in range(new_n):
-                if idx < diff or idx >= self.n+diff:
+                if idx < n_left or idx >= self.n+n_left:
                     objs_new[idx] = self.objs[0].copy()
                 else:
-                    objs_new[idx] = self.objs[idx-diff]
+                    objs_new[idx] = self.objs[idx-n_left]
             mobs_new = VGroup(*objs_new.flat).arrange(
                 RIGHT,
                 buff=self.current_gap,
             )
-            mobs_new.move_to(orig_center)
+            # mobs_new.move_to(orig_center)
+            offset = orig_head - mobs_new[n_left].get_center()
+            mobs_new.shift(offset)
 
             # reset z_index
             for idx, mob in enumerate(mobs_new):
@@ -400,8 +411,8 @@ class FTensor4D(VMobject):
             self.n = new_n
             self.shape = new_shape
 
-            vgs_left = self.mobs[:diff][::-1]
-            vgs_right = self.mobs[-diff:]
+            vgs_left = self.mobs[:n_left][::-1]
+            vgs_right = self.mobs[-n_right:]
             return AnimationGroup(
                 AnimationGroup(
                     *(mob.create(ref=ref)
@@ -418,11 +429,13 @@ class FTensor4D(VMobject):
             )
 
         elif direction == 'in':
-            new_n = self.n - diff * 2
+            # new_n = self.n - diff * 2
+            new_n = self.n - n_left - n_right
             if new_shape is None:
-                new_shape = (self.shape[0]-diff*2, *self.shape[1:])
+                # new_shape = (self.shape[0]-diff*2, *self.shape[1:])
+                new_shape = (self.shape[0]-n_left-n_right, *self.shape[1:])
 
-            objs_new = self.objs[diff:diff+new_n]
+            objs_new = self.objs[n_left:n_left+new_n]
             mobs_new = VGroup(*objs_new.flat)
 
             # skip z_index reset
@@ -434,8 +447,8 @@ class FTensor4D(VMobject):
             self.n = new_n
             self.shape = new_shape
 
-            vgs_left = mobs_old[:diff]
-            vgs_right = mobs_old[-diff:][::-1]
+            vgs_left = mobs_old[:n_left]
+            vgs_right = mobs_old[-n_right:][::-1]
 
             return AnimationGroup(
                 AnimationGroup(
