@@ -16,7 +16,10 @@ class MainScene(ThreeDScene):
         # ************************************************************
         # modules
         cards_module = import_mobs('028')
-        card_focus, cards_other = collect_idx_card(cards_module, 15)    # FIXME, reshape removed
+        cards_focus, cards_other = collect_idx_cards(
+            cards_module,
+            (15,16,17,18,19),
+        )
 
         self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)
@@ -30,14 +33,33 @@ class MainScene(ThreeDScene):
         cards_module.save_state()
 
         # exit and focus
+        for card in cards_focus:
+            card.generate_target()
+        for card in cards_other:
+            card.generate_target()
+        focus_target = VGroup(card.target for card in cards_focus)
+        other_target = VGroup(card.target for card in cards_other)
+        focus_target.set_y(CARD_FOCUS_Y)
+        other_target.set_x(CARD_EXIT_X)
         self.play(AnimationGroup(
-            cards_other.animate.set_x(CARD_EXIT_X),
-            card_focus.animate.set_y(CARD_FOCUS_Y),
-            lag_ratio=0.5,
+            AnimationGroup(
+                *(MoveToTarget(
+                    card,
+                ) for card in cards_other),
+                lag_ratio=0.0,
+            ),
+            AnimationGroup(
+                *(MoveToTarget(
+                    card,
+                ) for card in cards_focus),
+                lag_ratio=0.2,
+            ),
+            lag_ratio=0.8,
             run_time=wt,
         ))
-        # self.wait(wt)
+        self.wait(wt)
 
         # export
-        mobs = VGroup(card_focus, cards_module)     # NOTE: used by next
+        mobs = VGroup(cards_focus, cards_module)     # NOTE: used by next
         export_mobs(__file__, mobs)
+

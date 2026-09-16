@@ -38,7 +38,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load card and graph
@@ -71,7 +71,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'clean output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mt_o.save_state()
@@ -93,7 +93,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'tags on bn params',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # name tag assets
@@ -143,7 +143,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'rearrange bn params',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         c = module_config['c2']
@@ -202,7 +202,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'tags on bn again',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # name tag assets
@@ -252,7 +252,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply conv and bn',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight and fade
@@ -294,7 +294,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply act',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(mg.highlight(

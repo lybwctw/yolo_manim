@@ -18,7 +18,6 @@ class MainScene(ThreeDScene):
         ic_add = InfoCard('add', frame_config={'fill_color': TEAL})
         ic_split = InfoCard('split', frame_config={'fill_color': TEAL})
         ic_cat = InfoCard('cat', frame_config={'fill_color': TEAL})
-        ic_reshape = InfoCard('reshape', frame_config={'fill_color': TEAL})
 
         # pytorch module cards
         ic_Conv2d = InfoCard('Conv2d', frame_config={'fill_color': ORANGE})
@@ -45,7 +44,7 @@ class MainScene(ThreeDScene):
 
         # arrange cards into three groups
         ics_m = VGroup(
-            ic_add, ic_split, ic_cat, ic_reshape,
+            ic_add, ic_split, ic_cat,
         ).arrange(RIGHT)
         ics_t = VGroup(
             ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_SiLU, ic_Softmax, ic_BatchNorm2d,
@@ -62,7 +61,7 @@ class MainScene(ThreeDScene):
         ).arrange(DOWN, buff=0.5)
 
         ics_all = VGroup(
-            ic_add, ic_split, ic_cat, ic_reshape,
+            ic_add, ic_split, ic_cat,
             ic_Conv2d, ic_MaxPool2d, ic_Upsample, ic_Sigmoid, ic_SiLU, ic_Softmax, ic_BatchNorm2d,
             ic_Conv, ic_Bottleneck, ic_C2f, ic_SPPF, ic_Detect,
             ic_YOLOv8n, ic_YOLOv8s, ic_YOLOv8m, ic_YOLOv8l, ic_YOLOv8x,

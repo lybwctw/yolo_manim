@@ -69,26 +69,26 @@ class MainScene(ThreeDScene):
         ).scale(
             SCALE_FACTOR
         ).arrange(
-            RIGHT,
-            buff=-0.0,
+            DOWN,
+            buff=-0.30,     # FIXME: unrecognized submobs
+        ))
+        self.wait(wt)   
+
+        # possible Detect summaries for yolov8 series
+        self.play(AnimationGroup(
+            *(card.expand_summary(
+                arg,
+                direction='center',
+            ) for card, arg in zip(
+                cards, args
+            )),
+            rate_func=rate_functions.ease_in_out_expo,
+            lag_ratio=0.5,
+            run_time=wt*5,
+            # run_time=wt,
         ))
         self.wait(wt)
 
-        # # all possible Detect summaries for yolov8 series
-        # self.play(AnimationGroup(
-        #     *(card.expand_summary(
-        #         arg,
-        #         direction='center',
-        #     ) for card, arg in zip(
-        #         cards, args
-        #     )),
-        #     rate_func=rate_functions.ease_in_out_expo,
-        #     lag_ratio=0.5,
-        #     run_time=wt*5,
-        #     # run_time=wt,
-        # ))
-        # self.wait(wt)
-
-        # # export
-        # mobs = cards
-        # export_mobs(__file__, mobs)
+        # export
+        mobs = cards
+        export_mobs(__file__, mobs)

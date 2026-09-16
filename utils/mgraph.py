@@ -17,6 +17,13 @@ LINE_CONFIG_DEFAULT = {
     'stroke_opacity': 0.8,
 }
 
+LINE_CONFIG_THIN = {
+    'stroke_width': 1.0,
+    'color': WHITE,
+    'stroke_opacity': 0.8,
+}
+
+
 SHAPE_CONFIG_DEFAULT = {
     'font': 'JetBrains Mono',
     'font_size': 10,

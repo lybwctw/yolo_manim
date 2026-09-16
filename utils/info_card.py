@@ -534,6 +534,14 @@ def collect_idx_card(
     others = VGroup(c for c in cards if c is not card)
     return card, others
 
+def collect_idx_cards(
+    cards,
+    idxs,
+) -> tuple:
+    res = VGroup(cards[idx] for idx in idxs)
+    others = VGroup(c for c in cards if c not in res)
+    return res, others
+
 def attach_to_ref(
     mobs,
     ref,
