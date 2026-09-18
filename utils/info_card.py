@@ -239,7 +239,7 @@ class InfoCard(VMobject):
     def expand_summary(
         self,
         summary: str | None = None,
-        direction: str = 'right',       # right/down
+        direction: str = 'right',       # right/center/down
         **aargs,
     ) -> Animation:
         """Introduce smob.

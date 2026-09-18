@@ -38,21 +38,18 @@ def create_curve(
     p1,
     p2,
     buff: float = CURVE_BUFF_SMALL,
+    color: ManimColor = WHITE,
 ) -> VMobject:
+    cfg = {**LINE_CONFIG_THIN, 'stroke_color': color}
+
     pm_x = min(p1[0], p2[0]) - buff
     pm_seg = (p1[1] - p2[1]) / 5
     pm_y1 = p1[1] - pm_seg
     pm_y2 = p2[1] + pm_seg
 
-    # pm_y = (p1[1]+p2[1]) / 2
-    # pm = (pm_x, pm_y, 0.0)
-    # curve = VMobject(**LINE_CONFIG_THIN).set_points_smoothly(
-    #     [p1, pm, p2]
-    # )
-
     pm1 = (pm_x, pm_y1, 0.0)
     pm2 = (pm_x, pm_y2, 0.0)
-    curve = VMobject(**LINE_CONFIG_THIN).set_points_smoothly(
+    curve = VMobject(**cfg).set_points_smoothly(
         [p1, pm1, pm2, p2]
     )
     return curve
@@ -235,11 +232,6 @@ class MGraph_YOLOv8(MGraph):
             buff=CARD_BUFF_V_SMALL,
         )
 
-        # reposition 3 Detect
-        mobs[-3].next_to(mobs[15], RIGHT, buff=CARD_BUFF_H_SMALL)
-        mobs[-2].next_to(mobs[18], RIGHT, buff=CARD_BUFF_H_SMALL)
-        mobs[-1].next_to(mobs[21], RIGHT, buff=CARD_BUFF_H_SMALL)
-
         mobs.center()
 
         return objs, mobs
@@ -248,11 +240,14 @@ class MGraph_YOLOv8(MGraph):
         self,
         **aargs,
     ) -> Animation:
+        # 1 head line
         line_head = Line(
             self.objs_card[0].get_top() + UP*LINE_BUFF,
             self.objs_card[0].get_top(),
             **LINE_CONFIG_THIN,
         )
+
+        # 21 mid lines
         lines_mid = VGroup(
             Line(
                 self.objs_card[idx].get_bottom(),
@@ -260,6 +255,8 @@ class MGraph_YOLOv8(MGraph):
                 **LINE_CONFIG_THIN,
             ) for idx in range(0, 21)
         )
+
+        # 4 concat lines
         cps = [
             (self.objs_card[6].get_left(), self.objs_card[11].get_left()),
             (self.objs_card[4].get_left(), self.objs_card[14].get_left()),
@@ -273,11 +270,58 @@ class MGraph_YOLOv8(MGraph):
             create_curve(cps[3][0], cps[3][1], buff=CURVE_BUFF_MEDIUM),
         )
 
+        # 3 head input lines from [15, 18, 21]
+        cps = [
+            (self.objs_card[15].get_left(), self.objs_card[-3].get_left()),
+            (self.objs_card[18].get_left(), self.objs_card[-2].get_left()),
+            (self.objs_card[21].get_left(), self.objs_card[-1].get_left()),
+        ]
+        lines_hin = VGroup(
+            create_curve(cps[0][0], cps[0][1], buff=CURVE_BUFF_SMALL),
+            create_curve(cps[1][0], cps[1][1], buff=CURVE_BUFF_SMALL),
+            create_curve(cps[2][0], cps[2][1], buff=CURVE_BUFF_SMALL),
+        )
+
+        # 6 head output lines
+        lines_hout = VGroup(
+            Line(
+                self.objs_card[-3].get_right() + UP * 0.05,
+                self.objs_card[-3].get_right() + UP * 0.05 + RIGHT * LINE_BUFF,
+                **LINE_CONFIG_THIN,
+            ),
+            Line(
+                self.objs_card[-3].get_right() + DOWN * 0.05,
+                self.objs_card[-3].get_right() + DOWN * 0.05 + RIGHT * LINE_BUFF,
+                **LINE_CONFIG_THIN,
+            ),
+            Line(
+                self.objs_card[-2].get_right() + UP * 0.05,
+                self.objs_card[-2].get_right() + UP * 0.05 + RIGHT * LINE_BUFF,
+                **LINE_CONFIG_THIN,
+            ),
+            Line(
+                self.objs_card[-2].get_right() + DOWN * 0.05,
+                self.objs_card[-2].get_right() + DOWN * 0.05 + RIGHT * LINE_BUFF,
+                **LINE_CONFIG_THIN,
+            ),
+            Line(
+                self.objs_card[-1].get_right() + UP * 0.05,
+                self.objs_card[-1].get_right() + UP * 0.05 + RIGHT * LINE_BUFF,
+                **LINE_CONFIG_THIN,
+            ),
+            Line(
+                self.objs_card[-1].get_right() + DOWN * 0.05,
+                self.objs_card[-1].get_right() + DOWN * 0.05 + RIGHT * LINE_BUFF,
+                **LINE_CONFIG_THIN,
+            ),
+        )
+
         lines = VGroup(
             line_head,
             *lines_mid,
             *lines_concat,
-            # *lines_tail,
+            *lines_hin,
+            *lines_hout,
         )
 
         lines.set_z_index(999)
@@ -296,11 +340,197 @@ class MGraph_YOLOv8(MGraph):
             _on_finish=finish_connect,
         )
 
-    def switch_arrange(
+    def reposition_heads(
         self,
+        **aargs,
     ):
-        if self.mode == 'linear':
-            self.mode = 'network'
+        ms1 = VGroup(self.mobs_card[-3], self.lines[-6], self.lines[-5])
+        ms2 = VGroup(self.mobs_card[-2], self.lines[-4], self.lines[-3])
+        ms3 = VGroup(self.mobs_card[-1], self.lines[-2], self.lines[-1])
+        ms1.generate_target()
+        ms2.generate_target()
+        ms3.generate_target()
+        ms1.target.next_to(self.mobs_card[15], RIGHT, buff=0.5)
+        ms2.target.next_to(self.mobs_card[18], RIGHT, buff=0.5)
+        ms3.target.next_to(self.mobs_card[21], RIGHT, buff=0.5)
 
-        elif self.mode == 'network':
-            self.mode = 'linear'
+        c1, c2, c3 = self.lines[-9], self.lines[-8], self.lines[-7]
+        c1t = Line(
+            self.mobs_card[15].get_right(),
+            ms1.target.get_left(),
+            **LINE_CONFIG_THIN,
+        )
+        c2t = Line(
+            self.mobs_card[18].get_right(),
+            ms2.target.get_left(),
+            **LINE_CONFIG_THIN,
+        )
+        c3t = Line(
+            self.mobs_card[21].get_right(),
+            ms3.target.get_left(),
+            **LINE_CONFIG_THIN,
+        )
+
+        return AnimationGroup(
+            MoveToTarget(ms1),
+            MoveToTarget(ms2),
+            MoveToTarget(ms3),
+            Transform(c1, c1t),
+            Transform(c2, c2t),
+            Transform(c3, c3t),
+            **aargs,
+        )
+
+    def reposition_all(
+        self,
+        **aargs,
+    ):
+        hcard = self.mobs_card[0].height
+        mbuff = 0.3
+
+        s1 = self.mobs_card[:10]
+        s2 = self.mobs_card[10:16]
+        s3 = self.mobs_card[16:22]
+        s4 = self.mobs_card[-3:]
+
+        s1.generate_target()
+        s2.generate_target()
+        s3.generate_target()
+        s4.generate_target()
+
+        # setup s1 target cards
+        s1.target.arrange(DOWN, buff=mbuff).shift(LEFT*3).shift(UP*0.5)
+
+        # setup s2 target cards
+        sbuff = (s1.target[4:7].height - 4*hcard) / 3
+        s2.target[1:5].arrange(UP, buff=sbuff)
+        s2.target[0].next_to(s2.target[1], DOWN, buff=mbuff)
+        s2.target[5].next_to(s2.target[4], UP, buff=mbuff)
+        offset_y = s1.target[4].get_top()[1] - s2.target[4].get_top()[1]
+        s2.target.shift(UP*offset_y + LEFT)
+
+        # setup s3 target cards
+        bbuff = (s2.target[2].get_top()[1] - s1.target[-1].get_bottom()[1] - 4*hcard)/3
+        s3.target[1:5].arrange(DOWN, buff=bbuff)
+        s3.target[0].next_to(s3.target[1], UP, buff=mbuff)
+        s3.target[-1].next_to(s3.target[4], DOWN, buff=mbuff)
+        offset_y = s2.target[2].get_top()[1] - s3.target[1].get_top()[1]
+        s3.target.shift(UP*offset_y, RIGHT)
+
+        # setup s4 target cards
+        s4.target[0].center().align_to(s2.target[-1], UP)
+        s4.target[1].center().align_to(s3.target[2], UP)
+        s4.target[2].center().align_to(s3.target[-1], UP)
+        s4.target.shift(RIGHT*3)
+
+        # setup head line target
+        slines = self.lines
+        for line in slines:
+            line.generate_target()
+        tlines = VGroup(line.target for line in slines)
+        tlines[0].next_to(s1.target[0], UP, buff=0.0)
+
+        # setup mid lines target
+        for idx, line in enumerate(tlines[1:10]):
+            line.put_start_and_end_on(
+                start=s1.target[idx].get_bottom(),
+                end=s1.target[idx+1].get_top(),
+            )
+        node_start = s2.target[0].get_bottom()
+        node_start[1] = s1.target[-1].get_y()
+        tlines[10].put_start_and_end_on(
+            start=node_start,
+            end=s2.target[0].get_bottom(),
+        )
+        for idx, line in enumerate(tlines[11:16]):
+            line.put_start_and_end_on(
+                start=s2.target[idx].get_top(),
+                end=s2.target[idx+1].get_bottom(),
+            )
+        node_start = s3.target[0].get_top()
+        node_start[1] = s2.target[-1].get_y()
+        tlines[16].put_start_and_end_on(
+            start=node_start,
+            end=s3.target[0].get_top(),
+        )
+        for idx, line in enumerate(tlines[17:22]):
+            line.put_start_and_end_on(
+                start=s3.target[idx].get_bottom(),
+                end=s3.target[idx+1].get_top(),
+            )
+
+        # setup concat lines target
+        tlines[22].become(Line(
+            start=s1.target[6].get_right(),
+            end=s2.target[1].get_left(),
+            **LINE_CONFIG_THIN,
+        ))
+        tlines[23].become(Line(
+            start=s1.target[4].get_right(),
+            end=s2.target[4].get_left(),
+            **LINE_CONFIG_THIN,
+        ))
+        tlines[24].become(Line(
+            start=s2.target[2].get_right(),
+            end=s3.target[1].get_left(),
+            **LINE_CONFIG_THIN,
+        ))
+        tlines[25].become(Line(
+            start=s1.target[-1].get_right(),
+            end=s3.target[-2].get_left(),
+            **LINE_CONFIG_THIN,
+        ))
+
+        # setup head input lines target
+        tlines[26].put_start_and_end_on(
+            start=s2.target[-1].get_right(),
+            end=s4.target[0].get_left(),
+        )
+        tlines[27].put_start_and_end_on(
+            start=s3.target[2].get_right(),
+            end=s4.target[1].get_left(),
+        )
+        tlines[28].put_start_and_end_on(
+            start=s3.target[-1].get_right(),
+            end=s4.target[2].get_left(),
+        )
+
+        # setup head output lines target
+        tlines[29:31].next_to(s4.target[0], RIGHT, buff=0.0)
+        tlines[31:33].next_to(s4.target[1], RIGHT, buff=0.0)
+        tlines[33:35].next_to(s4.target[2], RIGHT, buff=0.0)
+
+        anims = AnimationGroup(
+            MoveToTarget(s1),
+            MoveToTarget(s2),
+            MoveToTarget(s3),
+            MoveToTarget(s4),
+            *(MoveToTarget(line) for line in slines),
+            **aargs,
+        )
+
+        return anims
+
+    def expand(
+        self,
+        summaries: list | None = None,
+        **aargs,
+    ) -> Animation:
+        if summaries is None:
+            return AnimationGroup(
+                *(card.expand_summary(
+                    direction='center',
+                ) for card in self.mobs_card),
+                **aargs,
+            )
+        else:
+            return AnimationGroup(
+                *(card.expand_summary(
+                    summary=summary,
+                    direction='center',
+                ) for card, summary in zip(
+                    self.mobs_card,
+                    summaries,
+                )),
+                **aargs,
+            )
