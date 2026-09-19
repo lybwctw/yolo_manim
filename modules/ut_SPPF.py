@@ -16,7 +16,7 @@ from utils.mgraph import *
 # 'k': UNKNOWN,
 # ---------------------------------------------
 
-class UT_C2f(VMobject):
+class UT_SPPF(VMobject):
     pass
 
 class MGraph_SPPF(MGraph):

@@ -19,8 +19,55 @@ from modules.ut_Bottleneck import *
 # 'e': UNKNOWN,
 # ---------------------------------------------
 
-class UT_C2f(VMobject):
-    pass
+class UT_C2f(Mobject):
+    """Visualization of ultralytics.nn.modules.C2f.
+    """
+    def __init__(
+        self,
+        module_config: dict = {},                   # c1, c2, n, shortcut, e
+        z_index: float = 0.0,                       # used by conv directly
+        module_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between modules
+    ):
+        super().__init__()
+        self.module_config = module_config
+
+        ut_cv1 = UT_Conv(
+            module_config=C2f_2_cv1_config(self.module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        ut_cv2 = UT_Conv(
+            module_config=C2f_2_cv2_config(self.module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        ut_m = VGroup(
+            UT_Bottleneck(
+                module_config=C2f_2_bottleneck_config(self.module_config),
+                z_index=z_index,
+            ) for _ in range(module_config['n'])
+        )
+        VGroup(ut_cv1, *ut_m, ut_cv2).arrange(DOWN, buff=module_gap)
+
+        self.ut_cv1 = ut_cv1
+        self.ut_cv2 = ut_cv2
+        self.ut_m = ut_m
+
+        self.add(self.ut_cv1, self.ut_cv2, self.ut_m)
+        self.center()
+
+    def create(
+        self,
+        ref: str = 'center',
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.create(ref=ref),
+            *(mb.create(ref=ref) for mb in self.ut_m),
+            self.ut_cv2.create(ref=ref),
+            _on_finish=lambda s: s.add(self),
+            **aargs,
+        )
 
 class MGraph_C2f(MGraph):
     def __init__(

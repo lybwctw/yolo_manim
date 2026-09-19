@@ -54,6 +54,8 @@ DEFAULT_CUBE_CONFIG_BIAS = {
 
 class UT_Conv(VMobject):
     """Visualization of ultralytics.nn.modules.Conv.
+       (c1, c2, k, s, p)
+       FIXME: dirty, ugly.
     """
     def __init__(
         self,
@@ -68,8 +70,7 @@ class UT_Conv(VMobject):
         n: int | None = None,                       # override that from module_config
         block_gap: float = UNIT_FTENSOR_SIZE,       # for conv
         tensor_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between conv and bn
-        init_scale: float = 1.0,
-        opaque: bool = False,
+        opaque: bool = False,                       # new fill_opacity and stroke_width for farther view
         Conv2d: bool = False,                       # NOTE: torch.nn.Conv2d with bias=True
     ):
         super().__init__()
@@ -114,7 +115,6 @@ class UT_Conv(VMobject):
         self.ft_conv = ft_conv
         self.ft_bn = ft_bn
         self.add(self.ft_conv, self.ft_bn)
-        self.scale(init_scale)
         self.center()
 
     def create(
