@@ -19,13 +19,13 @@ from modules.ut_Bottleneck import *
 # 'e': UNKNOWN,
 # ---------------------------------------------
 
-class UT_C2f(Mobject):
+class UT_C2f(VMobject):
     """Visualization of ultralytics.nn.modules.C2f.
     """
     def __init__(
         self,
         module_config: dict = {},                   # c1, c2, n, shortcut, e
-        z_index: float = 0.0,                       # used by conv directly
+        z_index: float = 0.0,                       # used by cv1, cv2, m
         module_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between modules
     ):
         super().__init__()
