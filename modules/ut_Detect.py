@@ -10,6 +10,8 @@ from utils.info_card import *
 
 from utils.mgraph import *
 
+from modules.ut_Conv import *
+
 # ------------- info card ---------------------
 # 'ch': UNKNOWN,    # input channels
 # 'c2': UNKNOWN,    # mid channels for cv2
@@ -22,7 +24,83 @@ LINE_BUFF = 0.5             # connection node to edge distance
 LINE_GAP = 0.22              # gap between input/output lines for softmax
 
 class UT_Detect(VMobject):
-    pass
+    def __init__(
+        self,
+        module_config: dict = {},                   # ch, c2, c3, reg_max, nc
+        z_index: float = 0.0,                       # used by ...
+        module_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between modules
+    ):
+        super().__init__()
+        self.module_config = module_config
+
+        ut_b1 = UT_Conv(
+            module_config=Detect_2_b1_config(module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        ut_b2 = UT_Conv(
+            module_config=Detect_2_b2_config(module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        ut_b3 = UT_Conv(
+            module_config=Detect_2_b3_config_fake(module_config),
+            z_index=z_index,
+            opaque=True,
+            Conv2d=True,
+        )
+        ut_c1 = UT_Conv(
+            module_config=Detect_2_c1_config(module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        ut_c2 = UT_Conv(
+            module_config=Detect_2_c2_config(module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        ut_c3 = UT_Conv(
+            module_config=Detect_2_c3_config_fake(module_config),
+            z_index=z_index,
+            opaque=True,
+            Conv2d=True,
+        )
+        VGroup(ut_b1, ut_b2, ut_b3, ut_c1, ut_c2, ut_c3).arrange(
+            DOWN, buff=module_gap,
+        )
+
+        self.ut_b1 = ut_b1
+        self.ut_b2 = ut_b2
+        self.ut_b3 = ut_b3
+        self.ut_c1 = ut_c1
+        self.ut_c2 = ut_c2
+        self.ut_c3 = ut_c3
+
+        self.add(
+            self.ut_b1,
+            self.ut_b2,
+            self.ut_b3,
+            self.ut_c1,
+            self.ut_c2,
+            self.ut_c3,
+        )
+        self.center()
+
+    def create(
+        self,
+        ref: str = 'center',
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_b1.create(ref=ref),
+            self.ut_b2.create(ref=ref),
+            self.ut_b3.create(ref=ref),
+            self.ut_c1.create(ref=ref),
+            self.ut_c2.create(ref=ref),
+            self.ut_c3.create(ref=ref),
+            _on_finish=lambda s: s.add(self),
+            **aargs,
+        )
 
 class MGraph_Detect(MGraph):
     def __init__(

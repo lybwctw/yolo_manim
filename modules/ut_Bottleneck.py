@@ -26,17 +26,15 @@ from modules.ut_Conv import *
 # CONFIG_OPAQUE = {'fill_opacity': 1.0, 'stroke_width': 1.5}
 
 class UT_Bottleneck(VMobject):
-    """(c1, c2, shortcut)
-       Only consider when c1==c2.
+    """Visualization of ultralytics.nn.modules.Bottleneck.
+       (c1, c2, shortcut, k, e)
        shortcut not visible.
     """
     def __init__(
         self,
-        module_config: dict = {},               # c1, c2, shortcut
+        module_config: dict = {},                   # c1, c2, shortcut
         z_index: float = 0.0,
-        ut_gap: float = UNIT_FTENSOR_SIZE*1.0,  # gap between cv1 and cv2
-        init_scale: float = 1.0,
-        opaque: bool = False,
+        module_gap: float = UNIT_FTENSOR_SIZE*3.0,  # gap between cv1 and cv2
     ):
         super().__init__()
         self.module_config = module_config
@@ -44,18 +42,14 @@ class UT_Bottleneck(VMobject):
         ut_cv1 = UT_Conv(
             module_config=Bottleneck_2_cv1_config(self.module_config),
             z_index=z_index,
-            tensor_gap=UNIT_FTENSOR_SIZE,   # closer from bottleneck
-            init_scale=init_scale,
-            opaque=opaque,
+            opaque=True,
         )
         ut_cv2 = UT_Conv(
             module_config=Bottleneck_2_cv2_config(self.module_config),
             z_index=z_index,
-            tensor_gap=UNIT_FTENSOR_SIZE,   # closer from bottleneck
-            init_scale=init_scale,
-            opaque=opaque,
+            opaque=True,
         )
-        VGroup(ut_cv1, ut_cv2).arrange(DOWN, buff=ut_gap)
+        VGroup(ut_cv1, ut_cv2).arrange(DOWN, buff=module_gap)
 
         self.ut_cv1 = ut_cv1
         self.ut_cv2 = ut_cv2
@@ -90,9 +84,9 @@ class UT_Bottleneck(VMobject):
         **aargs,
     ) -> AnimationGroup:
         return AnimationGroup(
-            self.ut_cv1.tarnish(),
-            self.ut_cv2.tarnish(),
-            **aargs,
+            self.ut_cv1.tarnish(**aargs),
+            self.ut_cv2.tarnish(**aargs),
+            lag_ratio=0.0,
         )
 
     def lightup(
@@ -100,9 +94,9 @@ class UT_Bottleneck(VMobject):
         **aargs,
     ) -> AnimationGroup:
         return AnimationGroup(
-            self.ut_cv1.lightup(),
-            self.ut_cv2.lightup(),
-            **aargs,
+            self.ut_cv1.lightup(**aargs),
+            self.ut_cv2.lightup(**aargs),
+            lag_ratio=0.0,
         )
     
     def uncreate(
@@ -170,6 +164,8 @@ class UT_Bottleneck(VMobject):
 
     @property
     def mobs(self):
+        """Used when increasing z_index in batch.
+        """
         return VGroup(
             *self.ut_cv1.mobs,
             *self.ut_cv2.mobs,

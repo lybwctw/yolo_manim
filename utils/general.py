@@ -281,7 +281,7 @@ def C2f_2_cv1_config(
     c2 = module_config['c2']
     n = module_config['n']
     shortcut = module_config['shortcut']
-    e = module_config['e']
+    e = module_config.get('e', 0.5)     # 0.5 by default
     _c = int(c2*e)
     return {
         'c1': c1,
@@ -298,7 +298,7 @@ def C2f_2_cv2_config(
     c2 = module_config['c2']
     n = module_config['n']
     shortcut = module_config['shortcut']
-    e = module_config['e']
+    e = module_config.get('e', 0.5)     # 0.5 by default
     _c = int(c2*e)
     return {
         'c1': (n+2)*_c,
@@ -315,7 +315,7 @@ def C2f_2_bottleneck_config(
     c2 = module_config['c2']
     n = module_config['n']
     shortcut = module_config['shortcut']
-    e = module_config['e']
+    e = module_config.get('e', 0.5)     # 0.5 by default
     _c = int(c2*e)
     return {
         'c1': _c,
@@ -330,7 +330,7 @@ def SPPF_2_cv1_config(
 ) -> dict:
     c1 = module_config['c1']
     c2 = module_config['c2']
-    k = module_config['k']
+    k = module_config.get('k', 5)       # 5 by default
     _c = int(c2//2)
     return {
         'c1': c1,
@@ -345,7 +345,7 @@ def SPPF_2_cv2_config(
 ) -> dict:
     c1 = module_config['c1']
     c2 = module_config['c2']
-    k = module_config['k']
+    k = module_config.get('k', 5)       # 5 by default
     _c = int(c2//2)
     return {
         'c1': _c*4,

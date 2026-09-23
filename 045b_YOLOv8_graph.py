@@ -35,7 +35,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # module card
@@ -58,7 +58,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'introduce graph',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # create unexpanded graph
@@ -90,7 +90,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'reposition heads',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(graph_model.reposition_heads(
@@ -117,7 +117,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'arrange into network style',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(graph_model.reposition_all(
@@ -141,7 +141,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'before summaries on different scales',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # clean lines
@@ -165,7 +165,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'create 4 graph copies',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         graphs = VGroup(
@@ -186,7 +186,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'summaries on 5 scales',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         sss = [
@@ -222,7 +222,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'nc as summary for model cards',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -406,20 +406,28 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # # ************************************************************
-        # # self.next_section(
-        # #     'prepare for compute',
-        # #     skip_animations=False,
-        # # )
-        # # # ************************************************************
-        # # # graph to right edge
-        # # self.play(graph_model.animate(
-        # #     run_time=wt,
-        # # ).scale(
-        # #     0.8
-        # # ).to_edge(RIGHT, buff=MGRAPH_EDGE_BUFF))
-        # # self.wait(wt)
+        # ************************************************************
+        self.next_section(
+            'prepare for visualization of yolov8n',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # lightup yolov8n modules
+        self.play(graphs[0].highlight(
+            run_time=wt,
+        ))
 
+        # focus on yolov8n
+        mobs = VGroup(cards_model[0], graphs[0])
+        self.play(AnimationGroup(
+            mobs.animate.to_edge(LEFT),
+            FadeOut(cards_model[1:]),
+            FadeOut(graphs[1:]),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
-        # # mobs = VGroup(card_module, graph_model)
-        # # export_mobs(__file__, mobs)      # used by next
+        # FIXME: connection issue
+
+        export_mobs(__file__, mobs)      # used by next

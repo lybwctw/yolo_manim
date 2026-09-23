@@ -10,14 +10,55 @@ from utils.info_card import *
 
 from utils.mgraph import *
 
+from modules.ut_Conv import *
+
 # ------------- info card ---------------------
 # 'c1': UNKNOWN,
 # 'c2': UNKNOWN,
 # 'k': UNKNOWN,
 # ---------------------------------------------
 
-class UT_C2f(VMobject):
-    pass
+class UT_SPPF(VMobject):
+    """Visualization of ultralytics.nn.modules.SPPF.
+    """
+    def __init__(
+        self,
+        module_config: dict = {},                   # c1, c2, k
+        z_index: float = 0.0,                       # used by cv1, cv2
+        module_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between modules
+    ):
+        super().__init__()
+        self.module_config = module_config
+
+        ut_cv1 = UT_Conv(
+            module_config=SPPF_2_cv1_config(self.module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        ut_cv2 = UT_Conv(
+            module_config=SPPF_2_cv2_config(self.module_config),
+            z_index=z_index,
+            opaque=True,
+        )
+        VGroup(ut_cv1, ut_cv2).arrange(DOWN, buff=module_gap)
+
+        self.ut_cv1 = ut_cv1
+        self.ut_cv2 = ut_cv2
+
+        self.add(self.ut_cv1, self.ut_cv2)
+        self.center()
+
+    def create(
+        self,
+        ref: str = 'center',
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.create(ref=ref),
+            self.ut_cv2.create(ref=ref),
+            _on_finish=lambda s: s.add(self),
+            **aargs,
+        )
 
 class MGraph_SPPF(MGraph):
     def __init__(
