@@ -26,7 +26,8 @@ from utils.general import *
 
 CONFIG_OPAQUE = {
     'fill_opacity': 1.0,
-    'stroke_width': 1.0,
+    'stroke_width': 0.2,
+    # 'stroke_width': 1.0,
 }
 
 DEFAULT_CUBE_CONFIG_CONV = {
