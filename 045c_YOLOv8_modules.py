@@ -36,13 +36,21 @@ MODULE_MAP = {
 
 FAKE_MAP = {
     3: 3,
-    16: 8,
-    32: 12,
-    64: 16,
-    128: 20,
-    192: 22,
-    256: 24,
-    384: 26,
+    16: 4,
+    32: 4,
+    64: 4,
+    128: 4,
+    192: 4,
+    256: 4,
+    384: 4,
+    # 3: 3,
+    # 16: 8,
+    # 32: 12,
+    # 64: 16,
+    # 128: 20,
+    # 192: 22,
+    # 256: 24,
+    # 384: 26,
 }
 
 MODULE_CONFIG = {
@@ -158,6 +166,7 @@ class MainScene(ThreeDScene):
             ) for mm_module in mm_modules),
             lag_ratio=0.9,
             run_time=wt*5,
+            rate_func=smooth,
         ))
         self.wait(wt)
 
