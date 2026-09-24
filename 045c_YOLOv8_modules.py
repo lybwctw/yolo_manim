@@ -25,7 +25,7 @@ TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-INIT_SCALE = 0.2
+INIT_SCALE = 0.5
 
 MODULE_MAP = {
     'Conv': UT_Conv,
@@ -103,37 +103,11 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'test',
+            'show fake modules',
             skip_animations=False,
         )
         # ************************************************************
-        # mobs = VGroup(
-        #     UT_Conv(
-        #         module_config=MODULE_CONFIG[0],
-        #         opaque=True,
-        #     ).scale(INIT_SCALE) for _ in range(5)
-        # ).arrange(DOWN, buff=0.5)
-
-        # cfg = {'c1': 8, 'c2': 8, 'shortcut': True, 'k': (3,3), 'e': 1.0}
-        # mob = UT_Bottleneck(
-        #     module_config=cfg,
-        # ).scale(INIT_SCALE)
-        # self.play(mob.create(
-        #     lag_ratio=0.5,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
-
-        # cfg = {'c1': 16, 'c2': 8, 'k': 5}
-        # mob = UT_SPPF(
-        #     module_config=cfg,
-        # ).scale(INIT_SCALE)
-        # self.play(mob.create(
-        #     lag_ratio=0.5,
-        #     run_time=wt*3,
-        # ))
-        # self.wait(wt)
-
+        # init visible modules
         mm_modules = VGroup()
         for idx, (name, args) in MODULE_CONFIG.items():
             if name not in MODULE_MAP:
@@ -156,19 +130,76 @@ class MainScene(ThreeDScene):
                 ).scale(INIT_SCALE)
 
             mm_modules.add(mm_module)
+        mm_modules.arrange(DOWN, buff=0.3)
 
-        mm_modules.arrange(DOWN, buff=0.2)
+        # positions
+        fc_start = mm_modules[0].get_top() + DOWN * 2
+        fc_end = mm_modules[-1].get_bottom() + UP * 5
+        ls_offset = LEFT*7 + DOWN*9 + OUT*10
+        ls_start = fc_start + ls_offset
+        ls_end = fc_end + ls_offset
+        light_source = self.camera.light_source        # (-7,-9,10) by default
 
-        self.play(AnimationGroup(
-            *(mm_module.create(
-                lag_ratio=0.5,
-                run_time=wt,
-            ) for mm_module in mm_modules),
-            lag_ratio=0.9,
-            run_time=wt*5,
-            rate_func=smooth,
-        ))
+        # init lightsource and camera
+        light_source.move_to(ls_start)
+        self.set_camera_orientation(
+            frame_center=fc_start,
+        )
+
+        # modules generation
+        self.move_camera(
+            added_anims=[
+                AnimationGroup(
+                    *(mm_module.create(
+                        lag_ratio=0.5,
+                        run_time=wt,
+                    ) for mm_module in mm_modules),
+                    lag_ratio=0.9,
+                    run_time=wt*10,
+                    rate_func=smooth,
+                ),
+                light_source.animate(
+                    run_time=wt*10,
+                ).move_to(ls_end),
+            ],
+            frame_center=fc_end,
+            run_time=wt*10,
+        )
         self.wait(wt)
 
-        # self.add(mm_modules)
-        # self.wait()
+        # ************************************************************
+        self.next_section(
+            'new perspective',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.move_camera(
+            added_anims=[
+                # mm_modules.animate(
+                #     run_time=wt*2,
+                # ).scale(0.3),
+                light_source.animate(
+                    run_time=wt*2,
+                ).move_to(ls_offset),
+            ],
+            frame_center=ORIGIN,
+            # phi=60*DEGREES,
+            # theta=-75*DEGREES,
+            focal_distance=100,     # TODO: change back later
+            zoom=0.35,               # TODO: chnage back later
+            run_time=wt,
+        )
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'connect module cards',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # FIXME: need shorter root line
+        self.play(graph.connect(
+            lag_ratio=0.5,
+            run_time=wt*3,
+        ))
+        self.wait(wt)
