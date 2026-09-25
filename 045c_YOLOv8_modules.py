@@ -35,22 +35,22 @@ MODULE_MAP = {
 }
 
 FAKE_MAP = {
-    3: 3,
-    16: 4,
-    32: 4,
-    64: 4,
-    128: 4,
-    192: 4,
-    256: 4,
-    384: 4,
     # 3: 3,
-    # 16: 8,
-    # 32: 12,
-    # 64: 16,
-    # 128: 20,
-    # 192: 22,
-    # 256: 24,
-    # 384: 26,
+    # 16: 4,
+    # 32: 4,
+    # 64: 4,
+    # 128: 4,
+    # 192: 4,
+    # 256: 4,
+    # 384: 4,
+    3: 3,
+    16: 8,
+    32: 12,
+    64: 16,
+    128: 20,
+    192: 22,
+    256: 24,
+    384: 26,
 }
 
 MODULE_CONFIG = {
@@ -150,20 +150,23 @@ class MainScene(ThreeDScene):
         self.move_camera(
             added_anims=[
                 AnimationGroup(
-                    *(mm_module.create(
+                    *(mm_module.create_convs(
                         lag_ratio=0.5,
                         run_time=wt,
                     ) for mm_module in mm_modules),
-                    lag_ratio=0.9,
+                    lag_ratio=1.0,
                     run_time=wt*10,
+                    # run_time=wt*1,
                     rate_func=smooth,
                 ),
                 light_source.animate(
                     run_time=wt*10,
+                    # run_time=wt*1,
                 ).move_to(ls_end),
             ],
             frame_center=fc_end,
             run_time=wt*10,
+            # run_time=wt*1,
         )
         self.wait(wt)
 

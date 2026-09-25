@@ -130,6 +130,16 @@ class UT_Conv(VMobject):
             _on_finish=lambda s: s.add(self),
         )
 
+    def create_convs(
+        self,
+        ref: str = 'center',
+        **aargs,
+    ) -> AnimationGroup:
+        return self.create(
+            ref=ref,
+            **aargs,
+        )
+
     def breath(
         self,
         **aargs,
@@ -225,6 +235,7 @@ class UT_Conv(VMobject):
     @property
     def tensor_gap(self):
         return self.ft_conv[0].get_bottom()[1] - self.ft_bn[0].get_top()[1]
+
 
 class MGraph_Conv(MGraph):
     def __init__(

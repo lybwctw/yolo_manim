@@ -69,6 +69,23 @@ class UT_Bottleneck(VMobject):
             _on_finish=lambda s: s.add(self),
         )
 
+    def create_convs(
+        self,
+        ref: str = 'center',
+        **aargs,        # for single conv
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.create(
+                ref=ref,
+                **aargs,
+            ),
+            self.ut_cv2.create(
+                ref=ref,
+                **aargs,
+            ),
+            lag_ratio=1.0,
+        )
+
     def breath(
         self,
         **aargs,
@@ -170,6 +187,10 @@ class UT_Bottleneck(VMobject):
             *self.ut_cv1.mobs,
             *self.ut_cv2.mobs,
         )
+
+    # @property
+    # def convs(self):
+    #     return VGroup(self.ut_cv1, self.ut_cv2)
 
 class MGraph_Bottleneck(MGraph):
     def __init__(

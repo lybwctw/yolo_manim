@@ -102,6 +102,37 @@ class UT_Detect(VMobject):
             **aargs,
         )
 
+    def create_convs(
+        self,
+        ref: str = 'center',
+        **aargs,        # for single conv
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            *(mm.create(
+                ref=ref,
+                **aargs,
+            ) for mm in (
+                self.ut_b1,
+                self.ut_b2,
+                self.ut_b3,
+                self.ut_c1,
+                self.ut_c2,
+                self.ut_c3,
+            )),
+            lag_ratio=1.0,
+        )
+
+    # @property
+    # def convs(self):
+    #     return VGroup(
+    #         self.ut_b1,
+    #         self.ut_b2,
+    #         self.ut_b3,
+    #         self.ut_c1,
+    #         self.ut_c2,
+    #         self.ut_c3,
+    #     )
+
 class MGraph_Detect(MGraph):
     def __init__(
         self,

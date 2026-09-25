@@ -60,6 +60,27 @@ class UT_SPPF(VMobject):
             **aargs,
         )
 
+    def create_convs(
+        self,
+        ref: str = 'center',
+        **aargs,        # for single conv
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.create(
+                ref=ref,
+                **aargs,
+            ),
+            self.ut_cv2.create(
+                ref=ref,
+                **aargs,
+            ),
+            lag_ratio=1.0,
+        )
+
+    # @property
+    # def convs(self):
+    #     return VGroup(self.ut_cv1, self.ut_cv2)
+
 class MGraph_SPPF(MGraph):
     def __init__(
         self,

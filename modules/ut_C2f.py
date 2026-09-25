@@ -69,6 +69,33 @@ class UT_C2f(VMobject):
             **aargs,
         )
 
+    def create_convs(
+        self,
+        ref: str = 'center',
+        **aargs,        # for single conv
+    ) -> AnimationGroup:
+        mms = VGroup()
+        mms.add(self.ut_cv1)
+        for mm in self.ut_m:
+            mms.add(mm.ut_cv1, mm.ut_cv2)
+        mms.add(self.ut_cv2)
+        return AnimationGroup(
+            *(mm.create(
+                ref=ref,
+                **aargs,
+            ) for mm in mms),
+            lag_ratio=1.0,
+        )
+
+    # @property
+    # def convs(self):
+    #     mms = VGroup()
+    #     mms.add(self.ut_cv1)
+    #     for mm in self.ut_m:
+    #         mms.add(*mm.convs)
+    #     mms.add(self.ut_cv2)
+    #     return mms
+
 class MGraph_C2f(MGraph):
     def __init__(
         self,
