@@ -87,7 +87,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # load card and graph
@@ -104,7 +104,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show fake modules',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # init visible modules
