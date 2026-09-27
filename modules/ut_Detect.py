@@ -122,6 +122,54 @@ class UT_Detect(VMobject):
             lag_ratio=1.0,
         )
 
+    def breath(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            *(mm.breath(**aargs) for mm in (
+                self.ut_b1,
+                self.ut_b2,
+                self.ut_b3,
+                self.ut_c1,
+                self.ut_c2,
+                self.ut_c3,
+            )),
+            lag_ratio=0.0,
+        )
+
+    def tarnish(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            *(mm.tarnish(**aargs) for mm in (
+                self.ut_b1,
+                self.ut_b2,
+                self.ut_b3,
+                self.ut_c1,
+                self.ut_c2,
+                self.ut_c3,
+            )),
+            lag_ratio=0.0,
+        )
+
+    def lightup(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            *(mm.lightup(**aargs) for mm in (
+                self.ut_b1,
+                self.ut_b2,
+                self.ut_b3,
+                self.ut_c1,
+                self.ut_c2,
+                self.ut_c3,
+            )),
+            lag_ratio=0.0,
+        )
+
     # @property
     # def convs(self):
     #     return VGroup(

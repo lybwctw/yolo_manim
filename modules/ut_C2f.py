@@ -87,6 +87,39 @@ class UT_C2f(VMobject):
             lag_ratio=1.0,
         )
 
+    def breath(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.breath(**aargs),
+            *(mm.breath(**aargs) for mm in self.ut_m),
+            self.ut_cv2.breath(**aargs),
+            lag_ratio=0.0,
+        )
+
+    def tarnish(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.tarnish(**aargs),
+            *(mm.tarnish(**aargs) for mm in self.ut_m),
+            self.ut_cv2.tarnish(**aargs),
+            lag_ratio=0.0,
+        )
+
+    def lightup(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.lightup(**aargs),
+            *(mm.lightup(**aargs) for mm in self.ut_m),
+            self.ut_cv2.lightup(**aargs),
+            lag_ratio=0.0,
+        )
+
     # @property
     # def convs(self):
     #     mms = VGroup()

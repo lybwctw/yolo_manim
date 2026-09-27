@@ -178,6 +178,7 @@ class MGraph(VMobject):
         self,
         text: str = 'None',
         index: int = 0,
+        on_card: bool = False,
         direction: np.ndarray = LEFT,
         buff: float | None = 0.1,
         text_config: dict = {},     # override default text config

@@ -103,7 +103,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'show fake modules',
+            'prepare fake modules',
             skip_animations=True,
         )
         # ************************************************************
@@ -140,59 +140,69 @@ class MainScene(ThreeDScene):
         ls_end = fc_end + ls_offset
         light_source = self.camera.light_source        # (-7,-9,10) by default
 
-        # init lightsource and camera
-        light_source.move_to(ls_start)
-        self.set_camera_orientation(
-            frame_center=fc_start,
-        )
-
-        # modules generation
-        self.move_camera(
-            added_anims=[
-                AnimationGroup(
-                    *(mm_module.create_convs(
-                        lag_ratio=0.5,
-                        run_time=wt,
-                    ) for mm_module in mm_modules),
-                    lag_ratio=1.0,
-                    run_time=wt*10,
-                    # run_time=wt*1,
-                    rate_func=smooth,
-                ),
-                light_source.animate(
-                    run_time=wt*10,
-                    # run_time=wt*1,
-                ).move_to(ls_end),
-            ],
-            frame_center=fc_end,
-            run_time=wt*10,
-            # run_time=wt*1,
-        )
-        self.wait(wt)
-
         # ************************************************************
         self.next_section(
-            'new perspective',
+            'show fake modules, fast',
             skip_animations=False,
         )
         # ************************************************************
-        self.move_camera(
-            added_anims=[
-                # mm_modules.animate(
-                #     run_time=wt*2,
-                # ).scale(0.3),
-                light_source.animate(
-                    run_time=wt*2,
-                ).move_to(ls_offset),
-            ],
-            frame_center=ORIGIN,
-            # phi=60*DEGREES,
-            # theta=-75*DEGREES,
+        self.set_camera_orientation(
+            theta=-125*DEGREES,
             focal_distance=100,     # TODO: change back later
             zoom=0.35,               # TODO: chnage back later
-            run_time=wt,
         )
+        self.add(mm_modules)
         self.wait(wt)
+
+        # # ************************************************************
+        # self.next_section(
+        #     'show fake modules',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # # init lightsource and camera
+        # light_source.move_to(ls_start)
+        # self.set_camera_orientation(
+        #     frame_center=fc_start,
+        # )
+
+        # # modules generation
+        # self.move_camera(
+        #     added_anims=[
+        #         AnimationGroup(
+        #             *(mm_module.create_convs(
+        #                 lag_ratio=0.5,
+        #                 run_time=wt,
+        #             ) for mm_module in mm_modules),
+        #             lag_ratio=1.0,
+        #             run_time=wt*10,
+        #             # run_time=wt*1,
+        #             rate_func=smooth,
+        #         ),
+        #         light_source.animate(
+        #             run_time=wt*10,
+        #             # run_time=wt*1,
+        #         ).move_to(ls_end),
+        #     ],
+        #     frame_center=fc_end,
+        #     run_time=wt*10,
+        #     # run_time=wt*1,
+        # )
+        # self.wait(wt)
+
+        # # new perspective
+        # self.move_camera(
+        #     added_anims=[
+        #         light_source.animate(
+        #             run_time=wt*2,
+        #         ).move_to(ls_offset),
+        #     ],
+        #     frame_center=ORIGIN,
+        #     focal_distance=100,     # TODO: change back later
+        #     zoom=0.35,               # TODO: chnage back later
+        #     run_time=wt,
+        # )
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -206,3 +216,7 @@ class MainScene(ThreeDScene):
             run_time=wt*3,
         ))
         self.wait(wt)
+
+        # export
+        mobs = VGroup(mm_modules, card, graph)
+        export_mobs(__file__, mobs)      # used by next

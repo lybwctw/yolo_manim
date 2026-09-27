@@ -77,6 +77,36 @@ class UT_SPPF(VMobject):
             lag_ratio=1.0,
         )
 
+    def breath(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.breath(**aargs),
+            self.ut_cv2.breath(**aargs),
+            lag_ratio=0.0,
+        )
+
+    def tarnish(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.tarnish(**aargs),
+            self.ut_cv2.tarnish(**aargs),
+            lag_ratio=0.0,
+        )
+
+    def lightup(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ut_cv1.lightup(**aargs),
+            self.ut_cv2.lightup(**aargs),
+            lag_ratio=0.0,
+        )
+
     # @property
     # def convs(self):
     #     return VGroup(self.ut_cv1, self.ut_cv2)

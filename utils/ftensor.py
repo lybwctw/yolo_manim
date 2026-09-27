@@ -14,6 +14,8 @@ from utils.constants_3d import *
 
 UNIT_FTENSOR_SIZE = 0.15
 
+MID_SCALE = 0.8
+
 CONFIG_OPAQUE = {
     'fill_opacity': 1.0,
     'stroke_width': 1.0,
@@ -96,7 +98,7 @@ class FTensor3D(VMobject):
         z_index: float = 0.0,
         cube_config: dict = {},
         size_config: dict = {},             # override that from shape
-        init_scale: float = 1.0,
+        init_scale: float = 1.0,        # FIXME: remove this
         opaque: bool = False,
     ):
         super().__init__()
@@ -176,6 +178,31 @@ class FTensor3D(VMobject):
             rate_func=rate_functions.there_and_back,
             **aargs,
         )
+
+    def _af_translate(
+        self,
+        mob: Mobject,
+        alpha: float,
+    ) -> None:
+        if hasattr(mob, 'saved_state'):
+            mob.restore()
+        else:
+            mob.save_state()
+
+        target_scale = 1.0 + (MID_SCALE - 1.0) * there_and_back(alpha)
+        mob.scale(target_scale)
+        mob.rotate(90 * DEGREES * smooth(alpha), OUT)
+
+    def translate(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        """Apply the MTensor cube-translation animation to this tensor cuboid."""
+        anim = UpdateFromAlphaFunc(
+            self.mob,
+            self._af_translate,
+        )
+        return AnimationGroup(anim, **aargs)
 
     def tarnish(
         self,

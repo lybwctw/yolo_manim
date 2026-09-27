@@ -14,6 +14,35 @@ from utils.color_cell import ColorCell
 from utils.line_matrix import LineMatrix
 from utils.constants import DIR_PICKLE
 
+def highlight_vgroup(
+    mobs: VGroup,
+    mask: np.ndarray | None = None,
+    **aargs,
+) -> AnimationGroup:
+    """Highlight VGroup members selected by a boolean mask."""
+    n_mobs = len(mobs)
+    if mask is None:
+        mask = np.ones(n_mobs, dtype=bool)
+    else:
+        mask = np.asarray(mask, dtype=bool)
+        if mask.shape != (n_mobs,):
+            raise ValueError(f"mask must have shape ({n_mobs},), got {mask.shape}")
+
+    if not hasattr(mobs, 'hl_state'):
+        mobs.hl_state = np.ones(n_mobs, dtype=bool)
+
+    mask_start = mobs.hl_state
+    mask_hl = ~mask_start & mask
+    mask_dm = mask_start & ~mask
+
+    anims = [
+        *(mobs[idx].lightup() for idx in range(n_mobs) if mask_hl[idx]),
+        *(mobs[idx].tarnish() for idx in range(n_mobs) if mask_dm[idx]),
+    ]
+    mobs.hl_state = mask.copy()
+    return AnimationGroup(*anims, **aargs)
+
+
 def export_mobs(path_source, mobs, suffix=''):
     """Dump manim mobs according to given path.
     
