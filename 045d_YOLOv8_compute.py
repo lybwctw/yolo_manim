@@ -29,6 +29,7 @@ TENSOR_VGAP_LARGE = 3.0
 INIT_SCALE = 0.5
 
 RUNNING_X = 6.0
+FAKE_HALF = 2/3
 
 FAKE_MAP = {
     # 3: 3,
@@ -121,7 +122,7 @@ class MainScene(ThreeDScene):
         ))
         self.play(mt_running.stretch_3d(
             new_shape=(16,320,320),
-            scale_factor=(8/3, 0.5, 0.5),
+            scale_factor=(8/3, FAKE_HALF, FAKE_HALF),
             run_time=wt*0.5,
         ))
         self.wait(wt)
@@ -160,8 +161,8 @@ class MainScene(ThreeDScene):
             run_time=wt*0.5,
         ))
         self.play(mt_running.stretch_3d(
-            new_shape=(16,320,320),
-            scale_factor=(12/8, 0.5, 0.5),
+            new_shape=(32,160,160),
+            scale_factor=(12/8, FAKE_HALF, FAKE_HALF),
             run_time=wt*0.5,
         ))
         self.wait(wt)
@@ -171,7 +172,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[2] apply C2f',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -205,3 +206,323 @@ class MainScene(ThreeDScene):
         self.wait(wt)
 
         # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[3] apply Conv',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[3]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[3]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[3],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[3].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.stretch_3d(
+            new_shape=(64,80,80),
+            scale_factor=(16/12, FAKE_HALF, FAKE_HALF),
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[4] apply C2f, backup',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[4]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[4]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[4],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[4].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.translate(
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # make a copy
+        mt_c4 = mt_running.copy()
+        mt_c4.set_opacity(0.3)
+        self.play(FadeIn(mt_c4, run_time=wt*0.1))
+        self.play(mt_c4.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[4],
+            LEFT,
+        ).set_x(
+            -RUNNING_X,
+        # ).set_opacity(
+        #     1.0,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '[5] apply Conv',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[5]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[5]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[5],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[5].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.stretch_3d(
+            new_shape=(128,40,40),
+            scale_factor=(20/16, FAKE_HALF, FAKE_HALF),
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[6] apply C2f, backup',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[6]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[6]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[6],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[6].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.translate(
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # make a copy
+        mt_c6 = mt_running.copy()
+        mt_c6.set_opacity(0.3)
+        self.play(FadeIn(mt_c6, run_time=wt*0.1))
+        self.play(mt_c6.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[6],
+            LEFT,
+        ).set_x(
+            -RUNNING_X,
+        # ).set_opacity(
+        #     1.0,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '[7] apply Conv',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[7]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[7]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[7],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[7].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.stretch_3d(
+            new_shape=(256,20,20),
+            scale_factor=(24/20, FAKE_HALF, FAKE_HALF),
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[8] apply C2f',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[8]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[8]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[8],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[8].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.translate(
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[9] apply SPPF',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[9]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[9]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[9],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[9].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.translate(
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # make a copy
+        mt_c9 = mt_running.copy()
+        mt_c9.set_opacity(0.3)
+        self.play(FadeIn(mt_c9, run_time=wt*0.1))
+        self.play(mt_c9.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[9],
+            LEFT,
+        ).set_x(
+            -RUNNING_X,
+        # ).set_opacity(
+        #     1.0,
+        ))
+        self.wait(wt)

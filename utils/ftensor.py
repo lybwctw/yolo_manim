@@ -184,10 +184,22 @@ class FTensor3D(VMobject):
         mob: Mobject,
         alpha: float,
     ) -> None:
-        if hasattr(mob, 'saved_state'):
-            mob.restore()
-        else:
-            mob.save_state()
+        """TODO: Codex generated, not verified yet.
+        """
+        state_key = '_ftensor_translate_state'
+
+        if alpha <= 0:
+            if hasattr(mob, state_key):
+                delattr(mob, state_key)
+            setattr(mob, state_key, mob.copy())
+        elif alpha >= 1:
+            if hasattr(mob, state_key):
+                delattr(mob, state_key)
+            return
+
+        base_state = getattr(mob, state_key, None)
+        if base_state is not None:
+            mob.become(base_state)
 
         target_scale = 1.0 + (MID_SCALE - 1.0) * there_and_back(alpha)
         mob.scale(target_scale)
@@ -202,7 +214,10 @@ class FTensor3D(VMobject):
             self.mob,
             self._af_translate,
         )
-        return AnimationGroup(anim, **aargs)
+        return AnimationGroup(
+            anim,
+            **aargs,
+        )
 
     def tarnish(
         self,
