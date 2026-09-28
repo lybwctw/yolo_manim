@@ -1,11 +1,10 @@
 # ************************************************************
-# Compute steps for fake yolov8n.
+# Compute steps for fake yolov8n, part 1.
 # ************************************************************
 from manim import *
 
 from utils.general import import_mobs, export_mobs
 from utils.show_shape_3d import ShowShape3D, HideShape3D
-# from utils.mtensor import MTensor3D
 from utils.ftensor import *
 from utils.info_card import *
 from utils.constants_3d import *
@@ -31,24 +30,32 @@ INIT_SCALE = 0.5
 RUNNING_X = 6.0
 FAKE_HALF = 2/3
 
-FAKE_MAP = {
-    # 3: 3,
-    # 16: 4,
-    # 32: 4,
-    # 64: 4,
-    # 128: 4,
-    # 192: 4,
-    # 256: 4,
-    # 384: 4,
-    3: 3,
-    16: 8,
-    32: 12,
-    64: 16,
-    128: 20,
-    192: 22,
-    256: 24,
-    384: 26,
-}
+# for reference
+# [0]  16 -> 8
+# [1]  32 -> 12
+# [2]  32 -> 12
+# [3]  64 -> 16
+# [4]  64 -> 16
+# [5]  128 -> 20
+# [6]  128 -> 20
+# [7]  256 -> 24
+# [8]  256 -> 24
+# [9]  256 -> 24
+# [10] 256 -> 24
+# [11] 384 -> 26
+# [12] 128 -> 20
+# [13] 128 -> 20
+# [14] 192 -> 22
+# [15] 64 -> 16
+# [16] 64 -> 16
+# [17] 192 -> 22
+# [18] 128 -> 20
+# [19] 128 -> 20
+# [20] 384 -> 26
+# [21] 256 -> 24
+# [22] 
+# [23]
+# [24]
 
 wt = 0.5
 class MainScene(ThreeDScene):
@@ -438,7 +445,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[8] apply C2f',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -476,7 +483,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[9] apply SPPF',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -526,3 +533,223 @@ class MainScene(ThreeDScene):
         #     1.0,
         ))
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '[10] apply Upsample',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module (tarnish all)
+        mask_graph = np.eye(graph.ncards, dtype=bool)[10]
+        mask_module = np.zeros(len(mm_modules), dtype=bool)
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor, skipped
+
+        # apply module
+        self.play(mt_running.stretch_3d(
+            new_shape=(256,40,40),
+            scale_factor=(1.0, 1/FAKE_HALF, 1/FAKE_HALF),
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[11] apply concat',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card
+        mask_graph = np.eye(graph.ncards, dtype=bool)[11]
+        self.play(graph.highlight(
+            mask_graph,
+            run_time=wt*0.1,
+        ))
+        self.wait(wt)
+
+        # prepare result mt_running
+        res_running = mt_running.copy()
+        res_running.stretch_to_fit_depth(
+            res_running.depth + mt_c6.depth
+        )
+
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).move_to(
+            res_running,
+            aligned_edge=OUT,
+        ))
+        self.wait(wt)
+
+        # concat mt_c6 into running
+        self.play(mt_c6.animate(
+            run_time=wt*0.5,
+        ).move_to(
+            res_running,
+            aligned_edge=IN,
+        ))
+        self.wait(wt)
+
+        # fade in result running
+        self.play(AnimationGroup(
+            Unwrite(mt_running),
+            Unwrite(mt_c6),
+            FadeIn(res_running),
+            run_time=wt*0.5,
+        ))
+        mt_running = res_running
+        self.wait(wt)
+
+        # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[12] apply C2f, backup',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module
+        mask_graph = np.eye(graph.ncards, dtype=bool)[12]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[12]
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[12],
+            RIGHT,
+        ).set_x(
+            RUNNING_X,
+        ))
+        self.wait(wt)
+
+        # apply module
+        self.play(mm_modules[12].breath(
+            run_time=wt*0.5,
+        ))
+        self.play(mt_running.stretch_3d(
+            new_shape=(128,80,80),
+            scale_factor=(16/44, 1.0, 1.0),
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # make a copy
+        mt_c12 = mt_running.copy()
+        mt_c12.set_opacity(0.3)
+        self.play(FadeIn(mt_c12, run_time=wt*0.1))
+        self.play(mt_c12.animate(
+            run_time=wt*0.5,
+        ).next_to(
+            mm_modules[12],
+            LEFT,
+        ).set_x(
+            -RUNNING_X,
+        # ).set_opacity(
+        #     1.0,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '[13] apply Upsample',
+            skip_animations=True,
+        )
+        # ************************************************************
+        # highlight card and module (tarnish all)
+        mask_graph = np.eye(graph.ncards, dtype=bool)[13]
+        mask_module = np.zeros(len(mm_modules), dtype=bool)
+        self.play(AnimationGroup(
+            graph.highlight(mask_graph, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+        
+        # move running tensor, skipped
+
+        # apply module
+        self.play(mt_running.stretch_3d(
+            new_shape=(128,80,80),
+            scale_factor=(1.0, 1/FAKE_HALF, 1/FAKE_HALF),
+            run_time=wt*0.5,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # ************************************************************
+        self.next_section(
+            '[14] apply concat',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # highlight card
+        mask_graph = np.eye(graph.ncards, dtype=bool)[14]
+        self.play(graph.highlight(
+            mask_graph,
+            run_time=wt*0.1,
+        ))
+        self.wait(wt)
+
+        # prepare result mt_running
+        res_running = mt_running.copy()
+        res_running.stretch_to_fit_depth(
+            res_running.depth + mt_c4.depth
+        )
+
+        # move running tensor
+        self.play(mt_running.animate(
+            run_time=wt*0.5,
+        ).move_to(
+            res_running,
+            aligned_edge=OUT,
+        ))
+        self.wait(wt)
+
+        # concat mt_c4 into running
+        self.play(mt_c4.animate(
+            run_time=wt*0.5,
+        ).move_to(
+            res_running,
+            aligned_edge=IN,
+        ))
+        self.wait(wt)
+
+        # show shape on graph
+
+        # fade in result running
+        self.play(AnimationGroup(
+            Unwrite(mt_running),
+            Unwrite(mt_c4),
+            FadeIn(res_running),
+            run_time=wt*0.5,
+        ))
+        mt_running = res_running
+        self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            mm_modules, card, graph,
+            mt_running,
+            mt_c9, mt_c12,
+        )
+        export_mobs(__file__, mobs)     # used by next

@@ -238,11 +238,13 @@ class MGraph_YOLOv8(MGraph):
 
     def connect(
         self,
+        short_head: bool = False,
         **aargs,
     ) -> Animation:
         # 1 head line
+        head_offset = UP*LINE_BUFF*.4 if short_head else UP*LINE_BUFF
         line_head = Line(
-            self.objs_card[0].get_top() + UP*LINE_BUFF,
+            self.objs_card[0].get_top() + head_offset,
             self.objs_card[0].get_top(),
             **LINE_CONFIG_THIN,
         )
