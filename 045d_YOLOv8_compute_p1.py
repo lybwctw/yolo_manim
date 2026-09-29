@@ -63,7 +63,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load card and graph
@@ -86,7 +86,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init input tensor',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mt_running = FTensor3D(
@@ -108,7 +108,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[0] apply Conv',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -138,8 +138,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[1] apply Conv',
-            skip_animations=True,
+            '[1/1] apply Conv',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -178,8 +178,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[2] apply C2f',
-            skip_animations=True,
+            '[2/2] apply C2f',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -216,8 +216,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[3] apply Conv',
-            skip_animations=True,
+            '[3/3] apply Conv',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -256,8 +256,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[4] apply C2f, backup',
-            skip_animations=True,
+            '[4/4] apply C2f, backup',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -310,8 +310,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[5] apply Conv',
-            skip_animations=True,
+            '[5/5] apply Conv',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -350,8 +350,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[6] apply C2f, backup',
-            skip_animations=True,
+            '[6/6] apply C2f, backup',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -404,8 +404,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[7] apply Conv',
-            skip_animations=True,
+            '[7/7] apply Conv',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -444,8 +444,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[8] apply C2f',
-            skip_animations=True,
+            '[8/8] apply C2f',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -482,8 +482,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[9] apply SPPF',
-            skip_animations=True,
+            '[9/9] apply SPPF',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -536,8 +536,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[10] apply Upsample',
-            skip_animations=True,
+            '[10/-] apply Upsample',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module (tarnish all)
@@ -564,8 +564,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[11] apply concat',
-            skip_animations=True,
+            '[11/-] apply concat',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card
@@ -589,7 +589,7 @@ class MainScene(ThreeDScene):
             res_running,
             aligned_edge=OUT,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # concat mt_c6 into running
         self.play(mt_c6.animate(
@@ -614,13 +614,13 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[12] apply C2f, backup',
-            skip_animations=True,
+            '[12/10] apply C2f, backup',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
         mask_graph = np.eye(graph.ncards, dtype=bool)[12]
-        mask_module = np.eye(len(mm_modules), dtype=bool)[12]
+        mask_module = np.eye(len(mm_modules), dtype=bool)[10]
         self.play(AnimationGroup(
             graph.highlight(mask_graph, run_time=wt*0.1),
             highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
@@ -632,7 +632,7 @@ class MainScene(ThreeDScene):
         self.play(mt_running.animate(
             run_time=wt*0.5,
         ).next_to(
-            mm_modules[12],
+            mm_modules[10],
             RIGHT,
         ).set_x(
             RUNNING_X,
@@ -640,7 +640,7 @@ class MainScene(ThreeDScene):
         self.wait(wt)
 
         # apply module
-        self.play(mm_modules[12].breath(
+        self.play(mm_modules[10].breath(
             run_time=wt*0.5,
         ))
         self.play(mt_running.stretch_3d(
@@ -659,7 +659,7 @@ class MainScene(ThreeDScene):
         self.play(mt_c12.animate(
             run_time=wt*0.5,
         ).next_to(
-            mm_modules[12],
+            mm_modules[10],
             LEFT,
         ).set_x(
             -RUNNING_X,
@@ -670,8 +670,8 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[13] apply Upsample',
-            skip_animations=True,
+            '[13/-] apply Upsample',
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module (tarnish all)
@@ -698,7 +698,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '[14] apply concat',
+            '[14/-] apply concat',
             skip_animations=False,
         )
         # ************************************************************
@@ -723,7 +723,7 @@ class MainScene(ThreeDScene):
             res_running,
             aligned_edge=OUT,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # concat mt_c4 into running
         self.play(mt_c4.animate(
