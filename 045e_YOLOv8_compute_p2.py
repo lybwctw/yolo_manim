@@ -438,7 +438,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[22/16-23/17-24/18] apply heads',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # remove running
@@ -462,17 +462,6 @@ class MainScene(ThreeDScene):
             mt_c18.animate(run_time=wt).set_opacity(1.0).next_to(mm_modules[17],LEFT).set_x(-RUNNING_X),
             mt_c21.animate(run_time=wt).set_opacity(1.0).next_to(mm_modules[18],LEFT).set_x(-RUNNING_X),
             lag_ratio=0.0,
-        ))
-        self.wait(wt)
-
-        # apply module
-        self.play(mm_modules[15].breath(
-            run_time=wt*0.5,
-        ))
-        self.play(mt_running.stretch_3d(
-            new_shape=(256,20,20),
-            scale_factor=(24/44, 1.0, 1.0),
-            run_time=wt*0.5,
         ))
         self.wait(wt)
 
@@ -519,3 +508,63 @@ class MainScene(ThreeDScene):
             lag_ratio=0.5,
         ))
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'simplified view',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # remove backups, show initial input
+        mt_input = FTensor3D(
+            shape=(3,640,640),
+            size_config={
+                'width': 64*UNIT_FTENSOR_SIZE,
+                'height': 64*UNIT_FTENSOR_SIZE,
+                'depth': 3*UNIT_FTENSOR_SIZE,
+            },
+            opaque=True,
+        ).scale(INIT_SCALE).next_to(mm_modules[0], UP*5)
+        self.play(AnimationGroup(
+            Unwrite(mt_c15, run_time=wt),
+            Unwrite(mt_c18, run_time=wt),
+            Unwrite(mt_c21, run_time=wt),
+            Write(mt_input, run_time=wt),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+
+        # smaller zoom, reposition outputs
+        mt_outputs = VGroup(
+            mt_22_box, mt_22_cls,
+            mt_23_box, mt_23_cls,
+            mt_24_box, mt_24_cls,
+        )
+        self.move_camera(
+            zoom=0.25,              # NOTE
+            added_anims=[
+                mt_outputs.animate(
+                    run_time=wt,
+                ).next_to(mm_modules[-1], DOWN*5),
+            ],
+            run_time=wt,
+        )
+        self.wait(wt)
+
+        # lightup all graph cards and modules
+        self.play(AnimationGroup(
+            graph.highlight(None, run_time=wt*0.1),
+            highlight_vgroup(mm_modules, None, run_time=wt*0.1),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            mm_modules, card, graph,
+            mt_input,
+            mt_22_box, mt_22_cls,
+            mt_23_box, mt_23_cls,
+            mt_24_box, mt_24_cls,
+        )
+        export_mobs(__file__, mobs)     # used by next

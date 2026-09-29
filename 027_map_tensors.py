@@ -129,9 +129,18 @@ class MainScene(ThreeDScene):
         for mob in mobs:
             mob.generate_target()
         
+        # t16_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).shift(CENTER_MOB)
+        # t8_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, OUT, buff=BUFF_MOB_H*2)
+        # t32_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, IN, buff=BUFF_MOB_H*2)
+        # act_game.target.rotate(90*DEGREES, axis=RIGHT).next_to(t16_distrib.target, LEFT, buff=BUFF_MOB_W*1.5)
+        # tin_norm.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(act_game.target, LEFT, buff=BUFF_MOB_W*1.5)
+        # t8_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t8_distrib.target, RIGHT, buff=BUFF_MOB_W*1.5)
+        # t16_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, RIGHT).set_x(t8_prob.target.get_x())
+        # t32_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t32_distrib.target, RIGHT).set_x(t16_prob.target.get_x())
+
         t16_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).shift(CENTER_MOB)
-        t8_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, OUT, buff=BUFF_MOB_H*2)
-        t32_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, IN, buff=BUFF_MOB_H*2)
+        t8_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, UP, buff=BUFF_MOB_H*3.5)
+        t32_distrib.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t16_distrib.target, DOWN, buff=BUFF_MOB_H*3.5)
         act_game.target.rotate(90*DEGREES, axis=RIGHT).next_to(t16_distrib.target, LEFT, buff=BUFF_MOB_W*1.5)
         tin_norm.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(act_game.target, LEFT, buff=BUFF_MOB_W*1.5)
         t8_prob.target.rects.arrange(IN, buff=BUFF_LAYER_3D).next_to(t8_distrib.target, RIGHT, buff=BUFF_MOB_W*1.5)
@@ -162,7 +171,7 @@ class MainScene(ThreeDScene):
                 view='intro',
                 text_config={'font_size': 12},      # bit smaller than default 15
                 text_buff=0.1,                      # bit closer than default 0.2
-                lag_ratio=1.0,
+                lag_ratio=0.3,
             ) for mob in t_mobs),
              lag_ratio=0.0,
              run_time=wt*3,

@@ -92,8 +92,8 @@ class MainScene(ThreeDScene):
         mt_running = FTensor3D(
             shape=(3,640,640),
             size_config={
-                'width': 128*UNIT_FTENSOR_SIZE,
-                'height': 128*UNIT_FTENSOR_SIZE,
+                'width': 64*UNIT_FTENSOR_SIZE,
+                'height': 64*UNIT_FTENSOR_SIZE,
                 'depth': 3*UNIT_FTENSOR_SIZE,
             },
             opaque=True,
