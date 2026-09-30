@@ -524,7 +524,11 @@ class MainScene(ThreeDScene):
                 'depth': 3*UNIT_FTENSOR_SIZE,
             },
             opaque=True,
-        ).scale(INIT_SCALE).next_to(mm_modules[0], UP*5)
+        ).scale(INIT_SCALE).next_to(
+            mm_modules[0],
+            UP,
+            buff=3.5,
+        )
         self.play(AnimationGroup(
             Unwrite(mt_c15, run_time=wt),
             Unwrite(mt_c18, run_time=wt),
@@ -532,23 +536,6 @@ class MainScene(ThreeDScene):
             Write(mt_input, run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
-
-        # smaller zoom, reposition outputs
-        mt_outputs = VGroup(
-            mt_22_box, mt_22_cls,
-            mt_23_box, mt_23_cls,
-            mt_24_box, mt_24_cls,
-        )
-        self.move_camera(
-            zoom=0.25,              # NOTE
-            added_anims=[
-                mt_outputs.animate(
-                    run_time=wt,
-                ).next_to(mm_modules[-1], DOWN*5),
-            ],
-            run_time=wt,
-        )
         self.wait(wt)
 
         # lightup all graph cards and modules
