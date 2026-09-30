@@ -192,14 +192,18 @@ class FTensor3D(VMobject):
             if hasattr(mob, state_key):
                 delattr(mob, state_key)
             setattr(mob, state_key, mob.copy())
-        elif alpha >= 1:
-            if hasattr(mob, state_key):
-                delattr(mob, state_key)
-            return
 
         base_state = getattr(mob, state_key, None)
         if base_state is not None:
             mob.become(base_state)
+
+        if alpha >= 1:
+            if base_state is not None:
+                mob.become(base_state)
+                mob.rotate(90 * DEGREES, OUT)
+            if hasattr(mob, state_key):
+                delattr(mob, state_key)
+            return
 
         target_scale = 1.0 + (MID_SCALE - 1.0) * there_and_back(alpha)
         mob.scale(target_scale)
@@ -359,6 +363,16 @@ class FTensor4D(VMobject):
                 ref=ref,
             ) for mob in self.mobs),
             _on_finish=lambda s: s.add(self),
+            **aargs,
+        )
+
+    def translate(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            *(mob.translate() for mob in self.mobs),
+            lag_ratio=0.0,
             **aargs,
         )
 

@@ -87,6 +87,22 @@ class UT_C2f(VMobject):
             lag_ratio=1.0,
         )
 
+    def translate_convs(
+        self,
+        reverse: bool = True,
+        **aargs,
+    ) -> AnimationGroup:
+        convs = [self.ut_cv1]
+        for module in self.ut_m:
+            convs.extend((module.ut_cv1, module.ut_cv2))
+        convs.append(self.ut_cv2)
+        if reverse:
+            convs.reverse()
+        return AnimationGroup(
+            *(conv.translate_convs(**aargs) for conv in convs),
+            lag_ratio=1.0,
+        )
+
     def breath(
         self,
         **aargs,

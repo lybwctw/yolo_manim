@@ -86,6 +86,19 @@ class UT_Bottleneck(VMobject):
             lag_ratio=1.0,
         )
 
+    def translate_convs(
+        self,
+        reverse: bool = True,
+        **aargs,
+    ) -> AnimationGroup:
+        convs = (self.ut_cv1, self.ut_cv2)
+        if reverse:
+            convs = convs[::-1]
+        return AnimationGroup(
+            *(conv.translate_convs(**aargs) for conv in convs),
+            lag_ratio=1.0,
+        )
+
     def breath(
         self,
         **aargs,

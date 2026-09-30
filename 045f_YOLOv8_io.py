@@ -54,7 +54,7 @@ class MainScene(ThreeDScene):
             **VIEW_COMPUTE,
             'theta': -125*DEGREES,
             'focal_distance': 100,
-            'zoom': 0.25,
+            'zoom': 0.35,
         }
         self.set_camera_orientation(
             **cam_args,
@@ -202,3 +202,13 @@ class MainScene(ThreeDScene):
             ),
         ))
         self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            mm_modules, card, graph,
+            mt_input,
+            mt_22_box, mt_22_cls,
+            mt_23_box, mt_23_cls,
+            mt_24_box, mt_24_cls,
+        )
+        export_mobs(__file__, mobs)     # used by next

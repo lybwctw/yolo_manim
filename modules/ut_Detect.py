@@ -122,6 +122,26 @@ class UT_Detect(VMobject):
             lag_ratio=1.0,
         )
 
+    def translate_convs(
+        self,
+        reverse: bool = True,
+        **aargs,
+    ) -> AnimationGroup:
+        convs = (
+            self.ut_b1,
+            self.ut_b2,
+            self.ut_b3,
+            self.ut_c1,
+            self.ut_c2,
+            self.ut_c3,
+        )
+        if reverse:
+            convs = convs[::-1]
+        return AnimationGroup(
+            *(conv.translate_convs(**aargs) for conv in convs),
+            lag_ratio=1.0,
+        )
+
     def breath(
         self,
         **aargs,

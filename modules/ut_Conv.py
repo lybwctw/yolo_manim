@@ -140,6 +140,16 @@ class UT_Conv(VMobject):
             **aargs,
         )
 
+    def translate_convs(
+        self,
+        **aargs,
+    ) -> AnimationGroup:
+        return AnimationGroup(
+            self.ft_conv.translate(**aargs),
+            self.ft_bn.translate(**aargs),
+            lag_ratio=0.0,
+        )
+
     def breath(
         self,
         **aargs,

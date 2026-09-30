@@ -63,7 +63,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # load card and graph
@@ -86,7 +86,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init input tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mt_running = FTensor3D(
@@ -108,7 +108,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[0] apply Conv',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -139,7 +139,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[1/1] apply Conv',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -179,7 +179,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[2/2] apply C2f',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -217,7 +217,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[3/3] apply Conv',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -257,7 +257,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[4/4] apply C2f, backup',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -311,7 +311,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[5/5] apply Conv',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -351,7 +351,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[6/6] apply C2f, backup',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -405,7 +405,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[7/7] apply Conv',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -445,7 +445,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[8/8] apply C2f',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -483,7 +483,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[9/9] apply SPPF',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -537,7 +537,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[10/-] apply Upsample',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module (tarnish all)
@@ -565,7 +565,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[11/-] apply concat',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card
@@ -615,7 +615,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[12/10] apply C2f, backup',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module
@@ -671,7 +671,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[13/-] apply Upsample',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # highlight card and module (tarnish all)
