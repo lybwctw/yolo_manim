@@ -205,8 +205,8 @@ class FTensor3D(VMobject):
                 delattr(mob, state_key)
             return
 
-        target_scale = 1.0 + (MID_SCALE - 1.0) * there_and_back(alpha)
-        mob.scale(target_scale)
+        # target_scale = 1.0 + (MID_SCALE - 1.0) * there_and_back(alpha)
+        # mob.scale(target_scale)
         mob.rotate(90 * DEGREES * smooth(alpha), OUT)
 
     def translate(
@@ -214,14 +214,18 @@ class FTensor3D(VMobject):
         **aargs,
     ) -> AnimationGroup:
         """Apply the MTensor cube-translation animation to this tensor cuboid."""
-        anim = UpdateFromAlphaFunc(
-            self.mob,
-            self._af_translate,
-        )
-        return AnimationGroup(
-            anim,
+        return self.animate(
+            rate_func=there_and_back,
             **aargs,
-        )
+        ).set_fill(opacity=0.0)
+        # anim = UpdateFromAlphaFunc(
+        #     self.mob,
+        #     self._af_translate,
+        # )
+        # return AnimationGroup(
+        #     anim,
+        #     **aargs,
+        # )
 
     def tarnish(
         self,
