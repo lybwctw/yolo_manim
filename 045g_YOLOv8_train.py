@@ -119,7 +119,7 @@ class MainScene(ThreeDScene):
         self.play(AnimationGroup(
             *(conv.translate_convs(run_time=wt) for conv in conv_units),
             lag_ratio=0.1,
-            rate_func=smooth,
+            rate_func=rate_functions.ease_in_out_quad,
             run_time=wt*5,
         ))
         self.wait(wt)
