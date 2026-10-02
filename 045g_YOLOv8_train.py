@@ -129,3 +129,13 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
         ))
         self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            mm_modules, card, graph,
+            mt_input,
+            mt_22_box, mt_22_cls,
+            mt_23_box, mt_23_cls,
+            mt_24_box, mt_24_cls,
+        )
+        export_mobs(__file__, mobs)     # used by next
