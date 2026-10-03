@@ -13,6 +13,7 @@ DIR_TENSOR = os.path.join(DIR_ASSETS, 'ultralytics')
 DIR_PICKLE = os.path.join(DIR_ROOT, 'pickle')
 
 PATH_IMAGE_640 = os.path.join(DIR_IMAGES, 'sample_640x360.jpg')
+PATH_IMAGE_640_PAD = os.path.join(DIR_IMAGES, 'sample_640x640.jpg')
 PATH_IMAGE_960 = os.path.join(DIR_IMAGES, 'sample_960x540.jpg')
 PATH_IMAGE_1280 = os.path.join(DIR_IMAGES, 'sample_1280x720.jpg')
 PATH_LABEL = os.path.join(DIR_LABELS, 'labels.txt')

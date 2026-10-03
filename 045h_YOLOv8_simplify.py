@@ -27,9 +27,9 @@ TENSOR_VGAP_LARGE = 3.0
 
 INIT_SCALE = 0.5
 
-SCALE_FACTOR = 0.4
+SCALE_FACTOR = 0.25
 
-UNIT_BUFF = 1.5
+UNIT_BUFF = 0.7
 
 RUNNING_X = 6.0
 FAKE_HALF = 2/3
@@ -166,3 +166,12 @@ class MainScene(ThreeDScene):
             run_time=wt,
         )
         self.wait(wt)
+
+        # export
+        mobs = VGroup(
+            mt_input, mm_modules,
+            mt_22_box, mt_22_cls,
+            mt_23_box, mt_23_cls,
+            mt_24_box, mt_24_cls,
+        )
+        export_mobs(__file__, mobs)     # used by next
