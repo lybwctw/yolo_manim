@@ -12,48 +12,59 @@ TEXT_EN_CONFIG = {
     'color': WHITE,
 }
 TEXT_CN_CONFIG = {
+    'font': 'Source Han Sans SC',
+    'font_size': 32,
+    'color': WHITE,
 }
+
+STAGE_SCALE = 0.5
 
 wt = SHORT_DURATION
 class MainScene(Scene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'start with image and annotation',
+            'start with image',
             skip_animations=False,
         )
         # ************************************************************
-        sin_raw = ImageRaw(
-            path=PATH_IMAGE_640,        # fake 960
+        # pretend to be 960x540, but actually 640x360
+        iv_input = ImageRaw(
+            path=PATH_IMAGE_640,
             width_nominal=960,
             height_nominal=540,
-        ).scale(1.5)                    # half of frame height
-        annotation_bg = sin_raw.copy().fade(0.7)        # TODO: make this a constant
-        annotation = YoloAnnotation(
-            background=annotation_bg,
-            annotation=PATH_LABEL,
-        )
-        sout_final = Group(annotation_bg, annotation)
-        tin_raw = Text(
-            text='numbers',
-            **TEXT_EN_CONFIG,
-        ).shift(DOWN*10)
-        tout_final = Text(
-            text='numbers',
-            **TEXT_EN_CONFIG,
-        ).shift(DOWN*10)
-        
-        ac_a1 = ArrowComment(False, DOWN).shift(LEFT*10).scale(0.6)
-        ac_z9 = ArrowComment(False, UP).shift(RIGHT*10).scale(0.6)
-        ac_game = ArrowComment(False, RIGHT).set_opacity(0.0)
+        ).scale_to_fit_width(config.frame_width/2)
 
-        self.add(ac_game, annotation_bg, sin_raw)
-        self.wait(wt)
-        self.play(Write(
-            annotation,
+        self.play(FadeIn(
+            iv_input,
             run_time=wt,
         ))
         self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'object detection task',
+            skip_animations=False,
+        )
+        # ************************************************************
+        annotation = YoloAnnotation(
+            background=iv_input,
+            annotation=PATH_LABEL,
+        )
+        self.play(Write(
+            annotation,
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'switch frames, there and back',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO
 
         # ************************************************************
         self.next_section(
@@ -61,38 +72,67 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+        # prepare assets
+        annotation_bg = iv_input.copy().fade(0.6)
+        annotation.background = annotation_bg
+        iv_output = Group(annotation_bg, annotation)
+        ac_game = ArrowComment(False, RIGHT).set_opacity(0.0)
         mobs = Group(
-            sin_raw, ac_game, sout_final,
+            iv_input, ac_game, iv_output,
         )
         mobs.generate_target()
         mobs.target.arrange(
-            direction=RIGHT,
+            RIGHT,
             # buff=1.0,
-        ).scale(0.6)
+        ).scale(STAGE_SCALE).center()
         mobs.target[1].set_opacity(1.0)
+
+        # split animation
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
         
         # ************************************************************
         self.next_section(
-            'introduce tile_input and tile_output',
+            'turn into digit game',
             skip_animations=False,
         )
         # ************************************************************
+        # prepare assets
+        tv_input_cn = Text(
+            text='一堆数字',
+            **TEXT_CN_CONFIG,
+        ).shift(DOWN*10).set_x(
+            iv_input.get_x()
+        )
+        tv_output_cn = tv_input_cn.copy().set_x(
+            iv_output.get_x()
+        )
+        tv_input_en = Text(
+            text='values',
+            **TEXT_EN_CONFIG,
+        ).shift(DOWN*10).set_x(
+            iv_input.get_x()
+        )
+        tv_output_en = tv_input_en.copy().set_x(
+            iv_output.get_x()
+        )
+        ac_left = ArrowComment(False, DOWN).shift(LEFT*10).scale(STAGE_SCALE)
+        ac_right = ArrowComment(False, UP).shift(RIGHT*10).scale(STAGE_SCALE)
         mobs = Group(
-            sin_raw, Mobject(), sout_final,
-            ac_a1,   Mobject(), ac_z9,
-            tin_raw, ac_game,  tout_final,
+            iv_input, Mobject(), iv_output,
+            ac_left,   Mobject(), ac_right,
+            tv_input_cn, ac_game,  tv_output_cn,
         )
         mobs.generate_target()
         mobs.target.arrange_in_grid(
             rows=3,
             cols=3,
-            # buff=1.0,
         ).center()
+
+        # introduce animation
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
@@ -101,29 +141,28 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'focus on image_raw',
+            'export',
             skip_animations=False,
         )
         # ************************************************************
-        mobs.save_state()
-
-        mobs.generate_target()
-        mobs.target.arrange_in_grid(
-            rows=3,
-            cols=3,
-            buff=10.0,
-        )
-        mobs.target.shift(-mobs.target[0].get_center())
-        mobs.target[0].scale_to_fit_height(J000_IMAGE_HEIGHT)
-        self.play(MoveToTarget(
-            mobs,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        export_mobs(__file__, mobs, 'a')     # NOTE: used by 005
-
         mobs = Group(
-            sin_raw,
+            iv_input, iv_output,
+            ac_left,  ac_right,
+            tv_input_cn, ac_game,  tv_output_cn,
         )
-        export_mobs(__file__, mobs, 'b')     # NOTE: used by 001
+        export_mobs(__file__, mobs)
+
+        # focus on input
+        # mobs.generate_target()
+        # mobs.target.arrange_in_grid(
+        #     rows=3,
+        #     cols=3,
+        #     buff=10.0,
+        # )
+        # mobs.target.shift(-mobs.target[0].get_center())
+        # mobs.target[0].scale_to_fit_height(J000_IMAGE_HEIGHT)
+        # self.play(MoveToTarget(
+        #     mobs,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
