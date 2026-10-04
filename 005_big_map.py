@@ -46,7 +46,7 @@ class MainScene(Scene):
             expanded=False,
         ).scale(1.0).shift(DOWN*10).set_x(iv_input.get_x())
 
-        # replace abstract numbers with tensor
+        # replace abstract values with tensor
         mobs = Group(
             iv_input, Mobject(), iv_output,
             ac_left, Mobject(), ac_right,
@@ -105,32 +105,13 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'focus on annotation representation',
+            'export',
             skip_animations=False,
         )
         # ************************************************************
-
-        # ************************************************************
-        self.next_section(
-            'focus on annotation representation',
-            skip_animations=False,
-        )
-        # ************************************************************
-        mobs.generate_target()
-        mobs.target.arrange_in_grid(
-            rows=3,
-            cols=3,
-            buff=10.0,
-        )
-        mobs.target.shift(-mobs.target[2].get_center())
-        mobs.target[2].scale_to_fit_width(config.frame_width/2)
-        self.play(MoveToTarget(
-            mobs,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
         mobs = Group(
-            iv_output,
+            iv_input, iv_output,
+            ac_left, ac_right,
+            tv_input, ac_game, tv_output,
         )
         export_mobs(__file__, mobs)

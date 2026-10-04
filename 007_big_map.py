@@ -15,55 +15,56 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        mobs = import_mobs('006')
+        # mobs = import_mobs('006')
+        # (
+        #     sout_final, tout_final,
+        # ) = mobs
+        mobs = import_mobs('005')
         (
-            sout_final, tout_final,
+            iv_input, iv_output,
+            ac_left, ac_right,
+            tv_input, ac_game, _tv_output,
         ) = mobs
 
-        # init the rest of map based on loaded
-        sin_raw = sout_final[0].copy().move_to(LEFT*10)
-        sin_raw.image.set_opacity(1.0)      # can't change opacity directly
-
-        tin_raw = LayersFake(
-            ref=sin_raw,
-            width_nominal=960,
-            height_nominal=540,
-            buff=0.12,              # TODO: buff constants?
-            expanded=True,
-        ).scale(0.95).move_to(LEFT*10)
-
-        ac_a1 = ArrowComment(False, DOWN).move_to(LEFT*10).scale(0.8)
-        ac_z9 = ArrowComment(False, UP).move_to(RIGHT*10).scale(0.8)
-        ac_game = ArrowComment(False, RIGHT).move_to(DOWN*10).scale(0.8)
-
-        # for reference
         ac_all = VGroup(
-            ac_a1, ac_z9, ac_game
+            ac_left, ac_game, ac_right,
         )
 
-        # show starting mobs
         self.add(mobs)
         self.wait(wt)
 
-        # ***********************************************************
+        # ************************************************************
         self.next_section(
-            'back to big map',
+            'replace text result with tensor',
             skip_animations=False,
         )
         # ************************************************************
+        # prepare assets
+        tv_output = LayersFake(
+            n=1,
+            width=0.5,
+            height=1.5,
+            width_nominal=5,
+            height_nominal='n',
+            buff=0.12,      # useless
+            expanded=True,
+        ).shift(DOWN*10).set_x(iv_output.get_x())
+
+        # replace abstract values with tensor
         mobs = Group(
-            sin_raw, Mobject(), sout_final,
-            ac_a1,   Mobject(), ac_z9,
-            tin_raw, ac_game,   tout_final,
+            iv_input, Mobject(), iv_output,
+            ac_left, Mobject(), ac_right,
+            tv_input, ac_game, tv_output,
         )
         mobs.generate_target()
         mobs.target.arrange_in_grid(
             rows=3,
             cols=3,
-            buff=0.6,
-        ).scale(0.55).center()
-        self.play(MoveToTarget(
-            mobs,
+            # buff=1.0,
+        ).scale(1.0).center()
+        self.play(AnimationGroup(
+            MoveToTarget(mobs),
+            _tv_output.animate.shift(RIGHT*10),
             run_time=wt,
         ))
         self.wait(wt)
@@ -83,11 +84,11 @@ class MainScene(Scene):
         # show shapes
         self.play(AnimationGroup(
             ShowShape(
-                tin_raw,
+                tv_input,
                 text_config=MEDIUM_SHAPE_TEXT_CONFIG,
             ),
             ShowShape(
-                tout_final,
+                tv_output,
                 text_config=MEDIUM_SHAPE_TEXT_CONFIG,
             ),
             run_time=wt,
@@ -96,8 +97,8 @@ class MainScene(Scene):
 
         # hide shapes
         self.play(AnimationGroup(
-            HideShape(tin_raw),
-            HideShape(tout_final),
+            HideShape(tv_input),
+            HideShape(tv_output),
             run_time=wt,
         ))
         self.wait(wt)
@@ -110,29 +111,42 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'loop through different maps',
+            'loop through frames',
             skip_animations=False,
         )
         # ************************************************************
-        # TODO....
+        # TODO
 
         # ************************************************************
         self.next_section(
-            'focus on input of both views',
+            'export',
             skip_animations=False,
         )
         # ************************************************************
-        self.play(AnimationGroup(
-            sout_final.animate.shift(RIGHT*10),
-            ac_a1.animate.shift(LEFT*10),
-            ac_z9.animate.shift(RIGHT*10),
-            ac_game.animate.shift(RIGHT*10),
-            tout_final.animate.shift(RIGHT*10),
-            run_time=wt,
-        ))
-        self.wait(wt)
-
         mobs = Group(
-            sin_raw, tin_raw,
+            iv_input, iv_output,
+            ac_left, ac_right,
+            tv_input, ac_game, tv_output,
         )
-        export_mobs(__file__, mobs)     # NOTE: used by 008
+        export_mobs(__file__, mobs)
+
+        # # ************************************************************
+        # self.next_section(
+        #     'focus on input of both views',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # self.play(AnimationGroup(
+        #     sout_final.animate.shift(RIGHT*10),
+        #     ac_a1.animate.shift(LEFT*10),
+        #     ac_z9.animate.shift(RIGHT*10),
+        #     ac_game.animate.shift(RIGHT*10),
+        #     tout_final.animate.shift(RIGHT*10),
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # mobs = Group(
+        #     sin_raw, tin_raw,
+        # )
+        # export_mobs(__file__, mobs)     # NOTE: used by 008

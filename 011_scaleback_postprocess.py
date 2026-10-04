@@ -7,6 +7,9 @@ from utils.yolo_annotation import YoloAnnotation
 from utils.image_pad import ImagePad
 from utils.show_shape import ShowShape, HideShape
 
+SESSION_SCALE_1 = 0.9
+SESSION_SCALE_2 = 1.2
+
 ARROW_CONFIG = {
     'buff': 0.0,
     'stroke_width': 2.0,
@@ -18,97 +21,84 @@ class MainScene(Scene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'init from previous',
+            'init mobs',
             skip_animations=False,
         )
-        # new naming system for arrows:
-        # aci -> arrow comment for intuition view
-        # acm -> arrow comment in the mid
-        # act -> arrow comment for tensor view
         # ************************************************************
-        mobs = import_mobs('010')
+        mobs = import_mobs('008')
         (
-            sin_raw, aci_1, sin_norm, _,        sout_final,
-            acm_1,   _,     acm_2,    _,        acm_9,
-            tin_raw, act_1, tin_norm, act_game, tout_final,
+            iv_input, aci_1, iv_resize, aci_2, iv_pad, aci_3, iv_norm,           iv_output,
+            acm_1,           acm_2,            acm_3,         acm_4,             acm_9,
+            tv_input, act_1, tv_resize, act_2, tv_pad, act_3, tv_norm, act_game, tv_output,
         ) = mobs
-        
-        # sout_direct = sin_norm.copy().move_to(UP*5)
-        sout_direct = sout_final.copy().scale_to_fit_width(sin_norm.width)
-        direct_bg, direct_anno = sout_direct
-        direct_bg = ImagePad(
-            image_raw=direct_bg.set_opacity(1.0),
+
+        self.add(mobs)
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'insert scaled output before final output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        iv_output_scaled = iv_output.copy().scale_to_fit_width(iv_norm.width)
+        bg_scaled, anno_scaled = iv_output_scaled
+        bg_scaled = ImagePad(
+            image_raw=bg_scaled.set_opacity(1.0),
             width_nominal=640,
             height_nominal=360,
             padded=True,
         ).fade(0.7)             # TODO: make this a constant
-        direct_anno.background = direct_bg
-        sout_direct = Group(direct_bg, direct_anno).move_to(UP*5)
+        anno_scaled.background = bg_scaled
+        iv_output_scaled = Group(bg_scaled, anno_scaled).move_to(UP*20)
 
-        tout_direct = tout_final.copy().move_to(DOWN*5)
-        aci_9 = aci_1.copy().move_to(UP*5)
-        act_9 = act_1.copy().move_to(DOWN*5)
-        acm_8 = acm_9.copy().move_to(RIGHT*5)
+        tv_output_scaled = tv_output.copy().move_to(DOWN*20)
+        aci_9 = aci_1.copy().move_to(UP*20)
+        act_9 = act_1.copy().move_to(DOWN*20)
+        acm_8 = acm_9.copy().move_to(RIGHT*20)
 
-        self.add(mobs)
-        self.wait()
-
-        # ************************************************************
-        self.next_section(
-            'insert direct output before final output',
-            skip_animations=False,
-        )
-        # ************************************************************
         mobs = Group(
-            sin_raw, aci_1,     sin_norm, Mobject(), sout_direct, aci_9,     sout_final,
-            acm_1,   Mobject(), acm_2,    Mobject(), acm_8,       Mobject(), acm_9,
-            tin_raw, act_1,     tin_norm, act_game,  tout_direct, act_9,     tout_final,
+            iv_input, aci_1,     iv_resize, aci_2,     iv_pad, aci_3,     iv_norm,            iv_output_scaled, aci_9,     iv_output,
+            acm_1,               acm_2,                acm_3,             acm_4,              acm_8,                       acm_9,
+            tv_input, act_1,     tv_resize, act_2,     tv_pad, act_3,     tv_norm, act_game,  tv_output_scaled, act_9,     tv_output,
         )
-
         mobs.generate_target()
         mobs.target.arrange_in_grid(
             rows=3,
-            cols=7,
+            cols=11,
             # buff=0.3,
-        ).center().scale(0.9)
+        ).center().scale(SESSION_SCALE_1)
         
-        # tweak position of new mobs
-        sout_direct.align_to(mobs.target[4], LEFT)
-        aci_9.align_to(mobs.target[5], LEFT)
-        tout_direct.align_to(mobs.target[18], LEFT)
-        act_9.align_to(mobs.target[19], LEFT)
-
-        # insert direct output without annotation
-        # NOTE: first time bouncy effect
+        # insert scaled output
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
         ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'show mini axes for direct output and final output',
+            'show mini axes for scaled output and final output',
             skip_animations=False,
         )
         # ************************************************************
-        origin_direct = sout_direct.get_corner(UL)
-        width_direct = sout_direct.width
-        height_direct = sout_direct.height
-        origin_final = sout_final.get_corner(UL)
-        width_final = sout_final.width
-        height_final = sout_final.height
+        origin_scaled = iv_output_scaled.get_corner(UL)
+        width_scaled = iv_output_scaled.width
+        height_scaled = iv_output_scaled.height
+        origin_final = iv_output.get_corner(UL)
+        width_final = iv_output.width
+        height_final = iv_output.height
 
         axes_direct = VGroup(
             Arrow(
-                start=origin_direct,
-                end=origin_direct+(width_direct+0.2)*RIGHT,
+                start=origin_scaled,
+                end=origin_scaled+(width_scaled+0.2)*RIGHT,
                 **ARROW_CONFIG,
             ),
             Arrow(
-                origin_direct,
-                origin_direct+(height_direct+0.1)*DOWN,
+                origin_scaled,
+                origin_scaled+(height_scaled+0.1)*DOWN,
                 **ARROW_CONFIG,
             ),
         )
@@ -142,10 +132,57 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'loop through frames and back',
+            'loop through frames',
             skip_animations=False,
         )
         # ************************************************************
-        # TODO... loop
+        # TODO
 
-        export_mobs(__file__, mobs)         # NOTE: used by 012
+        # ************************************************************
+        self.next_section(
+            'simplified preprocess steps',
+            skip_animations=False,
+        )
+        # ************************************************************
+        mobs_up = Group(aci_1, iv_resize, aci_2, iv_pad)
+        mobs_mid = VGroup(acm_2, acm_3)
+        mobs_down = Group(act_1, tv_resize, act_2, tv_pad)
+
+        mobs = Group(
+            iv_input, aci_3,     iv_norm,            iv_output_scaled, aci_9,     iv_output,
+            acm_1,               acm_4,              acm_8,                       acm_9,
+            tv_input, act_3,     tv_norm, act_game,  tv_output_scaled, act_9,     tv_output,
+        )
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
+            rows=3,
+            cols=7,
+            # buff=0.3,
+        ).center().scale(SESSION_SCALE_2)
+
+        # simplify animation
+        self.play(AnimationGroup(
+            MoveToTarget(
+                mobs,
+                run_time=wt,
+            ),
+            mobs_up.animate.shift(UP*20),
+            mobs_down.animate.shift(DOWN*20),
+            Unwrite(mobs_mid),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'export',
+            skip_animations=False,
+        )
+        # ************************************************************
+        mobs = Group(
+            iv_input, aci_3, iv_norm,           iv_output_scaled, aci_9, iv_output,
+            acm_1,           acm_4,             acm_8,                   acm_9,
+            tv_input, act_3, tv_norm, act_game, tv_output_scaled, act_9, tv_output,
+        )
+        export_mobs(__file__, mobs)

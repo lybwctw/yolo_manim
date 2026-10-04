@@ -262,11 +262,49 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+        mobs = import_mobs('005')
         (
-            annotation,         # Group(ImagePad, YoloAnnotation)
-        ) = import_mobs('005')
+            iv_input, iv_output,
+            ac_left, ac_right,
+            tv_input, ac_game, tv_output,
+        ) = mobs
         
+        self.add(mobs)
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'focus on annotation',
+            skip_animations=False,
+        )
+        # ************************************************************
+        mobs = Group(
+            iv_input, Mobject(), iv_output,
+            ac_left, Mobject(), ac_right,
+            tv_input, ac_game, tv_output,
+        )
+        mobs.generate_target()
+        mobs.target.arrange_in_grid(
+            rows=3,
+            cols=3,
+            buff=10.0,
+        )
+        mobs.target.shift(-mobs.target[2].get_center())
+        mobs.target[2].scale_to_fit_width(config.frame_width/2)
+        self.play(MoveToTarget(
+            mobs,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'prepare assets',
+            skip_animations=False,
+        )
+        # ************************************************************
         # for fast reference
+        annotation = iv_output
         w_n = annotation[0].width_nominal
         h_n = annotation[0].height_nominal
         sanos = annotation[1].mobs
@@ -358,17 +396,6 @@ class MainScene(Scene):
             row_formatter=TABLE_RES_ROW_FORMATTER_NORM,
             row_values=annotation[1].cxywh_norm,
         )
-
-        # # result tensor
-        # tout_final = LayersFake(
-        #     n=1,
-        #     width=1.5,
-        #     height=2.5,
-        #     width_nominal=5,
-        #     height_nominal='n',
-        #     buff=0.12,      # useless
-        #     expanded=True,
-        # )
 
         # show background + annotation
         self.add(annotation)
@@ -663,7 +690,7 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
-            'loop through video frames',
+            'clean useless details',
             skip_animations=False,
         )
         # ************************************************************
@@ -684,4 +711,10 @@ class MainScene(Scene):
         ).set_y(annotation[0].get_y()))
         self.wait(wt)
 
-        # TODO: loop through frames
+        # ************************************************************
+        self.next_section(
+            'loop through frames',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # TODO
