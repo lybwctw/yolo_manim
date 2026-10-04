@@ -7,8 +7,8 @@ N_SAMPLES_S2 = 3
 N_SAMPLES_S3 = 3
 
 DEFAULT_TEXT_CONFIG = {
-    'font_size': 24,
     'font': "JetBrains Mono",
+    'font_size': 24,
 }
 
 wt = SHORT_DURATION

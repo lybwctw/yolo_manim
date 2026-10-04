@@ -258,8 +258,8 @@ class MainScene(Scene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'init mobs from previous',
-            skip_animations=True,
+            'init mobs',
+            skip_animations=False,
         )
         # ************************************************************
         (
@@ -359,16 +359,16 @@ class MainScene(Scene):
             row_values=annotation[1].cxywh_norm,
         )
 
-        # result tensor
-        tout_final = LayersFake(
-            n=1,
-            width=1.5,
-            height=2.5,
-            width_nominal=5,
-            height_nominal='n',
-            buff=0.12,      # useless
-            expanded=True,
-        )
+        # # result tensor
+        # tout_final = LayersFake(
+        #     n=1,
+        #     width=1.5,
+        #     height=2.5,
+        #     width_nominal=5,
+        #     height_nominal='n',
+        #     buff=0.12,      # useless
+        #     expanded=True,
+        # )
 
         # show background + annotation
         self.add(annotation)
@@ -377,7 +377,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'two aspects: position info and class info',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         labels = annotation[1].get_labels()
@@ -409,7 +409,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'position first, coord system for annotation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # temp assets
@@ -472,7 +472,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'key dots and coords',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # remove shape texts
@@ -514,7 +514,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'on class info: mapping table',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # focus on labels
@@ -541,7 +541,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxyxy_abs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # shift in cxyxy_abs
@@ -577,7 +577,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxywh_abs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # transform from cxyxy_abs into cxywh_abs
@@ -606,7 +606,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxyxy_norm',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # transform from cxywh_abs into cxyxy_norm
@@ -635,7 +635,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxywh_norm',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # transform from cxyxy_norm into cxywh_norm
@@ -685,22 +685,3 @@ class MainScene(Scene):
         self.wait(wt)
 
         # TODO: loop through frames
-
-        # ************************************************************
-        self.next_section(
-            'from numbers into fake tensor',
-            skip_animations=False,
-        )
-        # ************************************************************
-        tout_final.move_to(table_cxywh_norm)
-        self.play(ReplacementTransform(
-            table_cxywh_norm,
-            tout_final,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        mobs = Group(
-            annotation, tout_final
-        )
-        export_mobs(__file__, mobs)

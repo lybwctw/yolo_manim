@@ -32,7 +32,7 @@ class MainScene(ThreeDScene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'init all mobs',
+            'init mobs',
             skip_animations=False,
         )
         # ************************************************************
@@ -59,7 +59,7 @@ class MainScene(ThreeDScene):
             axis=axes,
             shape=N_CUBES,
             cube_config={
-                'side_length': 0.20,
+                'side_length': 0.30,
             },
         )
 
@@ -107,7 +107,7 @@ class MainScene(ThreeDScene):
         self.play(cubes.create(
             type='beam',
             direction=UP,
-            run_time=1.0,
+            run_time=wt,
         ))
         self.wait(wt)
 
@@ -312,7 +312,6 @@ class MainScene(ThreeDScene):
             about='theta',
         )
         self.wait(1.0)      # TODO: proper duration
-        # TODO: rotate R/G/B labels?
         self.stop_ambient_camera_rotation(
             about='theta',
         )

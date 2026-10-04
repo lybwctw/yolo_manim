@@ -11,7 +11,7 @@ class MainScene(Scene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'init partially from previous',
+            'init mobs',
             skip_animations=False,
         )
         # ************************************************************

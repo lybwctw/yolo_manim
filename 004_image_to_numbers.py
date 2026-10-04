@@ -1,5 +1,6 @@
 from manim import *
 from utils.constants import *
+
 from utils.general import import_mobs, export_mobs
 from utils.color_cell import load_central_cells
 
@@ -8,15 +9,15 @@ class MainScene(ThreeDScene):
     def construct(self) -> None:
         # ************************************************************
         self.next_section(
-            'init from previous',
+            'init mobs',
             skip_animations=False,
         )
         # ************************************************************
         (
-            sin_raw, cells
+            iv_input,
+            cells,
         ) = import_mobs('001')
 
-        # FIXME: to do with 360/2
         focus_cells = load_central_cells(
             PATH_IMAGE_640,
             rows=8,
@@ -24,21 +25,22 @@ class MainScene(ThreeDScene):
             target_height=config.frame_height/2,
         )
 
+        self.add(cells, focus_cells)
+        self.wait(wt)
+
         # ************************************************************
         self.next_section(
             'focus on central cells',
             skip_animations=False,
         )
         # ************************************************************
-        self.add(cells, focus_cells)
-        self.wait(wt)
         self.play(FadeOut(
             cells,
             run_time=wt,
         ))
         self.wait(wt)
 
-        # adjust perspective
+        # new perspective
         self.move_camera(
             phi=60*DEGREES,
             theta=-75*DEGREES,
@@ -184,15 +186,15 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        self.bring_to_back(sin_raw)
+        self.bring_to_back(iv_input)
         self.play(Unwrite(
             cells,
             run_time=wt,
         ))
         self.wait(wt)
-        self.play(sin_raw.animate(
+        self.play(iv_input.animate(
             run_time=wt,
-        ).scale_to_fit_height(J000_IMAGE_HEIGHT))
+        ).scale_to_fit_width(config.frame_width/2))
         self.wait(wt)
 
         # # ************************************************************
@@ -202,6 +204,6 @@ class MainScene(ThreeDScene):
         # )
         # # ************************************************************
         # mobs = Group(
-        #     sin_raw,
+        #     iv_input,
         # )
         # export_mobs(__file__, mobs)

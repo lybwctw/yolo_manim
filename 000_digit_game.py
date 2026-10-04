@@ -1,7 +1,7 @@
 from manim import *
 from utils.constants import *
+
 from utils.image_raw import ImageRaw
-from utils.image_pad import ImagePad
 from utils.arrow_comment import ArrowComment
 from utils.yolo_annotation import YoloAnnotation
 from utils.general import export_mobs
@@ -17,7 +17,7 @@ TEXT_CN_CONFIG = {
     'color': WHITE,
 }
 
-STAGE_SCALE = 0.5
+SESSION_SCALE = 0.5
 
 wt = SHORT_DURATION
 class MainScene(Scene):
@@ -84,7 +84,7 @@ class MainScene(Scene):
         mobs.target.arrange(
             RIGHT,
             # buff=1.0,
-        ).scale(STAGE_SCALE).center()
+        ).scale(SESSION_SCALE).center()
         mobs.target[1].set_opacity(1.0)
 
         # split animation
@@ -119,8 +119,8 @@ class MainScene(Scene):
         tv_output_en = tv_input_en.copy().set_x(
             iv_output.get_x()
         )
-        ac_left = ArrowComment(False, DOWN).shift(LEFT*10).scale(STAGE_SCALE)
-        ac_right = ArrowComment(False, UP).shift(RIGHT*10).scale(STAGE_SCALE)
+        ac_left = ArrowComment(False, DOWN).shift(LEFT*10).scale(SESSION_SCALE)
+        ac_right = ArrowComment(False, UP).shift(RIGHT*10).scale(SESSION_SCALE)
         mobs = Group(
             iv_input, Mobject(), iv_output,
             ac_left,   Mobject(), ac_right,
@@ -147,22 +147,7 @@ class MainScene(Scene):
         # ************************************************************
         mobs = Group(
             iv_input, iv_output,
-            ac_left,  ac_right,
-            tv_input_cn, ac_game,  tv_output_cn,
+            ac_left, ac_right,
+            tv_input_cn, ac_game, tv_output_cn,
         )
         export_mobs(__file__, mobs)
-
-        # focus on input
-        # mobs.generate_target()
-        # mobs.target.arrange_in_grid(
-        #     rows=3,
-        #     cols=3,
-        #     buff=10.0,
-        # )
-        # mobs.target.shift(-mobs.target[0].get_center())
-        # mobs.target[0].scale_to_fit_height(J000_IMAGE_HEIGHT)
-        # self.play(MoveToTarget(
-        #     mobs,
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)

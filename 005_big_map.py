@@ -1,5 +1,6 @@
 from manim import *
 from utils.constants import *
+
 from utils.general import import_mobs, export_mobs
 from utils.yolo_annotation import YoloAnnotation
 from utils.arrow_comment import ArrowComment
@@ -15,32 +16,18 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        mobs = import_mobs('000', 'a')
+        mobs = import_mobs('000')
         (
-            sin_raw,        _, sout_final,
-            ac_a1,          _, ac_z9,
-            _tin_raw, ac_game, tout_final,
+            iv_input, iv_output,
+            ac_left, ac_right,
+            _tv_input, ac_game, tv_output,
         ) = mobs
 
         ac_mobs = VGroup(
-            ac_a1, ac_z9, ac_game,
+            ac_left, ac_right, ac_game,
         )
 
-        # ************************************************************
-        self.next_section(
-            'from focused raw to big map',
-            skip_animations=False,
-        )
-        # ************************************************************
         self.add(mobs)
-        self.wait(wt)
-
-        # animate.restore failed
-        self.play(Transform(
-            mobs,
-            mobs.saved_state,
-            run_time=wt,
-        ))
         self.wait(wt)
 
         # ************************************************************
@@ -50,33 +37,33 @@ class MainScene(Scene):
         )
         # ************************************************************
         # real time tensor size
-        tin_raw = LayersFake(
+        tv_input = LayersFake(
             n=3,
-            ref=sin_raw,
+            ref=iv_input,
             width_nominal=960,
             height_nominal=540,
-            buff=0.12,
+            buff=0.05,
             expanded=False,
-        ).scale(0.95).shift(DOWN*10)
+        ).scale(1.0).shift(DOWN*10).set_x(iv_input.get_x())
 
         # replace abstract numbers with tensor
         mobs = Group(
-            sin_raw, Mobject(), sout_final,
-            ac_a1,   Mobject(), ac_z9,
-            tin_raw, ac_game,   tout_final,
+            iv_input, Mobject(), iv_output,
+            ac_left, Mobject(), ac_right,
+            tv_input, ac_game, tv_output,
         )
         mobs.generate_target()
         mobs.target.arrange_in_grid(
             rows=3,
             cols=3,
             # buff=1.0,
-        ).scale(0.8).center()
+        ).scale(1.0).center()
         self.play(AnimationGroup(
             MoveToTarget(mobs),
-            _tin_raw.animate.shift(LEFT*10),
+            _tv_input.animate.shift(LEFT*10),
             run_time=wt,
         ))
-        self.play(tin_raw.expand(
+        self.play(tv_input.expand(
             run_time=wt,
         ))
         self.wait(wt)
@@ -93,7 +80,7 @@ class MainScene(Scene):
                 mob,
                 text_config=MEDIUM_SHAPE_TEXT_CONFIG,
                 aargs={'run_time': wt},
-            ) for mob in (sin_raw, tin_raw)),
+            ) for mob in (iv_input, tv_input)),
             lag_ratio=0.0,
             run_time=wt,
         ))
@@ -104,7 +91,7 @@ class MainScene(Scene):
             *(HideShape(
                 mob,
                 aargs={'run_time': wt},
-            ) for mob in (sin_raw, tin_raw)),
+            ) for mob in (iv_input, tv_input)),
             lag_ratio=0.0,
             run_time=wt,
         ))
@@ -122,6 +109,13 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
+
+        # ************************************************************
+        self.next_section(
+            'focus on annotation representation',
+            skip_animations=False,
+        )
+        # ************************************************************
         mobs.generate_target()
         mobs.target.arrange_in_grid(
             rows=3,
@@ -129,7 +123,7 @@ class MainScene(Scene):
             buff=10.0,
         )
         mobs.target.shift(-mobs.target[2].get_center())
-        mobs.target[2].scale_to_fit_height(J005_ANNO_HEIGHT)
+        mobs.target[2].scale_to_fit_width(config.frame_width/2)
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
@@ -137,6 +131,6 @@ class MainScene(Scene):
         self.wait(wt)
 
         mobs = Group(
-            sout_final,
+            iv_output,
         )
-        export_mobs(__file__, mobs)     # NOTE: used by 006
+        export_mobs(__file__, mobs)

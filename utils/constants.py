@@ -48,9 +48,9 @@ BIG_SHAPE_TEXT_CONFIG = {
     'color': WHITE,
 }
 
-# joint constants between scenes
-J000_IMAGE_HEIGHT = 4.0
-J005_ANNO_HEIGHT = 4.0
+# # joint constants between scenes
+# J000_IMAGE_HEIGHT = 4.0
+# J005_ANNO_HEIGHT = 4.0
 
 # anchor point related
 DIRECTION_SERIES = [
