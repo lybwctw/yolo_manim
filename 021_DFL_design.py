@@ -21,7 +21,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True).set_opacity(0.1)

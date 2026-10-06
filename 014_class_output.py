@@ -70,7 +70,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and and explainer new',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -112,7 +112,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'multiple prob prediction thinking',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show anchor points
@@ -153,7 +153,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'expected inside anchor point pbars',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # hide pbars, back to anchor points
@@ -255,7 +255,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prob: explainer to tensor',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # scale and shift explainer
@@ -299,7 +299,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'reshape prob tensor to 2d version',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make room for reshaped xyxy tensor
@@ -324,7 +324,7 @@ class MainScene(Scene):
                 tensor_prob_2d, tensor_prob_2d_target
             )),
             lag_ratio=0.5,
-            run_time=wt,                    # NOTE: make this long
+            run_time=wt*4,                    # NOTE: make this long
             rate_func=rate_functions.ease_in_circ,
         ))
         self.wait(wt)
@@ -438,7 +438,7 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*10).set_color(PURE_RED)
+        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*10)
         act_9 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*5)
         acm_8 = ArrowComment(True, DOWN).scale(0.8).move_to(RIGHT*10)
 
@@ -457,7 +457,7 @@ class MainScene(Scene):
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
         ))
         self.wait(wt)
 
@@ -479,7 +479,7 @@ class MainScene(Scene):
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
         ))
         self.wait(wt)
 

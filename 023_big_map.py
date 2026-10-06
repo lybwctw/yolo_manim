@@ -16,7 +16,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mobs = import_mobs('020')
@@ -42,7 +42,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert s32_reg in intuition view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of s32_offset
@@ -84,7 +84,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert t32_distrib in tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # shift mat_1 to make room

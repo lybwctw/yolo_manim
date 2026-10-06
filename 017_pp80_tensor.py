@@ -24,7 +24,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'start with xyxyccc',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -57,7 +57,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply take max',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor_cmax = tensor_raw.into_take_max(
@@ -80,7 +80,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply conf filter',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor_conf = tensor_cmax.into_filter_conf(
@@ -104,7 +104,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply class split',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensors_split = tensor_conf.into_splitted(
@@ -133,7 +133,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sort each class',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensors_sort = []
@@ -163,7 +163,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'NMS each class',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.wait(1.0)

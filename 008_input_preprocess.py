@@ -287,7 +287,7 @@ class MainScene(Scene):
             ac_ref_lr.copy().move_to(DOWN*20),
             ac_ref_lr.copy().move_to(DOWN*20),
         )
-        ac_game = ac_ref_lr.copy().move_to(DOWN*20).set_color(PURE_RED)
+        ac_game = ac_ref_lr.copy().move_to(DOWN*20)
         ac_a1, ac_b2, ac_c3, ac_d4, ac_z9 = (
             ac_ref_ud.copy().move_to(LEFT*20),
             ac_ref_ud.copy().move_to(LEFT*20),

@@ -22,7 +22,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # NOTE: import from 2d scene failed.
@@ -50,7 +50,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show probcells for sample anchor point',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         sap, oaps = e32.random_ap(COMPUTE_IDX)
@@ -78,7 +78,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'stack probcells in 3d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.move_camera(
@@ -99,7 +99,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'loop through several samples',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         sample_idxs = random_path(

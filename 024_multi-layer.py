@@ -21,7 +21,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init [b/e/s][8/16/32]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # NOTE: b->background, e->explainer, s->system
@@ -63,7 +63,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'hard examples for stride 32',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO
@@ -71,7 +71,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'instroduce stride 8/16 background',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mobs = Group(b8, b16, s32)
@@ -90,7 +90,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'instroduce 8/16 anchor points capture',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
 
@@ -130,7 +130,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'back to dots for stride 8/16/32',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(

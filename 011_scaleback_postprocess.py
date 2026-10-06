@@ -58,8 +58,8 @@ class MainScene(Scene):
         acm_8 = acm_9.copy().move_to(RIGHT*20)
 
         mobs = Group(
-            iv_input, aci_1,     iv_resize, aci_2,     iv_pad, aci_3,     iv_norm,            iv_output_scaled, aci_9,     iv_output,
-            acm_1,               acm_2,                acm_3,             acm_4,              acm_8,                       acm_9,
+            iv_input, aci_1,     iv_resize, aci_2,     iv_pad, aci_3,     iv_norm, Mobject(), iv_output_scaled, aci_9,     iv_output,
+            acm_1,    Mobject(), acm_2,     Mobject(), acm_3,  Mobject(), acm_4,   Mobject(), acm_8,            Mobject(), acm_9,
             tv_input, act_1,     tv_resize, act_2,     tv_pad, act_3,     tv_norm, act_game,  tv_output_scaled, act_9,     tv_output,
         )
         mobs.generate_target()
@@ -149,8 +149,8 @@ class MainScene(Scene):
         mobs_down = Group(act_1, tv_resize, act_2, tv_pad)
 
         mobs = Group(
-            iv_input, aci_3,     iv_norm,            iv_output_scaled, aci_9,     iv_output,
-            acm_1,               acm_4,              acm_8,                       acm_9,
+            iv_input, aci_3,     iv_norm, Mobject(), iv_output_scaled, aci_9,     iv_output,
+            acm_1,    Mobject(), acm_4,   Mobject(), acm_8,            Mobject(), acm_9,
             tv_input, act_3,     tv_norm, act_game,  tv_output_scaled, act_9,     tv_output,
         )
         mobs.generate_target()

@@ -39,7 +39,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'update col 1 and col 3 with [-140] operator',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         tensor_nms = import_mobs('017')
@@ -108,7 +108,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'update col 0, 1, 2, 3 with [*1.5] operator',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # create four [*1.5] operators for xyxy
@@ -165,7 +165,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'check boundary with check operators',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # prepare operators
@@ -293,7 +293,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'clip into boundary with clip operators',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # prepare operators

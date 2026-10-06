@@ -15,7 +15,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mobs = import_mobs('023')
@@ -30,7 +30,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'remove tails',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -44,7 +44,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert stride-8 and stride-16 series',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # init stride-8 series in intuition view
@@ -139,7 +139,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'expand everything',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # realtime label width and height
@@ -232,7 +232,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'combine multiple systems into one',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of arrow
@@ -275,7 +275,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'combine multiple tensors into one',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of arrow
@@ -330,7 +330,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'result after decode and before postprocess',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make room in the right
@@ -364,7 +364,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply max selection',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # intuition view
@@ -386,7 +386,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply conf, nms, scale back',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # conf filter
@@ -430,7 +430,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor shapes',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # mobs = Group(
