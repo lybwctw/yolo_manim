@@ -20,7 +20,7 @@ DOT_CONFIG = {
 
 RECT_CONFIG = {
     'fill_opacity': 0.0,
-    'stroke_width': 2,
+    'stroke_width': 1.0,
     'stroke_color': WHITE,
 }
 
@@ -80,7 +80,7 @@ LABEL_BG_CONFIG = {
 
 # ------------- coords related --------------
 COORDS_PATH_CONFIG = {
-    'color': PURE_YELLOW,
+    'color': GRAY,
     'width': 3,
     'opacity': 1.0,
 }

@@ -98,6 +98,8 @@ class MainScene(Scene):
                 run_time=wt,
             ).stretch_to_fit_height(
                 tv_otuput_unfiltered.height*1.5,
+            ).stretch_to_fit_width(
+                tv_otuput_unfiltered.width*1.5,
             ),
             tv_output_scaled.animate(
                 run_time=wt,
@@ -110,7 +112,8 @@ class MainScene(Scene):
                 tv_otuput_unfiltered.height*0.7,
             ),
         ))
-        tv_otuput_unfiltered.height_nominal = '?' # unknown direct number
+        tv_otuput_unfiltered.width_nominal = '?' # unknown output width
+        tv_otuput_unfiltered.height_nominal = '?' # unknown output height
         self.wait(wt)
 
         # # ************************************************************
@@ -177,7 +180,7 @@ class MainScene(Scene):
         # fade arrows
         ac_all.save_state()
         self.play(ac_all.animate(
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ).fade(0.8))
         self.wait(wt)
@@ -208,7 +211,7 @@ class MainScene(Scene):
         
         # restore arrows
         self.play(ac_all.animate(
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ).restore())
         self.wait(wt)

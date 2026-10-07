@@ -119,8 +119,8 @@ class MainScene(Scene):
         tv_output_en = tv_input_en.copy().set_x(
             iv_output.get_x()
         )
-        ac_left = ArrowComment(False, DOWN).shift(LEFT*10).scale(SESSION_SCALE)
-        ac_right = ArrowComment(False, UP).shift(RIGHT*10).scale(SESSION_SCALE)
+        ac_left = ArrowComment(True, DOWN).shift(LEFT*10).scale(SESSION_SCALE)
+        ac_right = ArrowComment(True, UP).shift(RIGHT*10).scale(SESSION_SCALE)
         mobs = Group(
             iv_input, Mobject(), iv_output,
             ac_left,   Mobject(), ac_right,

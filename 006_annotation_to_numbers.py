@@ -14,7 +14,7 @@ from typing import Callable
 # coord system
 TEXT_CONFIG = {
     'font': 'JetBrains Mono',
-    'font_size': 20,
+    'font_size': 15,
     'color': WHITE,
 }
 DOT_CONFIG = {
@@ -23,11 +23,11 @@ DOT_CONFIG = {
 }
 
 # class mapping table
-TABLE_MAP_CONFIG = {'font_size': 18, 'color': GRAY}
+TABLE_MAP_CONFIG = {'font_size': 15, 'color': GRAY}
 
 # result data table
-TABLE_RES_HEAD_CONFIG = {'font_size': 18, 'color': GRAY}
-TABLE_RES_ROW_CONFIG = {'font_size': 18, 'color': WHITE}
+TABLE_RES_HEAD_CONFIG = {'font_size': 15, 'color': GRAY}
+TABLE_RES_ROW_CONFIG = {'font_size': 15, 'color': WHITE}
 TABLE_RES_HEAD_FORMATTER = '{:<6s} {:<6s} {:<6s} {:<6s} {:<6s}'
 TABLE_RES_HEAD_VALUES_XYXY = ['class', 'x1', 'y1', 'x2', 'y2']
 TABLE_RES_HEAD_VALUES_XYWH = ['class', 'cx', 'cy', 'w', 'h']
@@ -37,7 +37,7 @@ TABLE_RES_ROW_FORMATTER_ABS = '{:<6d} {:<6d} {:<6d} {:<6d} {:<6d}'
 # path
 PATH_STROKE_CONFIG = {
     'width': 3,
-    'color': PURE_YELLOW,
+    'color': GRAY,
     'opacity': 1.0,
 }
 
@@ -259,7 +259,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mobs = import_mobs('005')
@@ -275,7 +275,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on annotation',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mobs = Group(
@@ -300,7 +300,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prepare assets',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # for fast reference
@@ -317,20 +317,20 @@ class MainScene(Scene):
             y_length=annotation.height+0.5,
             x_axis_config={
                 'include_ticks': False,
-                'tip_width': 0.2,
-                'tip_height': 0.2,
+                'tip_width': 0.1,
+                'tip_height': 0.1,
                 'scaling': LinearBase(100),
             },
             y_axis_config={
                 'include_ticks': False,
-                'tip_width': 0.2,
-                'tip_height': 0.2,
+                'tip_width': 0.1,
+                'tip_height': 0.1,
                 'scaling': LinearBase(100),
             },
             img_rotate=True,
-        ).fade(0.5)
+        ).fade(0.0)
         axes.shift(annotation.get_corner(UL) - axes.get_origin())
-        ax_labels = axes.get_axis_labels().scale(0.8).fade(0.5)
+        ax_labels = axes.get_axis_labels().scale(0.6).fade(0.0)
         ax_labels[0].next_to(axes.x_axis, RIGHT)
         ax_labels[1].next_to(axes.y_axis, DOWN)
         # key dots
@@ -368,7 +368,7 @@ class MainScene(Scene):
             ) for idx, name in enumerate(KK_NAMES)
         ).arrange(
             DOWN,
-            buff=0.3,
+            buff=0.2,
             aligned_edge=LEFT,
         ).to_corner(
             UR,
@@ -404,7 +404,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'two aspects: position info and class info',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         labels = annotation[1].get_labels()
@@ -436,7 +436,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'position first, coord system for annotation',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # temp assets
@@ -444,12 +444,12 @@ class MainScene(Scene):
         path_left.set_points_as_corners([
             annotation.get_corner(UR),
             annotation.get_corner(UL),
-        ]).set_stroke(color=ManimColor("#FFFF00"))  # pure yellow
+        ]).set_stroke(color=WHITE)  # pure yellow
         path_up = VMobject()
         path_up.set_points_as_corners([
             annotation.get_corner(DL),
             annotation.get_corner(UL),
-        ]).set_stroke(color=ManimColor("#FFFF00"))  # pure yellow
+        ]).set_stroke(color=WHITE)  # pure yellow
         shape_w = Text(
             str(w_n),   # from background
             **TEXT_CONFIG,
@@ -499,7 +499,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'key dots and coords',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # remove shape texts
@@ -541,7 +541,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'on class info: mapping table',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # focus on labels
@@ -568,7 +568,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxyxy_abs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # shift in cxyxy_abs
@@ -604,7 +604,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxywh_abs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # transform from cxyxy_abs into cxywh_abs
@@ -633,7 +633,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxyxy_norm',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # transform from cxywh_abs into cxyxy_norm
@@ -662,7 +662,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'loop on digitalization: cxywh_norm',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # transform from cxyxy_norm into cxywh_norm
@@ -711,10 +711,10 @@ class MainScene(Scene):
         ).set_y(annotation[0].get_y()))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'loop through frames',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # TODO
+        # # ************************************************************
+        # self.next_section(
+        #     'loop through frames',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # # TODO

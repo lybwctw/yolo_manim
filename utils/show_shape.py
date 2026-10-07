@@ -2,7 +2,7 @@ from manim import *
 from typing import Any
 
 DEFAULT_SHAPE_PATH_CONFIG = {
-    'color': PURE_YELLOW,
+    'color': GRAY,
     'width': 3,
     'opacity': 1.0,
 }

@@ -16,7 +16,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mobs = import_mobs('007')
@@ -32,7 +32,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'focus on input of both views',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -48,7 +48,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'resize iv_input from intuition view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         iv_resize = iv_input.copy()     # ImageRaw
@@ -70,7 +70,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'resize tv_input from tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ***********************************************************
         tv_resize = tv_input.copy()
@@ -97,7 +97,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'clean shapes and make room in the right',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -121,7 +121,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'pad iv_resize in intuition view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of resized image
@@ -154,7 +154,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'pad tv_resize in tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of resized tensor
@@ -183,7 +183,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'clean shapes and make room in the right',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -207,7 +207,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'implicit new norm in tensor view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of pad tensor
@@ -219,10 +219,10 @@ class MainScene(Scene):
 
         # show shapes for tensor view
         self.play(AnimationGroup(
-            ShowShape(tv_input, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
-            ShowShape(tv_resize, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
-            ShowShape(tv_pad, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
-            ShowShape(tv_norm, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
+            ShowShape(tv_input, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(tv_resize, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(tv_pad, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(tv_norm, text_config=SMALL_SHAPE_TEXT_CONFIG),
             lag_ratio=0.0,
             run_time=wt,
         ))
@@ -231,7 +231,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'implicit new norm in intuition view',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # make a copy of pad image
@@ -243,10 +243,10 @@ class MainScene(Scene):
 
         # show shapes for intuition view
         self.play(AnimationGroup(
-            ShowShape(iv_input, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
-            ShowShape(iv_resize, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
-            ShowShape(iv_pad, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
-            ShowShape(iv_norm, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
+            ShowShape(iv_input, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(iv_resize, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(iv_pad, text_config=SMALL_SHAPE_TEXT_CONFIG),
+            ShowShape(iv_norm, text_config=SMALL_SHAPE_TEXT_CONFIG),
             lag_ratio=0.0,
             run_time=wt,
         ))
@@ -255,7 +255,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'clean shapes',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -269,7 +269,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'prepare assets for big map',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         iv_output.scale(SESSION_SCALE_1)

@@ -15,10 +15,6 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        # mobs = import_mobs('006')
-        # (
-        #     sout_final, tout_final,
-        # ) = mobs
         mobs = import_mobs('005')
         (
             iv_input, iv_output,
@@ -51,23 +47,35 @@ class MainScene(Scene):
         ).shift(DOWN*10).set_x(iv_output.get_x())
 
         # replace abstract values with tensor
-        mobs = Group(
-            iv_input, Mobject(), iv_output,
-            ac_left, Mobject(), ac_right,
-            tv_input, ac_game, tv_output,
-        )
-        mobs.generate_target()
-        mobs.target.arrange_in_grid(
-            rows=3,
-            cols=3,
-            # buff=1.0,
-        ).scale(1.0).center()
         self.play(AnimationGroup(
-            MoveToTarget(mobs),
-            _tv_output.animate.shift(RIGHT*10),
+            tv_output.animate.next_to(
+                ac_right, DOWN,
+                buff=0.6,
+            ),
+            _tv_output.animate.shift(
+                RIGHT*10,
+            ),
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
+        # mobs = Group(
+        #     iv_input, Mobject(), iv_output,
+        #     ac_left, Mobject(), ac_right,
+        #     tv_input, ac_game, tv_output,
+        # )
+        # mobs.generate_target()
+        # mobs.target.arrange_in_grid(
+        #     rows=3,
+        #     cols=3,
+        #     # buff=1.0,
+        # ).scale(1.0).center()
+        # self.play(AnimationGroup(
+        #     MoveToTarget(mobs),
+        #     _tv_output.animate.shift(RIGHT*10),
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -129,24 +137,3 @@ class MainScene(Scene):
             tv_input, ac_game, tv_output,
         )
         export_mobs(__file__, mobs)
-
-        # # ************************************************************
-        # self.next_section(
-        #     'focus on input of both views',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # self.play(AnimationGroup(
-        #     sout_final.animate.shift(RIGHT*10),
-        #     ac_a1.animate.shift(LEFT*10),
-        #     ac_z9.animate.shift(RIGHT*10),
-        #     ac_game.animate.shift(RIGHT*10),
-        #     tout_final.animate.shift(RIGHT*10),
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
-
-        # mobs = Group(
-        #     sin_raw, tin_raw,
-        # )
-        # export_mobs(__file__, mobs)     # NOTE: used by 008

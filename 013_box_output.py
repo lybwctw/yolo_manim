@@ -24,6 +24,7 @@ AP_DOT_CONFIG_OTHERS = {
 AP_RECT_CONFIG_FOCUS = {
     'stroke_color': WHITE,
     'stroke_opacity': 1.0,
+    'stroke_width': 1.0,
 }
 AP_RECT_CONFIG_OTHERS = {
     'stroke_color': GRAY,
@@ -61,13 +62,13 @@ TENSOR_OFFSET_CONFIG = {
     'side_length': 0.15,
     'stroke_width': 2.0,
     'stroke_opacity': 1.0,
-    'fill_opacity': 0.7,
+    'fill_opacity': 1.0,
 }
 TENSOR_XYXY_CONFIG = {
     'side_length': 0.15,
     'stroke_width': 2.0,
     'stroke_opacity': 1.0,
-    'fill_opacity': 0.7,
+    'fill_opacity': 1.0,
 }
 TENSOR_XYXY_2D_CONFIG = {
     'line_width': 0.3,
@@ -78,7 +79,7 @@ TENSOR_XYXY_2D_CONFIG = {
 TENSOR_BUFF_RATIO = 0.5
 
 # ---------------- computation related -------------------
-COMPUTATION_FONT_SIZE = 20
+COMPUTATION_FONT_SIZE = 15
 COMPUTATION_LINE_BUFF = 0.5
 COMPUTATION_BASE_COLOR = GRAY
 
@@ -88,7 +89,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init background and explainer anew',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         background = ImagePad(padded=True)
@@ -130,7 +131,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'anchor points capture thinking',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show grid then anchor points
@@ -145,7 +146,7 @@ class MainScene(Scene):
         ))
         self.wait(wt)
         self.play(explainer.hide_grid(
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
@@ -170,7 +171,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'expected inside anchor point capture',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show true annotation
@@ -216,7 +217,7 @@ class MainScene(Scene):
         self.play(AnimationGroup(
             *(ap.to_rect(rect_config=AP_RECT_CONFIG_FOCUS,
             ) for ap in aps_in),
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
@@ -225,7 +226,7 @@ class MainScene(Scene):
         self.play(AnimationGroup(
             *(ap.to_rect(rect_config=AP_RECT_CONFIG_OTHERS,
             ) for ap in aps_out),
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
@@ -239,7 +240,7 @@ class MainScene(Scene):
         self.wait(wt)
 
         # remove annotation
-        self.play(Unwrite(
+        self.play(FadeOut(
             annotation,
             lag_ratio=0.0,
             run_time=wt,
@@ -249,7 +250,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, xyxy output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # focus on sample anchor point
@@ -306,7 +307,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, offset output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show arrows
@@ -405,7 +406,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'sample, normed offset output',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # show divides for arrow offsets
@@ -472,7 +473,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'OPTIONAL: loop through several samples',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         sample_idxs = random.sample(
@@ -553,7 +554,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'explainer: two initial explainers',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # scale and shift explainer
@@ -579,7 +580,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'offset: explainer to tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # synced creation: arrows + tensor
@@ -606,7 +607,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'xyxy: explainer to tensor',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # synced creation: rects + tensors
@@ -633,7 +634,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'reshape xyxy tensor to 2d version',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make room for reshaped xyxy tensor
@@ -669,7 +670,7 @@ class MainScene(Scene):
         self.next_section(
             'simplify tensor_offset/tensor_xyxy/tensor_xyxy_2d' \
             'into t32_offset/t32_xyxy/t32_xyxy_2d',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # replace tensor_offset with t32_offset
@@ -754,7 +755,7 @@ class MainScene(Scene):
             'simplify system_offset and system_xyxy ' \
             'into s32_offset and s32_xyxy' \
             '4x4 mini version',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # clean up system_offset and system_xyxy
@@ -801,10 +802,10 @@ class MainScene(Scene):
         # show anchor points of new explainers
         self.play(AnimationGroup(
             e32_offset.show_anchor_points(
-                lag_ratio=0.5,
+                lag_ratio=0.0,
             ),
             e32_xyxy.show_anchor_points(
-                lag_ratio=0.5,
+                lag_ratio=0.0,
             ),
             run_time=wt,
         ))
@@ -832,12 +833,12 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*10)
-        aci_8 = ArrowComment(False, RIGHT).scale(0.8).move_to(UP*5)
-        act_8 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*5)
-        act_9 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*5)
-        acm_7 = ArrowComment(True, DOWN).scale(0.8).move_to(LEFT*10)
-        acm_8 = ArrowComment(True, DOWN).scale(0.8).move_to(RIGHT*10)
+        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*20)
+        aci_8 = ArrowComment(False, RIGHT).scale(0.8).move_to(UP*20)
+        act_8 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*20)
+        act_9 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*20)
+        acm_7 = ArrowComment(True, DOWN).scale(0.8).move_to(LEFT*20)
+        acm_8 = ArrowComment(True, DOWN).scale(0.8).move_to(RIGHT*20)
 
         # show big map without s32_xyxy_2d
         mobs = Group(
@@ -859,9 +860,9 @@ class MainScene(Scene):
         self.wait(wt)
 
         # introduce s32_xyxy_2d
-        aci_9 = aci_8.copy().move_to(UP*5)
-        acm_9 = acm_8.copy().move_to(RIGHT*5)
-        s32_xyxy_2d = s32_xyxy.copy().move_to(UP*5)
+        aci_9 = aci_8.copy().move_to(UP*20)
+        acm_9 = acm_8.copy().move_to(RIGHT*20)
+        s32_xyxy_2d = s32_xyxy.copy().move_to(UP*20)
         mobs = Group(
             Mobject(), s32_offset, aci_8,     s32_xyxy, aci_9,     s32_xyxy_2d,
             Mobject(), acm_7,      Mobject(), acm_8,    Mobject(), acm_9,
@@ -911,4 +912,4 @@ class MainScene(Scene):
         ).restore())
         self.wait(wt)
 
-        export_mobs(__file__, mobs)     # NOTE: used by 015
+        export_mobs(__file__, mobs)
