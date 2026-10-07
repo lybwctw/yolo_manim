@@ -17,12 +17,14 @@ import random
 
 DEFAULT_CUBE_CONFIG = {
     'side_length': 0.3,
-    'fill_opacity': 0.6,
-    # 'stroke_opacity': 0.0,
+    'fill_opacity': 1.0,
+    # 'stroke_opacity': 1.0,
+    # 'stroke_width': 1.0,
+    # 'stroke_color': WHITE,
 }
 
-SHOW_OPACITY = 0.6
-HIDE_OPACITY = 0.0
+SHOW_OPACITY = 1.0
+HIDE_OPACITY = 0.05
 
 class ColorCube(VMobject):
     def __init__(

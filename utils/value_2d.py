@@ -260,7 +260,7 @@ class Value2D(VMobject):
         ))
         scene.play(AnimationGroup(
             *(xyxy.animate(
-                rate_func=rate_functions.ease_out_back,
+                # rate_func=rate_functions.ease_out_back,
             ).shift(offset) for xyxy in mobs_xyxy_c),
             lag_ratio=0.5,
             run_time=1.0*run_time_ratio,
@@ -275,7 +275,7 @@ class Value2D(VMobject):
         ))
         scene.play(AnimationGroup(
             *(mconf.animate(
-                rate_func=rate_functions.ease_out_back,
+                # rate_func=rate_functions.ease_out_back,
             ).next_to(xyxy, RIGHT) for mconf, xyxy in zip(
                 mobs_cmax_c, mobs_xyxy_c
             )),
@@ -311,7 +311,7 @@ class Value2D(VMobject):
         scene.play(ApplyMethod(
             result.arrange_matrix,
             np.array([result.get_x(), self.get_y(), 0]),
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
             run_time=1.0*run_time_ratio,
         ))
         scene.wait(0.5*run_time_ratio)
@@ -370,7 +370,7 @@ class Value2D(VMobject):
         ))
         scene.play(AnimationGroup(
             *(line.animate(
-                rate_func=rate_functions.ease_out_back,
+                # rate_func=rate_functions.ease_out_back,
             ).shift(offset) for line in res_mobs),
             run_time=1.0*run_time_ratio,
             lag_ratio=0.5,
@@ -394,7 +394,7 @@ class Value2D(VMobject):
         scene.play(ApplyMethod(
             result.arrange_matrix,
             np.array([result.get_x(), self.get_y(), 0]),
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
             run_time=1.0*run_time_ratio,
         ))
         scene.wait(0.5*run_time_ratio)
@@ -721,7 +721,7 @@ class Value2D(VMobject):
         scene.play(ApplyMethod(
             result.arrange_matrix,
             np.array([result.get_x(), self.get_y(), 0]),
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
             run_time=0.5*run_time_ratio,
         ))
         scene.wait(0.5*run_time_ratio)

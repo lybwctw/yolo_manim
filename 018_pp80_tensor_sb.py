@@ -43,8 +43,12 @@ class MainScene(Scene):
         )
         # ************************************************************
         tensor_nms = import_mobs('017')
-        tensor_nms.scale(1.5)
+        # tensor_nms.scale(1.5)
         self.add(tensor_nms)
+        self.wait(wt)
+        self.play(tensor_nms.animate(
+            run_time=wt,
+        ).scale(1.5))
         self.wait(wt)
         # self.add(tensor_nms)
         # self.wait(wt)

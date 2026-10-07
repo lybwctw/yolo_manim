@@ -40,7 +40,7 @@ TENSOR_PROB_CONFIG = {
     'side_length': 0.15,
     'stroke_width': 2.0,
     'stroke_opacity': 1.0,
-    'fill_opacity': 0.7,
+    'fill_opacity': 1.0,
 }
 TENSOR_PROB_2D_CONFIG = {
     'line_width': 0.3,
@@ -409,7 +409,7 @@ class MainScene(Scene):
 
         # show anchor points of new explainer
         self.play(e32_prob.show_anchor_points(
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
@@ -438,9 +438,9 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*10)
-        act_9 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*5)
-        acm_8 = ArrowComment(True, DOWN).scale(0.8).move_to(RIGHT*10)
+        ac_game = ArrowComment(False, RIGHT).scale(0.8).move_to(LEFT*20)
+        act_9 = ArrowComment(False, RIGHT).scale(0.8).move_to(DOWN*20)
+        acm_8 = ArrowComment(True, DOWN).scale(0.8).move_to(RIGHT*20)
 
         # show big map without s32_prob_2d
         mobs = Group(
@@ -462,9 +462,9 @@ class MainScene(Scene):
         self.wait(wt)
 
         # introduce s32_prob_2d
-        aci_9 = act_9.copy().move_to(UP*5)
-        acm_9 = acm_8.copy().move_to(RIGHT*5)
-        s32_prob_2d = s32_prob.copy().move_to(UP*5)
+        aci_9 = act_9.copy().move_to(UP*20)
+        acm_9 = acm_8.copy().move_to(RIGHT*20)
+        s32_prob_2d = s32_prob.copy().move_to(UP*20)
         mobs = Group(
             Mobject(), s32_prob, aci_9,     s32_prob_2d,
             Mobject(), acm_8,    Mobject(), acm_9,

@@ -202,7 +202,7 @@ class MainScene(Scene):
         self.play(ApplyMethod(
             tensor_nms.arrange_matrix,
             ORIGIN,     # NOTE: use screen center as new center
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
             run_time=wt,
         ))
         self.wait(wt)

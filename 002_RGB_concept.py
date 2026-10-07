@@ -8,7 +8,7 @@ N_SAMPLES_S3 = 3
 
 DEFAULT_TEXT_CONFIG = {
     'font': "JetBrains Mono",
-    'font_size': 24,
+    'font_size': 15,
 }
 
 wt = SHORT_DURATION
@@ -334,7 +334,7 @@ class MainScene(Scene):
                 (f'({int(r_tracker.get_value())},'
                  f'{int(g_tracker.get_value())},'
                  f'{int(b_tracker.get_value())})'),
-                font_size=24,
+                font_size=15,
                 font='JetBrains Mono',
             ).center()
         )

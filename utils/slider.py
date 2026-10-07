@@ -1,7 +1,7 @@
 from manim import *
 
 DEFAULT_TEXT_CONFIG = {
-    'font_size': 24,
+    'font_size': 15,
     'font': "JetBrains Mono",
 }
 
