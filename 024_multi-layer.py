@@ -211,61 +211,61 @@ class MainScene(Scene):
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'loop through random aps for each stride',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # TODO: better looping path, fashion and cool
-        sample_idxs_8 = random_path(
-            n=N_SAMPLES,
-            step=6,
-            shape=e8.shape,
-            start_idx=SAMPLE_IDX_8,
-        )
-        sample_idxs_16 = random_path(
-            n=N_SAMPLES,
-            step=4,
-            shape=e16.shape,
-            start_idx=SAMPLE_IDX_16,
-        )
-        sample_idxs_32 = random_path(
-            n=N_SAMPLES,
-            step=2,
-            shape=e32.shape,
-            start_idx=SAMPLE_IDX_32,
-        )
-        for idx_8, idx_16, idx_32 in zip(sample_idxs_8, sample_idxs_16, sample_idxs_32):
-            _sap_8, _oaps_8 = e8.random_ap(idx_8)
-            _sap_16, _oaps_16 = e16.random_ap(idx_16)
-            _sap_32, _oaps_32 = e32.random_ap(idx_32)
+        # # ************************************************************
+        # self.next_section(
+        #     'loop through random aps for each stride',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # # TODO: better looping path, fashion and cool
+        # sample_idxs_8 = random_path(
+        #     n=N_SAMPLES,
+        #     step=6,
+        #     shape=e8.shape,
+        #     start_idx=SAMPLE_IDX_8,
+        # )
+        # sample_idxs_16 = random_path(
+        #     n=N_SAMPLES,
+        #     step=4,
+        #     shape=e16.shape,
+        #     start_idx=SAMPLE_IDX_16,
+        # )
+        # sample_idxs_32 = random_path(
+        #     n=N_SAMPLES,
+        #     step=2,
+        #     shape=e32.shape,
+        #     start_idx=SAMPLE_IDX_32,
+        # )
+        # for idx_8, idx_16, idx_32 in zip(sample_idxs_8, sample_idxs_16, sample_idxs_32):
+        #     _sap_8, _oaps_8 = e8.random_ap(idx_8)
+        #     _sap_16, _oaps_16 = e16.random_ap(idx_16)
+        #     _sap_32, _oaps_32 = e32.random_ap(idx_32)
 
-            pcs_8 = _sap_8.create_pcells(box_config={})
-            pcs_16 = _sap_16.create_pcells(box_config={})
-            pcs_32 = _sap_32.create_pcells(box_config={})
-            self.play(AnimationGroup(
-                AnimationGroup(
-                    *(Transform(pcs1, pcs2)
-                      for pcs1, pcs2 in zip(sap_8.pcells.values(), pcs_8.values())),
-                    *(ap.mob.animate.set_opacity(0.1)
-                      for ap in _oaps_8),
-                    _sap_8.mob.animate.set_opacity(1.0),
-                ),
-                AnimationGroup(
-                    *(Transform(pcs1, pcs2)
-                      for pcs1, pcs2 in zip(sap_16.pcells.values(), pcs_16.values())),
-                    *(ap.mob.animate.set_opacity(0.1)
-                      for ap in _oaps_16),
-                    _sap_16.mob.animate.set_opacity(1.0),
-                ),
-                AnimationGroup(
-                    *(Transform(pcs1, pcs2)
-                      for pcs1, pcs2 in zip(sap_32.pcells.values(), pcs_32.values())),
-                    *(ap.mob.animate.set_opacity(0.1)
-                      for ap in _oaps_32),
-                    _sap_32.mob.animate.set_opacity(1.0),
-                ),
-                lag_ratio=0.0,
-                run_time=wt,
-            ))
+        #     pcs_8 = _sap_8.create_pcells(box_config={})
+        #     pcs_16 = _sap_16.create_pcells(box_config={})
+        #     pcs_32 = _sap_32.create_pcells(box_config={})
+        #     self.play(AnimationGroup(
+        #         AnimationGroup(
+        #             *(Transform(pcs1, pcs2)
+        #               for pcs1, pcs2 in zip(sap_8.pcells.values(), pcs_8.values())),
+        #             *(ap.mob.animate.set_opacity(0.1)
+        #               for ap in _oaps_8),
+        #             _sap_8.mob.animate.set_opacity(1.0),
+        #         ),
+        #         AnimationGroup(
+        #             *(Transform(pcs1, pcs2)
+        #               for pcs1, pcs2 in zip(sap_16.pcells.values(), pcs_16.values())),
+        #             *(ap.mob.animate.set_opacity(0.1)
+        #               for ap in _oaps_16),
+        #             _sap_16.mob.animate.set_opacity(1.0),
+        #         ),
+        #         AnimationGroup(
+        #             *(Transform(pcs1, pcs2)
+        #               for pcs1, pcs2 in zip(sap_32.pcells.values(), pcs_32.values())),
+        #             *(ap.mob.animate.set_opacity(0.1)
+        #               for ap in _oaps_32),
+        #             _sap_32.mob.animate.set_opacity(1.0),
+        #         ),
+        #         lag_ratio=0.0,
+        #         run_time=wt,
+        #     ))

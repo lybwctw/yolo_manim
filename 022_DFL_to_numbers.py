@@ -71,6 +71,7 @@ class MainScene(ThreeDScene):
         self.play(sap.show_pcells(
             box_config={},
             lag_ratio = 0.5,
+            rate_func=smooth,
             run_time = wt,
         ))
         self.wait(wt)
@@ -84,7 +85,12 @@ class MainScene(ThreeDScene):
         self.move_camera(
             phi=75*DEGREES,
             theta=-60*DEGREES,
-            run_time=1.0,
+            added_anims=[
+                s32.animate(
+                    run_time=wt*2,
+                ).scale(0.7),
+            ],
+            run_time=wt*2,
         )
         self.wait(wt)
 
@@ -92,6 +98,7 @@ class MainScene(ThreeDScene):
 
         self.play(sap.arrange_pcells(
             lag_ratio=0.5,
+            rate_func=smooth,
             run_time=wt*10,
         ))
         self.wait(wt)
@@ -152,7 +159,8 @@ class MainScene(ThreeDScene):
 
         # remove pcells
         self.play(sap.hide_pcells(
-            lag_ratio=0.0,
+            lag_ratio=0.5,
+            rate_func=smooth,
             run_time=wt,
         ))
         self.wait(wt)
@@ -268,7 +276,7 @@ class MainScene(ThreeDScene):
         ))
         self.play(Write(
             tensor_sub,
-            run_time=0.5,
+            run_time=wt,
             lag_ratio=wt,
         ))
         self.wait(wt)
@@ -279,8 +287,8 @@ class MainScene(ThreeDScene):
             aargs={'run_time': wt},
         ))
         self.wait(wt)
-        self.play(HideShape(
-            tensor_sub,
-            aargs={'run_time': wt},
-        ))
-        self.wait(wt)
+        # self.play(HideShape(
+        #     tensor_sub,
+        #     aargs={'run_time': wt},
+        # ))
+        # self.wait(wt)

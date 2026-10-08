@@ -2,13 +2,14 @@ from manim import *
 
 from utils.mtensor import *
 from utils.show_shape_3d import *
+from utils.constants import *
 from utils.constants_3d import *
 from utils.info_card import *
 from utils.general import *
 
 import numpy as np
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************

@@ -6,6 +6,7 @@ from utils.general import import_mobs, export_mobs
 from utils.layers_fake import LayersFake
 from utils.arrow_comment import ArrowComment
 from utils.constants_3d import *
+from utils.constants import *
 
 BUFF_LAYER_2D = 0.08
 BUFF_LAYER_3D = 0.13
@@ -14,7 +15,7 @@ BUFF_MOB_W = 0.8
 
 CENTER_MOB = RIGHT*0.6
 
-wt = 1.0
+wt = MEDIUM_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # TODO, introduce top-left corner image as reference

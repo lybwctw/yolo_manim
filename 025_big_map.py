@@ -15,7 +15,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'init all mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         mobs = import_mobs('023')
@@ -30,7 +30,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'remove tails',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -44,7 +44,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'insert stride-8 and stride-16 series',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # init stride-8 series in intuition view
@@ -139,7 +139,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'expand everything',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # realtime label width and height
@@ -232,7 +232,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'combine multiple systems into one',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make a copy of arrow
@@ -257,9 +257,9 @@ class MainScene(Scene):
         e16_copy = s16_merged_2d[-1].copy()
         e32_copy = s32_merged_2d[-1].copy()
         self.play(AnimationGroup(
-            e8_copy.animate(run_time=0.5).shift(e8_offset),
-            e16_copy.animate(run_time=0.5).shift(e16_offset),
-            e32_copy.animate(run_time=0.5).shift(e32_offset),
+            e8_copy.animate(run_time=wt).shift(e8_offset),
+            e16_copy.animate(run_time=wt).shift(e16_offset),
+            e32_copy.animate(run_time=wt).shift(e32_offset),
             lag_ratio=0.5,
             run_time=wt,
         ))
@@ -275,7 +275,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'combine multiple tensors into one',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make a copy of arrow
@@ -330,13 +330,13 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'result after decode and before postprocess',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # make room in the right
         mobs = Group(*self.get_top_level_mobjects())
         self.play(mobs.animate(
-            run_time=0.5,
+            run_time=wt,
         ).scale(1.0).shift(LEFT*2.3))      # TODO: twick
         self.wait(wt)
 
@@ -364,7 +364,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply max selection',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # intuition view
@@ -386,7 +386,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'apply conf, nms, scale back',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # conf filter
@@ -410,7 +410,7 @@ class MainScene(Scene):
             run_time_ratio=wt,
         )
         self.play(t_result.animate(
-            run_time=0.5,
+            run_time=wt,
         ).stretch_to_fit_height(
             t_result.height * 0.5,
         ))
@@ -430,7 +430,7 @@ class MainScene(Scene):
         # ************************************************************
         self.next_section(
             'tensor shapes',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # mobs = Group(
@@ -479,6 +479,52 @@ class MainScene(Scene):
 
         # ************************************************************
         self.next_section(
+            'merge decode steps',
+            skip_animations=False,
+        )
+        # ************************************************************
+        up_mobs = Group(
+            aci_12,  s8_merged_2d,
+            aci_13, s16_merged_2d,
+            aci_14, s32_merged_2d,
+        )
+        down_mobs = Group(
+            act_12,  t8_merged_2d,
+            act_13, t16_merged_2d,
+            act_14, t32_merged_2d,
+        )
+        focus_mobs = Group(
+            #                                     s8_distrib,  s8_prob, 
+            # sin_raw, aci_1, sin_norm,           s16_distrib, s16_prob, aci_15, s_merged_2d, aci_16, s_result,
+            #                                     s32_distrib, s32_prob,
+            #                                     t8_distrib,  t8_prob, 
+            # tin_raw, act_1, tin_norm, act_game, t16_distrib, t16_prob, act_15, t_merged_2d, act_16, t_result,
+            #                                     t32_distrib, t32_prob,
+            Mobject(), Mobject(), Mobject(), Mobject(), s8_distrib,  s8_prob,  Mobject(), Mobject(),   Mobject(), Mobject(),
+            sin_raw,   aci_1,     sin_norm,  Mobject(), s16_distrib, s16_prob, aci_15,    s_merged_2d, aci_16,    s_result,
+            Mobject(), Mobject(), Mobject(), Mobject(), s32_distrib, s32_prob, Mobject(), Mobject(),   Mobject(), Mobject(),
+            Mobject(), Mobject(), Mobject(), Mobject(), t8_distrib,  t8_prob,  Mobject(), Mobject(),   Mobject(), Mobject(),
+            tin_raw,   act_1,     tin_norm,  act_game,  t16_distrib, t16_prob, act_15,    t_merged_2d, act_16,    t_result,
+            Mobject(), Mobject(), Mobject(), Mobject(), t32_distrib, t32_prob, Mobject(), Mobject(),   Mobject(), Mobject(),
+        )
+        focus_mobs.generate_target()
+        focus_mobs.target.arrange_in_grid(
+            rows=6,
+            cols=10,
+        ).center()
+        # FIXME: manual twick s_result due to unrecoganized children
+        focus_mobs.target[19].shift(UP*0.1)
+        self.play(AnimationGroup(
+            up_mobs.animate.shift(UP*20),
+            down_mobs.animate.shift(DOWN*20),
+            MoveToTarget(focus_mobs),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
             'focus on core game',
             skip_animations=False,
         )
@@ -497,12 +543,12 @@ class MainScene(Scene):
             tin_raw, act_1,
         )
         right_mobs = Group(
-            aci_12,  s8_merged_2d,
-            aci_13, s16_merged_2d, aci_15, s_merged_2d, aci_16, s_result,
-            aci_14, s32_merged_2d,
-            act_12,  t8_merged_2d,
-            act_13, t16_merged_2d, act_15, t_merged_2d, act_16, t_result,
-            act_14, t32_merged_2d,
+            aci_12,
+            aci_13, aci_15, s_merged_2d, aci_16, s_result,
+            aci_14,
+            act_12,
+            act_13, act_15, t_merged_2d, act_16, t_result,
+            act_14,
         )
         self.play(AnimationGroup(
             left_mobs.animate.shift(LEFT*10),

@@ -12,7 +12,7 @@ from utils.constants import *
 
 import random
 
-N_COMPUTE_SAMPLES = 5
+N_COMPUTE_SAMPLES = 3
 SAMPLE_IDX = 190
 
 wt = SHORT_DURATION
@@ -40,7 +40,7 @@ class MainScene(Scene):
         )
         # ************************************************************
         self.play(e32.show_anchor_points(
-            lag_ratio=0.5,
+            lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
@@ -73,6 +73,7 @@ class MainScene(Scene):
             self.play(sap.show_pcells(
                 direction=direction,
                 box_config={},
+                rate_func=smooth,
                 lag_ratio = 0.5,
                 run_time = wt,
             ))
@@ -86,6 +87,7 @@ class MainScene(Scene):
                 },
                 gargs={
                     'lag_ratio': 0.5,
+                    'rate_func': smooth,
                     'run_time': wt,
                 },
             ))
@@ -107,6 +109,7 @@ class MainScene(Scene):
                 direction=direction,
                 gargs={
                     'lag_ratio': 0.5,
+                    'rate_func': smooth,
                     'run_time': wt,
                 },
             ))
@@ -120,21 +123,21 @@ class MainScene(Scene):
             ))
             self.wait(wt)
         
-        # highlight pcells borders
-        pcells = VGroup(
-            pc for pcs in sap.pcells.values() for pc in pcs
-        )
-        self.play(AnimationGroup(
-            *(pc.mob_box.animate(
-                # rate_func=rate_functions.there_and_back,
-            ).set_stroke(
-                color=WHITE,
-                opacity=1.0,
-            ) for pc in pcells),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
+        # # highlight pcells borders
+        # pcells = VGroup(
+        #     pc for pcs in sap.pcells.values() for pc in pcs
+        # )
+        # self.play(AnimationGroup(
+        #     *(pc.mob_box.animate(
+        #         # rate_func=rate_functions.there_and_back,
+        #     ).set_stroke(
+        #         color=WHITE,
+        #         opacity=1.0,
+        #     ) for pc in pcells),
+        #     lag_ratio=0.0,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -150,7 +153,8 @@ class MainScene(Scene):
         for idx in sample_idxs:
             # clean old probcells
             self.play(sap.hide_pcells(
-                lag_ratio=0.3,
+                lag_ratio=0.5,
+                rate_func=smooth,
                 run_time=wt,
             ))
             self.wait(wt)
@@ -178,7 +182,8 @@ class MainScene(Scene):
             # show probcells
             self.play(sap.show_pcells(
                 box_config={},
-                lag_ratio=0.0,
+                lag_ratio=0.5,
+                rate_func=smooth,
                 run_time=wt,
             ))
             self.wait(wt)
@@ -207,7 +212,7 @@ class MainScene(Scene):
         
         # clean jobs
         self.play(sap.hide_pcells(
-            lag_ratio=0.3,
+            lag_ratio=0.5,
             run_time=wt,
         ))
         self.play(sap.hide_arrows(

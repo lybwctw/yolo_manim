@@ -2,19 +2,20 @@ from manim import *
 
 from utils.mtensor import *
 from utils.show_shape_3d import *
+from utils.constants import *
 from utils.constants_3d import *
 from utils.info_card import *
 from utils.general import *
 
 import numpy as np
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.set_camera_orientation(
@@ -29,7 +30,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'intro view: cube mode',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # init tensor
@@ -91,7 +92,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'intro view: card mode',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(mtensor.switch(
@@ -105,7 +106,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'compute view: card mode',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.move_camera(
@@ -117,7 +118,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'compute view: cube mode',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(mtensor.switch(
@@ -164,6 +165,6 @@ class MainScene(ThreeDScene):
         ))
         self.play(Unwrite(
             card,
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.wait(wt)
