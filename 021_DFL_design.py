@@ -126,7 +126,7 @@ class MainScene(Scene):
         )
         self.play(AnimationGroup(
             *(pc.mob_box.animate(
-                rate_func=rate_functions.there_and_back,
+                # rate_func=rate_functions.there_and_back,
             ).set_stroke(
                 color=WHITE,
                 opacity=1.0,

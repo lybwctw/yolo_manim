@@ -40,11 +40,11 @@ class MainScene(Scene):
         )
         
         self.add(mobs)
-        self.wait()
+        self.wait(wt)
 
         # make room in the right
         self.play(mobs.animate.shift(LEFT*10.))
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -67,7 +67,7 @@ class MainScene(Scene):
         # copy system
         s32_max = s32_merged_2d.copy()
         self.play(s32_max.animate(
-            run_time=1.0,
+            run_time=wt,
         ).next_to(
             aci_10,
             RIGHT,
@@ -530,11 +530,11 @@ class MainScene(Scene):
         )
         # ************************************************************
         # new arrows
-        aci_14 = ArrowComment(False, RIGHT).scale(0.2).move_to(UP*5.0)
-        aci_15 = ArrowComment(False, RIGHT).scale(0.2).move_to(UP*5.0)
-        act_game = ArrowComment(False, RIGHT).scale(0.2).move_to(LEFT*10.0)
-        act_14 = ArrowComment(False, RIGHT).scale(0.2).move_to(DOWN*5.0)
-        act_15 = ArrowComment(False, RIGHT).scale(0.2).move_to(DOWN*5.0)
+        aci_14 = ArrowComment(False, RIGHT).scale(0.2).move_to(UP*20)
+        aci_15 = ArrowComment(False, RIGHT).scale(0.2).move_to(UP*20)
+        act_game = ArrowComment(False, RIGHT).scale(0.2).move_to(LEFT*20)
+        act_14 = ArrowComment(False, RIGHT).scale(0.2).move_to(DOWN*20)
+        act_15 = ArrowComment(False, RIGHT).scale(0.2).move_to(DOWN*20)
 
         mobs = Group(
             Mobject(), s32_offset, s32_prob, aci_14, s32_merged_2d, aci_15, s32_back,
@@ -560,7 +560,7 @@ class MainScene(Scene):
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
         ))
         self.wait(wt)
 
@@ -570,10 +570,10 @@ class MainScene(Scene):
             skip_animations=False,
         )
         # ************************************************************
-        aci_1 = aci_14.copy().move_to(LEFT*10)
-        act_1 = act_14.copy().move_to(LEFT*10)
-        sin_raw = s32_back[0].copy().set_opacity(1.0).move_to(LEFT*10)
-        sin_norm = s32_merged_2d[0].copy().set_opacity(1.0).move_to(LEFT*10)
+        aci_1 = aci_14.copy().move_to(LEFT*20)
+        act_1 = act_14.copy().move_to(LEFT*20)
+        sin_raw = s32_back[0].copy().set_opacity(1.0).move_to(LEFT*20)
+        sin_norm = s32_merged_2d[0].copy().set_opacity(1.0).move_to(LEFT*20)
         tin_raw = LayersFake(
             n=3,
             ref=sin_raw,
@@ -581,7 +581,7 @@ class MainScene(Scene):
             width_nominal=sin_raw.width_nominal,
             height_nominal=sin_raw.height_nominal,
             buff=0.05,              # TODO, natural buff?
-        ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
+        ).scale(1.0).shift(LEFT*20) # TODO, scale up a little bit?
         tin_norm = LayersFake(
             n=3,
             ref=sin_norm,
@@ -589,7 +589,7 @@ class MainScene(Scene):
             width_nominal=sin_norm.width_nominal,
             height_nominal=sin_norm.height_nominal,
             buff=0.05,              # TODO, natural buff?
-        ).scale(1.0).shift(LEFT*10) # TODO, scale up a little bit?
+        ).scale(1.0).shift(LEFT*20) # TODO, scale up a little bit?
 
         mobs = Group(
             sin_raw, aci_1, sin_norm, Mobject(), s32_offset, s32_prob, aci_14, s32_merged_2d, aci_15, s32_back,
@@ -616,9 +616,9 @@ class MainScene(Scene):
         self.play(MoveToTarget(
             mobs,
             run_time=wt,
-            rate_func=rate_functions.ease_out_back,
+            # rate_func=rate_functions.ease_out_back,
         ))
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -645,7 +645,7 @@ class MainScene(Scene):
             lag_ratio=0.5,
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # hide shapes
         self.play(AnimationGroup(
