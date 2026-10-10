@@ -16,7 +16,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         # modules
         cards_module = import_mobs('028')
-        card_focus, cards_other = collect_idx_card(cards_module, 1)
+        card_focus, cards_other = collect_idx_card(cards_module, 6)
 
         self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)
@@ -36,7 +36,7 @@ class MainScene(ThreeDScene):
             lag_ratio=0.5,
             run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # export
         mobs = VGroup(card_focus, cards_module)     # NOTE: used by next

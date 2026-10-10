@@ -10,7 +10,7 @@ import torch
 
 TENSOR_VGAP_2D = 1.5
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -106,8 +106,16 @@ class MainScene(ThreeDScene):
         h, w = tensor_i1.shape
         masks = np.eye(h*w, dtype=bool).reshape(h*w, h, w)
         self.play(AnimationGroup(
-            tensor_i1.highlight_loop(masks=masks, back=False),
-            tensor_i2.highlight_loop(masks=masks, back=False),
+            tensor_i1.highlight_loop(
+                masks=masks,
+                back=False,
+                rate_func=smooth,
+            ),
+            tensor_i2.highlight_loop(
+                masks=masks,
+                back=False,
+                rate_func=smooth,
+            ),
             Succession(
                 *(GrowFromCenter(
                     mob,

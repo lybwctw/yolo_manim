@@ -21,6 +21,18 @@ import numpy as np
 # 'groups': UNKNOWN,
 # 'padding_mode': UNKNOWN,
 # ---------------------------------------------
+DEFAULT_WEIGHT_CONFIG = {
+    **SMALL_TENSOR_CONFIG,
+    'cube_config': {
+        'fill_color': ORANGE,
+    },
+}
+DEFAULT_BIAS_CONFIG = {
+    **SMALL_TENSOR_CONFIG,
+    'cube_config': {
+        'fill_color': ORANGE,
+    },
+}
 
 DEFAULT_WEIGHT_CREATE_ARGS = {
     'style': 'beam',
@@ -60,7 +72,10 @@ class PT_Conv2d(VMobject):
             array=rt_weight,
             mode=init_mode,
             style='horizontal',
-            **{**SMALL_TENSOR_CONFIG, **self.weight_config},
+            **{
+                **DEFAULT_WEIGHT_CONFIG,
+                **self.weight_config,
+            },
         )
         self.rt_weight = rt_weight
         self.mt_weight = mt_weight
@@ -73,7 +88,10 @@ class PT_Conv2d(VMobject):
                 array=rt_bias,
                 mode=init_mode,
                 style='horizontal',
-                **{**SMALL_TENSOR_CONFIG, **self.bias_config},
+                **{
+                    **DEFAULT_BIAS_CONFIG,
+                    **self.bias_config,
+                },
             )
             # align bias to weight
             for i, mob in enumerate(mt_bias.mobs):

@@ -1,9 +1,34 @@
 from manim import *
 
 from utils.general import import_mobs, export_mobs
+from utils.show_shape_3d import ShowShape3D, HideShape3D
 from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
+
+# EMPTY_CONFIG = {
+#     'in_channels': UNKNOWN,
+#     'out_channels': UNKNOWN,
+#     'kernel_size': UNKNOWN,
+#     'stride': UNKNOWN,
+#     'padding': UNKNOWN,
+#     'bias': UNKNOWN,
+#     'dilation': UNKNOWN,
+#     'groups': UNKNOWN,
+#     'padding_mode': UNKNOWN,
+# }
+
+# INIT_CONFIG = {
+#     'in_channels': 6,
+#     'out_channels': 5,
+#     'kernel_size': 3,
+#     'stride': 1,
+#     'padding': 1,
+#     'bias': False,
+#     'dilation': 1,
+#     'groups': 1,
+#     'padding_mode': 'zeros',
+# }
 
 wt = SHORT_DURATION
 class MainScene(ThreeDScene):
@@ -16,7 +41,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         # modules
         cards_module = import_mobs('028')
-        card_focus, cards_other = collect_idx_card(cards_module, 1)
+        card_focus, cards_other = collect_idx_card(cards_module, 3)
 
         self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)
@@ -29,7 +54,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         cards_module.save_state()
 
-        # exit and focus
+        # focus
         self.play(AnimationGroup(
             cards_other.animate.set_x(CARD_EXIT_X),
             card_focus.animate.set_y(CARD_FOCUS_Y),

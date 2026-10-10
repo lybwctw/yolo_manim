@@ -11,13 +11,13 @@ import torch
 TENSOR_VGAP_3D = 1.2
 TENSOR_HGAP_3D = 0.8
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # cards
@@ -77,7 +77,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'introduce inputs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # introduce input 1
@@ -111,15 +111,23 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'detailed computation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # compute into output 1
         c, h, w = tensor_i1.shape
         masks = np.eye(c*h*w, dtype=bool).reshape(c*h*w, c, h, w)
         self.play(AnimationGroup(
-            tensor_i1.highlight_loop(masks=masks, back=False),
-            tensor_i2.highlight_loop(masks=masks, back=False),
+            tensor_i1.highlight_loop(
+                masks=masks,
+                back=False,
+                rate_func=smooth,
+            ),
+            tensor_i2.highlight_loop(
+                masks=masks,
+                back=False,
+                rate_func=smooth,
+            ),
             Succession(
                 *(GrowFromCenter(
                     mob,

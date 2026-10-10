@@ -12,7 +12,7 @@ TENSOR_VGAP_3D = 1.0
 TENSOR_HGAP_3D = 1.0
 TENSOR_EGAP_3D = 1.0
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -29,7 +29,7 @@ class MainScene(ThreeDScene):
 
         # show initial mobs
         self.set_camera_orientation(
-            zoom=0.8,                   # a little bit farther
+            # zoom=0.8,                   # a little bit farther
             **VIEW_COMPUTE,
         )
         self.add_fixed_in_frame_mobjects(cards)
@@ -111,10 +111,10 @@ class MainScene(ThreeDScene):
 
         # concat animation
         tensor_is_copy = tensor_is.copy()
-        self.play(FadeIn(
-            tensor_is_copy,
-            run_time=wt*0.1,
-        ))
+        # self.play(FadeIn(
+        #     tensor_is_copy,
+        #     run_time=wt*0.1,
+        # ))
         tensor_is_copy.generate_target()
         for tmob, idx in zip(
             tensor_is_copy.target,
@@ -124,6 +124,7 @@ class MainScene(ThreeDScene):
                 tensor_o1[idx:],
                 UL+OUT
             )
+        tensor_is_copy.fade(1.0)
         self.play(MoveToTarget(
             tensor_is_copy,
             run_time=wt,
@@ -256,10 +257,10 @@ class MainScene(ThreeDScene):
 
         # concat animation
         tensor_is_copy = tensor_is.copy()
-        self.play(FadeIn(
-            tensor_is_copy,
-            run_time=wt*0.1,
-        ))
+        # self.play(FadeIn(
+        #     tensor_is_copy,
+        #     run_time=wt*0.1,
+        # ))
         tensor_is_copy.generate_target()
         for tmob, idx in zip(
             tensor_is_copy.target,
@@ -269,6 +270,7 @@ class MainScene(ThreeDScene):
                 tensor_o1[:,idx:],
                 UL+OUT
             )
+        tensor_is_copy.fade(1.0)
         self.play(MoveToTarget(
             tensor_is_copy,
             run_time=wt,
@@ -363,10 +365,10 @@ class MainScene(ThreeDScene):
 
         # concat animation
         tensor_is_copy = tensor_is.copy()
-        self.play(FadeIn(
-            tensor_is_copy,
-            run_time=wt*0.1,
-        ))
+        # self.play(FadeIn(
+        #     tensor_is_copy,
+        #     run_time=wt*0.1,
+        # ))
         tensor_is_copy.generate_target()
         for tmob, idx in zip(
             tensor_is_copy.target,
@@ -376,6 +378,7 @@ class MainScene(ThreeDScene):
                 tensor_o1[:,:,idx:],
                 UL+OUT
             )
+        tensor_is_copy.fade(1.0)
         self.play(MoveToTarget(
             tensor_is_copy,
             run_time=wt,
@@ -518,10 +521,10 @@ class MainScene(ThreeDScene):
 
         # concat animation
         tensor_is_copy = tensor_is.copy()
-        self.play(FadeIn(
-            tensor_is_copy,
-            run_time=wt*0.1,
-        ))
+        # self.play(FadeIn(
+        #     tensor_is_copy,
+        #     run_time=wt*0.1,
+        # ))
         tensor_is_copy.generate_target()
         for tmob, idx in zip(
             tensor_is_copy.target,
@@ -531,6 +534,7 @@ class MainScene(ThreeDScene):
                 tensor_o1[idx:],
                 UL+OUT
             )
+        tensor_is_copy.fade(1.0)
         self.play(MoveToTarget(
             tensor_is_copy,
             run_time=wt,

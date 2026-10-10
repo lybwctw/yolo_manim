@@ -16,6 +16,14 @@ VIEW_COMPUTE = {
 
 # general mtensor config
 SMALL_TENSOR_CONFIG = {
+    'side_length': 0.2,
+    'font_size': 7,
+    'padding': 0.0,
+    'cube_config': {},
+    'square_config': {},
+    'decimal_config': {},
+}
+MEDIUM_TENSOR_CONFIG = {
     'side_length': 0.3,
     'font_size': 10,
     'padding': 0.0,
@@ -23,17 +31,9 @@ SMALL_TENSOR_CONFIG = {
     'square_config': {},
     'decimal_config': {},
 }
-MEDIUM_TENSOR_CONFIG = {
+BIG_TENSOR_CONFIG = {
     'side_length': 0.5,
     'font_size': 18,
-    'padding': 0.0,
-    'cube_config': {},
-    'square_config': {},
-    'decimal_config': {},
-}
-BIG_TENSOR_CONFIG = {
-    'side_length': 0.7,
-    'font_size': 24,
     'padding': 0.0,
     'cube_config': {},
     'square_config': {},

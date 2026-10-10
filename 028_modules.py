@@ -5,7 +5,7 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -17,7 +17,7 @@ class MainScene(ThreeDScene):
         # pytorch operation cards
         ic_add = InfoCard('add', frame_config={'fill_color': TEAL})
         ic_split = InfoCard('split', frame_config={'fill_color': TEAL})
-        ic_cat = InfoCard('cat', frame_config={'fill_color': TEAL})
+        ic_cat = InfoCard('concat', frame_config={'fill_color': TEAL})
 
         # pytorch module cards
         ic_Conv2d = InfoCard('Conv2d', frame_config={'fill_color': ORANGE})

@@ -12,7 +12,7 @@ TENSOR_VGAP_2D = 1.5
 TENSOR_EGAP_2D = 1.0
 TENSOR_HGAP_2D = 1.0
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -103,10 +103,10 @@ class MainScene(ThreeDScene):
 
         # concat animation
         tensor_is_copy = tensor_is.copy()
-        self.play(FadeIn(
-            tensor_is_copy,
-            run_time=wt*0.1,
-        ))
+        # self.play(FadeIn(
+        #     tensor_is_copy,
+        #     run_time=wt*0.1,
+        # ))
         tensor_is_copy.generate_target()
         for tmob, idx in zip(
             tensor_is_copy.target,
@@ -116,6 +116,7 @@ class MainScene(ThreeDScene):
                 tensor_o1[idx:],
                 UL+OUT,
             )
+        tensor_is_copy.fade(1.0)
         self.play(MoveToTarget(
             tensor_is_copy,
             run_time=wt,
@@ -249,10 +250,10 @@ class MainScene(ThreeDScene):
 
         # concat animation
         tensor_is_copy = tensor_is.copy()
-        self.play(FadeIn(
-            tensor_is_copy,
-            run_time=wt*0.1,
-        ))
+        # self.play(FadeIn(
+        #     tensor_is_copy,
+        #     run_time=wt*0.1,
+        # ))
         tensor_is_copy.generate_target()
         for tmob, idx in zip(
             tensor_is_copy.target,
@@ -262,6 +263,7 @@ class MainScene(ThreeDScene):
                 tensor_o1[:,idx:],
                 UL+OUT
             )
+        tensor_is_copy.fade(1.0)
         self.play(MoveToTarget(
             tensor_is_copy,
             run_time=wt,
@@ -372,10 +374,10 @@ class MainScene(ThreeDScene):
 
         # concat animation
         tensor_is_copy = tensor_is.copy()
-        self.play(FadeIn(
-            tensor_is_copy,
-            run_time=wt*0.1,
-        ))
+        # self.play(FadeIn(
+        #     tensor_is_copy,
+        #     run_time=wt*0.1,
+        # ))
         tensor_is_copy.generate_target()
         for tmob, idx in zip(
             tensor_is_copy.target,
@@ -385,6 +387,7 @@ class MainScene(ThreeDScene):
                 tensor_o1[:,idx:],
                 UL+OUT
             )
+        tensor_is_copy.fade(1.0)
         self.play(MoveToTarget(
             tensor_is_copy,
             run_time=wt,
@@ -422,8 +425,8 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
+        self.wait(wt)
 
         # export
         mobs = VGroup(card_i1, card_i2, card_i3, card_m, card_o1)
         export_mobs(__file__, mobs)     # NOTE: used by next
-        self.wait(wt)

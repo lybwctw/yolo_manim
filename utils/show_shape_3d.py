@@ -8,7 +8,7 @@ from utils.layers_fake import LayersFake
 from utils.ftensor import *
 
 DEFAULT_SHAPE_PATH_CONFIG = {
-    'stroke_color': ORANGE,
+    'stroke_color': GRAY,
     'stroke_width': 3,
     'stroke_opacity': 1.0,
 }
@@ -16,7 +16,7 @@ DEFAULT_SHAPE_PATH_CONFIG = {
 DEFAULT_SHAPE_TEXT_CONFIG = {
     'font_size': 15,
     'font': 'JetBrains Mono',
-    'color': ORANGE,
+    'color': WHITE,
 }
 
 DEFAULT_TEXT_BUFF = 0.2

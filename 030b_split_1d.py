@@ -16,13 +16,13 @@ INIT_MODULE_PARAMS = {
 TENSOR_VGAP_1D = 1.5
 TENSOR_HGAP_1D = 1.0
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # module card
@@ -62,7 +62,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'introduce input',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # introduce input card
@@ -91,7 +91,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '(10) -[5|0]- (5)(5)',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # update module card
@@ -123,11 +123,11 @@ class MainScene(ThreeDScene):
 
         # fade in out tensor mobs
         tensor_os = VGroup(tensor_o1, tensor_o2)
-        self.play(AnimationGroup(
-            *(FadeIn(tensor_o) for tensor_o in tensor_os),
-            lag_ratio=0.0,
-            run_time=wt*0.1,
-        ))
+        # self.play(AnimationGroup(
+        #     *(FadeIn(tensor_o) for tensor_o in tensor_os),
+        #     lag_ratio=0.0,
+        #     run_time=wt*0.1,
+        # ))
 
         # split animation
         tensor_os.generate_target()
@@ -137,6 +137,7 @@ class MainScene(ThreeDScene):
             RIGHT,
             buff=TENSOR_HGAP_1D,
         ).move_to(orig_center)
+        tensor_os.fade(1.0)
         self.play(MoveToTarget(
             tensor_os,
             run_time=wt,
@@ -218,12 +219,12 @@ class MainScene(ThreeDScene):
             )
         )
 
-        # fade in out tensor mobs
-        self.play(AnimationGroup(
-            *(FadeIn(tensor_o) for tensor_o in tensor_os),
-            lag_ratio=0.0,
-            run_time=wt*0.1,
-        ))
+        # # fade in out tensor mobs
+        # self.play(AnimationGroup(
+        #     *(FadeIn(tensor_o) for tensor_o in tensor_os),
+        #     lag_ratio=0.0,
+        #     run_time=wt*0.1,
+        # ))
 
         # split animation
         tensor_os.generate_target()
@@ -233,6 +234,7 @@ class MainScene(ThreeDScene):
             RIGHT,
             buff=TENSOR_HGAP_1D,
         ).move_to(orig_center)
+        tensor_os.fade(1.0)
         self.play(MoveToTarget(
             tensor_os,
             run_time=wt,
@@ -314,18 +316,19 @@ class MainScene(ThreeDScene):
             )
         )
 
-        # fade in out tensor mobs
-        self.play(AnimationGroup(
-            *(FadeIn(tensor_o) for tensor_o in tensor_os),
-            lag_ratio=0.0,
-            run_time=wt*0.1,
-        ))
+        # # fade in out tensor mobs
+        # self.play(AnimationGroup(
+        #     *(FadeIn(tensor_o) for tensor_o in tensor_os),
+        #     lag_ratio=0.0,
+        #     run_time=wt*0.1,
+        # ))
 
         # split animation
         tensor_os.generate_target()
         tensor_os.target.shift(DOWN*TENSOR_VGAP_1D*2)
         orig_center = tensor_os.target.get_center()
         tensor_os.target.arrange(RIGHT, buff=TENSOR_HGAP_1D).move_to(orig_center)
+        tensor_os.fade(1.0)
         self.play(MoveToTarget(
             tensor_os,
             run_time=wt,
