@@ -5,7 +5,7 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -15,8 +15,8 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # cards
-        card_focus, cards_module = import_mobs('040a')
-        cards_sample = import_mobs('040h')
+        card_focus, cards_module = import_mobs('039a')
+        cards_sample = import_mobs('039h')
 
         self.add_fixed_in_frame_mobjects(cards_sample)
         self.wait(wt)
