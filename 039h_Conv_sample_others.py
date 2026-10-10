@@ -29,18 +29,17 @@ TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-wt = 0.5
-
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load sample cards
-        cards, ut_conv = import_mobs('040g')
+        cards, ut_conv = import_mobs('039g')
 
         # show initial reference card
         self.set_camera_orientation(
@@ -55,7 +54,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[3 16 3 2 1] -> [3 32 3 2 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -75,10 +74,11 @@ class MainScene(ThreeDScene):
             focal_distance=90,
             added_anims=[
                 ut_conv.stretch_blocks(
+                    direction='out',
                     diff=8,
-                    direction='bottom',
-                    shape=(32,3,3,3),
+                    new_shape=(32,3,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -88,7 +88,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[3 32 3 2 1] -> [3 48 3 2 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -108,10 +108,11 @@ class MainScene(ThreeDScene):
             focal_distance=100,
             added_anims=[
                 ut_conv.stretch_blocks(
+                    direction='out',
                     diff=8,
-                    direction='bottom',
-                    shape=(48,3,3,3),
+                    new_shape=(48,3,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -121,7 +122,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[3 48 3 2 1] -> [3 64 3 2 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -141,10 +142,11 @@ class MainScene(ThreeDScene):
             focal_distance=110,
             added_anims=[
                 ut_conv.stretch_blocks(
+                    direction='out',
                     diff=8,
-                    direction='bottom',
-                    shape=(64,3,3,3),
+                    new_shape=(64,3,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -154,7 +156,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[3 64 3 2 1] -> [3 80 3 2 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -174,10 +176,11 @@ class MainScene(ThreeDScene):
             focal_distance=120,
             added_anims=[
                 ut_conv.stretch_blocks(
+                    direction='out',
                     diff=8,
-                    direction='bottom',
-                    shape=(80,3,3,3),
+                    new_shape=(80,3,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -187,7 +190,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[3 80 3 2 1] -> [16 16 3 1 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -200,33 +203,33 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # stretch blocks to 16
+        # stretch blocks to (16, 3, 3, 3)
         self.move_camera(
             zoom=1.0,           # back
             focal_distance=80,  # back
             **VIEW_COMPUTE,     # back
             added_anims=[
                 ut_conv.stretch_blocks(
-                    diff=-32,
-                    direction='bottom',
-                    shape=(16,3,3,3),
+                    direction='in',
+                    diff=32,
+                    new_shape=(16,3,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
         )
         # self.wait(wt)
 
-        # stretch erect to 16
+        # stretch 3d to (16, 16, 3, 3)
         self.move_camera(
             zoom=0.8,
             **VIEW_COMPUTE,
             added_anims=[
-                ut_conv.stretch_direction(
-                    direction='erect',
-                    size_scale=16/3,
-                    shape=(16,16,3,3),
+                ut_conv.stretch_3d(
+                    new_shape=(16,3,3),
                     lag_ratio=0.0,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -236,7 +239,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[16 16 3 1 1] -> [16 32 3 2 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -249,17 +252,18 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # stretch blocks to 32
+        # stretch blocks to (32, 16, 3, 3)
         self.move_camera(
             zoom=0.53,
             theta=-150*DEGREES,
             focal_distance=90,
             added_anims=[
                 ut_conv.stretch_blocks(
+                    direction='out',
                     diff=8,
-                    direction='bottom',
-                    shape=(32,16,3,3),
+                    new_shape=(32,16,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -269,7 +273,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[16 32 3 2 1] -> [32 32 1 1 0]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -282,34 +286,32 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # stretch horizontal to 1x1
+        # stretch 3d to (16, 1, 1)
         self.move_camera(
             # zoom=0.45,
             # theta=-145*DEGREES,
             # focal_distance=100,
             added_anims=[
-                ut_conv.stretch_direction(
-                    direction='horizontal',
-                    size_scale=1/3,
-                    shape=(32,16,1,1),
+                ut_conv.stretch_3d(
+                    new_shape=(16,1,1),
                     lag_ratio=0.0,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
         )
         # self.wait(wt)
 
-        # stretch erect to 32
+        # stretch 3d to (32, 1, 1)
         self.move_camera(
             zoom=0.45,
             theta=-145*DEGREES,
             focal_distance=100,
             added_anims=[
-                ut_conv.stretch_direction(
-                    direction='erect',
-                    size_scale=2.0,
-                    shape=(32,32,1,1),
+                ut_conv.stretch_3d(
+                    new_shape=(32,1,1),
                     lag_ratio=0.0,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -319,7 +321,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[32 32 1 1 0] -> [32 32 3 1 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -332,17 +334,16 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # stretch horizontal to 3x3
+        # expand the 4D kernel group from (32,32,1,1) to (32,32,3,3)
         self.move_camera(
             zoom=0.45,
             theta=-145*DEGREES,
             focal_distance=100,
             added_anims=[
-                ut_conv.stretch_direction(
-                    direction='horizontal',
-                    size_scale=3.0,
-                    shape=(32,32,3,3),
+                ut_conv.stretch_3d(
+                    new_shape=(32,3,3),
                     lag_ratio=0.0,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -352,7 +353,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[32 32 3 1 1] -> [32 64 3 2 1]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -365,7 +366,7 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # stretch blocks to 64
+        # expand the 4D kernel group from (32,32,3,3) to (64,32,3,3)
         self.move_camera(
             zoom=0.25,
             theta=-145*DEGREES,
@@ -373,9 +374,9 @@ class MainScene(ThreeDScene):
             added_anims=[
                 ut_conv.stretch_blocks(
                     diff=16,
-                    direction='bottom',
-                    shape=(64,32,3,3),
+                    new_shape=(64,32,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -385,7 +386,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[32 64 3 2 1] -> [48 32 1 1 0]',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight new card
@@ -398,51 +399,50 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # stretch blocks to 32
+        # shrink the 4D kernel group from (64,32,3,3) to (32,32,3,3)
         self.move_camera(
             zoom=0.45,
             theta=-145*DEGREES,
             focal_distance=100,
             added_anims=[
                 ut_conv.stretch_blocks(
-                    diff=-16,
-                    direction='bottom',
-                    shape=(32,32,3,3),
+                    direction='in',
+                    diff=16,
+                    new_shape=(32,32,3,3),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
         )
         # self.wait(wt)
 
-        # stretch horizontal to 1x1
+        # shrink the 4D kernel group from (32,32,3,3) to (32,32,1,1)
         self.move_camera(
             # zoom=0.45,
             # theta=-145*DEGREES,
             # focal_distance=100,
             added_anims=[
-                ut_conv.stretch_direction(
-                    direction='horizontal',
-                    size_scale=1/3,
-                    shape=(32,32,1,1),
+                ut_conv.stretch_3d(
+                    new_shape=(32,1,1),
                     lag_ratio=0.0,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
         )
         # self.wait(wt)
 
-        # stretch erect to 48
+        # resize the 4D kernel group from (32,32,1,1) to (32,48,1,1)
         self.move_camera(
             zoom=0.43,
             theta=-145*DEGREES,
             focal_distance=100,
             added_anims=[
-                ut_conv.stretch_direction(
-                    direction='erect',
-                    size_scale=48/32,
-                    shape=(48,32,1,1),
+                ut_conv.stretch_3d(
+                    new_shape=(48,1,1),
                     lag_ratio=0.0,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
@@ -464,45 +464,43 @@ class MainScene(ThreeDScene):
         ))
         # self.wait(wt)
 
-        # stretch erect to 8
+        # resize the 4D kernel group from (32,48,1,1) to (32,8,1,1)
         self.move_camera(
             zoom=0.43,
             theta=-145*DEGREES,
             focal_distance=100,
             added_anims=[
-                ut_conv.stretch_direction(
-                    direction='erect',
-                    size_scale=8/48,
-                    shape=(32,8,1,1),
+                ut_conv.stretch_3d(
+                    new_shape=(8,1,1),
                     lag_ratio=0.0,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
         )
         # self.wait(wt)
 
-        # stretch blocks to 8
+        # shrink the 4D kernel group from (32,8,1,1) to (8,8,1,1)
         self.move_camera(
             zoom=1.0,
             focal_distance=80,
             **VIEW_COMPUTE,
             added_anims=[
                 ut_conv.stretch_blocks(
-                    diff=-12,
-                    direction='bottom',
-                    shape=(8,8,1,1),
+                    direction='in',
+                    diff=12,
+                    new_shape=(8,8,1,1),
                     lag_ratio=0.5,
+                    run_time=wt*2,
                 ),
             ],
             run_time=wt*2,
         )
         # self.wait(wt)
 
-        # stretch horizontal to 3x3
-        self.play(ut_conv.stretch_direction(
-            direction='horizontal',
-            size_scale=3.0,
-            shape=(32,32,3,3),
+        # expand the 4D kernel group from (8,8,1,1) to (8,8,3,3)
+        self.play(ut_conv.stretch_3d(
+            new_shape=(8,3,3),
             lag_ratio=0.0,
             run_time=wt*2,
         ))
@@ -516,7 +514,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         # remove module
         self.play(ut_conv.uncreate(
-            direction='center',
+            ref='center',
             lag_ratio=0.0,
             run_time=wt,
         ))

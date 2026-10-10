@@ -5,8 +5,8 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-FONT_SIZE_ANNO = 20
-FONT_SIZE_TICK = 16
+FONT_SIZE_ANNO = 18
+FONT_SIZE_TICK = 15
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))

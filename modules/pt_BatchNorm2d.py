@@ -16,6 +16,31 @@ from utils.info_card import *
 # 'track_running_stats': UNKNOWN,
 # ---------------------------------------------
 
+DEFAULT_RUNNING_MEAN_CONFIG = {
+    **SMALL_TENSOR_CONFIG,
+    'cube_config': {
+        'fill_color': PURE_RED,
+    },
+}
+DEFAULT_RUNNING_VAR_CONFIG = {
+    **SMALL_TENSOR_CONFIG,
+    'cube_config': {
+        'fill_color': PURE_RED,
+    },
+}
+DEFAULT_WEIGHT_CONFIG = {
+    **SMALL_TENSOR_CONFIG,
+    'cube_config': {
+        'fill_color': PURE_RED,
+    },
+}
+DEFAULT_BIAS_CONFIG = {
+    **SMALL_TENSOR_CONFIG,
+    'cube_config': {
+        'fill_color': PURE_RED,
+    },
+}
+
 DEFAULT_MTENSOR_CREATE_ARGS = {
     'style': 'series',
     'direction': RIGHT,
@@ -50,13 +75,13 @@ class PT_BatchNorm2d(VMobject):
             array=rt_running_mean,
             mode='cube',
             style='erect',
-            **{**SMALL_TENSOR_CONFIG, **self.running_mean_config},
+            **{**DEFAULT_RUNNING_MEAN_CONFIG, **self.running_mean_config},
         )
         mt_running_var = MTensor1D(
             array=rt_running_var,
             mode='cube',
             style='erect',
-            **{**SMALL_TENSOR_CONFIG, **self.running_var_config},
+            **{**DEFAULT_RUNNING_VAR_CONFIG, **self.running_var_config},
         )
         self.rt_running_mean = rt_running_mean
         self.rt_running_var = rt_running_var
@@ -72,13 +97,13 @@ class PT_BatchNorm2d(VMobject):
             array=rt_weight,
             mode='cube',
             style='erect',
-            **{**SMALL_TENSOR_CONFIG, **self.weight_config},
+            **{**DEFAULT_WEIGHT_CONFIG, **self.weight_config},
         )
         mt_bias = MTensor1D(
             array=rt_bias,
             mode='cube',
             style='erect',
-            **{**SMALL_TENSOR_CONFIG, **self.bias_config},
+            **{**DEFAULT_BIAS_CONFIG, **self.bias_config},
         )
         self.rt_weight = rt_weight
         self.rt_bias = rt_bias

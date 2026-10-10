@@ -27,7 +27,7 @@ INIT_CONFIG = {
     'track_running_stats': True,
 }
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -37,7 +37,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # module card
-        card_module, _ = import_mobs('039a')
+        card_module, _ = import_mobs('038a')
 
         # raw module with random init
         torch_module = torch.nn.BatchNorm2d(**INIT_CONFIG)

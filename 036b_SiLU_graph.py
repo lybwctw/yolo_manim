@@ -5,15 +5,13 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-FONT_SIZE_ANNO = 20
-FONT_SIZE_TICK = 16
-
-wt = 1.0
+FONT_SIZE_ANNO = 18
+FONT_SIZE_TICK = 15
 
 def silu(x):
     return x / (1 + np.exp(-x))
 
-
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -23,7 +21,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # module card
-        card_module, _ = import_mobs('037a')
+        card_module, _ = import_mobs('036a')
 
         # show initial card
         self.add_fixed_in_frame_mobjects(card_module)

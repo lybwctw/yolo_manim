@@ -15,7 +15,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # cards
-        card_focus, cards_module = import_mobs('038a')
+        card_focus, cards_module = import_mobs('037a')
 
         self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)

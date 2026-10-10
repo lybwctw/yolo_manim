@@ -32,7 +32,7 @@ TENSOR_VGAP_LARGE = 3.0
 #     'p': 1,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -46,7 +46,7 @@ class MainScene(ThreeDScene):
             tc_i, mc, tc_o,
             mt_i, mm_conv, mm_bn, mt_o,
             mg,
-        ) = import_mobs('040c')
+        ) = import_mobs('039c')
 
         # existing mobs
         module_config = mg.module_config
@@ -210,21 +210,25 @@ class MainScene(ThreeDScene):
             ref=p2f(self, vgs_bn[2][0].get_corner(DOWN)),
             text='running_mean',
             leader_direction=DR,
+            label_config={'font_size': 8},
         )
         tag_running_var = NameTag(
             ref=p2f(self, vgs_bn[2][1].get_corner(DOWN)),
             text='running_var',
             leader_direction=DR,
+            label_config={'font_size': 8},
         )
         tag_weight = NameTag(
             ref=p2f(self, vgs_bn[2][2].get_corner(DOWN)),
             text='weight',
             leader_direction=DR,
+            label_config={'font_size': 8},
         )
         tag_bias = NameTag(
             ref=p2f(self, vgs_bn[2][3].get_corner(DOWN)),
             text='bias',
             leader_direction=DR,
+            label_config={'font_size': 8},
         )
 
         # show tags

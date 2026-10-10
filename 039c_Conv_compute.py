@@ -32,7 +32,7 @@ TENSOR_VGAP_LARGE = 3.0
 #     'p': 1,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -42,7 +42,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        mc, mg = import_mobs('040b')
+        mc, mg = import_mobs('039b')
         module_config = mg.module_config
 
         # raw modules

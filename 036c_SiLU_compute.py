@@ -14,7 +14,7 @@ TENSOR_VGAP_3D = 1.0
 TENSOR_HGAP_3D = 0.7
 # TENSOR_EGAP_3D = 1.0
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -24,7 +24,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # module card
-        card_module = import_mobs('037b')
+        card_module = import_mobs('036b')
 
         # raw module, no visible module
         torch_module = torch.nn.SiLU()

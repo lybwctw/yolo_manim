@@ -1,6 +1,6 @@
 from manim import *
 
-from utils.mtensor import MTensor2D
+from utils.mtensor import MTensor3D
 from utils.general import *
 from utils.info_card import *
 from utils.constants import *
@@ -8,19 +8,23 @@ from utils.constants_3d import *
 
 import torch
 
-TENSOR_VGAP_2D = 1.5
-TENSOR_EGAP_2D = 1.0
-TENSOR_HGAP_2D = 1.0
+TENSOR_HGAP_3D = 1.0
+TENSOR_VGAP_3D = 1.5
+TENSOR_EGAP_3D = 1.0
 
-INIT_CONFIG = {
+CONFIG_0 = {
     'dim': 0,
 }
 
-NEW_CONFIG = {
+CONFIG_1 = {
     'dim': 1,
 }
 
-wt = 0.5
+CONFIG_2 ={
+    'dim': 2,
+}
+
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -30,23 +34,21 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # cards
-        cards = import_mobs('038b')
+        cards = import_mobs('037c')
         (
             card_i1, card_module, card_o1
         ) = cards
 
         # raw tensors
-        t_i1 = torch.randn(5,7)
-        module_config = INIT_CONFIG
+        t_i1 = torch.randn(4,5,7)
 
         # tensor mobs
-        mob_i1 = MTensor2D(
+        mob_i1 = MTensor3D(
             array=t_i1,
             mode='cube',
-            style='erect',
-            **MEDIUM_TENSOR_CONFIG,
+            **SMALL_TENSOR_CONFIG,
         ).align_to(
-            UP*TENSOR_VGAP_2D,
+            UP*TENSOR_VGAP_3D,
             DOWN,
         )
 
@@ -69,7 +71,7 @@ class MainScene(ThreeDScene):
         self.play(AnimationGroup(
             mob_i1.create(
                 style='beam',
-                direction=RIGHT,
+                direction=OUT,
             ),
             card_i1.expand_summary(
                 t2s(t_i1),
@@ -81,54 +83,39 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'dim 0 compute loop, first colume',
+            'dim 0 compute loop',
             skip_animations=False,
         )
         # ************************************************************
         # new output
+        module_config = CONFIG_0
         torch_module = torch.nn.Softmax(**module_config)
         t_o1 = torch_module(t_i1)
-        mob_o1 = MTensor2D(
+        mob_o1 = MTensor3D(
             array=t_o1,
             mode='cube',
-            style='erect',
-            **MEDIUM_TENSOR_CONFIG,
+            **SMALL_TENSOR_CONFIG,
         ).align_to(
-            DOWN*TENSOR_VGAP_2D,
+            DOWN*TENSOR_VGAP_3D,
             UP,
         )
 
-        masks_input = np.eye(mob_i1.shape[1],dtype=bool)[:,None,:].repeat(mob_i1.shape[0],1)
-        masks_output = np.eye(mob_o1.shape[1],dtype=bool)[:,None,:].repeat(mob_o1.shape[0],1)
+        c, h, w = mob_i1.shape  # shared by output masks
+        masks_input = np.eye(h*w,dtype=bool).reshape(h*w,h,w)[:,None,:,:].repeat(c,1)
+        masks_output = np.eye(h*w,dtype=bool).reshape(h*w,h,w)[:,None,:,:].repeat(c,1)
         beams_output = mob_o1.get_vgs(masks_output)
 
-        # highlight first column of input
-        self.play(mob_i1.highlight(
-            mask=masks_input[0],
+        # update module config
+        self.play(card_module.update_params(
+            module_config,
             run_time=wt,
         ))
         self.wait(wt)
 
-        # generate first column of output
-        self.play(AnimationGroup(
-            *(GrowFromCenter(
-                mob,
-                rate_func=rate_functions.ease_out_back,
-            ) for mob in beams_output[0]),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # ************************************************************
-        self.next_section(
-            'dim 0 compute loop, the rest',
-            skip_animations=False,
-        )
-        # ************************************************************
+        # loop
         self.play(AnimationGroup(
             mob_i1.highlight_loop(
-                masks=masks_input[1:],
+                masks=masks_input,
                 rate_func=smooth,
             ),
             Succession(
@@ -136,7 +123,7 @@ class MainScene(ThreeDScene):
                     *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
                       for mob in beam),
                     lag_ratio=0.0,
-                ) for beam in beams_output[1:]),
+                ) for beam in beams_output),
                 rate_func=smooth,
             ),
             lag_ratio=0.0,
@@ -161,7 +148,7 @@ class MainScene(ThreeDScene):
         self.play(AnimationGroup(
             mob_o1.uncreate(
                 style='beam',
-                direction=RIGHT,
+                direction=IN,
                 anim=Unwrite,
             ),
             card_o1.shrink_summary(),
@@ -172,26 +159,26 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'dim 1 compute loop, first row',
+            'dim 1 compute loop',
             skip_animations=False,
         )
         # ************************************************************
         # new output
-        module_config = NEW_CONFIG
+        module_config = CONFIG_1
         torch_module = torch.nn.Softmax(**module_config)
         t_o1 = torch_module(t_i1)
-        mob_o1 = MTensor2D(
+        mob_o1 = MTensor3D(
             array=t_o1,
             mode='cube',
-            style='erect',
-            **MEDIUM_TENSOR_CONFIG,
+            **SMALL_TENSOR_CONFIG,
         ).align_to(
-            DOWN*TENSOR_VGAP_2D,
+            DOWN*TENSOR_VGAP_3D,
             UP,
         )
 
-        masks_input = np.eye(mob_i1.shape[0],dtype=bool)[:,:,None].repeat(mob_i1.shape[1],2)
-        masks_output = np.eye(mob_o1.shape[0],dtype=bool)[:,:,None].repeat(mob_o1.shape[1],2)
+        c, h, w = mob_i1.shape  # shared by output masks
+        masks_input = np.eye(c*w,dtype=bool).reshape(c*w,c,w)[:,:,None,:].repeat(h,2)
+        masks_output = np.eye(c*w,dtype=bool).reshape(c*w,c,w)[:,:,None,:].repeat(h,2)
         beams_output = mob_o1.get_vgs(masks_output)
 
         # update module config
@@ -201,33 +188,10 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # highlight first row of input
-        self.play(mob_i1.highlight(
-            mask=masks_input[0],
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # generate first row of output
-        self.play(AnimationGroup(
-            *(GrowFromCenter(
-                mob,
-                rate_func=rate_functions.ease_out_back,
-            ) for mob in beams_output[0]),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
-
-        # ************************************************************
-        self.next_section(
-            'dim 1 compute loop, the rest',
-            skip_animations=False,
-        )
-        # ************************************************************
+        # loop
         self.play(AnimationGroup(
             mob_i1.highlight_loop(
-                masks=masks_input[1:],
+                masks=masks_input,
                 rate_func=smooth,
             ),
             Succession(
@@ -235,7 +199,7 @@ class MainScene(ThreeDScene):
                     *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
                       for mob in beam),
                     lag_ratio=0.0,
-                ) for beam in beams_output[1:]),
+                ) for beam in beams_output),
                 rate_func=smooth,
             ),
             lag_ratio=0.0,
@@ -256,18 +220,88 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
+        # clean output
+        self.play(AnimationGroup(
+            mob_o1.uncreate(
+                style='beam',
+                direction=IN,
+                anim=Unwrite,
+            ),
+            card_o1.shrink_summary(),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
         # ************************************************************
         self.next_section(
-            'clean input/output',
+            'dim 2 compute loop',
             skip_animations=False,
         )
         # ************************************************************
+        # new output
+        module_config = CONFIG_2
+        torch_module = torch.nn.Softmax(**module_config)
+        t_o1 = torch_module(t_i1)
+        mob_o1 = MTensor3D(
+            array=t_o1,
+            mode='cube',
+            **SMALL_TENSOR_CONFIG,
+        ).align_to(
+            DOWN*TENSOR_VGAP_3D,
+            UP,
+        )
+
+        c, h, w = mob_i1.shape  # shared by output masks
+        masks_input = np.eye(c*h,dtype=bool).reshape(c*h,c,h)[:,:,:,None].repeat(w,3)
+        masks_output = np.eye(c*h,dtype=bool).reshape(c*h,c,h)[:,:,:,None].repeat(w,3)
+        beams_output = mob_o1.get_vgs(masks_output)
+
+        # update module config
+        self.play(card_module.update_params(
+            module_config,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # loop
+        self.play(AnimationGroup(
+            mob_i1.highlight_loop(
+                masks=masks_input,
+                rate_func=smooth,
+            ),
+            Succession(
+                *(AnimationGroup(
+                    *(GrowFromCenter(mob, rate_func=rate_functions.ease_out_back)
+                      for mob in beam),
+                    lag_ratio=0.0,
+                ) for beam in beams_output),
+                rate_func=smooth,
+            ),
+            lag_ratio=0.0,
+            run_time=wt*3,
+        ))
+        self.wait(wt)
+
+        # restore input
+        self.play(mob_i1.highlight(
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # show output summary
+        self.play(card_o1.expand_summary(
+            t2s(t_o1.detach()),
+            run_time=wt,
+        ))
+        self.wait(wt)
+
         # clean input/output
         self.play(AnimationGroup(
             *(AnimationGroup(
                 tmob.uncreate(
                     style='beam',
-                    direction=RIGHT,
+                    direction=IN,
                     anim=Unwrite,
                 ),
                 cmob.shrink_summary(),

@@ -28,17 +28,17 @@ CONFIG_3 ={
     'dim': 3,
 }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # cards
-        cards = import_mobs('038d')
+        cards = import_mobs('037d')
         (
             card_i1, card_module, card_o1
         ) = cards
@@ -69,7 +69,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show input',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show input
@@ -89,7 +89,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'dim 0 compute loop',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # new output
@@ -166,7 +166,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'dim 1 compute loop',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # new output

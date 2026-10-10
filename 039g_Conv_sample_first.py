@@ -29,8 +29,7 @@ TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-wt = 0.5
-
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -40,7 +39,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load sample cards
-        cards = import_mobs('040f')
+        cards = import_mobs('039f')
 
         # show initial reference card
         self.set_camera_orientation(
@@ -97,6 +96,7 @@ class MainScene(ThreeDScene):
             mode='cube',
             style='horizontal',
             side_length=SIDE_LENGTH_MINI,
+            cube_config={'fill_color': PURE_RED},
         )
         for idx in range(mm_bn.shape[0]):
             mm_bn[idx].next_to(
@@ -151,7 +151,7 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             ),
             ut_conv.create(
-                direction='bottom',
+                ref='bottom',
                 run_time=wt,
             ),
             lag_ratio=0.0,

@@ -1,11 +1,11 @@
 from manim import *
 
-from utils.general import *
+from utils.general import import_mobs, export_mobs
 from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -14,21 +14,32 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
-        # cards
-        card_focus, cards_module = import_mobs('039a')
+        # modules
+        cards_module = import_mobs('028')
+        card_focus, cards_other = collect_idx_card(cards_module, 8)
 
         self.add_fixed_in_frame_mobjects(cards_module)
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'back to module list',
+            'focus on current module',
             skip_animations=False,
         )
         # ************************************************************
-        # module list
-        self.play(cards_module.animate(
+        cards_module.save_state()
+
+        # exit and focus
+        self.play(AnimationGroup(
+            cards_other.animate.set_x(CARD_EXIT_X),
+            card_focus.animate.set_y(CARD_FOCUS_Y),
+            lag_ratio=0.5,
             run_time=wt,
-        ).restore())
+        ))
         self.wait(wt)
+
+        # export
+        mobs = VGroup(card_focus, cards_module)     # NOTE: used by next
+        export_mobs(__file__, mobs)
+
 

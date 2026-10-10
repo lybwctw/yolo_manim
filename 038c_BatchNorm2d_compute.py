@@ -11,7 +11,7 @@ from utils.name_tag import *
 import torch
 import numpy as np
 
-FONT_SIZE_FORMULA = 24
+FONT_SIZE_FORMULA = 18
 FORMULA_V_OFFSET = 2.5
 FORMULA_V_OFFSET_FOCUS = 3.0
 FORMULA_H_OFFSET_FOCUS = 2.2
@@ -22,17 +22,17 @@ TENSOR_VGAP_3D_FOCUS = 0.7
 # TENSOR_HGAP_3D = 1.0
 # TENSOR_EGAP_3D = 1.0
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load mobs and torch module
-        card_module, mob_module = import_mobs('039b')
+        card_module, mob_module = import_mobs('038b')
         torch_module = mob_module.module
         mob_running_mean = mob_module.mt_running_mean
         mob_running_var = mob_module.mt_running_var
@@ -84,7 +84,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show input',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show input tensor
@@ -113,7 +113,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'formula and named tags again',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # assets
@@ -172,7 +172,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'focus and switch',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # mob_i1.save_state()
@@ -194,7 +194,7 @@ class MainScene(ThreeDScene):
         formula.generate_target()
         formula.target.center().shift(FORMULA_V_OFFSET_FOCUS*UP)
         self.move_camera(
-            zoom=1.8,
+            zoom=2.3,
             added_anims=[
                 MoveToTarget(mob_i1),
                 MoveToTarget(formula),
@@ -237,7 +237,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'compute for the first in first layer of output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         c, h, w = mob_i1.shape
@@ -309,7 +309,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'compute loop for the rest in first layer of output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         c, h, w = mob_i1.shape
@@ -356,7 +356,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'finish first layer computation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight first layer of input

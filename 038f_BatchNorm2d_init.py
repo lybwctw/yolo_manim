@@ -16,7 +16,7 @@ import numpy as np
 
 PARAM_HGAP_3D = 1.5
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -31,7 +31,7 @@ class MainScene(ThreeDScene):
             card_module,
             card_o1,
             mob_module,
-        ) = import_mobs('039e')
+        ) = import_mobs('038e')
 
         # raw module
         torch_module = mob_module.module
@@ -60,7 +60,7 @@ class MainScene(ThreeDScene):
         # FIXME: new perspective necessary??
         self.move_camera(
             **VIEW_INTRO,
-            zoom=1.7,
+            zoom=2.3,
             added_anims=[
                 AnimationGroup(
                     *(mob.switch(

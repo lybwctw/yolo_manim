@@ -32,13 +32,13 @@ TENSOR_VGAP_LARGE = 3.0
 #     'p': 1,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load card and graph
@@ -46,7 +46,7 @@ class MainScene(ThreeDScene):
             tc_i, mc, tc_o,
             mt_i, mm_conv, mm_bn, mt_o,
             mg,
-        ) = import_mobs('040d')
+        ) = import_mobs('039d')
 
         module_config = mg.module_config
 
@@ -64,7 +64,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'clean output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mt_o.save_state()
@@ -85,7 +85,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply conv bn act together',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # loop

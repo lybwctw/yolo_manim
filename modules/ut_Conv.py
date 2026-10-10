@@ -33,14 +33,14 @@ CONFIG_OPAQUE = {
 DEFAULT_CUBE_CONFIG_CONV = {
     'fill_color': ORANGE,
     'fill_opacity': 0.8,
-    'stroke_width': 2.0,
+    'stroke_width': 1.0,
     'stroke_opacity': 1.0,
     'stroke_color': WHITE,
 }
 DEFAULT_CUBE_CONFIG_BN = {
     'fill_color': PURE_RED,
     'fill_opacity': 0.8,
-    'stroke_width': 2.0,
+    'stroke_width': 1.0,
     'stroke_opacity': 1.0,
     'stroke_color': WHITE,
 }
@@ -48,7 +48,7 @@ DEFAULT_CUBE_CONFIG_BN = {
 DEFAULT_CUBE_CONFIG_BIAS = {
     'fill_color': ORANGE,
     'fill_opacity': 0.8,
-    'stroke_width': 2.0,
+    'stroke_width': 1.0,
     'stroke_opacity': 1.0,
     'stroke_color': WHITE,
 }

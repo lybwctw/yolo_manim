@@ -18,8 +18,7 @@ INIT_CONFIG = {
     'dim': 0,
 }
 
-FONT_SIZE_ANNO = 24
-FONT_SIZE_TICK = 16
+FONT_SIZE_ANNO = 18
 
 TENSOR_VGAP_1D = 1.0
 TENSOR_HGAP_1D = 1.0
@@ -27,18 +26,17 @@ TENSOR_HGAP_1D = 1.0
 COLOR_SOURCE = GREEN
 COLOR_TARGET = RED
 
-wt = 0.5
-
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # module card
-        card_module, _ = import_mobs('038a')
+        card_module, _ = import_mobs('037a')
 
         # raw module
         torch_module = torch.nn.Softmax(**INIT_CONFIG)
@@ -81,7 +79,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'starting module card',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # expand empty module card
@@ -101,7 +99,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show input tensor',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(mob_i1.create(
@@ -128,7 +126,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'from formula to output',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # assets
@@ -193,7 +191,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'clean formula and make space in the right',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # remove formula and make tensors closer
@@ -209,7 +207,7 @@ class MainScene(ThreeDScene):
         self.play(mobs.animate(
             run_time=wt,
         ).align_to(
-            LEFT*TENSOR_HGAP_1D*0.5,
+            LEFT*TENSOR_HGAP_1D*1.0,
             RIGHT,
         ))
         self.wait(wt)
@@ -226,14 +224,14 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'plot explanation',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # assets
         axes = Axes(
             x_range=[-0.5, len(arr_i1) - 0.5, 1],
             y_range=[-3, 3, 1],
-            x_length=4,
+            x_length=3,
             y_length=3,
             axis_config={
                 'include_numbers': False,
@@ -251,8 +249,8 @@ class MainScene(ThreeDScene):
         )
         ticks = VGroup(*(
             Line(
-                axes.c2p(index, 0) + DOWN * 0.1,
-                axes.c2p(index, 0) + UP * 0.1,
+                axes.c2p(index, 0) + DOWN * 0.05,
+                axes.c2p(index, 0) + UP * 0.05,
                 stroke_width=2,
             )
             for index in range(len(arr_i1))
@@ -260,7 +258,7 @@ class MainScene(ThreeDScene):
         source_dots = VGroup(*(
             Dot(
                 axes.c2p(index, value),
-                radius=0.05,
+                radius=0.03,
                 color=COLOR_SOURCE,
             )
             for index, value in enumerate(arr_i1)
@@ -278,7 +276,7 @@ class MainScene(ThreeDScene):
         target_dots = VGroup(*(
             Dot(
                 axes.c2p(index, value),
-                radius=0.05,
+                radius=0.03,
                 color=COLOR_TARGET,
             )
             for index, value in enumerate(arr_o1)
@@ -302,7 +300,7 @@ class MainScene(ThreeDScene):
             target_lines,
             target_dots,
         ).align_to(
-            RIGHT*TENSOR_HGAP_1D*0.5,
+            RIGHT*TENSOR_HGAP_1D*1.0,
             LEFT,
         )
 
@@ -341,10 +339,10 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'loop through samples',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
-        for _ in range(1):
+        for _ in range(5):
             # new assets
             t_i1 = -5 + 10 * torch.rand(6)
             t_o1 = torch_module(t_i1)
