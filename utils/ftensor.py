@@ -12,7 +12,7 @@ from utils.mcube import MCube
 from utils.mtensor import *
 from utils.constants_3d import *
 
-UNIT_FTENSOR_SIZE = 0.15
+UNIT_FTENSOR_SIZE = 0.10
 
 MID_SCALE = 0.8
 
@@ -23,7 +23,7 @@ CONFIG_OPAQUE = {
 DEFAULT_CUBE_CONFIG = {
     'fill_color': GRAY,
     'fill_opacity': 0.8,
-    'stroke_width': 2.0,
+    'stroke_width': 1.0,
     'stroke_opacity': 1.0,
     'stroke_color': WHITE,
 }
