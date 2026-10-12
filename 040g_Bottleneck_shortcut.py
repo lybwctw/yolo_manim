@@ -31,7 +31,7 @@ TENSOR_VGAP_LARGE = 3.0
     # 'e': 1.0,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -45,7 +45,7 @@ class MainScene(ThreeDScene):
             tc_i, mc, tc_o,
             mt_1, mm_cv1, mt_2, mm_cv2, mt_3,
             mg,
-        ) = import_mobs('041f')
+        ) = import_mobs('040f')
 
         # for convenience
         mts = VGroup(mt_1, mt_2, mt_3)

@@ -91,11 +91,39 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             )
         )
-        # self.wait(wt)
+
+        # update io tensors
+        self.play(AnimationGroup(
+            mts[0].stretch_3d(
+                new_shape=(16,5,6),
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # update graph shapes
+        self.play(AnimationGroup(
+            mg.update_shape(
+                text='(16,h,w)',
+                index=0,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # update io cards
+        self.play(AnimationGroup(
+            tc_i.update_summary(
+                summary='(16,h,w)',
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            '[8 8] -> [16 16]',
+            '[16 8] -> [16 16]',
             skip_animations=False,
         )
         # ************************************************************
@@ -123,105 +151,122 @@ class MainScene(ThreeDScene):
 
         # update module
         self.play(AnimationGroup(
-            mm_cv1.ft_conv.stretch_blocks(
+            mm_cv1.stretch_blocks(
                 direction='out',
                 diff=2,
-                ref='center',
+                new_shape=(8,16,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            mm_cv1.ft_bn.stretch_blocks(
-                direction='out',
-                diff=2,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_cv2.ft_conv.stretch_blocks(
+            mm_cv2.stretch_blocks(
                 direction='out',
                 diff=4,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_cv2.ft_bn.stretch_blocks(
-                direction='out',
-                diff=4,
-                ref='center',
+                new_shape=(16,4,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
             lag_ratio=0.0,
         ))
         self.play(
-            mm_cv2.ft_conv.stretch_3d(
+            mm_cv2.stretch_3d(
                 new_shape=(8,3,3),
                 run_time=wt,
             ),
         )
-        self.move_camera(
-            zoom=0.9,           # NOTE
-            run_time=wt,
-        )
-        self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            '(16,5,6) -> (8,5,6) -> (16,5,6)',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # update tensors
+        # update io tensors
         self.play(AnimationGroup(
-            mt_1.stretch_3d(new_shape=(16,5,6)),
-            mt_2.stretch_3d(new_shape=(8,5,6)),
-            mt_3.stretch_3d(new_shape=(16,5,6)),
-            lag_ratio=0.5,
-            run_time=wt*2,
-        ))
-
-        # show graph shapes
-        self.play(mg.show_shapes(
-            texts=['(16,5,6)', '(8,5,6)', '(16,5,6)'],
-            indices=[0, 1, 2],
-            directions=[LEFT]*3,
-            lag_ratio=0.5,
-            run_time=wt*2,
-        ))
-
-        # tensor cards summary
-        self.play(AnimationGroup(
-            tc_i.expand_summary('(16,5,6)'),
-            tc_o.expand_summary('(16,5,6)'),
-            lag_ratio=0.5,
+            mts[1].stretch_3d(
+                new_shape=(8,5,6),
+            ),
+            mts[2].stretch_3d(
+                new_shape=(16,5,6),
+            ),
+            lag_ratio=0.0,
             run_time=wt,
         ))
 
-        # lightup tensors
+        # update graph shapes
         self.play(AnimationGroup(
-            mt_1.lightup(),
-            mt_2.lightup(),
-            mt_3.lightup(),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=1,
+            ),
+            mg.update_shape(
+                text='(16,h,w)',
+                index=2,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # update io cards
+        self.play(AnimationGroup(
+            tc_o.update_summary(
+                summary='(16,h,w)',
+            ),
             lag_ratio=0.0,
             run_time=wt,
         ))
         self.wait(wt)
 
-        # fade modules
-        self.play(AnimationGroup(
-            mm_cv1.ft_conv.tarnish(),
-            mm_cv1.ft_bn.tarnish(),
-            mm_cv2.ft_conv.tarnish(),
-            mm_cv2.ft_bn.tarnish(),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-        self.wait(wt)
+        # # ************************************************************
+        # self.next_section(
+        #     '(16,5,6) -> (8,5,6) -> (16,5,6)',
+        #     skip_animations=False,
+        # )
+        # # ************************************************************
+        # # update tensors
+        # self.play(AnimationGroup(
+        #     mt_1.stretch_3d(new_shape=(16,5,6)),
+        #     mt_2.stretch_3d(new_shape=(8,5,6)),
+        #     mt_3.stretch_3d(new_shape=(16,5,6)),
+        #     lag_ratio=0.5,
+        #     run_time=wt*2,
+        # ))
 
-        # export
-        mobs = VGroup(
-            tc_i, mc, tc_o,
-            mts[0], mm_cv1, mts[1], mm_cv2, mts[2],
-            mg,
-        )
-        export_mobs(__file__, mobs)     # NOTE: used by next
+        # # show graph shapes
+        # self.play(mg.show_shapes(
+        #     texts=['(16,5,6)', '(8,5,6)', '(16,5,6)'],
+        #     indices=[0, 1, 2],
+        #     directions=[LEFT]*3,
+        #     lag_ratio=0.5,
+        #     run_time=wt*2,
+        # ))
+
+        # # tensor cards summary
+        # self.play(AnimationGroup(
+        #     tc_i.expand_summary('(16,5,6)'),
+        #     tc_o.expand_summary('(16,5,6)'),
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+
+        # # lightup tensors
+        # self.play(AnimationGroup(
+        #     mt_1.lightup(),
+        #     mt_2.lightup(),
+        #     mt_3.lightup(),
+        #     lag_ratio=0.0,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # fade modules
+        # self.play(AnimationGroup(
+        #     mm_cv1.ft_conv.tarnish(),
+        #     mm_cv1.ft_bn.tarnish(),
+        #     mm_cv2.ft_conv.tarnish(),
+        #     mm_cv2.ft_bn.tarnish(),
+        #     lag_ratio=0.0,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
+
+        # # export
+        # mobs = VGroup(
+        #     tc_i, mc, tc_o,
+        #     mts[0], mm_cv1, mts[1], mm_cv2, mts[2],
+        #     mg,
+        # )
+        # export_mobs(__file__, mobs)     # NOTE: used by next

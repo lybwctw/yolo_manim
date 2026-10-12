@@ -236,6 +236,49 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
+        # ************************************************************
+        self.next_section(
+            '8hw -> 4hw -> 8hw',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # manual graph update
+        self.play(AnimationGroup(
+            mg.update_shape(
+                text='(8,h,w)',
+                index=0,
+            ),
+            mg.update_shape(
+                text='(4,h,w)',
+                index=1,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=2,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # manual cards update
+        self.play(AnimationGroup(
+            tc_i.update_summary(
+                summary='(8,h,w)',
+            ),
+            tc_o.update_summary(
+                summary='(8,h,w)',
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'focus on modules',
+            skip_animations=False,
+        )
+        # ************************************************************
         # lightup modules
         self.play(AnimationGroup(
             mm_cv1.lightup(),
@@ -245,34 +288,28 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # ************************************************************
-        self.next_section(
-            'fade tensors, focus on modules',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # fade tensors
-        self.play(AnimationGroup(
-            mts[0].tarnish(),
-            mts[1].tarnish(),
-            mts[2].tarnish(),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
+        # # fade tensors
+        # self.play(AnimationGroup(
+        #     mts[0].tarnish(),
+        #     mts[1].tarnish(),
+        #     mts[2].tarnish(),
+        #     lag_ratio=0.0,
+        #     run_time=wt,
+        # ))
 
-        # remove shapes in graph
-        self.play(mg.hide_shapes(
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
+        # # remove shapes in graph
+        # self.play(mg.hide_shapes(
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
 
-        # shrink tensor cards
-        self.play(AnimationGroup(
-            *(card.shrink_summary() for card in [tc_i, tc_o]),
-            lag_ratio=0.5,
-            run_time=wt,
-        ))
-        self.wait(wt)
+        # # shrink tensor cards
+        # self.play(AnimationGroup(
+        #     *(card.shrink_summary() for card in [tc_i, tc_o]),
+        #     lag_ratio=0.5,
+        #     run_time=wt,
+        # ))
+        # self.wait(wt)
 
         # export
         mobs = VGroup(
