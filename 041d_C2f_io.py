@@ -23,7 +23,7 @@ TENSOR_VGAP_SMALL = 0.5
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -38,7 +38,7 @@ class MainScene(ThreeDScene):
             mm_cv1, mm_m, mm_cv2,
             mts,
             mg,
-        ) = import_mobs('042c')
+        ) = import_mobs('041c')
         module_config = mg.module_config
 
         # for convenience

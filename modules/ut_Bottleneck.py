@@ -42,12 +42,12 @@ class UT_Bottleneck(VMobject):
         ut_cv1 = UT_Conv(
             module_config=Bottleneck_2_cv1_config(self.module_config),
             z_index=z_index,
-            opaque=True,
+            opaque=True,        # opaque Conv by default
         )
         ut_cv2 = UT_Conv(
             module_config=Bottleneck_2_cv2_config(self.module_config),
             z_index=z_index,
-            opaque=True,
+            opaque=True,        # opaque Conv by default
         )
         VGroup(ut_cv1, ut_cv2).arrange(DOWN, buff=module_gap)
 

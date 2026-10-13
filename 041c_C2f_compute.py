@@ -33,7 +33,9 @@ TENSOR_EGAP_MEDIUM = 1.0
     # 'e': 0.5,
 # }
 
-wt = 0.5
+INIT_SCALE = 0.8
+
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -43,7 +45,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        mc, mg = import_mobs('042b')
+        mc, mg = import_mobs('041b')
         module_config = mg.module_config
 
         # raw modules
@@ -65,21 +67,17 @@ class MainScene(ThreeDScene):
         # module mobs (cv1, m, cv2)
         mm_cv1 = UT_Conv(
             module_config=C2f_2_cv1_config(module_config),
-            init_scale=0.8,
             opaque=True,
-        )
+        ).scale(INIT_SCALE)
         mm_cv2 = UT_Conv(
             module_config=C2f_2_cv2_config(module_config),
-            init_scale=0.8,
             opaque=True,
-        )
+        ).scale(INIT_SCALE)
         mm_m = VGroup(
             UT_Bottleneck(
                 module_config=C2f_2_bottleneck_config(module_config),
-                init_scale=0.8,
-                opaque=True,
             ) for _ in range(module_config['n'])
-        )
+        ).scale(INIT_SCALE)
         mm_m1, mm_m2, mm_m3 = mm_m
         VGroup(mm_cv1, mm_m1, mm_m2, mm_m3, mm_cv2).arrange(
             DOWN,
@@ -90,9 +88,8 @@ class MainScene(ThreeDScene):
         mts = VGroup(
             FTensor3D(
                 shape=t[0].shape,
-                init_scale=0.8,
                 opaque=True,
-            ) for t in [
+            ).scale(INIT_SCALE) for t in [
                 t_i, t_m1, t_m2, t_m3, t_m4, t_m5, t_m6, t_m7, t_o,
             ]
         )
@@ -594,7 +591,7 @@ class MainScene(ThreeDScene):
         mobs.target.arrange(DOWN, buff=gap)
 
         # NOTE: final mobs center here
-        mobs.target.shift(UP*2.5)
+        mobs.target.shift(UP*1.5)
         self.play(MoveToTarget(
             mobs,
             run_time=wt,

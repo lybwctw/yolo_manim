@@ -51,9 +51,24 @@ class MainScene(ThreeDScene):
         mts = VGroup(mt_1, mt_2, mt_3)
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.9)   # NOTE: last zoom is 0.9
+        self.set_camera_orientation(**VIEW_COMPUTE)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mts, mm_cv1, mm_cv2)
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'tarnish modules',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # fade modules
+        self.play(AnimationGroup(
+            mm_cv1.tarnish(),
+            mm_cv2.tarnish(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
         self.wait(wt)
 
         # ************************************************************
@@ -132,36 +147,34 @@ class MainScene(ThreeDScene):
 
         # update module
         self.play(AnimationGroup(
-            mm_cv1.ft_conv.stretch_blocks(
+            mm_cv1.stretch_blocks(
                 direction='in',
                 diff=2,
-                ref='center',
+                new_shape=(4,16,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            mm_cv1.ft_bn.stretch_blocks(
-                direction='in',
-                diff=2,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_cv2.ft_conv.stretch_3d(
+            mm_cv2.stretch_3d(
                 new_shape=(4,3,3),
                 run_time=wt,
             ),
             lag_ratio=0.0,
-            run_time=wt,
         ))
         self.wait(wt)
 
-        # update mid tensor and graph shape
+        # update io tensors
         self.play(AnimationGroup(
-            mt_2.stretch_3d(
+            mts[1].stretch_3d(
                 new_shape=(4,5,6),
             ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # update graph shapes
+        self.play(AnimationGroup(
             mg.update_shape(
-                text='(4,5,6)',
+                text='(4,h,w)',
                 index=1,
             ),
             lag_ratio=0.0,
@@ -200,36 +213,34 @@ class MainScene(ThreeDScene):
 
         # update module
         self.play(AnimationGroup(
-            mm_cv1.ft_conv.stretch_blocks(
+            mm_cv1.stretch_blocks(
                 direction='out',
                 diff=6,
-                ref='center',
+                new_shape=(16,16,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            mm_cv1.ft_bn.stretch_blocks(
-                direction='out',
-                diff=6,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_cv2.ft_conv.stretch_3d(
+            mm_cv2.stretch_3d(
                 new_shape=(16,3,3),
                 run_time=wt,
             ),
             lag_ratio=0.0,
-            run_time=wt,
         ))
         self.wait(wt)
 
-        # update mid tensor and graph shape
+        # update io tensors
         self.play(AnimationGroup(
-            mt_2.stretch_3d(
+            mts[1].stretch_3d(
                 new_shape=(16,5,6),
             ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # update graph shapes
+        self.play(AnimationGroup(
             mg.update_shape(
-                text='(16,5,6)',
+                text='(16,h,w)',
                 index=1,
             ),
             lag_ratio=0.0,
@@ -268,42 +279,28 @@ class MainScene(ThreeDScene):
 
         # update module
         self.play(AnimationGroup(
-            mm_cv1.ft_conv.stretch_blocks(
+            mm_cv1.stretch_blocks(
                 direction='in',
                 diff=4,
-                ref='center',
+                new_shape=(8,16,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
-            mm_cv1.ft_bn.stretch_blocks(
+            mm_cv2.stretch_blocks(
                 direction='in',
                 diff=4,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_cv2.ft_conv.stretch_blocks(
-                direction='in',
-                diff=4,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_cv2.ft_bn.stretch_blocks(
-                direction='in',
-                diff=4,
-                ref='center',
+                new_shape=(8,16,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
             lag_ratio=0.0,
         ))
         self.play(AnimationGroup(
-            mm_cv1.ft_conv.stretch_3d(
+            mm_cv1.stretch_3d(
                 new_shape=(8,3,3),
                 run_time=wt,
             ),
-            mm_cv2.ft_conv.stretch_3d(
+            mm_cv2.stretch_3d(
                 new_shape=(8,3,3),
                 run_time=wt,
             ),
@@ -311,51 +308,59 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # update mid tensor and graph shape
-        self.play(Succession(
-            AnimationGroup(
-                mt_1.stretch_3d(new_shape=(8,5,6)),
-                mt_2.stretch_3d(new_shape=(8,5,6)),
-                mt_3.stretch_3d(new_shape=(8,5,6)),
+        # update io tensors
+        self.play(AnimationGroup(
+            mts[0].stretch_3d(
+                new_shape=(8,5,6),
             ),
-            AnimationGroup(
-                mg.update_shape(
-                    text='(8,5,6)',
-                    index=0,
-                ),
-                mg.update_shape(
-                    text='(8,5,6)',
-                    index=1,
-                ),
-                mg.update_shape(
-                    text='(8,5,6)',
-                    index=2,
-                ),
+            mts[1].stretch_3d(
+                new_shape=(8,5,6),
             ),
-            AnimationGroup(
-                tc_i.update_summary(
-                    summary='(8,5,6)',
-                ),
-                tc_o.update_summary(
-                    summary='(8,5,6)',
-                ),
+            mts[2].stretch_3d(
+                new_shape=(8,5,6),
             ),
             lag_ratio=0.0,
-            run_time=wt*3,
+            run_time=wt,
+        ))
+
+        # update graph shapes
+        self.play(AnimationGroup(
+            mg.update_shape(
+                text='(8,h,w)',
+                index=0,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=1,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=2,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # update io cards
+        self.play(AnimationGroup(
+            tc_i.update_summary(
+                summary='(8,h,w)',
+            ),
+            tc_o.update_summary(
+                summary='(8,h,w)',
+            ),
         ))
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'highlight modules',
+            'lightup modules',
             skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
-            mm_cv1.ft_conv.lightup(),
-            mm_cv1.ft_bn.lightup(),
-            mm_cv2.ft_conv.lightup(),
-            mm_cv2.ft_bn.lightup(),
+            mm_cv1.lightup(),
+            mm_cv2.lightup(),
             lag_ratio=0.0,
             run_time=wt,
         ))

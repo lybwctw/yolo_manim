@@ -23,12 +23,12 @@ BUFF_HEIGHT_RATIO = 0.8         # padding height / colon height
 DEFAULT_HEAD_CONFIG = {
     'color': WHITE,
     'font': 'JetBrains Mono',
-    'font_size': 12,
+    'font_size': 10,
 }
 DEFAULT_LINE_CONFIG = {
     'color': GRAY,
     'font': 'JetBrains Mono',
-    'font_size': 12,
+    'font_size': 10,
 }
 DEFAULT_FRAME_CONFIG = {
     'fill_color': GRAY,

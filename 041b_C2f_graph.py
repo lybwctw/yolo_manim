@@ -28,7 +28,7 @@ TENSOR_LABEL_CONFIG = {
     'color': GRAY,
 }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -38,7 +38,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # module card
-        card_module, _ = import_mobs('042a')
+        card_module, _ = import_mobs('041a')
 
         # raw module with random init
         module_config = INIT_CONFIG

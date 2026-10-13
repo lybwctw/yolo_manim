@@ -7,6 +7,7 @@ from utils.mtensor import *
 from utils.constants import *
 from utils.constants_3d import *
 from utils.info_card import *
+from utils.mgraph import *
 
 from modules.ut_Conv import *
 from modules.ut_Bottleneck import *
@@ -167,29 +168,34 @@ class MGraph_C2f(MGraph):
 
         objs['cv1'] = InfoCard(
             'Conv',
-            summary=f'{c1} {c_*2} 1 1 1',
+            summary=f'{c1} {c_*2} 1 1 0',
+            # head_config=GRAPH_CARD_HEAD_CONFIG,
             frame_config={'fill_color': PURE_BLUE},
         )
         objs['cv2'] = InfoCard(
             'Conv',
-            summary=f'{(2+n)*c_} {c2} 1 1 1',
+            summary=f'{(2+n)*c_} {c2} 1 1 0',
+            # head_config=GRAPH_CARD_HEAD_CONFIG,
             frame_config={'fill_color': PURE_BLUE},
         )
         objs['split'] = InfoCard(
             'split',
             summary=f'{c_} 0',
+            # head_config=GRAPH_CARD_HEAD_CONFIG,
             frame_config={'fill_color': TEAL},
         )
         # TODO: update cat with concat in previous chapters
         objs['concat'] = InfoCard(
             'concat',
             summary=f'0',
+            # head_config=GRAPH_CARD_HEAD_CONFIG,
             frame_config={'fill_color': TEAL},
         )
         objs['m'] = VGroup(
             InfoCard(
                 'Bottleneck',
                 summary=f'{c_} {c_} {str(shortcut)[0]}',
+                # head_config=GRAPH_CARD_HEAD_CONFIG,
                 frame_config={'fill_color': PURE_BLUE},
             ) for _ in range(n)
         )

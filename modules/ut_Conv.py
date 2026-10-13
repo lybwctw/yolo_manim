@@ -26,7 +26,7 @@ from utils.general import *
 
 CONFIG_OPAQUE = {
     'fill_opacity': 1.0,
-    'stroke_width': 0.2,
+    'stroke_width': 0.5,
     # 'stroke_width': 1.0,
 }
 
@@ -392,8 +392,7 @@ class Demo(ThreeDScene):
                 'k': 3,
             },
             opaque=True,
-            init_scale=0.8,
-        )
+        ).scale(0.8)
         self.play(uconv.create(
             ref='center',
             rate_func=smooth,

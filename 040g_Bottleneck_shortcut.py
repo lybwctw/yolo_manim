@@ -51,7 +51,7 @@ class MainScene(ThreeDScene):
         mts = VGroup(mt_1, mt_2, mt_3)
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.9)   # NOTE: last zoom is 0.9
+        self.set_camera_orientation(**VIEW_COMPUTE)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mts, mm_cv1, mm_cv2)
         self.wait(wt)
@@ -122,7 +122,7 @@ class MainScene(ThreeDScene):
 
         # new perspective
         self.move_camera(
-            zoom=0.85,
+            # zoom=0.85,
             frame_center=VGroup(mt_2,mm_cv2).get_center(),
             run_time=wt,
         )
@@ -145,13 +145,13 @@ class MainScene(ThreeDScene):
         # summary and graph shape for new output
         self.play(Succession(
             mg.show_shape(
-                '(8,5,6)',
+                '(8,h,w)',
                 index=4,
                 direction=LEFT,
                 run_time=wt,
             ),
             tc_o.expand_summary(
-                '(8,5,6)',
+                '(8,h,w)',
                 run_time=wt,
             ),
         ))
@@ -176,7 +176,7 @@ class MainScene(ThreeDScene):
         # new perspective and rearrange
         mobs = VGroup(mt_1, mm_cv1, mm_cv2, mt_4)
         self.move_camera(
-            zoom=1.0,
+            # zoom=1.0,
             frame_center=ORIGIN,
             added_anims=[
                 mobs.animate(

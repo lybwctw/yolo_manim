@@ -311,7 +311,12 @@ class MainScene(ThreeDScene):
         # ))
         # self.wait(wt)
 
-        # export
+        # ************************************************************
+        self.next_section(
+            'export',
+            skip_animations=False,
+        )
+        # ************************************************************
         mobs = VGroup(
             tc_i, mc, tc_o,
             mts[0], mm_cv1, mts[1], mm_cv2, mts[2],

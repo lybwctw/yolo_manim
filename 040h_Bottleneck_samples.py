@@ -26,8 +26,6 @@ TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-wt = 0.5
-
 SCALE_FACTOR = 1.0
 
 with open(Path(__file__).with_name('yolov8_Bottleneck_3.csv'), newline='') as csv_file:
@@ -37,6 +35,7 @@ with open(Path(__file__).with_name('yolov8_Bottleneck_3.csv'), newline='') as cs
         for row in csv.DictReader(csv_file)
     ]
 
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -46,8 +45,8 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        card_ref = import_mobs('041g')
-        cards = VGroup(card_ref.copy() for _ in range(21))
+        card_ref = import_mobs('040g')
+        cards = VGroup(card_ref.copy() for _ in range(20))
 
         # show initial reference card
         self.set_camera_orientation(
@@ -58,7 +57,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'arrange 21 copies of card',
+            'arrange 20 copies of card',
             skip_animations=False,
         )
         # ************************************************************
@@ -71,8 +70,8 @@ class MainScene(ThreeDScene):
         ).scale(
             SCALE_FACTOR
         ).arrange_in_grid(
-            rows=7,
-            cols=3,
+            rows=5,
+            cols=4,
             buff=(1.0, 0.1),
             flow_order='dr',
         ).center())
@@ -88,8 +87,7 @@ class MainScene(ThreeDScene):
             )),
             rate_func=rate_functions.ease_in_out_expo,
             lag_ratio=0.5,
-            # run_time=wt*10,
-            run_time=wt,
+            run_time=wt*10,
         ))
         self.wait(wt)
 
