@@ -1,5 +1,5 @@
 # ************************************************************
-# n for C2f.
+# n in C2f: 3 -> 2 -> 1.
 # ************************************************************
 from manim import *
 
@@ -32,7 +32,7 @@ TENSOR_VGAP_LARGE = 3.0
     # 'e': 0.25,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -47,14 +47,14 @@ class MainScene(ThreeDScene):
             mm_cv1, mm_m, mm_cv2,
             mts,
             mg,
-        ) = import_mobs('042g')
+        ) = import_mobs('041g')
         module_config = mg.module_config
 
         # for convenience
         mm_m1, mm_m2, mm_m3 = mm_m
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.7)
+        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.6)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mm_m, mm_cv1, mm_cv2, mts)
         self.wait(wt)
@@ -81,7 +81,7 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ).set_y(0.0))
         self.play(mg.mobs_card[5].update_summary(
-            summary='16 16 1 1 1',
+            summary='32 16 1 1 0',
             run_time=wt,
         ))
         # self.wait(wt)
@@ -101,21 +101,29 @@ class MainScene(ThreeDScene):
         # update modules: stretch mm_cv2
         self.play(
             mm_cv2.stretch_3d(
-                new_shape=(16,16,1,1),
-                scale_factor=(16/20,1.0,1.0),
-                lag_ratio=0.0,
+                new_shape=(32,1,1),
                 run_time=wt,
             )
         )
 
-        # update tensors
+        # update io tensors
         self.play(
             mts[6].stretch_3d(
-                new_shape=(16,5,6),
-                scale_factor=(16/20,1.0,1.0),
+                new_shape=(32,5,6),
                 run_time=wt,
             )
         )
+
+        # update graph shapes
+        self.play(AnimationGroup(
+            mg.update_shape(
+                text='(32,h,w)',
+                index=5,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # rearrange
         vg1 = VGroup(mts[0], mm_cv1, mts[1], mts[2], mts[3], mm_m1, mts[4], mm_m2, mts[5])
@@ -128,7 +136,7 @@ class MainScene(ThreeDScene):
         mobs.target[0].set_z(vg1_z)
         mobs.target[1].set_z(vg2_z)
         self.move_camera(
-            zoom=0.8,
+            zoom=0.7,
             added_anims=[
                 MoveToTarget(
                     mobs,
@@ -161,7 +169,7 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ).set_y(0.0))
         self.play(mg.mobs_card[4].update_summary(
-            summary='12 16 1 1 1',
+            summary='24 16 1 1 0',
             run_time=wt,
         ))
         # self.wait(wt)
@@ -181,21 +189,29 @@ class MainScene(ThreeDScene):
         # update modules: stretch mm_cv2
         self.play(
             mm_cv2.stretch_3d(
-                new_shape=(12,16,1,1),
-                scale_factor=(12/16,1.0,1.0),
-                lag_ratio=0.0,
+                new_shape=(24,1,1),
                 run_time=wt,
             )
         )
 
-        # update tensors
+        # update io tensors
         self.play(
             mts[5].stretch_3d(
-                new_shape=(12,5,6),
-                scale_factor=(12/16,1.0,1.0),
+                new_shape=(24,5,6),
                 run_time=wt,
             )
         )
+
+        # update graph shapes
+        self.play(AnimationGroup(
+            mg.update_shape(
+                text='(24,h,w)',
+                index=4,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # rearrange
         vg1 = VGroup(mts[0], mm_cv1, mts[1], mts[2], mts[3], mm_m1, mts[4])
@@ -208,7 +224,7 @@ class MainScene(ThreeDScene):
         mobs.target[0].set_z(vg1_z)
         mobs.target[1].set_z(vg2_z)
         self.move_camera(
-            zoom=0.9,                   # NOTE: final zoom
+            zoom=0.8,                   # NOTE: final zoom
             added_anims=[
                 MoveToTarget(
                     mobs,

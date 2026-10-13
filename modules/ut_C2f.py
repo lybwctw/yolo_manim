@@ -330,6 +330,8 @@ class MGraph_C2f(MGraph):
         card_pop = self.mobs_card[n+1]
         line_pop1 = self.lines[n+1]
         line_pop2 = self.lines[2*n+5]
+        shape_pop = self.objs_shape[n+1]
+        self.remove(shape_pop)
 
         self.mobs_card.remove(card_pop)
         self.objs_card['m'].remove(card_pop)
@@ -339,7 +341,16 @@ class MGraph_C2f(MGraph):
         mobs_tail = VGroup(
             self.mobs_card[n+1:],
             self.lines[n+1:n+4],
+            self.objs_shape[n+2],
+            self.objs_shape[n+3],
+            self.objs_shape[n+4],
         )
+        self.objs_shape[n+1] = self.objs_shape[n+2]
+        self.objs_shape[n+2] = self.objs_shape[n+3]
+        self.objs_shape[n+3] = self.objs_shape[n+4]
+        self.objs_shape[n+4] = self.objs_shape[n+5]
+        del self.objs_shape[n+5]
+
         mobs_tail.generate_target()
         mobs_tail.target.next_to(self.mobs_card[n], DOWN, buff=0.0)
 
@@ -364,6 +375,7 @@ class MGraph_C2f(MGraph):
             Unwrite(card_pop),
             Unwrite(line_pop1),
             Unwrite(line_pop2),
+            Unwrite(shape_pop),
             AnimationGroup(
                 MoveToTarget(mobs_tail),
                 Transform(path, path_new),

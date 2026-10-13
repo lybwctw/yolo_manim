@@ -26,8 +26,6 @@ TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-wt = 0.5
-
 SCALE_FACTOR = 1.0
 
 with open(Path(__file__).with_name('yolov8_C2f_3.csv'), newline='') as csv_file:
@@ -36,6 +34,7 @@ with open(Path(__file__).with_name('yolov8_C2f_3.csv'), newline='') as csv_file:
         for row in csv.DictReader(csv_file)
     ]
 
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -45,7 +44,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        card_ref = import_mobs('042i')
+        card_ref = import_mobs('041i')
         cards = VGroup(card_ref.copy() for _ in range(36))
 
         # show initial reference card
@@ -73,7 +72,7 @@ class MainScene(ThreeDScene):
             cols=6,
             buff=(0.5, 0.2),
             flow_order='dr',
-        ).center())
+        ).center().shift(RIGHT*0.5))
         # self.wait(wt)
 
         # all possible Bottleneck summaries for yolov8 series
@@ -91,6 +90,11 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # export
+        # ************************************************************
+        self.next_section(
+            'export',
+            skip_animations=False,
+        )
+        # ************************************************************
         mobs = cards
         export_mobs(__file__, mobs)

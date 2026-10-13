@@ -1,5 +1,5 @@
 # ************************************************************
-# e=0.25 for C2f.
+# e in C2f: 0.5 -> 0.25 -> 0.5.
 # ************************************************************
 from manim import *
 
@@ -32,7 +32,7 @@ TENSOR_VGAP_LARGE = 3.0
     # 'e': 0.5,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -47,14 +47,14 @@ class MainScene(ThreeDScene):
             mm_cv1, mm_m, mm_cv2,
             mts,
             mg,
-        ) = import_mobs('042f')
+        ) = import_mobs('041f')
         module_config = mg.module_config
 
         # for convenience
         mm_m1, mm_m2, mm_m3 = mm_m
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.7)
+        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.6)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mm_m, mm_cv1, mm_cv2, mts)
         self.wait(wt)
@@ -76,7 +76,7 @@ class MainScene(ThreeDScene):
         # update graph
         self.play(AnimationGroup(
             mg.mobs_card[0].update_summary(
-                summary='16 8 1 1 1',
+                summary='16 8 1 1 0',
                 run_time=wt,
             ),
             mg.mobs_card[1].update_summary(
@@ -96,7 +96,7 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             ),
             mg.mobs_card[6].update_summary(
-                summary='20 16 1 1 1',
+                summary='20 16 1 1 0',
                 run_time=wt,
             ),
             lag_ratio=0.5,
@@ -104,76 +104,62 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # update modules: stretch blocks
+        # update modules
         self.play(AnimationGroup(
             mm_cv1.stretch_blocks(
-                new_shape=(8,16,1,1),
                 direction='in',
                 diff=4,
-                ref='center',
+                new_shape=(8,16,1,1),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
             mm_m1.stretch_blocks(
-                new_shape=(4,8,3,3),
                 direction='in',
                 diff=2,
-                ref='center',
+                new_shape=(4,8,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
             mm_m2.stretch_blocks(
-                new_shape=(4,8,3,3),
                 direction='in',
                 diff=2,
-                ref='center',
+                new_shape=(4,8,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
             mm_m3.stretch_blocks(
-                new_shape=(4,8,3,3),
                 direction='in',
                 diff=2,
-                ref='center',
+                new_shape=(4,8,3,3),
                 lag_ratio=0.5,
                 run_time=wt,
             ),
             lag_ratio=0.5,
             run_time=wt*3,
         ))
-        # self.wait(wt)
-
-        # update modules: stretch 3d
         self.play(AnimationGroup(
             mm_m1.stretch_3d(
-                new_shape=(4,4,3,3),
-                scale_factor=(0.5,1.0,1.0),
-                lag_ratio=0.0,
+                new_shape=(4,3,3),
                 run_time=wt,
             ),
             mm_m2.stretch_3d(
-                new_shape=(4,4,3,3),
-                scale_factor=(0.5,1.0,1.0),
-                lag_ratio=0.0,
+                new_shape=(4,3,3),
                 run_time=wt,
             ),
             mm_m3.stretch_3d(
-                new_shape=(4,4,3,3),
-                scale_factor=(0.5,1.0,1.0),
-                lag_ratio=0.0,
+                new_shape=(4,3,3),
                 run_time=wt,
             ),
             mm_cv2.stretch_3d(
-                new_shape=(16,20,1,1),
-                scale_factor=(0.5,1.0,1.0),
-                lag_ratio=0.0,
+                new_shape=(20,1,1),
                 run_time=wt,
             ),
             lag_ratio=0.5,
             run_time=wt*3,
         ))
+        self.wait(wt)
 
-        # update tensors
+        # update io tensors
         mts[2].generate_target()
         mts[2].target.stretch_to_fit_depth(mts[2].depth*0.5).align_to(mts[2],IN)
         mts[3].generate_target()
@@ -181,33 +167,235 @@ class MainScene(ThreeDScene):
         self.play(AnimationGroup(
             mts[1].stretch_3d(
                 new_shape=(8,5,6),
-                scale_factor=(0.5,1.0,1.0),
                 run_time=wt,
             ),
             MoveToTarget(mts[2], run_time=wt),
             MoveToTarget(mts[3], run_time=wt),
             mts[4].stretch_3d(
                 new_shape=(4,5,6),
-                scale_factor=(0.5,1.0,1.0),
                 run_time=wt,
             ),
             mts[5].stretch_3d(
                 new_shape=(4,5,6),
-                scale_factor=(0.5,1.0,1.0),
                 run_time=wt,
             ),
             mts[6].stretch_3d(
                 new_shape=(4,5,6),
-                scale_factor=(0.5,1.0,1.0),
                 run_time=wt,
             ),
             mts[7].stretch_3d(
                 new_shape=(20,5,6),
-                scale_factor=(0.5,1.0,1.0),
                 run_time=wt,
             ),
             lag_ratio=0.5,
             run_time=wt*3,
+        ))
+        # self.wait(wt)
+
+        # update graph shapes
+        self.play(AnimationGroup(
+            mg.update_shape(
+                text='(8,h,w)',
+                index=1,
+            ),
+            mg.update_shape(
+                text='(4,h,w)',
+                direction=UP,
+                index=8,
+                buff=0.03,
+            ),
+            mg.update_shape(
+                text='(4,h,w)',
+                index=2,
+            ),
+            mg.update_shape(
+                text='(4,h,w)',
+                index=3,
+            ),
+            mg.update_shape(
+                text='(4,h,w)',
+                index=4,
+            ),
+            mg.update_shape(
+                text='(4,h,w)',
+                index=5,
+            ),
+            mg.update_shape(
+                text='(20,h,w)',
+                index=6,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'e: 0.25 -> 0.5',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # update module card
+        self.play(
+            mc.update_params(
+                params={'e': 0.5},
+                run_time=wt,
+            )
+        )
+
+        # update graph
+        self.play(AnimationGroup(
+            mg.mobs_card[0].update_summary(
+                summary='16 16 1 1 0',
+                run_time=wt,
+            ),
+            mg.mobs_card[1].update_summary(
+                summary='8 0',
+                run_time=wt,
+            ),
+            mg.mobs_card[2].update_summary(
+                summary='8 8 T',
+                run_time=wt,
+            ),
+            mg.mobs_card[3].update_summary(
+                summary='8 8 T',
+                run_time=wt,
+            ),
+            mg.mobs_card[4].update_summary(
+                summary='8 8 T',
+                run_time=wt,
+            ),
+            mg.mobs_card[6].update_summary(
+                summary='40 16 1 1 0',
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
+            run_time=wt*3,
+        ))
+        self.wait(wt)
+
+        # update modules
+        self.play(AnimationGroup(
+            mm_cv1.stretch_blocks(
+                direction='out',
+                diff=4,
+                new_shape=(16,16,1,1),
+                lag_ratio=0.5,
+                run_time=wt,
+            ),
+            mm_m1.stretch_blocks(
+                direction='out',
+                diff=2,
+                new_shape=(8,4,3,3),
+                lag_ratio=0.5,
+                run_time=wt,
+            ),
+            mm_m2.stretch_blocks(
+                direction='out',
+                diff=2,
+                new_shape=(8,4,3,3),
+                lag_ratio=0.5,
+                run_time=wt,
+            ),
+            mm_m3.stretch_blocks(
+                direction='out',
+                diff=2,
+                new_shape=(8,4,3,3),
+                lag_ratio=0.5,
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
+            run_time=wt*3,
+        ))
+        self.play(AnimationGroup(
+            mm_m1.stretch_3d(
+                new_shape=(8,3,3),
+                run_time=wt,
+            ),
+            mm_m2.stretch_3d(
+                new_shape=(8,3,3),
+                run_time=wt,
+            ),
+            mm_m3.stretch_3d(
+                new_shape=(8,3,3),
+                run_time=wt,
+            ),
+            mm_cv2.stretch_3d(
+                new_shape=(40,1,1),
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
+            run_time=wt*3,
+        ))
+        self.wait(wt)
+
+        # update io tensors
+        mts[2].generate_target()
+        mts[2].target.stretch_to_fit_depth(mts[2].depth*2.0).align_to(mts[2],IN)
+        mts[3].generate_target()
+        mts[3].target.stretch_to_fit_depth(mts[3].depth*2.0).align_to(mts[3],OUT)
+        self.play(AnimationGroup(
+            mts[1].stretch_3d(
+                new_shape=(16,5,6),
+                run_time=wt,
+            ),
+            MoveToTarget(mts[2], run_time=wt),
+            MoveToTarget(mts[3], run_time=wt),
+            mts[4].stretch_3d(
+                new_shape=(8,5,6),
+                run_time=wt,
+            ),
+            mts[5].stretch_3d(
+                new_shape=(8,5,6),
+                run_time=wt,
+            ),
+            mts[6].stretch_3d(
+                new_shape=(8,5,6),
+                run_time=wt,
+            ),
+            mts[7].stretch_3d(
+                new_shape=(40,5,6),
+                run_time=wt,
+            ),
+            lag_ratio=0.5,
+            run_time=wt*3,
+        ))
+        # self.wait(wt)
+
+        # update graph shapes
+        self.play(AnimationGroup(
+            mg.update_shape(
+                text='(16,h,w)',
+                index=1,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                direction=UP,
+                index=8,
+                buff=0.03,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=2,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=3,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=4,
+            ),
+            mg.update_shape(
+                text='(8,h,w)',
+                index=5,
+            ),
+            mg.update_shape(
+                text='(40,h,w)',
+                index=6,
+            ),
+            lag_ratio=0.0,
+            run_time=wt,
         ))
         self.wait(wt)
 

@@ -203,9 +203,6 @@ class MainScene(ThreeDScene):
             lag_ratio=0.5,
             run_time=wt*3,
         ))
-        # self.wait(wt)
-
-        # update modules: stretch 3d
         self.play(AnimationGroup(
             mm_m1.stretch_3d(
                 new_shape=(8,3,3),

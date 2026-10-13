@@ -144,12 +144,12 @@ class MGraph_SPPF(MGraph):
 
         objs['cv1'] = InfoCard(
             'Conv',
-            summary=f'{c1} {c_} 1 1',
+            summary=f'{c1} {c_} 1 1 0',
             frame_config={'fill_color': PURE_BLUE},
         )
         objs['cv2'] = InfoCard(
             'Conv',
-            summary=f'{c_*4} {c2} 1 1',
+            summary=f'{c_*4} {c2} 1 1 0',
             frame_config={'fill_color': PURE_BLUE},
         )
         objs['m'] = VGroup(

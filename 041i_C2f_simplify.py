@@ -32,7 +32,7 @@ TENSOR_VGAP_LARGE = 3.0
     # 'e': 0.25,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -47,14 +47,14 @@ class MainScene(ThreeDScene):
             mm_cv1, mm_m, mm_cv2,
             mts,
             mg,
-        ) = import_mobs('042h')
+        ) = import_mobs('041h')
         module_config = mg.module_config
 
         # for convenience
         mm_m1 = mm_m[0]
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.9)
+        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.8)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mm_m, mm_cv1, mm_cv2, mts)
         self.wait(wt)
@@ -95,7 +95,7 @@ class MainScene(ThreeDScene):
         mobs.generate_target()
         mobs.target.arrange(DOWN, buff=TENSOR_VGAP_SMALL)
         self.move_camera(
-            zoom=1.0,
+            zoom=0.9,
             added_anims=[
                 MoveToTarget(mobs, run_time=wt),
             ],
@@ -105,85 +105,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'e: 0.25 -> 0.5 (default)',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # update module card
-        self.play(
-            mc.update_params(
-                params={'e': 0.5},
-                run_time=wt,
-            )
-        )
-
-        # update graph
-        self.play(AnimationGroup(
-            mg.mobs_card[0].update_summary(
-                summary='16 16 1 1 1',
-                run_time=wt,
-            ),
-            mg.mobs_card[1].update_summary(
-                summary='8 0',
-                run_time=wt,
-            ),
-            mg.mobs_card[2].update_summary(
-                summary='8 8 T',
-                run_time=wt,
-            ),
-            mg.mobs_card[4].update_summary(
-                summary='24 16 1 1 1',
-                run_time=wt,
-            ),
-            lag_ratio=0.5,
-            run_time=wt*3,
-        ))
-        self.wait(wt)
-
-        # update modules: stretch blocks
-        self.play(AnimationGroup(
-            mm_cv1.stretch_blocks(
-                new_shape=(16,16,1,1),
-                direction='out',
-                diff=4,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            mm_m1.stretch_blocks(
-                new_shape=(8,4,3,3),
-                direction='out',
-                diff=2,
-                ref='center',
-                lag_ratio=0.5,
-                run_time=wt,
-            ),
-            lag_ratio=0.5,
-            run_time=wt*3,
-        ))
-
-        # update modules: stretch blocks
-        self.play(AnimationGroup(
-            mm_m1.stretch_3d(
-                new_shape=(8,8,3,3),
-                scale_factor=(2.0,1.0,1.0),
-                lag_ratio=0.0,
-                run_time=wt,
-            ),
-            mm_cv2.stretch_3d(
-                new_shape=(16,24,1,1),
-                scale_factor=(2.0,1.0,1.0),
-                lag_ratio=0.0,
-                run_time=wt,
-            ),
-            lag_ratio=0.5,
-            run_time=wt*3,
-        ))
-        self.wait(wt)
-
-        # ************************************************************
-        self.next_section(
-            'clean everything',
+            'clean',
             skip_animations=False,
         )
         # ************************************************************
@@ -250,5 +172,10 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # export
+        # ************************************************************
+        self.next_section(
+            'export',
+            skip_animations=False,
+        )
+        # ************************************************************
         export_mobs(__file__, mc)     # NOTE: used by next, samples

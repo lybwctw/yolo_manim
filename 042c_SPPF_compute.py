@@ -32,17 +32,17 @@ TENSOR_EGAP_MEDIUM = 1.0
     # 'k': 5,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load card and graph
-        mc, mg = import_mobs('043b')
+        mc, mg = import_mobs('042b')
         module_config = mg.module_config
 
         # raw modules
@@ -63,12 +63,10 @@ class MainScene(ThreeDScene):
         # module mobs (cv1, m, cv2)
         mm_cv1 = UT_Conv(
             module_config=SPPF_2_cv1_config(module_config),
-            init_scale=1.0,
             opaque=True,
         )
         mm_cv2 = UT_Conv(
             module_config=SPPF_2_cv2_config(module_config),
-            init_scale=1.0,
             opaque=True,
         )
         VGroup(mm_cv1, mm_cv2).arrange(
@@ -80,7 +78,6 @@ class MainScene(ThreeDScene):
         mts = VGroup(
             FTensor3D(
                 shape=t[0].shape,
-                init_scale=0.8,
                 opaque=True,
             ) for t in [
                 t_i, t_m1, t_m2, t_m3, t_m4, t_m5, t_o,
@@ -107,7 +104,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show sub modules',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight cv1 in graph
@@ -176,7 +173,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show input',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show input tensor
@@ -216,7 +213,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply cv1',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight and fade
@@ -273,7 +270,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply first MaxPool2d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight and fade
@@ -318,7 +315,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply second MaxPool2d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight and fade
@@ -361,7 +358,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply third MaxPool2d',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight and fade
@@ -404,7 +401,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply concat',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight and fade

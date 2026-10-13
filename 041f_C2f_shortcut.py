@@ -54,7 +54,7 @@ class MainScene(ThreeDScene):
         mm_m1, mm_m2, mm_m3 = mm_m
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.6)
+        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.6)   # from previous
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mm_m, mm_cv1, mm_cv2, mts)
         self.wait(wt)
