@@ -32,7 +32,7 @@ TENSOR_VGAP_LARGE = 3.0
     # 'e': 0.5,
 # }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -47,14 +47,14 @@ class MainScene(ThreeDScene):
             mm_cv1, mm_m, mm_cv2,
             mts,
             mg,
-        ) = import_mobs('042e')
+        ) = import_mobs('041e')
         module_config = mg.module_config
 
         # for convenience
         mm_m1, mm_m2, mm_m3 = mm_m
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.7)
+        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.6)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mm_m, mm_cv1, mm_cv2, mts)
         self.wait(wt)

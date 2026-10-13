@@ -86,7 +86,7 @@ class MainScene(ThreeDScene):
 
         # update modules
         self.play(
-            mm_cv1.ft_conv.stretch_3d(
+            mm_cv1.stretch_3d(
                 new_shape=(16,3,3),
                 run_time=wt,
             )

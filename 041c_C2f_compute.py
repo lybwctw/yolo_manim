@@ -33,8 +33,6 @@ TENSOR_EGAP_MEDIUM = 1.0
     # 'e': 0.5,
 # }
 
-INIT_SCALE = 0.8
-
 wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
@@ -68,16 +66,16 @@ class MainScene(ThreeDScene):
         mm_cv1 = UT_Conv(
             module_config=C2f_2_cv1_config(module_config),
             opaque=True,
-        ).scale(INIT_SCALE)
+        )
         mm_cv2 = UT_Conv(
             module_config=C2f_2_cv2_config(module_config),
             opaque=True,
-        ).scale(INIT_SCALE)
+        )
         mm_m = VGroup(
             UT_Bottleneck(
                 module_config=C2f_2_bottleneck_config(module_config),
             ) for _ in range(module_config['n'])
-        ).scale(INIT_SCALE)
+        )
         mm_m1, mm_m2, mm_m3 = mm_m
         VGroup(mm_cv1, mm_m1, mm_m2, mm_m3, mm_cv2).arrange(
             DOWN,
@@ -89,7 +87,7 @@ class MainScene(ThreeDScene):
             FTensor3D(
                 shape=t[0].shape,
                 opaque=True,
-            ).scale(INIT_SCALE) for t in [
+            ) for t in [
                 t_i, t_m1, t_m2, t_m3, t_m4, t_m5, t_m6, t_m7, t_o,
             ]
         )
@@ -435,7 +433,7 @@ class MainScene(ThreeDScene):
         # new_center[2] = 0.0
         self.move_camera(
             # frame_center=new_center,
-            zoom=0.9,
+            zoom=0.8,
             added_anims=[
                 MoveToTarget(mobs, run_time=wt),
             ],
@@ -484,7 +482,7 @@ class MainScene(ThreeDScene):
         # new_center = mobs.target[0][-1].get_bottom()
         # new_center[2] = 0.0
         self.move_camera(
-            zoom=0.8,
+            zoom=0.7,
             # frame_center=new_center,
             added_anims=[
                 MoveToTarget(mobs, run_time=wt),
@@ -534,7 +532,7 @@ class MainScene(ThreeDScene):
         # new_center = mobs.target[0][-1].get_bottom()
         # new_center[2] = 0.0
         self.move_camera(
-            zoom=0.7,           # NOTE: final zoom level
+            zoom=0.6,           # NOTE: final zoom level
             # frame_center=new_center,
             added_anims=[
                 MoveToTarget(mobs, run_time=wt),
@@ -591,7 +589,7 @@ class MainScene(ThreeDScene):
         mobs.target.arrange(DOWN, buff=gap)
 
         # NOTE: final mobs center here
-        mobs.target.shift(UP*1.5)
+        mobs.target.shift(UP*2.0)
         self.play(MoveToTarget(
             mobs,
             run_time=wt,

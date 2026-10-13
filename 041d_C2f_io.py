@@ -29,7 +29,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # load cards, modules, tensors, graph
@@ -45,7 +45,7 @@ class MainScene(ThreeDScene):
         mm_m1, mm_m2, mm_m3 = mm_m
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.7)
+        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.6)       # NOTE: previous final zoom
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mts, mm_cv1, mm_m, mm_cv2)
         self.wait(wt)
@@ -65,7 +65,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'fade modules, highlight tensors',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         # fade all sub modules
@@ -83,7 +83,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '(c,5,6) -> (c,6,9)',
-            skip_animations=False,
+            skip_animations=True,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -160,6 +160,33 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
+            'back: (c,5,6) -> (c,h,w)',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            mg.update_shape(text='(8,h,w)', index=0),
+            mg.update_shape(text='(8,h,w)', index=1),
+            mg.update_shape(text='(4,h,w)', index=8, direction=UP, buff=0.03),
+            mg.update_shape(text='(4,h,w)', index=2),
+            mg.update_shape(text='(4,h,w)', index=3),
+            mg.update_shape(text='(4,h,w)', index=4),
+            mg.update_shape(text='(4,h,w)', index=5),
+            mg.update_shape(text='(20,h,w)', index=6),
+            mg.update_shape(text='(8,h,w)', index=7),
+            lag_ratio=0.5,
+            run_time=wt*3,
+        ))
+        self.play(AnimationGroup(
+            tc_i.update_summary(summary='(8,h,w)'),
+            tc_o.update_summary(summary='(8,h,w)'),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
             'fade tensors, focus on modules',
             skip_animations=False,
         )
@@ -170,20 +197,6 @@ class MainScene(ThreeDScene):
             *(mm.lightup() for mm in [
                 mm_cv1, mm_m1, mm_m2, mm_m3, mm_cv2,
             ]),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-
-        # remove shapes in graph
-        self.play(mg.hide_shapes(
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-
-        # use general tensor cards
-        self.play(AnimationGroup(
-            tc_i.update_summary('(8,h,w)'),
-            tc_o.update_summary('(8,h,w)'),
             lag_ratio=0.0,
             run_time=wt,
         ))

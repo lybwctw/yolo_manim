@@ -35,7 +35,7 @@ DEFAULT_SIZE_CONFIG = {
 
 TARNISH_CUBE_CONFIG = {
     'fill_opacity': 0.0,
-    'stroke_opacity': 0.1,
+    'stroke_opacity': 1.0,
 }
 
 # def stretch_inplace_3d(
