@@ -24,7 +24,7 @@ TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -39,18 +39,18 @@ class MainScene(ThreeDScene):
             mm_cv1, mm_cv2,
             mts,
             mg,
-        ) = import_mobs('043c')
+        ) = import_mobs('042c')
         module_config = mg.module_config
 
         # show initial mobs
-        self.set_camera_orientation(**VIEW_COMPUTE, zoom=0.7)
+        self.set_camera_orientation(**VIEW_COMPUTE)
         self.add_fixed_in_frame_mobjects(tc_i, mc, tc_o, mg)
         self.add(mts, mm_cv1, mm_cv2)
         self.wait(wt)
 
         # ************************************************************
         self.next_section(
-            'fade modules, focus on tensors',
+            'fade modules, highlight tensors',
             skip_animations=False,
         )
         # ************************************************************
@@ -102,15 +102,14 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            '(c,6,9) -> (c,h,w)',
+            '(c,6,9) -> (c,5,6)',
             skip_animations=False,
         )
         # ************************************************************
-        # (c, 5, 6) as template
         self.play(AnimationGroup(
             AnimationGroup(
                 *(mt.stretch_3d(
-                    new_shape=mt.shape[:1]+(6,9),
+                    new_shape=mt.shape[:1]+(5,6),
                     scale_factor=[
                         1.0, 5/6, 6/9,
                     ],
@@ -119,16 +118,42 @@ class MainScene(ThreeDScene):
                 run_time=wt*3,
             ),
             AnimationGroup(
-                mg.update_shape(text='(8,h,w)', index=0),
-                mg.update_shape(text='(4,h,w)', index=1),
-                mg.update_shape(text='(4,h,w)', index=2),
-                mg.update_shape(text='(4,h,w)', index=3),
-                mg.update_shape(text='(4,h,w)', index=4),
-                mg.update_shape(text='(16,h,w)', index=5),
-                mg.update_shape(text='(8,h,w)', index=6),
+                mg.update_shape(text='(8,5,6)', index=0),
+                mg.update_shape(text='(4,5,6)', index=1),
+                mg.update_shape(text='(4,5,6)', index=2),
+                mg.update_shape(text='(4,5,6)', index=3),
+                mg.update_shape(text='(4,5,6)', index=4),
+                mg.update_shape(text='(16,5,6)', index=5),
+                mg.update_shape(text='(8,5,6)', index=6),
                 lag_ratio=0.5,
                 run_time=wt*3,
             ),
+        ))
+        self.play(AnimationGroup(
+            tc_i.update_summary(summary='(8,5,6)'),
+            tc_o.update_summary(summary='(8,5,6)'),
+            lag_ratio=0.5,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            '(c,5,6) -> (c,h,w)',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # (c, 5, 6) as template
+        self.play(AnimationGroup(
+            mg.update_shape(text='(8,h,w)', index=0),
+            mg.update_shape(text='(4,h,w)', index=1),
+            mg.update_shape(text='(4,h,w)', index=2),
+            mg.update_shape(text='(4,h,w)', index=3),
+            mg.update_shape(text='(4,h,w)', index=4),
+            mg.update_shape(text='(16,h,w)', index=5),
+            mg.update_shape(text='(8,h,w)', index=6),
+            lag_ratio=0.5,
+            run_time=wt*3,
         ))
         self.play(AnimationGroup(
             tc_i.update_summary(summary='(8,h,w)'),

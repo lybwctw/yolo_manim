@@ -74,7 +74,7 @@ class MainScene(ThreeDScene):
             )
         )
 
-        # update graph
+        # update graph modules
         self.play(
             mg.mobs_card[0].update_summary(
                 summary='16 8 1 1 0',
