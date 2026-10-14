@@ -31,7 +31,7 @@ TENSOR_LABEL_CONFIG = {
     'color': GRAY,
 }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -41,7 +41,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # module card
-        card_module, _ = import_mobs('044a')
+        card_module, _ = import_mobs('043a')
 
         # raw module with random init
         module_config = INIT_CONFIG
@@ -107,8 +107,8 @@ class MainScene(ThreeDScene):
         # graph to right edge
         self.play(graph_module.animate(
             run_time=wt,
-        ).scale(
-            0.8
+        # ).scale(
+        #     0.8
         ).to_edge(RIGHT, buff=MGRAPH_EDGE_BUFF))
         self.wait(wt)
 

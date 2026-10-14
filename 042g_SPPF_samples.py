@@ -26,8 +26,6 @@ TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
 TENSOR_VGAP_LARGE = 3.0
 
-wt = 0.5
-
 SCALE_FACTOR = 1.0
 
 with open(Path(__file__).with_name('yolov8_SPPF_3.csv'), newline='') as csv_file:
@@ -36,6 +34,7 @@ with open(Path(__file__).with_name('yolov8_SPPF_3.csv'), newline='') as csv_file
         for row in csv.DictReader(csv_file)
     ]
 
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -45,7 +44,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        card_ref = import_mobs('043f')
+        card_ref = import_mobs('042f')
         cards = VGroup(card_ref.copy() for _ in range(4))
 
         # show initial reference card
