@@ -56,7 +56,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'ignore mid tensors',
+            'remove mid tensors',
             skip_animations=False,
         )
         # ************************************************************

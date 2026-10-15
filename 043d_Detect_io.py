@@ -97,6 +97,8 @@ class MainScene(ThreeDScene):
             mg.update_shape(text='(4,h,w)', index=16, direction=RIGHT),
             mg.update_shape(text='(3,h,w)', index=17, direction=RIGHT),
             mg.update_shape(text='(3,h,w)', index=18, direction=RIGHT),
+            lag_ratio=0.5,
+            run_time=wt,
         ))
 
         # update io cards
@@ -111,7 +113,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'focus on modules',
+            'export',
             skip_animations=False,
         )
         # ************************************************************
@@ -123,7 +125,6 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # export
         mobs = VGroup(
             tc_i, mc, card_o1, card_o2,
             mm_bs, mm_cs,

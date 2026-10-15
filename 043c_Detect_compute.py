@@ -59,7 +59,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load card and graph
@@ -176,7 +176,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show sub modules for box prediction',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight b1 in graph
@@ -246,7 +246,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show sub modules for cls prediction',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight c1
@@ -307,7 +307,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'show input',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # show input tensor
@@ -347,7 +347,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'prepare for box prediction',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mask = np.zeros(mg.ncards, dtype=bool)
@@ -397,7 +397,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply b1',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mts[1].next_to(
@@ -430,7 +430,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply b2',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mts[2].next_to(
@@ -463,7 +463,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply b3',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mts[3].next_to(
@@ -496,7 +496,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply split',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # NOTE: new perspective
@@ -567,7 +567,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply softmax in batch',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO: maybe a hint for softmax's dim?
@@ -605,7 +605,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply concat',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # prepare copies
@@ -672,7 +672,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'prepare for cls prediction',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # TODO: maybe align root shape to cls series?
@@ -738,7 +738,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply c1, c2, c3 fast',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mts[13].next_to(
@@ -810,7 +810,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'apply sigmoid',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         mts[16].next_to(mts[15], DOWN, buff=TENSOR_VGAP_MINI)
