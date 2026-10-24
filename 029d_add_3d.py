@@ -136,7 +136,7 @@ class MainScene(ThreeDScene):
                 rate_func=smooth,
             ),
             lag_ratio=0.0,
-            run_time=wt*2,
+            run_time=wt*5,
         ))
 
         # highlight back input
@@ -152,7 +152,7 @@ class MainScene(ThreeDScene):
             t2s(t_o1),
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -247,6 +247,7 @@ class MainScene(ThreeDScene):
             lag_ratio=0.5,
             run_time=wt,
         ))
+        self.wait(wt)
 
         # failed breath and generation
         self.play(AnimationGroup(

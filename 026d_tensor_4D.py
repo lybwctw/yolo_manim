@@ -161,7 +161,7 @@ class MainScene(ThreeDScene):
         ))
 
         self.play(card.shrink_params(
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(Unwrite(
             card,

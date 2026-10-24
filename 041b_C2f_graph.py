@@ -64,7 +64,7 @@ class MainScene(ThreeDScene):
         self.play(graph_module.create(
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # expand module card
         self.play(card_module.expand_params(
@@ -89,11 +89,116 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'tags on sub module args',
+            'prepare arg tags',
             skip_animations=False,
         )
         # ************************************************************
-        # TODO...
+        tag_cv1_c1 = NameTag(
+            graph_module.card_cv1.smob.mob[1].get_corner(UL),
+            text='c1',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_cv1_c2 = NameTag(
+            graph_module.card_cv1.smob.mob[2].get_corner(UR),
+            text='2*c2*e',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_split = NameTag(
+            graph_module.card_split.smob.mob[1].get_corner(UR),
+            text='c2*e',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b1_c1 = NameTag(
+            graph_module.cards_m[0].smob.mob[1].get_corner(UR)+RIGHT*0.05,
+            text='c2*e',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b1_c2 = NameTag(
+            graph_module.cards_m[0].smob.mob[2].get_corner(UL),
+            text='c2*e',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*2,
+        )
+        tag_b2_c1 = NameTag(
+            graph_module.cards_m[1].smob.mob[1].get_corner(UR),
+            text='c2*e',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b2_c2 = NameTag(
+            graph_module.cards_m[1].smob.mob[2].get_corner(DR),
+            text='c2*e',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b3_c1 = NameTag(
+            graph_module.cards_m[2].smob.mob[1].get_corner(DR)+RIGHT*0.05,
+            text='c2*e',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b3_c2 = NameTag(
+            graph_module.cards_m[2].smob.mob[2].get_corner(DL),
+            text='c2*e',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*2,
+        )
+        tag_cv2_c1 = NameTag(
+            graph_module.card_cv2.smob.mob[1].get_corner(DL),
+            text='(n+2)*c2*e',
+            leader_direction=DL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_cv2_c2 = NameTag(
+            graph_module.card_cv2.smob.mob[3].get_corner(DR),
+            text='c2',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+
+        # ************************************************************
+        self.next_section(
+            'args matching',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            tag_cv1_c1.create(),
+            tag_cv1_c2.create(),
+            tag_split.create(),
+            tag_b1_c1.create(),
+            tag_b1_c2.create(),
+            tag_b2_c1.create(),
+            tag_b2_c2.create(),
+            tag_b3_c1.create(),
+            tag_b3_c2.create(),
+            tag_cv2_c1.create(),
+            tag_cv2_c2.create(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(AnimationGroup(
+            tag_cv1_c1.uncreate(),
+            tag_cv1_c2.uncreate(),
+            tag_split.uncreate(),
+            tag_b1_c1.uncreate(),
+            tag_b1_c2.uncreate(),
+            tag_b2_c1.uncreate(),
+            tag_b2_c2.uncreate(),
+            tag_b3_c1.uncreate(),
+            tag_b3_c2.uncreate(),
+            tag_cv2_c1.uncreate(),
+            tag_cv2_c2.uncreate(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

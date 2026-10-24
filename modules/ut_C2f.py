@@ -28,6 +28,7 @@ class UT_C2f(VMobject):
         module_config: dict = {},                   # c1, c2, n, shortcut, e
         z_index: float = 0.0,                       # used by cv1, cv2, m
         module_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between modules
+        super_opaque: bool = False,                 # even more opaque?
     ):
         super().__init__()
         self.module_config = module_config
@@ -36,17 +37,31 @@ class UT_C2f(VMobject):
             module_config=C2f_2_cv1_config(self.module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
         )
+
+        ut_m = VGroup()
+        prev_ut = ut_cv1
+        for _ in range(module_config['n']):
+            ut_b = UT_Bottleneck(
+                module_config=C2f_2_bottleneck_config(self.module_config),
+                z_index=prev_ut.z_index_end,
+                super_opaque=super_opaque,
+            )
+            prev_ut = ut_b
+            ut_m.add(ut_b)
+        # ut_m = VGroup(
+        #     UT_Bottleneck(
+        #         module_config=C2f_2_bottleneck_config(self.module_config),
+        #         z_index=z_index,
+        #         super_opaque=super_opaque,
+        #     ) for _ in range(module_config['n'])
+        # )
         ut_cv2 = UT_Conv(
             module_config=C2f_2_cv2_config(self.module_config),
-            z_index=z_index,
+            z_index=prev_ut.z_index_end,
             opaque=True,
-        )
-        ut_m = VGroup(
-            UT_Bottleneck(
-                module_config=C2f_2_bottleneck_config(self.module_config),
-                z_index=z_index,
-            ) for _ in range(module_config['n'])
+            super_opaque=super_opaque,
         )
         VGroup(ut_cv1, *ut_m, ut_cv2).arrange(DOWN, buff=module_gap)
 
@@ -136,6 +151,20 @@ class UT_C2f(VMobject):
             self.ut_cv2.lightup(**aargs),
             lag_ratio=0.0,
         )
+
+    @property
+    def mobs(self):
+        """Used when increasing z_index in batch.
+        """
+        res = VGroup()
+        for mob in self.ut_cv1.mobs:
+            res.add(mob)
+        for mm in self.ut_m:
+            for m in mm.mobs:
+                res.add(m)
+        for mob in self.ut_cv2.mobs:
+            res.add(mob)
+        return res
 
     # @property
     # def convs(self):

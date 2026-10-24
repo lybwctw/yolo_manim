@@ -45,7 +45,7 @@ class MainScene(ThreeDScene):
         self.set_camera_orientation(
             **VIEW_COMPUTE,
             zoom=1.0,
-            focal_distance=80,
+            # focal_distance=80,
         )
         self.add_fixed_in_frame_mobjects(cards)
         self.add(ut_conv)
@@ -69,19 +69,20 @@ class MainScene(ThreeDScene):
 
         # visualize new Conv
         self.move_camera(
-            zoom=0.55,
+            # zoom=0.45,
+            zoom=0.75,
             theta=-152*DEGREES,
-            focal_distance=90,
+            focal_distance=80,
             added_anims=[
                 ut_conv.stretch_blocks(
                     direction='out',
                     diff=8,
                     new_shape=(32,3,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -103,19 +104,20 @@ class MainScene(ThreeDScene):
 
         # stretch blocks to 48
         self.move_camera(
-            zoom=0.40,
+            # zoom=0.40,
+            zoom=0.65,
             theta=-150*DEGREES,
-            focal_distance=100,
+            # focal_distance=100,
             added_anims=[
                 ut_conv.stretch_blocks(
                     direction='out',
                     diff=8,
                     new_shape=(48,3,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -137,19 +139,20 @@ class MainScene(ThreeDScene):
 
         # stretch blocks to 64
         self.move_camera(
-            zoom=0.30,
+            # zoom=0.30,
+            zoom=0.50,
             theta=-146*DEGREES,
-            focal_distance=110,
+            # focal_distance=110,
             added_anims=[
                 ut_conv.stretch_blocks(
                     direction='out',
                     diff=8,
                     new_shape=(64,3,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -171,19 +174,20 @@ class MainScene(ThreeDScene):
 
         # stretch blocks to 80
         self.move_camera(
-            zoom=0.25,
+            # zoom=0.25,
+            zoom=0.40,
             theta=-142*DEGREES,
-            focal_distance=120,
+            # focal_distance=120,
             added_anims=[
                 ut_conv.stretch_blocks(
                     direction='out',
                     diff=8,
                     new_shape=(80,3,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -206,7 +210,7 @@ class MainScene(ThreeDScene):
         # stretch blocks to (16, 3, 3, 3)
         self.move_camera(
             zoom=1.0,           # back
-            focal_distance=80,  # back
+            # focal_distance=80,  # back
             **VIEW_COMPUTE,     # back
             added_anims=[
                 ut_conv.stretch_blocks(
@@ -214,25 +218,25 @@ class MainScene(ThreeDScene):
                     diff=32,
                     new_shape=(16,3,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
         # stretch 3d to (16, 16, 3, 3)
         self.move_camera(
-            zoom=0.8,
+            zoom=1.0,
             **VIEW_COMPUTE,
             added_anims=[
                 ut_conv.stretch_3d(
                     new_shape=(16,3,3),
                     lag_ratio=0.0,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -254,19 +258,20 @@ class MainScene(ThreeDScene):
 
         # stretch blocks to (32, 16, 3, 3)
         self.move_camera(
-            zoom=0.53,
+            # zoom=0.53,
+            zoom=0.75,
             theta=-150*DEGREES,
-            focal_distance=90,
+            # focal_distance=90,
             added_anims=[
                 ut_conv.stretch_blocks(
                     direction='out',
                     diff=8,
                     new_shape=(32,16,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -295,26 +300,26 @@ class MainScene(ThreeDScene):
                 ut_conv.stretch_3d(
                     new_shape=(16,1,1),
                     lag_ratio=0.0,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
         # stretch 3d to (32, 1, 1)
         self.move_camera(
-            zoom=0.45,
-            theta=-145*DEGREES,
-            focal_distance=100,
+            # zoom=0.45,
+            # theta=-145*DEGREES,
+            # focal_distance=100,
             added_anims=[
                 ut_conv.stretch_3d(
                     new_shape=(32,1,1),
                     lag_ratio=0.0,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -336,17 +341,17 @@ class MainScene(ThreeDScene):
 
         # expand the 4D kernel group from (32,32,1,1) to (32,32,3,3)
         self.move_camera(
-            zoom=0.45,
-            theta=-145*DEGREES,
-            focal_distance=100,
+            # zoom=0.45,
+            # theta=-145*DEGREES,
+            # focal_distance=100,
             added_anims=[
                 ut_conv.stretch_3d(
                     new_shape=(32,3,3),
                     lag_ratio=0.0,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -368,18 +373,19 @@ class MainScene(ThreeDScene):
 
         # expand the 4D kernel group from (32,32,3,3) to (64,32,3,3)
         self.move_camera(
-            zoom=0.25,
+            # zoom=0.25,
+            zoom=0.45,
             theta=-145*DEGREES,
-            focal_distance=110,
+            # focal_distance=100,
             added_anims=[
                 ut_conv.stretch_blocks(
                     diff=16,
                     new_shape=(64,32,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -401,19 +407,19 @@ class MainScene(ThreeDScene):
 
         # shrink the 4D kernel group from (64,32,3,3) to (32,32,3,3)
         self.move_camera(
-            zoom=0.45,
-            theta=-145*DEGREES,
-            focal_distance=100,
+            # zoom=0.45,
+            # theta=-145*DEGREES,
+            # focal_distance=100,
             added_anims=[
                 ut_conv.stretch_blocks(
                     direction='in',
                     diff=16,
                     new_shape=(32,32,3,3),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -426,26 +432,26 @@ class MainScene(ThreeDScene):
                 ut_conv.stretch_3d(
                     new_shape=(32,1,1),
                     lag_ratio=0.0,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
         # resize the 4D kernel group from (32,32,1,1) to (32,48,1,1)
         self.move_camera(
-            zoom=0.43,
+            zoom=0.70,
             theta=-145*DEGREES,
-            focal_distance=100,
+            # focal_distance=100,
             added_anims=[
                 ut_conv.stretch_3d(
                     new_shape=(48,1,1),
                     lag_ratio=0.0,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         self.wait(wt)
 
@@ -466,24 +472,24 @@ class MainScene(ThreeDScene):
 
         # resize the 4D kernel group from (32,48,1,1) to (32,8,1,1)
         self.move_camera(
-            zoom=0.43,
+            zoom=0.80,
             theta=-145*DEGREES,
-            focal_distance=100,
+            focal_distance=20,
             added_anims=[
                 ut_conv.stretch_3d(
                     new_shape=(8,1,1),
                     lag_ratio=0.0,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
         # shrink the 4D kernel group from (32,8,1,1) to (8,8,1,1)
         self.move_camera(
             zoom=1.0,
-            focal_distance=80,
+            focal_distance=20,
             **VIEW_COMPUTE,
             added_anims=[
                 ut_conv.stretch_blocks(
@@ -491,10 +497,10 @@ class MainScene(ThreeDScene):
                     diff=12,
                     new_shape=(8,8,1,1),
                     lag_ratio=0.5,
-                    run_time=wt*2,
+                    run_time=wt,
                 ),
             ],
-            run_time=wt*2,
+            run_time=wt,
         )
         # self.wait(wt)
 
@@ -502,8 +508,8 @@ class MainScene(ThreeDScene):
         self.play(ut_conv.stretch_3d(
             new_shape=(8,3,3),
             lag_ratio=0.0,
-            run_time=wt*2,
-        ))
+            run_time=wt,
+       ))
         self.wait(wt)
 
         # ************************************************************

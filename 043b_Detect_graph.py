@@ -67,7 +67,7 @@ class MainScene(ThreeDScene):
         self.play(graph_module.create(
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # expand module card
         self.play(card_module.expand_params(
@@ -92,11 +92,134 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'tags on sub module args',
+            'prepare arg tags',
             skip_animations=False,
         )
         # ************************************************************
-        # TODO...
+        tag_b1_c1 = NameTag(
+            graph_module.cards_box[0].smob.mob[1].get_corner(UL),
+            text='ch',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b1_c2 = NameTag(
+            graph_module.cards_box[0].smob.mob[2].get_corner(UL),
+            text='c2',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*2,
+        )
+        tag_b2_c1 = NameTag(
+            graph_module.cards_box[1].smob.mob[1].get_corner(UL),
+            text='c2',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b2_c2 = NameTag(
+            graph_module.cards_box[1].smob.mob[2].get_corner(DOWN),
+            text='c2',
+            leader_direction=DL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b3_c1 = NameTag(
+            graph_module.cards_box[2].smob.mob[1].get_corner(UL),
+            text='c2',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_b3_c2 = NameTag(
+            graph_module.cards_box[2].smob.mob[2].get_corner(DL),
+            text='reg_max*4',
+            leader_direction=DL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_split_size = NameTag(
+            graph_module.cards_box[3].smob.mob[2].get_corner(DR),
+            text='reg_max',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*2.5,
+        )
+        tag_c1_c1 = NameTag(
+            graph_module.cards_cls[0].smob.mob[1].get_corner(UR),
+            text='ch',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*2,
+        )
+        tag_c1_c2 = NameTag(
+            graph_module.cards_cls[0].smob.mob[2].get_corner(UR),
+            text='c3',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_c2_c1 = NameTag(
+            graph_module.cards_cls[1].smob.mob[1].get_corner(DL),
+            text='c3',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_c2_c2 = NameTag(
+            graph_module.cards_cls[1].smob.mob[2].get_corner(UR),
+            text='c3',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_c3_c1 = NameTag(
+            graph_module.cards_cls[2].smob.mob[1].get_corner(DR),
+            text='c3',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_c3_c2 = NameTag(
+            graph_module.cards_cls[2].smob.mob[2].get_corner(UR),
+            text='nc',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+
+        # ************************************************************
+        self.next_section(
+            'args matching',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            tag_b1_c1.create(),
+            tag_b1_c2.create(),
+            tag_b2_c1.create(),
+            tag_b2_c2.create(),
+            tag_b3_c1.create(),
+            tag_b3_c2.create(),
+            tag_split_size.create(),
+            tag_c1_c1.create(),
+            tag_c1_c2.create(),
+            tag_c2_c1.create(),
+            tag_c2_c2.create(),
+            tag_c3_c1.create(),
+            tag_c3_c2.create(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(AnimationGroup(
+            tag_b1_c1.uncreate(),
+            tag_b1_c2.uncreate(),
+            tag_b2_c1.uncreate(),
+            tag_b2_c2.uncreate(),
+            tag_b3_c1.uncreate(),
+            tag_b3_c2.uncreate(),
+            tag_split_size.uncreate(),
+            tag_c1_c1.uncreate(),
+            tag_c1_c2.uncreate(),
+            tag_c2_c1.uncreate(),
+            tag_c2_c2.uncreate(),
+            tag_c3_c1.uncreate(),
+            tag_c3_c2.uncreate(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+
 
         # ************************************************************
         self.next_section(

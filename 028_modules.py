@@ -76,7 +76,7 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # into left
         self.play(ics_all.animate(
@@ -91,6 +91,6 @@ class MainScene(ThreeDScene):
             LEFT,
             buff=CARD_EDGE_BUFF,
         ))
-        self.wait()
+        self.wait(wt)
 
         export_mobs(__file__, ics_all)      # used by next

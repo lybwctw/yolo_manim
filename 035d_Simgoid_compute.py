@@ -103,7 +103,7 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             ),
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show output summary
         self.play(card_o1.expand_summary(
@@ -134,7 +134,7 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # remove tensor cards
         self.play(AnimationGroup(
@@ -143,3 +143,4 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
+        self.wait(wt)

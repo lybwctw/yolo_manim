@@ -10,15 +10,15 @@ from utils.show_shape import ShowShape, HideShape
 from utils.image_pad import ImagePad
 from utils.value_2d import Value2D
 
-TENSOR_GAP = 3.5
+TENSOR_GAP = 2.5
 
-CONF_THRESH = 0.5
+CONF_THRESH = 0.7
 IOU_THRESH = 0.05
 
 # TODO: multi-label option
 # TODO: nms-ignore option
 wt = SHORT_DURATION     # wait time
-qt = 0.1                # quick time
+qt = 0.3                # quick time
 class MainScene(Scene):
     def construct(self):
         # ************************************************************
@@ -62,7 +62,7 @@ class MainScene(Scene):
         # ************************************************************
         tensor_cmax = tensor_raw.into_take_max(
             scene=self,
-            offset=RIGHT*TENSOR_GAP,
+            offset=RIGHT*(TENSOR_GAP+0.5),
             run_time_ratio=qt*5,
         )
         self.wait(wt)

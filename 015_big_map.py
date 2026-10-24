@@ -151,8 +151,8 @@ class MainScene(Scene):
             ShowShape(t32_xyxy_2d, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
             ShowShape(t32_prob, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
             ShowShape(t32_prob_2d, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
-            lag_ratio=0.5,
-            run_time=wt,
+            lag_ratio=0.0,
+            run_time=wt*2,
         ))
         self.wait(wt)
 
@@ -248,7 +248,7 @@ class MainScene(Scene):
             mat_2.animate.fade(0.8),
             ShowShape(t32_merged_2d, text_config=MEDIUM_SHAPE_TEXT_CONFIG),
             lag_ratio=0.5,
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
         self.play(AnimationGroup(

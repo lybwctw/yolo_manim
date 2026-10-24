@@ -80,7 +80,78 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # TODO: shape matching
+        # ************************************************************
+        self.next_section(
+            'prepare arg tags',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tag_c1 = NameTag(
+            graph_module.card_conv.smob.mob[1].get_corner(UL),
+            text='c1',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*1.5,
+        )
+        tag_c2 = NameTag(
+            graph_module.card_conv.smob.mob[2].get_corner(UL),
+            text='c2',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*2.5,
+        )
+        tag_k = NameTag(
+            graph_module.card_conv.smob.mob[3].get_corner(UR),
+            text='k',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*3,
+        )
+        tag_s = NameTag(
+            graph_module.card_conv.smob.mob[4].get_corner(UR),
+            text='s',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*2,
+        )
+        tag_p = NameTag(
+            graph_module.card_conv.smob.mob[5].get_corner(UR),
+            text='p',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_nf = NameTag(
+            graph_module.card_bn.smob.mob[1].get_corner(DR),
+            text='c2',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+
+        # ************************************************************
+        self.next_section(
+            'args matching',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            tag_c1.create(),
+            tag_c2.create(),
+            tag_k.create(),
+            tag_s.create(),
+            tag_p.create(),
+            tag_nf.create(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(AnimationGroup(
+            tag_c1.uncreate(),
+            tag_c2.uncreate(),
+            tag_k.uncreate(),
+            tag_s.uncreate(),
+            tag_p.uncreate(),
+            tag_nf.uncreate(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

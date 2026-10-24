@@ -27,24 +27,24 @@ TENSOR_VGAP_LARGE = 3.0
 
 INIT_SCALE = 0.5
 
-SCALE_FACTOR = 0.25
+SCALE_FACTOR = 0.3
 
 UNIT_BUFF = 0.7
 
-RUNNING_X = 6.0
+RUNNING_X = 3.0
 FAKE_HALF = 2/3
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load card and graph
-        mobs = import_mobs('045g')
+        mobs = import_mobs('044g')
         (
             mm_modules, card, graph,
             mt_input,
@@ -62,7 +62,7 @@ class MainScene(ThreeDScene):
             **VIEW_COMPUTE,
             'theta': -125*DEGREES,
             'focal_distance': 100,
-            'zoom': 0.35,
+            'zoom': 0.50,
         }
         self.set_camera_orientation(
             **cam_args,
@@ -79,7 +79,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'clean cards and extra modules',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(
@@ -93,8 +93,8 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'arrange input, modules and output',
-            skip_animations=True,
-        )
+            skip_animations=False,
+       )
         # ************************************************************
         mm_modules = mm_modules[-3:]
 

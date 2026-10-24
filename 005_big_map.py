@@ -79,10 +79,39 @@ class MainScene(Scene):
             *(ShowShape(
                 mob,
                 text_config=MEDIUM_SHAPE_TEXT_CONFIG,
+                aargs={'run_time': wt*2},
+            ) for mob in (iv_input, tv_input)),
+            lag_ratio=0.0,
+            run_time=wt*2,
+        ))
+        self.wait(wt)
+
+        # hide shape on both image and tensor
+        self.play(AnimationGroup(
+            *(HideShape(
+                mob,
                 aargs={'run_time': wt},
             ) for mob in (iv_input, tv_input)),
             lag_ratio=0.0,
             run_time=wt,
+        ))
+        self.wait(wt)
+
+        # common nominal width and height
+        iv_input.width_nominal='w'
+        iv_input.height_nominal='h'
+        tv_input.width_nominal='w'
+        tv_input.height_nominal='h'
+
+        # show shape on both image and tensor
+        self.play(AnimationGroup(
+            *(ShowShape(
+                mob,
+                text_config=MEDIUM_SHAPE_TEXT_CONFIG,
+                aargs={'run_time': wt*2},
+            ) for mob in (iv_input, tv_input)),
+            lag_ratio=0.0,
+            run_time=wt*2,
         ))
         self.wait(wt)
 

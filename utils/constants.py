@@ -2,7 +2,7 @@ from manim import *
 import os
 
 # duration related
-SHORT_DURATION = 0.5
+SHORT_DURATION = 0.8
 MEDIUM_DURATION = 1.0
 LONG_DURATION = 3.0
 

@@ -9,13 +9,13 @@ from utils.show_shape import ShowShape, HideShape
 from utils.image_pad import ImagePad
 from utils.constants import *
 
-CONF_THRESH = 0.5
+CONF_THRESH = 0.7
 IOU_THRESH = 0.05
 
 # TODO: multi-label option
 # TODO: nms-ignore option
 wt = SHORT_DURATION     # wait time
-qt = 0.1                # quick time
+qt = 0.3                # quick time
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -57,7 +57,7 @@ class MainScene(ThreeDScene):
         # show anchor points
         self.play(explainer.show_anchor_points(
             lag_ratio=0.0,
-            run_time=0.5,
+            run_time=wt,
         ))
         self.wait(wt)
 
@@ -72,7 +72,7 @@ class MainScene(ThreeDScene):
                 'fill_opacity': 0.7,
             },
             aargs={},
-            gargs={'lag_ratio': 1.0, 'run_time': 0.5},
+            gargs={'lag_ratio': 0.3, 'run_time': wt*5},
         ))
         self.wait(wt)
 
@@ -84,7 +84,8 @@ class MainScene(ThreeDScene):
         # ************************************************************
         explainer.apply_max_select(
             scene=self,
-            run_time_ratio=qt,
+            # run_time_ratio=qt,
+            run_time=wt,
         )
         self.wait(wt)
 

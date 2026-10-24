@@ -102,206 +102,212 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'rearrange input/module/output',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # mm_bs.generate_target()
-        # mm_bs.target.arrange(
-        #     DOWN,
-        #     buff=TENSOR_VGAP_MINI,
-        # ).move_to(
-        #     mm_bs,
-        #     aligned_edge=UL,
-        # )
+        # ************************************************************
+        self.next_section(
+            'rearrange input/module/output',
+            skip_animations=False,
+        )
+        # ************************************************************
+        mm_bs.generate_target()
+        mm_bs.target.arrange(
+            DOWN,
+            buff=TENSOR_VGAP_MINI,
+        ).move_to(
+            mm_bs,
+            aligned_edge=UL,
+        )
 
-        # mm_cs.generate_target()
-        # mm_cs.target.arrange(
-        #     DOWN,
-        #     buff=TENSOR_VGAP_MINI,
-        # ).move_to(
-        #     mm_cs,
-        #     aligned_edge=UL,
-        # )
+        mm_cs.generate_target()
+        mm_cs.target.arrange(
+            DOWN,
+            buff=TENSOR_VGAP_MINI,
+        ).move_to(
+            mm_cs,
+            aligned_edge=UL,
+        )
 
-        # mts[12].generate_target()
-        # mts[12].target.next_to(
-        #     mm_bs.target,
-        #     DOWN,
-        #     buff=TENSOR_VGAP_SMALL,
-        # )
+        mts[1].generate_target()
+        mts[1].target.next_to(
+            mm_bs.target,
+            DOWN,
+            buff=TENSOR_VGAP_SMALL,
+        )
 
-        # mts[-1].generate_target()
-        # mts[-1].target.next_to(
-        #     mm_cs.target,
-        #     DOWN,
-        #     buff=TENSOR_VGAP_SMALL,
-        # )
+        mts[2].generate_target()
+        mts[2].target.next_to(
+            mm_cs.target,
+            DOWN,
+            buff=TENSOR_VGAP_SMALL,
+        )
 
-        # mts[0].generate_target()
+        mts[0].generate_target()
 
-        # # center all targets
-        # mobs = VGroup(
-        #     mts[0].target,
-        #     mm_bs.target,
-        #     mm_cs.target,
-        #     mts[12].target,
-        #     mts[-1].target,
-        # )
-        # mobs.center().shift(UP*0.5)
+        # center all targets
+        mobs = VGroup(
+            mts[0].target,
+            mm_bs.target,
+            mm_cs.target,
+            mts[1].target,
+            mts[2].target,
+        )
+        mobs.center().shift(UP*0.5)
 
-        # # NOTE: new perspective
-        # camera_config = {
-        #     **VIEW_COMPUTE,
-        #     'phi': 50*DEGREES,
-        #     'zoom': 0.85,
-        #     'frame_center': ORIGIN,
-        # }
-        # self.move_camera(
-        #     **camera_config,
-        #     added_anims=[
-        #         AnimationGroup(
-        #             MoveToTarget(mts[0]),
-        #             MoveToTarget(mm_bs),
-        #             MoveToTarget(mm_cs),
-        #             MoveToTarget(mts[12]),
-        #             MoveToTarget(mts[-1]),
-        #             lag_ratio=0.0,
-        #             run_time=wt,
-        #         ),
-        #     ],
-        #     run_time=wt,
-        # )
+        # NOTE: new perspective
+        camera_config = {
+            **VIEW_COMPUTE,
+            'phi': 50*DEGREES,
+            'zoom': 0.65,
+            'frame_center': ORIGIN,
+        }
+        self.move_camera(
+            **camera_config,
+            added_anims=[
+                AnimationGroup(
+                    MoveToTarget(mts[0]),
+                    MoveToTarget(mm_bs),
+                    MoveToTarget(mm_cs),
+                    MoveToTarget(mts[1]),
+                    MoveToTarget(mts[2]),
+                    lag_ratio=0.0,
+                    run_time=wt,
+                ),
+            ],
+            run_time=wt,
+        )
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'even simpler arrange',
+            skip_animations=False,
+        )
+        # ************************************************************
+        mts_input = mts[0]
+        mts_output = VGroup(mts[1], mts[2])
+        mts_input.generate_target()
+        mm_bs.generate_target()
+        mm_cs.generate_target()
+        mts_output.generate_target()
+
+        # on output
+        mts_output.target.arrange(
+            RIGHT,
+            buff=TENSOR_VGAP_SMALL,
+        )
+
+        # on global
+        mtargets = VGroup(
+            mts_input.target,
+            mm_bs.target,
+            mm_cs.target,
+            mts_output.target,
+        )
+        mtargets.arrange(
+            DOWN,
+            buff=TENSOR_VGAP_MINI,
+        )
+
+        # on input and output
+        mts_input.target.next_to(
+            mtargets[1],
+            UP,
+            TENSOR_VGAP_SMALL,
+        )
+        mts_output.target.next_to(
+            mtargets[-2],
+            DOWN,
+            TENSOR_VGAP_SMALL*0.7,
+        )
+
+        # NOTE: new perspective
+        self.move_camera(
+            zoom=0.6,
+            # frame_center=DOWN*1.0,
+            added_anims=[
+                AnimationGroup(
+                    MoveToTarget(mts_input),
+                    MoveToTarget(mm_bs),
+                    MoveToTarget(mm_cs),
+                    MoveToTarget(mts_output),
+                    lag_ratio=0.0,
+                    run_time=wt,
+                ),
+            ],
+            run_time=wt,
+        )
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'clean everything',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # clean input/output and graph
+        # NOTE: new perspective
+        self.move_camera(
+            zoom=0.6,
+            added_anims=[
+                AnimationGroup(
+                    *(AnimationGroup(
+                        tmob.uncreate(ref='bottom'),
+                        cmob.shrink_summary(),
+                        lag_ratio=0.5,
+                    ) for tmob, cmob in zip(
+                        [mts[0], mts[1], mts[2]],
+                        [tc_i, card_o1, card_o2],
+                    )),
+                    Unwrite(mg),
+                    lag_ratio=0.0,
+                    run_time=wt,
+                ),
+            ],
+            run_time=wt,
+        )
+
+        # remove input/output cards
+        self.play(AnimationGroup(
+            detach_to_ref(tc_i, UP),
+            detach_to_ref(card_o1, DOWN),
+            detach_to_ref(card_o2, DOWN),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
+        # shrink module card
+        self.play(mc.shrink_params(
+            run_time=wt,
+        ))
+
+        # expand module summary
+        self.play(mc.expand_summary(
+            '16 4 4 4 3',
+            direction='right',
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # shrink module card
+        self.play(mc.shrink_summary(
+            run_time=wt,
+        ))
         # self.wait(wt)
 
-        # # ************************************************************
-        # self.next_section(
-        #     'even simpler arrange',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # mts_input = mts[0]
-        # mts_output = VGroup(mts[12], mts[-1])
-        # mts_input.generate_target()
-        # mm_bs.generate_target()
-        # mm_cs.generate_target()
-        # mts_output.generate_target()
+        # remove module mob
+        self.play(AnimationGroup(
+            *(mm.uncreate(
+                ref='center',
+                lag_ratio=0.0,
+                run_time=wt,
+            ) for mm in (*mm_bs, *mm_cs)),
+            lag_ratio=0.0,
+        ))
+        self.wait(wt)
 
-        # # on output
-        # mts_output.target.arrange(
-        #     RIGHT,
-        #     buff=TENSOR_VGAP_SMALL,
-        # )
-
-        # # on global
-        # mtargets = VGroup(
-        #     mts_input.target,
-        #     mm_bs.target,
-        #     mm_cs.target,
-        #     mts_output.target,
-        # )
-        # mtargets.arrange(
-        #     DOWN,
-        #     buff=TENSOR_VGAP_MINI,
-        # )
-
-        # # on input and output
-        # mts_input.target.next_to(
-        #     mtargets[1],
-        #     UP,
-        #     TENSOR_VGAP_SMALL,
-        # )
-        # mts_output.target.next_to(
-        #     mtargets[-2],
-        #     DOWN,
-        #     TENSOR_VGAP_SMALL*0.7,
-        # )
-
-        # # NOTE: new perspective
-        # self.move_camera(
-        #     zoom=0.75,
-        #     added_anims=[
-        #         AnimationGroup(
-        #             MoveToTarget(mts_input),
-        #             MoveToTarget(mm_bs),
-        #             MoveToTarget(mm_cs),
-        #             MoveToTarget(mts_output),
-        #             lag_ratio=0.0,
-        #             run_time=wt,
-        #         ),
-        #     ],
-        #     run_time=wt,
-        # )
-        # self.wait(wt)
-
-        # # ************************************************************
-        # self.next_section(
-        #     'clean everything',
-        #     skip_animations=False,
-        # )
-        # # ************************************************************
-        # # clean input/output and graph
-        # # NOTE: new perspective
-        # self.move_camera(
-        #     zoom=0.85,
-        #     added_anims=[
-        #         AnimationGroup(
-        #             *(AnimationGroup(
-        #                 tmob.uncreate(ref='bottom'),
-        #                 cmob.shrink_summary(),
-        #                 lag_ratio=0.5,
-        #             ) for tmob, cmob in zip(
-        #                 [mts[0], mts[12], mts[-1]],
-        #                 [tc_i, card_o1, card_o2],
-        #             )),
-        #             Unwrite(mg),
-        #             lag_ratio=0.0,
-        #             run_time=wt,
-        #         ),
-        #     ],
-        #     run_time=wt,
-        # )
-
-        # # remove input/output cards
-        # self.play(AnimationGroup(
-        #     detach_to_ref(tc_i, UP),
-        #     detach_to_ref(card_o1, DOWN),
-        #     detach_to_ref(card_o2, DOWN),
-        #     lag_ratio=0.0,
-        #     run_time=wt,
-        # ))
-
-        # # shrink module card
-        # self.play(mc.shrink_params(
-        #     run_time=wt,
-        # ))
-
-        # # expand module summary
-        # self.play(mc.expand_summary(
-        #     '16 4 4 4 3',
-        #     direction='right',
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
-
-        # # shrink module card
-        # self.play(mc.shrink_summary(
-        #     run_time=wt,
-        # ))
-        # # self.wait(wt)
-
-        # # remove module mob
-        # self.play(AnimationGroup(
-        #     *(mm.uncreate(
-        #         ref='center',
-        #         lag_ratio=0.0,
-        #         run_time=wt,
-        #     ) for mm in (*mm_bs, *mm_cs)),
-        #     lag_ratio=0.0,
-        # ))
-        # self.wait(wt)
-
-        # # export
-        # export_mobs(__file__, mc)     # NOTE: used by next, samples
+        # ************************************************************
+        self.next_section(
+            'export',
+            skip_animations=False,
+        )
+        # ************************************************************
+        export_mobs(__file__, mc)     # NOTE: used by next, samples

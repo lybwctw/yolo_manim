@@ -35,6 +35,7 @@ class UT_Bottleneck(VMobject):
         module_config: dict = {},                   # c1, c2, shortcut
         z_index: float = 0.0,
         module_gap: float = UNIT_FTENSOR_SIZE*3.0,  # gap between cv1 and cv2
+        super_opaque: bool = False,
     ):
         super().__init__()
         self.module_config = module_config
@@ -42,12 +43,14 @@ class UT_Bottleneck(VMobject):
         ut_cv1 = UT_Conv(
             module_config=Bottleneck_2_cv1_config(self.module_config),
             z_index=z_index,
-            opaque=True,        # opaque Conv by default
+            opaque=True,                    # opaque Conv by default
+            super_opaque=super_opaque,      # even more opaque?
         )
         ut_cv2 = UT_Conv(
             module_config=Bottleneck_2_cv2_config(self.module_config),
-            z_index=z_index,
-            opaque=True,        # opaque Conv by default
+            z_index=ut_cv1.z_index_end,
+            opaque=True,                    # opaque Conv by default
+            super_opaque=super_opaque,      # even more opaque?
         )
         VGroup(ut_cv1, ut_cv2).arrange(DOWN, buff=module_gap)
 
@@ -200,6 +203,10 @@ class UT_Bottleneck(VMobject):
             *self.ut_cv1.mobs,
             *self.ut_cv2.mobs,
         )
+
+    @property
+    def z_index_end(self):
+        return self.ut_cv2.z_index_end
 
     # @property
     # def convs(self):

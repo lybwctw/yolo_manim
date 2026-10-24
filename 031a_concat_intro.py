@@ -36,7 +36,7 @@ class MainScene(ThreeDScene):
             lag_ratio=0.5,
             run_time=wt,
         ))
-        # self.wait(wt)
+        self.wait(wt)
 
         # export
         mobs = VGroup(card_focus, cards_module)     # NOTE: used by next

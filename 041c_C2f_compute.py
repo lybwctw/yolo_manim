@@ -354,7 +354,7 @@ class MainScene(ThreeDScene):
             FadeIn(mts[2]),
             FadeIn(mts[3]),
             lag_ratio=0.0,
-            run_time=wt*0.1,
+            run_time=wt,
         ))
         self.play(AnimationGroup(
             mts[2].animate.next_to(

@@ -5,7 +5,7 @@ from utils.info_card import *
 from utils.constants import *
 from utils.constants_3d import *
 
-wt = 1.0
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************

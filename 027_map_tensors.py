@@ -157,7 +157,7 @@ class MainScene(ThreeDScene):
             )],
             run_time=wt,
         )
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -170,6 +170,7 @@ class MainScene(ThreeDScene):
                 self,
                 mob,
                 view='intro',
+                path_config={'stroke_color': ORANGE},
                 text_config={'font_size': 12},      # bit smaller than default 15
                 text_buff=0.1,                      # bit closer than default 0.2
                 lag_ratio=0.3,

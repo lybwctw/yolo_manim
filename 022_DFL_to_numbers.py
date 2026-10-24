@@ -65,7 +65,7 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         )
-        self.wait(0.5)
+        self.wait(wt)
 
         # show pcells
         self.play(sap.show_pcells(
@@ -185,7 +185,7 @@ class MainScene(ThreeDScene):
                 'fill_opacity': 0.0,
             },
         ).move_to(layer_center)
-        self.play(Write(
+        self.play(FadeIn(
             tensor_64,
             run_time=wt,
         ))
@@ -244,7 +244,7 @@ class MainScene(ThreeDScene):
         self.play(ShowShape(
             tensor_64,
             text_config=MEDIUM_SHAPE_TEXT_CONFIG,
-            aargs={'run_time': wt},
+            aargs={'run_time': wt*2},
         ))
         self.wait(wt)
         self.play(HideShape(
@@ -284,7 +284,7 @@ class MainScene(ThreeDScene):
         self.play(ShowShape(
             tensor_sub,
             text_config=MEDIUM_SHAPE_TEXT_CONFIG,
-            aargs={'run_time': wt},
+            aargs={'run_time': wt*2},
         ))
         self.wait(wt)
         # self.play(HideShape(

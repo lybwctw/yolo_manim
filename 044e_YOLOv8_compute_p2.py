@@ -27,7 +27,7 @@ TENSOR_VGAP_LARGE = 3.0
 
 INIT_SCALE = 0.5
 
-RUNNING_X = 6.0
+RUNNING_X = 3.0
 FAKE_HALF = 2/3
 
 # for reference
@@ -57,17 +57,17 @@ FAKE_HALF = 2/3
 # [23]
 # [24]
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load card and graph
-        mobs = import_mobs('045d')
+        mobs = import_mobs('044d')
         (
             mm_modules, card, graph,
             mt_running,
@@ -78,7 +78,7 @@ class MainScene(ThreeDScene):
             **VIEW_COMPUTE,
             'theta': -125*DEGREES,
             'focal_distance': 100,
-            'zoom': 0.35,
+            'zoom': 0.50,
         }
         self.set_camera_orientation(
             **cam_args,
@@ -90,7 +90,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[15/11] apply C2f, backup',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -146,7 +146,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[16/12] apply Conv',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -186,7 +186,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[17/-] apply concat',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card
@@ -236,7 +236,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[18/13] apply C2f, backup',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -292,7 +292,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[19/14] apply Conv',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -332,7 +332,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[20/-] apply concat',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card
@@ -382,7 +382,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[21/15] apply C2f, backup',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # highlight card and module
@@ -438,7 +438,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '[22/16-23/17-24/18] apply heads',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # remove running
@@ -527,7 +527,7 @@ class MainScene(ThreeDScene):
         ).scale(INIT_SCALE).next_to(
             mm_modules[0],
             UP,
-            buff=3.5,
+            buff=1.0,       # more space than that of start running
         )
         self.play(AnimationGroup(
             Unwrite(mt_c15, run_time=wt),

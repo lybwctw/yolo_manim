@@ -29,6 +29,7 @@ class UT_Detect(VMobject):
         module_config: dict = {},                   # ch, c2, c3, reg_max, nc
         z_index: float = 0.0,                       # used by ...
         module_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between modules
+        super_opaque: bool = False,                 # even more opaque?
     ):
         super().__init__()
         self.module_config = module_config
@@ -37,32 +38,38 @@ class UT_Detect(VMobject):
             module_config=Detect_2_b1_config(module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
         )
         ut_b2 = UT_Conv(
             module_config=Detect_2_b2_config(module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
         )
         ut_b3 = UT_Conv(
             module_config=Detect_2_b3_config_fake(module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
             Conv2d=True,
         )
         ut_c1 = UT_Conv(
             module_config=Detect_2_c1_config(module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
         )
         ut_c2 = UT_Conv(
             module_config=Detect_2_c2_config(module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
         )
         ut_c3 = UT_Conv(
             module_config=Detect_2_c3_config_fake(module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
             Conv2d=True,
         )
         VGroup(ut_b1, ut_b2, ut_b3, ut_c1, ut_c2, ut_c3).arrange(
@@ -188,6 +195,19 @@ class UT_Detect(VMobject):
                 self.ut_c3,
             )),
             lag_ratio=0.0,
+        )
+
+    @property
+    def mobs(self):
+        """Used when increasing z_index in batch.
+        """
+        return VGroup(
+            *self.ut_b1.mobs,
+            *self.ut_b2.mobs,
+            *self.ut_b3.mobs,
+            *self.ut_c1.mobs,
+            *self.ut_c2.mobs,
+            *self.ut_c3.mobs,
         )
 
     # @property

@@ -245,7 +245,7 @@ class FTensor3D(VMobject):
 
     def stretch_3d(
         self,
-        new_shape: tuple,                       # (c, h, w)
+        new_shape: tuple | None = None,         # (c, h, w)
         scale_factor: tuple | None = None,      # (c, h, w)
         target_size: tuple | None = None,       # (c, h, w)
         **aargs,
@@ -263,7 +263,8 @@ class FTensor3D(VMobject):
             target.stretch_to_fit_depth(new_shape[0]*UNIT_FTENSOR_SIZE)
             target.stretch_to_fit_height(new_shape[1]*UNIT_FTENSOR_SIZE)
             target.stretch_to_fit_width(new_shape[2]*UNIT_FTENSOR_SIZE)
-        self.shape = new_shape
+        if new_shape is not None:
+            self.shape = new_shape
         return Transform(
             self.mob,
             target,
@@ -296,7 +297,7 @@ class FTensor4D(VMobject):
         self,
         ref_4d: MTensor4D | None = None,    # override size_config, n, block_gap
         shape: tuple | None = None,         # nominal shape like (64, 128, 320, 320)
-        z_index: float = 0.0,               # starting z_index for 3ds
+        z_index: float = 0.0,               # lowest z_index for 3ds
         cube_config: dict = {},
         size_config: dict = {},             # override that from shape[1:]
         n: int | None = None,               # override that from shape[0]

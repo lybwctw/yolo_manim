@@ -30,6 +30,11 @@ CONFIG_OPAQUE = {
     # 'stroke_width': 1.0,
 }
 
+CONFIG_SUPER_OPAQUE = {
+    'fill_opacity': 1.0,
+    'stroke_width': 0.2,
+}
+
 DEFAULT_CUBE_CONFIG_CONV = {
     'fill_color': ORANGE,
     'fill_opacity': 0.8,
@@ -72,12 +77,18 @@ class UT_Conv(VMobject):
         block_gap: float = UNIT_FTENSOR_SIZE,       # for conv
         tensor_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between conv and bn
         opaque: bool = False,                       # new fill_opacity and stroke_width for farther view
+        super_opaque: bool = False,                 # new fill_opacity and stroke_width for even farther view
         Conv2d: bool = False,                       # NOTE: torch.nn.Conv2d with bias=True
     ):
         super().__init__()
         self.module_config = module_config
-        self.z_index = z_index
-        config_opaque = CONFIG_OPAQUE if opaque else {}
+        # self.z_index = z_index
+        if super_opaque:
+            config_opaque = CONFIG_SUPER_OPAQUE
+        elif opaque:
+            config_opaque = CONFIG_OPAQUE
+        else:
+            config_opaque = {}
         self.cube_config_conv = {**DEFAULT_CUBE_CONFIG_CONV, **config_opaque, **cube_config_conv}
         if Conv2d:
             self.cube_config_bn = {**DEFAULT_CUBE_CONFIG_BIAS, **config_opaque, **cube_config_bn}
@@ -92,7 +103,7 @@ class UT_Conv(VMobject):
         ft_conv = FTensor4D(
             ref_4d=ref_conv,
             shape=Conv_2_conv_shape(self.module_config),
-            z_index=self.z_index,
+            z_index=z_index,
             cube_config=self.cube_config_conv,
             size_config=self.size_config_conv,
             n=self.n,
@@ -245,6 +256,10 @@ class UT_Conv(VMobject):
     @property
     def tensor_gap(self):
         return self.ft_conv[0].get_bottom()[1] - self.ft_bn[0].get_top()[1]
+
+    @property
+    def z_index_end(self):
+        return self.ft_bn.z_index_end
 
 
 class MGraph_Conv(MGraph):

@@ -99,7 +99,7 @@ class MainScene(Scene):
                 tv_output,
                 text_config=MEDIUM_SHAPE_TEXT_CONFIG,
             ),
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
 

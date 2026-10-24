@@ -122,7 +122,7 @@ class MainScene(ThreeDScene):
                 mob_module.mt_weight.shape_texts[1],
             ]),
             lag_ratio=0.0,
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
 
@@ -133,7 +133,7 @@ class MainScene(ThreeDScene):
                 mob_module.mt_weight.shape_texts[0],
             ]),
             lag_ratio=0.0,
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
 
@@ -145,7 +145,7 @@ class MainScene(ThreeDScene):
                 mob_module.mt_weight.shape_texts[3],
             ]),
             lag_ratio=0.0,
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
 

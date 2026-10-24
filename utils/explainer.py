@@ -395,7 +395,8 @@ class Explainer(VGroup):
     def apply_max_select(
         self,
         scene: Scene,
-        run_time_ratio: float = 1.0,
+        # run_time_ratio: float = 1.0,
+        **aargs,
     ) -> None:
         """[Internal animation]
             Apply max conf filter.
@@ -421,7 +422,8 @@ class Explainer(VGroup):
                 max_idx=max_idx,
                 aargs={},
             ) for ap, max_idx in zip(self.anchor_points, max_idxs)),
-            run_time=1.0*run_time_ratio,
+            # run_time=1.0*run_time_ratio,
+            **aargs,
         )
         scene.play(anims)
 
@@ -703,10 +705,10 @@ class Explainer(VGroup):
         # restore opacity and color of all kept aps
         scene.play(AnimationGroup(
             *(ap.animate.restore() for ap in res_aps),
-            run_time=1.0*run_time_ratio,
+            run_time=3.0*run_time_ratio,
             lag_ratio=0.5,
         ))
-        scene.wait(1.0*run_time_ratio)
+        scene.wait(3.0*run_time_ratio)
 
         # shift back those kept
         scene.play(AnimationGroup(

@@ -242,7 +242,7 @@ class MGraph_YOLOv8(MGraph):
         **aargs,
     ) -> Animation:
         # 1 head line
-        head_offset = UP*LINE_BUFF*.4 if short_head else UP*LINE_BUFF
+        head_offset = UP*LINE_BUFF*.3 if short_head else UP*LINE_BUFF
         line_head = Line(
             self.objs_card[0].get_top() + head_offset,
             self.objs_card[0].get_top(),
@@ -285,35 +285,36 @@ class MGraph_YOLOv8(MGraph):
         )
 
         # 6 head output lines
+        hbuff = RIGHT * LINE_BUFF if not short_head else RIGHT * LINE_BUFF * 0.3
         lines_hout = VGroup(
             Line(
                 self.objs_card[-3].get_right() + UP * 0.05,
-                self.objs_card[-3].get_right() + UP * 0.05 + RIGHT * LINE_BUFF,
+                self.objs_card[-3].get_right() + UP * 0.05 + hbuff,
                 **LINE_CONFIG_THIN,
             ),
             Line(
                 self.objs_card[-3].get_right() + DOWN * 0.05,
-                self.objs_card[-3].get_right() + DOWN * 0.05 + RIGHT * LINE_BUFF,
+                self.objs_card[-3].get_right() + DOWN * 0.05 + hbuff,
                 **LINE_CONFIG_THIN,
             ),
             Line(
                 self.objs_card[-2].get_right() + UP * 0.05,
-                self.objs_card[-2].get_right() + UP * 0.05 + RIGHT * LINE_BUFF,
+                self.objs_card[-2].get_right() + UP * 0.05 + hbuff,
                 **LINE_CONFIG_THIN,
             ),
             Line(
                 self.objs_card[-2].get_right() + DOWN * 0.05,
-                self.objs_card[-2].get_right() + DOWN * 0.05 + RIGHT * LINE_BUFF,
+                self.objs_card[-2].get_right() + DOWN * 0.05 + hbuff,
                 **LINE_CONFIG_THIN,
             ),
             Line(
                 self.objs_card[-1].get_right() + UP * 0.05,
-                self.objs_card[-1].get_right() + UP * 0.05 + RIGHT * LINE_BUFF,
+                self.objs_card[-1].get_right() + UP * 0.05 + hbuff,
                 **LINE_CONFIG_THIN,
             ),
             Line(
                 self.objs_card[-1].get_right() + DOWN * 0.05,
-                self.objs_card[-1].get_right() + DOWN * 0.05 + RIGHT * LINE_BUFF,
+                self.objs_card[-1].get_right() + DOWN * 0.05 + hbuff,
                 **LINE_CONFIG_THIN,
             ),
         )

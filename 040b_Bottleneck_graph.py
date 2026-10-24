@@ -63,7 +63,7 @@ class MainScene(ThreeDScene):
         self.play(graph_module.create(
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # expand module card
         self.play(card_module.expand_params(
@@ -82,7 +82,78 @@ class MainScene(ThreeDScene):
         ))
         self.wait(wt)
 
-        # TODO: shape matching
+        # ************************************************************
+        self.next_section(
+            'prepare arg tags',
+            skip_animations=False,
+        )
+        # ************************************************************
+        tag_cv1_c1 = NameTag(
+            graph_module.card_cv1.smob.mob[1].get_corner(UL),
+            text='c1',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_cv1_c2 = NameTag(
+            graph_module.card_cv1.smob.mob[2].get_corner(UL),
+            text='c2*e',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*2,
+        )
+        tag_cv1_k = NameTag(
+            graph_module.card_cv1.smob.mob[3].get_corner(UR),
+            text='k[0]',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1.5,
+        )
+        tag_cv2_c1 = NameTag(
+            graph_module.card_cv2.smob.mob[1].get_corner(DL),
+            text='c2*e',
+            leader_direction=DL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_cv2_c2 = NameTag(
+            graph_module.card_cv2.smob.mob[2].get_corner(DL),
+            text='c2',
+            leader_direction=DL,
+            leader_length=UNIT_LEADER_LENGTH*2,
+        )
+        tag_cv2_k = NameTag(
+            graph_module.card_cv2.smob.mob[3].get_corner(DR),
+            text='k[1]',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1.5,
+        )
+
+        # ************************************************************
+        self.next_section(
+            'args matching',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            tag_cv1_c1.create(),
+            tag_cv1_c2.create(),
+            tag_cv1_k.create(),
+            tag_cv2_c1.create(),
+            tag_cv2_c2.create(),
+            tag_cv2_k.create(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(AnimationGroup(
+            tag_cv1_c1.uncreate(),
+            tag_cv1_c2.uncreate(),
+            tag_cv1_k.uncreate(),
+            tag_cv2_c1.uncreate(),
+            tag_cv2_c2.uncreate(),
+            tag_cv2_k.uncreate(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

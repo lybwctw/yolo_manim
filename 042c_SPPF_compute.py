@@ -417,7 +417,7 @@ class MainScene(ThreeDScene):
         mts_copy.set_opacity(0.5)
         self.play(FadeIn(
             mts_copy,
-            run_time=wt*0.1,
+            run_time=wt,
         ))
 
         # pending copies before concat

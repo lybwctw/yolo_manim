@@ -383,7 +383,7 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'clean everything',
+            'module summary',
             skip_animations=False,
         )
         # ************************************************************
@@ -413,9 +413,21 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
+        self.wait(wt)
+
+        # replace params with summary
+        self.play(card_module.shrink_params(
+            run_time=wt,
+        ))
+        self.play(card_module.expand_summary(
+            '3',
+            direction='right',
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # shrink module card
-        self.play(card_module.shrink_params(
+        self.play(card_module.shrink_summary(
             run_time=wt,
         ))
         self.wait(wt)

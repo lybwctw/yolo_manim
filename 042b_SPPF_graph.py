@@ -63,7 +63,7 @@ class MainScene(ThreeDScene):
         self.play(graph_module.create(
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # expand module card
         self.play(card_module.expand_params(
@@ -88,11 +88,109 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'tags on sub module args',
+            'prepare arg tags',
             skip_animations=False,
         )
         # ************************************************************
-        # TODO...
+        tag_cv1_c1 = NameTag(
+            graph_module.card_cv1.smob.mob[1].get_corner(UL),
+            text='c1',
+            leader_direction=UL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_cv1_c2 = NameTag(
+            graph_module.card_cv1.smob.mob[2].get_corner(UR),
+            text='c1//2',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_mp1_k = NameTag(
+            graph_module.cards_m[0].smob.mob[1].get_corner(UR),
+            text='k',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_mp1_p = NameTag(
+            graph_module.cards_m[0].smob.mob[3].get_corner(UR),
+            text='k//2',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_mp2_k = NameTag(
+            graph_module.cards_m[1].smob.mob[1].get_corner(UR),
+            text='k',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_mp2_p = NameTag(
+            graph_module.cards_m[1].smob.mob[3].get_corner(UR),
+            text='k//2',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_mp3_k = NameTag(
+            graph_module.cards_m[2].smob.mob[1].get_corner(UR),
+            text='k',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_mp3_p = NameTag(
+            graph_module.cards_m[2].smob.mob[3].get_corner(UR),
+            text='k//2',
+            leader_direction=UR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_cv2_c1 = NameTag(
+            graph_module.card_cv2.smob.mob[1].get_corner(DL),
+            text='(c1//2)*4',
+            leader_direction=DL,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+        tag_cv2_c2 = NameTag(
+            graph_module.card_cv2.smob.mob[3].get_corner(DR),
+            text='c2',
+            leader_direction=DR,
+            leader_length=UNIT_LEADER_LENGTH*1,
+        )
+
+        # ************************************************************
+        self.next_section(
+            'args matching',
+            skip_animations=False,
+        )
+        # ************************************************************
+        self.play(AnimationGroup(
+            tag_cv1_c1.create(),
+            tag_cv1_c2.create(),
+            tag_mp1_k.create(),
+            tag_mp1_p.create(),
+            tag_mp2_k.create(),
+            tag_mp2_p.create(),
+            tag_mp3_k.create(),
+            tag_mp3_p.create(),
+            tag_cv2_c1.create(),
+            tag_cv2_c2.create(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        self.play(AnimationGroup(
+            tag_cv1_c1.uncreate(),
+            tag_cv1_c2.uncreate(),
+            tag_mp1_k.uncreate(),
+            tag_mp1_p.uncreate(),
+            tag_mp2_k.uncreate(),
+            tag_mp2_p.uncreate(),
+            tag_mp3_k.uncreate(),
+            tag_mp3_p.uncreate(),
+            tag_cv2_c1.uncreate(),
+            tag_cv2_c2.uncreate(),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
 
         # ************************************************************
         self.next_section(
@@ -105,7 +203,6 @@ class MainScene(ThreeDScene):
             run_time=wt,
         ).to_edge(RIGHT, buff=MGRAPH_EDGE_BUFF))
         self.wait(wt)
-
 
         mobs = VGroup(card_module, graph_module)
         export_mobs(__file__, mobs)      # used by next

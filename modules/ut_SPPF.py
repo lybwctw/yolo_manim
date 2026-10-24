@@ -26,6 +26,7 @@ class UT_SPPF(VMobject):
         module_config: dict = {},                   # c1, c2, k
         z_index: float = 0.0,                       # used by cv1, cv2
         module_gap: float = UNIT_FTENSOR_SIZE*2,    # gap between modules
+        super_opaque: bool = False,                 # even more opaque?
     ):
         super().__init__()
         self.module_config = module_config
@@ -34,11 +35,13 @@ class UT_SPPF(VMobject):
             module_config=SPPF_2_cv1_config(self.module_config),
             z_index=z_index,
             opaque=True,
+            super_opaque=super_opaque,
         )
         ut_cv2 = UT_Conv(
             module_config=SPPF_2_cv2_config(self.module_config),
-            z_index=z_index,
+            z_index=ut_cv1.z_index_end,
             opaque=True,
+            super_opaque=super_opaque,
         )
         VGroup(ut_cv1, ut_cv2).arrange(DOWN, buff=module_gap)
 
@@ -118,6 +121,15 @@ class UT_SPPF(VMobject):
             self.ut_cv1.lightup(**aargs),
             self.ut_cv2.lightup(**aargs),
             lag_ratio=0.0,
+        )
+
+    @property
+    def mobs(self):
+        """Used when increasing z_index in batch.
+        """
+        return VGroup(
+            *self.ut_cv1.mobs,
+            *self.ut_cv2.mobs,
         )
 
     # @property

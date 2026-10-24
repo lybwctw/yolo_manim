@@ -28,7 +28,7 @@ class MainScene(Scene):
         ) = mobs
 
         self.add(mobs)
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

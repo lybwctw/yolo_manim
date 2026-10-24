@@ -622,7 +622,7 @@ class MainScene(ThreeDScene):
         # show copy
         self.play(FadeIn(
             mts_copy,
-            run_time=wt*0.1,
+            run_time=wt,
         ))
 
         # direct concat animation

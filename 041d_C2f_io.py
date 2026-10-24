@@ -29,7 +29,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # load cards, modules, tensors, graph
@@ -65,7 +65,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'fade modules, highlight tensors',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # fade all sub modules
@@ -83,7 +83,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             '(c,5,6) -> (c,6,9)',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(

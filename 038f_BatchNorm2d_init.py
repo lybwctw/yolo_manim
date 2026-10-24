@@ -96,12 +96,37 @@ class MainScene(ThreeDScene):
 
         # ************************************************************
         self.next_section(
-            'clean',
+            'module summary',
             skip_animations=False,
         )
         # ***********************************************************#
-        # FIXME: use module's uncreate?
-        # remove module params
+        # remove tensor cards
+        self.play(AnimationGroup(
+            detach_to_ref(card_i1, UP),
+            detach_to_ref(card_o1, DOWN),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # replace params with summary
+        self.play(card_module.shrink_params(
+            run_time=wt,
+        ))
+        self.play(card_module.expand_summary(
+            '8',
+            direction='right',
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # shrink module card
+        self.play(card_module.shrink_summary(
+            run_time=wt,
+        ))
+        # self.wait(wt)
+
+        # remove module mob
         self.play(AnimationGroup(
             *(mob.uncreate(
                 style='series',
@@ -114,19 +139,6 @@ class MainScene(ThreeDScene):
                 mob_bias,
             ]),
             lag_ratio=0.0,
-            run_time=wt,
-        ))
-
-        # remove tensor cards
-        self.play(AnimationGroup(
-            detach_to_ref(card_i1, UP),
-            detach_to_ref(card_o1, DOWN),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-
-        # shrink module card
-        self.play(card_module.shrink_params(
             run_time=wt,
         ))
         self.wait(wt)

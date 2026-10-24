@@ -113,12 +113,14 @@ class MainScene(ThreeDScene):
             **VIEW_INTRO,
             zoom=1.8,
             added_anims=[
-                VGroup(mob_weight, mob_bias).animate.arrange(
+                VGroup(mob_weight, mob_bias).animate(
+                    run_time=wt,
+                ).arrange(
                     DOWN,
                     buff=BIAS_GAP_BIG,      # more gap
                 ),
             ],
-            run_time=wt*3,
+            run_time=wt,
         )
 
         # FIXME: make groups closer
@@ -368,6 +370,14 @@ class MainScene(ThreeDScene):
             skip_animations=False,
         )
         # ************************************************************
+        # remove tensor cards
+        self.play(AnimationGroup(
+            detach_to_ref(card_i1, UP),
+            detach_to_ref(card_o1, DOWN),
+            lag_ratio=0.0,
+            run_time=wt,
+        ))
+
         # clean range and tag
         self.play(AnimationGroup(
             Succession(
@@ -381,6 +391,30 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
+        self.wait(wt)
+
+        # ************************************************************
+        self.next_section(
+            'module summary',
+            skip_animations=False,
+        )
+        # ************************************************************
+        # replace params with summary
+        self.play(card_module.shrink_params(
+            run_time=wt,
+        ))
+        self.play(card_module.expand_summary(
+            '5 4 3 1 1 T',
+            direction='right',
+            run_time=wt,
+        ))
+        self.wait(wt)
+
+        # shrink module card
+        self.play(card_module.shrink_summary(
+            run_time=wt,
+        ))
+        # self.wait(wt)
 
         # clean weight and bias
         self.play(AnimationGroup(
@@ -398,25 +432,5 @@ class MainScene(ThreeDScene):
                 run_time=wt,
             ),
             lag_ratio=0.0,
-        ))
-        self.wait(wt)
-
-        # ************************************************************
-        self.next_section(
-            'clean cards',
-            skip_animations=False,
-        )
-        # ************************************************************
-        # remove tensor cards
-        self.play(AnimationGroup(
-            detach_to_ref(card_i1, UP),
-            detach_to_ref(card_o1, DOWN),
-            lag_ratio=0.0,
-            run_time=wt,
-        ))
-
-        # shrink module card
-        self.play(card_module.shrink_params(
-            run_time=wt,
         ))
         self.wait(wt)

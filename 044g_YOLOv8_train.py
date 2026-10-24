@@ -27,11 +27,8 @@ TENSOR_VGAP_LARGE = 3.0
 
 INIT_SCALE = 0.5
 
-RUNNING_X = 6.0
+RUNNING_X = 3.0
 FAKE_HALF = 2/3
-
-wt = 0.5
-# TODO: show shape text into (n, h, w)
 
 def collect_ut_convs(mob):
     if isinstance(mob, UT_Conv):
@@ -57,6 +54,7 @@ def collect_ut_convs(mob):
         ]
     raise TypeError(f'Unsupported module type: {type(mob).__name__}')
 
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -66,7 +64,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        mobs = import_mobs('045f')
+        mobs = import_mobs('044f')
         (
             mm_modules, card, graph,
             mt_input,
@@ -79,7 +77,7 @@ class MainScene(ThreeDScene):
             **VIEW_COMPUTE,
             'theta': -125*DEGREES,
             'focal_distance': 100,
-            'zoom': 0.35,
+            'zoom': 0.50,
         }
         self.set_camera_orientation(
             **cam_args,

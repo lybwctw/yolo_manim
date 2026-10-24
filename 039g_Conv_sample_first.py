@@ -23,7 +23,7 @@ from modules.ut_Conv import *
 
 from ultralytics.nn.modules import Conv
 
-SIDE_LENGTH_MINI = 0.2
+SIDE_LENGTH_MINI = UNIT_FTENSOR_SIZE
 
 TENSOR_VGAP_SMALL = 1.0
 TENSOR_VGAP_MEDIUM = 2.0
@@ -45,7 +45,7 @@ class MainScene(ThreeDScene):
         self.set_camera_orientation(
             **VIEW_COMPUTE,
             zoom=1.0,
-            focal_distance=80,
+            # focal_distance=80,
         )
         self.add_fixed_in_frame_mobjects(cards)
         self.wait(wt)
@@ -89,6 +89,10 @@ class MainScene(ThreeDScene):
             block_gap=0.2,
             weight_config={
                 'side_length': SIDE_LENGTH_MINI,
+                'cube_config': {
+                    'stroke_width': 1.0,
+                    'fill_color': ORANGE,
+                },
             },
         )
         mm_bn = MTensor4D(
@@ -96,7 +100,10 @@ class MainScene(ThreeDScene):
             mode='cube',
             style='horizontal',
             side_length=SIDE_LENGTH_MINI,
-            cube_config={'fill_color': PURE_RED},
+            cube_config={
+                'fill_color': PURE_RED,
+                'stroke_width': 1.0,
+            },
         )
         for idx in range(mm_bn.shape[0]):
             mm_bn[idx].next_to(

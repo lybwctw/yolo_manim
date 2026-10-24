@@ -21,7 +21,7 @@ NEW_CONFIG = {
     'dilation': 1,
 }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -135,7 +135,7 @@ class MainScene(ThreeDScene):
                         mob,
                         rate_func=rate_functions.ease_out_back,
                     ) for mob in beam),
-                    lag_ratio=0.5,
+                    lag_ratio=0.0,
                 ) for beam in beams_output),
                 rate_func=smooth,
                 run_time=wt*5,
@@ -195,9 +195,21 @@ class MainScene(ThreeDScene):
             lag_ratio=0.0,
             run_time=wt,
         ))
+        self.wait(wt)
+
+        # replace params with summary
+        self.play(card_module.shrink_params(
+            run_time=wt,
+        ))
+        self.play(card_module.expand_summary(
+            '3 2 1',
+            direction='right',
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # shrink module card
-        self.play(card_module.shrink_params(
+        self.play(card_module.shrink_summary(
             run_time=wt,
         ))
         self.wait(wt)

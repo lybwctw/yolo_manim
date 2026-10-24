@@ -27,10 +27,10 @@ TENSOR_VGAP_LARGE = 3.0
 
 INIT_SCALE = 0.5
 
-RUNNING_X = 6.0
+RUNNING_X = 3.0
 FAKE_HALF = 2/3
 
-wt = 0.5
+wt = SHORT_DURATION
 # TODO: show shape text into (n, h, w)
 class MainScene(ThreeDScene):
     def construct(self):
@@ -41,7 +41,7 @@ class MainScene(ThreeDScene):
         )
         # ************************************************************
         # load card and graph
-        mobs = import_mobs('045e')
+        mobs = import_mobs('044e')
         (
             mm_modules, card, graph,
             mt_input,
@@ -54,7 +54,7 @@ class MainScene(ThreeDScene):
             **VIEW_COMPUTE,
             'theta': -125*DEGREES,
             'focal_distance': 100,
-            'zoom': 0.35,
+            'zoom': 0.50,
         }
         self.set_camera_orientation(
             **cam_args,

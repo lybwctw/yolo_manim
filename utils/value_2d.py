@@ -312,9 +312,9 @@ class Value2D(VMobject):
             result.arrange_matrix,
             np.array([result.get_x(), self.get_y(), 0]),
             # rate_func=rate_functions.ease_out_back,
-            run_time=1.0*run_time_ratio,
+            run_time=0.3*run_time_ratio,
         ))
-        scene.wait(0.5*run_time_ratio)
+        scene.wait(run_time_ratio)
 
         return result
 
@@ -395,9 +395,9 @@ class Value2D(VMobject):
             result.arrange_matrix,
             np.array([result.get_x(), self.get_y(), 0]),
             # rate_func=rate_functions.ease_out_back,
-            run_time=1.0*run_time_ratio,
+            run_time=0.3*run_time_ratio,
         ))
-        scene.wait(0.5*run_time_ratio)
+        scene.wait(1.0*run_time_ratio)
 
         return result
 

@@ -218,6 +218,8 @@ class MainScene(Scene):
         aci_1 = aci_14.copy().move_to(LEFT*20)
         act_1 = act_14.copy().move_to(LEFT*20)
         sin_raw = s32_back[0].copy().set_opacity(1.0).move_to(LEFT*20)
+        sin_raw.width_nominal = 'w'
+        sin_raw.height_nominal = 'h'
         sin_norm = s32_merged_2d[0].copy().set_opacity(1.0).move_to(LEFT*20)
         tin_raw = LayersFake(
             n=3,
@@ -290,7 +292,7 @@ class MainScene(Scene):
             lag_ratio=0.5,
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # hide shapes
         self.play(AnimationGroup(

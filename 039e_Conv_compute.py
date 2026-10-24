@@ -59,7 +59,7 @@ class MainScene(ThreeDScene):
         self.add(
             mt_i, mm_conv, mm_bn, mt_o,
         )
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

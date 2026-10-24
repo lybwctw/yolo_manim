@@ -32,7 +32,7 @@ class MainScene(ThreeDScene):
         # scale down and add background
         self.play(card.head_mob.animate(
             rate_func=rate_functions.ease_out_expo,
-            run_time=wt*0.5,
+            run_time=wt,
         ).restore())
         self.play(FadeIn(
             card.frame_mob,
@@ -43,7 +43,7 @@ class MainScene(ThreeDScene):
         self.add_fixed_in_frame_mobjects(card)
         self.play(card.animate(
             rate_func=rate_functions.ease_out_expo,
-            run_time=wt*0.5,
+            run_time=wt,
         ).to_edge(
             LEFT,
             buff=CARD_EDGE_BUFF,
@@ -88,7 +88,7 @@ class MainScene(ThreeDScene):
             self,
             mtensor,
             view='top',
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
 
@@ -143,7 +143,7 @@ class MainScene(ThreeDScene):
             self,
             mtensor,
             view='intro',
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
 
@@ -185,7 +185,7 @@ class MainScene(ThreeDScene):
             self,
             mtensor,
             view='compute',
-            run_time=wt,
+            run_time=wt*2,
         ))
         self.wait(wt)
         self.play(HideShape3D(

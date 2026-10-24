@@ -140,7 +140,7 @@ class MainScene(ThreeDScene):
             t2s(t_o1),
             run_time=wt,
         ))
-        self.wait()
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(

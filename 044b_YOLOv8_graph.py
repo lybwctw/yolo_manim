@@ -29,17 +29,17 @@ TENSOR_LABEL_CONFIG = {
     'color': GRAY,
 }
 
-wt = 0.5
+wt = SHORT_DURATION
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
         self.next_section(
             'init mobs',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # module card
-        cards_model, _ = import_mobs('045a')
+        cards_model, _ = import_mobs('044a')
 
         # raw module with random init
         module_config = INIT_CONFIG
@@ -58,7 +58,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'introduce graph',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # create unexpanded graph
@@ -90,7 +90,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'reposition heads',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(graph_model.reposition_heads(
@@ -102,22 +102,22 @@ class MainScene(ThreeDScene):
         ))  # set_y(0.3)?
         self.wait(wt)
 
-        # # loop though cards
-        # masks = np.eye(graph_model.ncards,dtype=bool)
-        # self.play(graph_model.highlight_loop(
-        #     masks=masks,
-        #     rate_func=smooth,
-        #     run_time=wt*10,
-        # ))
-        # self.play(graph_model.highlight(
-        #     run_time=wt,
-        # ))
-        # self.wait(wt)
+        # loop though cards
+        masks = np.eye(graph_model.ncards,dtype=bool)
+        self.play(graph_model.highlight_loop(
+            masks=masks,
+            rate_func=smooth,
+            run_time=wt*10,
+        ))
+        self.play(graph_model.highlight(
+            run_time=wt,
+        ))
+        self.wait(wt)
 
         # ************************************************************
         self.next_section(
             'arrange into network style',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(graph_model.reposition_all(
@@ -141,7 +141,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'before summaries on different scales',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         # clean lines
@@ -165,7 +165,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'create 4 graph copies',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         graphs = VGroup(
@@ -186,7 +186,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'summaries on 5 scales',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         sss = [
@@ -222,7 +222,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.next_section(
             'nc as summary for model cards',
-            skip_animations=True,
+            skip_animations=False,
         )
         # ************************************************************
         self.play(AnimationGroup(

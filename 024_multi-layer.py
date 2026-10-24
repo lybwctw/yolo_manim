@@ -52,7 +52,7 @@ class MainScene(Scene):
         
         # start with system 32
         self.add(s32)
-        self.wait()
+        self.wait(wt)
 
         self.play(e32.show_anchor_points(
             lag_ratio=0.0,
