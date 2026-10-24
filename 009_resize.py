@@ -1,1 +1,0 @@
-# three scenes of tensor preprocess in 3d scene
