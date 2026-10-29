@@ -520,7 +520,7 @@ class MainScene(ThreeDScene):
         self.play(Wiggle(
             mg.cards_box[3],
             scale_value=1.2,
-            run_time=wt,
+            run_time=wt*2,
         ))
 
         # write split targets
@@ -580,7 +580,7 @@ class MainScene(ThreeDScene):
             Wiggle(
                 mg.cards_box[4],
                 scale_value=1.2,
-                run_time=wt,
+                run_time=wt*2,
             ),
             AnimationGroup(
                 *(GrowFromCenter(
@@ -616,7 +616,7 @@ class MainScene(ThreeDScene):
         self.play(Wiggle(
             mg.cards_box[5],
             scale_value=1.2,
-            run_time=wt,
+            run_time=wt*2,
         ))
 
         # show copy
@@ -818,7 +818,7 @@ class MainScene(ThreeDScene):
             Wiggle(
                 mg.cards_cls[-1],
                 scale_value=1.2,
-                run_time=wt,
+                run_time=wt*2,
             ),
             GrowFromCenter(
                 mts[16],

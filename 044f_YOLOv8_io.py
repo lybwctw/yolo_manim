@@ -77,38 +77,38 @@ class MainScene(ThreeDScene):
         self.play(mt_input.stretch_3d(
             new_shape=(3,640,1280),
             scale_factor=(1.0, 1.0, 3/2),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(AnimationGroup(
             mt_22_box.stretch_3d(
                 new_shape=(64,80,160),
                 scale_factor=(1.0, 1.0, 3/2),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_22_cls.stretch_3d(
                 new_shape=(3,80,160),
                 scale_factor=(1.0, 1.0, 3/2),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_23_box.stretch_3d(
                 new_shape=(64,40,80),
                 scale_factor=(1.0, 1.0, 3/2),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_23_cls.stretch_3d(
                 new_shape=(3,40,80),
                 scale_factor=(1.0, 1.0, 3/2),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_24_box.stretch_3d(
                 new_shape=(64,20,40),
                 scale_factor=(1.0, 1.0, 3/2),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_24_cls.stretch_3d(
                 new_shape=(3,20,40),
                 scale_factor=(1.0, 1.0, 3/2),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
         ))
         self.wait(wt)
@@ -122,38 +122,38 @@ class MainScene(ThreeDScene):
         self.play(mt_input.stretch_3d(
             new_shape=(3,1280,1280),
             scale_factor=(1.0, 3/2, 1.0),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(AnimationGroup(
             mt_22_box.stretch_3d(
                 new_shape=(64,160,160),
                 scale_factor=(1.0, 3/2, 1.0),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_22_cls.stretch_3d(
                 new_shape=(64,160,160),
                 scale_factor=(1.0, 3/2, 1.0),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_23_box.stretch_3d(
                 new_shape=(64,80,80),
                 scale_factor=(1.0, 3/2, 1.0),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_23_cls.stretch_3d(
                 new_shape=(64,80,80),
                 scale_factor=(1.0, 3/2, 1.0),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_24_box.stretch_3d(
                 new_shape=(64,40,40),
                 scale_factor=(1.0, 3/2, 1.0),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_24_cls.stretch_3d(
                 new_shape=(3,40,40),
                 scale_factor=(1.0, 3/2, 1.0),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
         ))
         self.wait(wt)
@@ -167,38 +167,38 @@ class MainScene(ThreeDScene):
         self.play(mt_input.stretch_3d(
             new_shape=(3,640,640),
             scale_factor=(1.0, 2/3, 2/3),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(AnimationGroup(
             mt_22_box.stretch_3d(
                 new_shape=(64,80,80),
                 scale_factor=(1.0, 2/3, 2/3),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_22_cls.stretch_3d(
                 new_shape=(64,80,80),
                 scale_factor=(1.0, 2/3, 2/3),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_23_box.stretch_3d(
                 new_shape=(64,40,40),
                 scale_factor=(1.0, 2/3, 2/3),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_23_cls.stretch_3d(
                 new_shape=(64,40,40),
                 scale_factor=(1.0, 2/3, 2/3),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_24_box.stretch_3d(
                 new_shape=(64,20,20),
                 scale_factor=(1.0, 2/3, 2/3),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mt_24_cls.stretch_3d(
                 new_shape=(64,20,20),
                 scale_factor=(1.0, 2/3, 2/3),
-                run_time=wt*0.5,
+                run_time=wt,
             ),
         ))
         self.wait(wt)

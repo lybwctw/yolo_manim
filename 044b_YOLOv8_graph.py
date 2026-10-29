@@ -66,12 +66,12 @@ class MainScene(ThreeDScene):
             run_time=wt,
             rate_func=smooth,
         ))
-        self.wait()
+        self.wait(wt)
 
         # connect without expand summary
         self.play(graph_model.connect(
             lag_ratio=0.5,
-            run_time=wt*10,
+            run_time=wt*5,
         ))
         self.wait(wt)
 
@@ -80,7 +80,7 @@ class MainScene(ThreeDScene):
         self.play(graph_model.highlight_loop(
             masks=masks,
             rate_func=smooth,
-            run_time=wt*10,
+            run_time=wt*5,
         ))
         self.play(graph_model.highlight(
             run_time=wt,
@@ -107,7 +107,7 @@ class MainScene(ThreeDScene):
         self.play(graph_model.highlight_loop(
             masks=masks,
             rate_func=smooth,
-            run_time=wt*10,
+            run_time=wt*5,
         ))
         self.play(graph_model.highlight(
             run_time=wt,
@@ -122,7 +122,7 @@ class MainScene(ThreeDScene):
         # ************************************************************
         self.play(graph_model.reposition_all(
             lag_ratio=0.0,
-            run_time=wt*3,
+            run_time=wt*2,
         ))
         self.wait(wt)
 
@@ -131,7 +131,7 @@ class MainScene(ThreeDScene):
         self.play(graph_model.highlight_loop(
             masks=masks,
             rate_func=smooth,
-            run_time=wt*10,
+            run_time=wt*5,
         ))
         self.play(graph_model.highlight(
             run_time=wt,

@@ -88,7 +88,7 @@ class MainScene(ThreeDScene):
             Unwrite(mm_modules[:-3], run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -109,7 +109,7 @@ class MainScene(ThreeDScene):
         mt_input.target.next_to(
             mm_modules.target,
             UP,
-            buff=4.0,
+            buff=2.0,
         )
 
         self.play(AnimationGroup(

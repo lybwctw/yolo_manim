@@ -57,7 +57,7 @@ FAKE_HALF = 2/3
 # [23]
 # [24]
 
-wt = SHORT_DURATION
+wt = SHORT_DURATION * 0.5
 class MainScene(ThreeDScene):
     def construct(self):
         # ************************************************************
@@ -85,7 +85,7 @@ class MainScene(ThreeDScene):
         )
         self.add_fixed_in_frame_mobjects(card, graph)
         self.add(mm_modules, mt_running, mt_c9, mt_c12)
-        self.wait(wt)
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -97,42 +97,42 @@ class MainScene(ThreeDScene):
         mask_graph = np.eye(graph.ncards, dtype=bool)[15]
         mask_module = np.eye(len(mm_modules), dtype=bool)[11]
         self.play(AnimationGroup(
-            graph.highlight(mask_graph, run_time=wt*0.1),
-            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            graph.highlight(mask_graph, run_time=wt),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
         
         # move running tensor
         self.play(mt_running.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[11],
             RIGHT,
         ).set_x(
             RUNNING_X,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # apply module
         self.play(mm_modules[11].breath(
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(mt_running.stretch_3d(
             new_shape=(64,80,80),
             scale_factor=(16/36, 1.0, 1.0),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show shape on graph
 
         # make a copy
         mt_c15 = mt_running.copy()
         mt_c15.set_opacity(0.3)
-        self.play(FadeIn(mt_c15, run_time=wt*0.1))
+        self.play(FadeIn(mt_c15, run_time=wt))
         self.play(mt_c15.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[11],
             LEFT,
@@ -141,7 +141,7 @@ class MainScene(ThreeDScene):
         # ).set_opacity(
         #     1.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -153,33 +153,33 @@ class MainScene(ThreeDScene):
         mask_graph = np.eye(graph.ncards, dtype=bool)[16]
         mask_module = np.eye(len(mm_modules), dtype=bool)[12]
         self.play(AnimationGroup(
-            graph.highlight(mask_graph, run_time=wt*0.1),
-            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            graph.highlight(mask_graph, run_time=wt),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
         
         # move running tensor
         self.play(mt_running.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[12],
             RIGHT,
         ).set_x(
             RUNNING_X,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # apply module
         self.play(mm_modules[12].breath(
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(mt_running.stretch_3d(
             new_shape=(64,40,40),
             scale_factor=(1.0, FAKE_HALF, FAKE_HALF),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show shape on graph
 
@@ -193,9 +193,9 @@ class MainScene(ThreeDScene):
         mask_graph = np.eye(graph.ncards, dtype=bool)[17]
         self.play(graph.highlight(
             mask_graph,
-            run_time=wt*0.1,
+            run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # prepare result mt_running
         res_running = mt_running.copy()
@@ -205,21 +205,21 @@ class MainScene(ThreeDScene):
 
         # move running tensor
         self.play(mt_running.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).move_to(
             res_running,
             aligned_edge=OUT,
         ))
-        # self.wait(wt)
+        self.wait(wt)
 
         # concat mt_c12 into running
         self.play(mt_c12.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).move_to(
             res_running,
             aligned_edge=IN,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show shape on graph
 
@@ -228,10 +228,10 @@ class MainScene(ThreeDScene):
             Unwrite(mt_running),
             Unwrite(mt_c12),
             FadeIn(res_running),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         mt_running = res_running
-        self.wait(wt)
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -243,42 +243,42 @@ class MainScene(ThreeDScene):
         mask_graph = np.eye(graph.ncards, dtype=bool)[18]
         mask_module = np.eye(len(mm_modules), dtype=bool)[13]
         self.play(AnimationGroup(
-            graph.highlight(mask_graph, run_time=wt*0.1),
-            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            graph.highlight(mask_graph, run_time=wt),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
         
         # move running tensor
         self.play(mt_running.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[13],
             RIGHT,
         ).set_x(
             RUNNING_X,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # apply module
         self.play(mm_modules[13].breath(
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(mt_running.stretch_3d(
             new_shape=(128,40,40),
             scale_factor=(20/36, 1.0, 1.0),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show shape on graph
 
         # make a copy
         mt_c18 = mt_running.copy()
         mt_c18.set_opacity(0.3)
-        self.play(FadeIn(mt_c18, run_time=wt*0.1))
+        self.play(FadeIn(mt_c18, run_time=wt))
         self.play(mt_c18.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[13],
             LEFT,
@@ -287,7 +287,7 @@ class MainScene(ThreeDScene):
         # ).set_opacity(
         #     1.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -299,33 +299,33 @@ class MainScene(ThreeDScene):
         mask_graph = np.eye(graph.ncards, dtype=bool)[19]
         mask_module = np.eye(len(mm_modules), dtype=bool)[14]
         self.play(AnimationGroup(
-            graph.highlight(mask_graph, run_time=wt*0.1),
-            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            graph.highlight(mask_graph, run_time=wt),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
         
         # move running tensor
         self.play(mt_running.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[14],
             RIGHT,
         ).set_x(
             RUNNING_X,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # apply module
         self.play(mm_modules[14].breath(
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(mt_running.stretch_3d(
             new_shape=(128,20,20),
             scale_factor=(1.0, FAKE_HALF, FAKE_HALF),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show shape on graph
 
@@ -339,9 +339,9 @@ class MainScene(ThreeDScene):
         mask_graph = np.eye(graph.ncards, dtype=bool)[20]
         self.play(graph.highlight(
             mask_graph,
-            run_time=wt*0.1,
+            run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # prepare result mt_running
         res_running = mt_running.copy()
@@ -351,7 +351,7 @@ class MainScene(ThreeDScene):
 
         # move running tensor
         self.play(mt_running.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).move_to(
             res_running,
             aligned_edge=OUT,
@@ -360,12 +360,12 @@ class MainScene(ThreeDScene):
 
         # concat mt_c9 into running
         self.play(mt_c9.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).move_to(
             res_running,
             aligned_edge=IN,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show shape on graph
 
@@ -374,10 +374,10 @@ class MainScene(ThreeDScene):
             Unwrite(mt_running),
             Unwrite(mt_c9),
             FadeIn(res_running),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         mt_running = res_running
-        self.wait(wt)
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -389,42 +389,42 @@ class MainScene(ThreeDScene):
         mask_graph = np.eye(graph.ncards, dtype=bool)[21]
         mask_module = np.eye(len(mm_modules), dtype=bool)[15]
         self.play(AnimationGroup(
-            graph.highlight(mask_graph, run_time=wt*0.1),
-            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            graph.highlight(mask_graph, run_time=wt),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
         
         # move running tensor
         self.play(mt_running.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[15],
             RIGHT,
         ).set_x(
             RUNNING_X,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # apply module
         self.play(mm_modules[15].breath(
-            run_time=wt*0.5,
+            run_time=wt,
         ))
         self.play(mt_running.stretch_3d(
             new_shape=(256,20,20),
             scale_factor=(24/44, 1.0, 1.0),
-            run_time=wt*0.5,
+            run_time=wt,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # show shape on graph
 
         # make a copy
         mt_c21 = mt_running.copy()
         mt_c21.set_opacity(0.3)
-        self.play(FadeIn(mt_c21, run_time=wt*0.1))
+        self.play(FadeIn(mt_c21, run_time=wt))
         self.play(mt_c21.animate(
-            run_time=wt*0.5,
+            run_time=wt,
         ).next_to(
             mm_modules[15],
             LEFT,
@@ -433,7 +433,7 @@ class MainScene(ThreeDScene):
         # ).set_opacity(
         #     1.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # ************************************************************
         self.next_section(
@@ -450,11 +450,11 @@ class MainScene(ThreeDScene):
         mask_module = np.zeros(len(mm_modules), dtype=bool)
         mask_module[16:] = True
         self.play(AnimationGroup(
-            graph.highlight(mask_graph, run_time=wt*0.1),
-            highlight_vgroup(mm_modules, mask_module, run_time=wt*0.1),
+            graph.highlight(mask_graph, run_time=wt),
+            highlight_vgroup(mm_modules, mask_module, run_time=wt),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # move backup tensors
         self.play(AnimationGroup(
@@ -463,7 +463,7 @@ class MainScene(ThreeDScene):
             mt_c21.animate(run_time=wt).set_opacity(1.0).next_to(mm_modules[18],LEFT).set_x(-RUNNING_X),
             lag_ratio=0.0,
         ))
-        self.wait(wt)
+        # self.wait(wt)
 
         # prepare output tensors
         mt_22_box = mt_c15.copy().stretch_to_fit_depth(mt_c15.depth*16/16).set_x(RUNNING_X)
@@ -476,13 +476,13 @@ class MainScene(ThreeDScene):
         # apply module
         self.play(AnimationGroup(
             mm_modules[16].breath(
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mm_modules[17].breath(
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             mm_modules[18].breath(
-                run_time=wt*0.5,
+                run_time=wt,
             ),
             lag_ratio=0.5,
         ))
@@ -540,8 +540,8 @@ class MainScene(ThreeDScene):
 
         # lightup all graph cards and modules
         self.play(AnimationGroup(
-            graph.highlight(None, run_time=wt*0.1),
-            highlight_vgroup(mm_modules, None, run_time=wt*0.1),
+            graph.highlight(None, run_time=wt),
+            highlight_vgroup(mm_modules, None, run_time=wt),
             lag_ratio=0.0,
         ))
         self.wait(wt)

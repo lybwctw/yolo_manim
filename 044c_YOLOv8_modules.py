@@ -168,7 +168,7 @@ class MainScene(ThreeDScene):
                 AnimationGroup(
                     *(mm_module.create_convs(
                         lag_ratio=0.5,
-                        run_time=wt,
+                        # run_time=wt,
                     ) for mm_module in mm_modules),
                     lag_ratio=1.0,
                     run_time=wt*10,
